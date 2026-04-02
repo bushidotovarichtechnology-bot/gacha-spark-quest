@@ -309,7 +309,7 @@ const CampaignDetail = () => {
             disabled={isDrawing}
             className="gap-1.5 px-5"
           >
-            <Zap className="h-4 w-4" /> Draw 1x
+            <Zap className="h-4 w-4" /> {t("draw1x")}
           </Button>
           <Button
             variant="gold"
