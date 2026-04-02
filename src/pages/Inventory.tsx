@@ -70,7 +70,7 @@ const Inventory = () => {
           <div className="rounded-xl border border-border bg-card p-3 text-center">
             <Recycle className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
             <p className="font-display text-xl font-bold text-foreground">{tierCounts.B + tierCounts.C}</p>
-            <p className="text-xs text-muted-foreground">Recyclable</p>
+            <p className="text-xs text-muted-foreground">{t("recyclable")}</p>
           </div>
         </div>
 
