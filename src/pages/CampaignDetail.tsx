@@ -166,7 +166,7 @@ const CampaignDetail = () => {
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm text-foreground">
               <span className="font-semibold">{totalRemaining}</span>
-              <span className="text-muted-foreground">/{totalTickets} left</span>
+              <span className="text-muted-foreground">/{totalTickets} {t("left")}</span>
             </span>
           </div>
         </div>
