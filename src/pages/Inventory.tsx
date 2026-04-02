@@ -118,7 +118,7 @@ const Inventory = () => {
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f === "all" ? "All" : f === "S" ? "Grand" : `Tier ${f}`}
+                {f === "all" ? t("all") : f === "S" ? t("grand") : `${t("tierA").split(" ")[0]} ${f}`}
                 <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-primary-foreground/20" : "bg-background/40"}`}>
                   {count}
                 </span>
