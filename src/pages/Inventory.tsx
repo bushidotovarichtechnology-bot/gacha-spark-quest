@@ -17,6 +17,7 @@ const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: st
 
 const Inventory = () => {
   const { items, totalCoins, drawsSinceTierA, recycleItem, pityThreshold } = useGacha();
+  const { t } = useI18n();
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
 
   const filteredItems = filter === "all" ? items : items.filter((i) => i.tier === filter);
