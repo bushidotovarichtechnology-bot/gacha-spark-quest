@@ -75,7 +75,7 @@ const Navbar = () => {
               ))}
               <div className="flex items-center gap-2">
                 <Coins className="h-4 w-4 text-accent" />
-                <span className="text-sm font-semibold text-accent">1,250 Gacha Coins</span>
+                <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} Gacha Coins</span>
               </div>
             </div>
           </motion.div>
