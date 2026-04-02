@@ -45,9 +45,9 @@ const Inventory = () => {
       <div className="container mx-auto px-4 pt-24">
         <div className="mb-8">
           <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            My Inventory
+            {t("myInventory")}
           </h1>
-          <p className="text-sm text-muted-foreground">Your collection of prizes from Bushido Gacha draws.</p>
+          <p className="text-sm text-muted-foreground">{t("yourCollection")}</p>
         </div>
 
         {/* Stats row */}
