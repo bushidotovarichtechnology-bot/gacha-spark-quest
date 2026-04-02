@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Coins, Package, Home } from "lucide-react";
+import { Menu, X, Coins, Package, Home, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGacha } from "@/context/GachaContext";
+import { useI18n } from "@/context/I18nContext";
 
 const Navbar = () => {
   const { totalCoins } = useGacha();
+  const { t, locale, setLocale } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/inventory", label: "My Inventory", icon: Package },
+    { to: "/", label: t("home"), icon: Home },
+    { to: "/inventory", label: t("myInventory"), icon: Package },
   ];
+
+  const toggleLocale = () => setLocale(locale === "en" ? "id" : "en");
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -41,6 +45,13 @@ const Navbar = () => {
             <Coins className="h-4 w-4 text-accent" />
             <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
           </div>
+          <button
+            onClick={toggleLocale}
+            className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            {locale === "en" ? "ID" : "EN"}
+          </button>
         </div>
 
         {/* Mobile toggle */}
@@ -75,8 +86,15 @@ const Navbar = () => {
               ))}
               <div className="flex items-center gap-2">
                 <Coins className="h-4 w-4 text-accent" />
-                <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} Gacha Coins</span>
+                <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("gachaCoins")}</span>
               </div>
+              <button
+                onClick={toggleLocale}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Globe className="h-4 w-4" />
+                {locale === "en" ? "Bahasa Indonesia" : "English"}
+              </button>
             </div>
           </motion.div>
         )}

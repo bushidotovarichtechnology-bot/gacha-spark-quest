@@ -29,6 +29,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </GachaProvider>
+      </I18nProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

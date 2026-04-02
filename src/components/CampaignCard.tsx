@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Ticket, Flame } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 interface CampaignCardProps {
   id: string;
@@ -13,6 +14,7 @@ interface CampaignCardProps {
 }
 
 const CampaignCard = ({ id, title, image, price, remaining, total, hot }: CampaignCardProps) => {
+  const { t } = useI18n();
   const percentage = (remaining / total) * 100;
   const isLow = percentage < 30;
 
@@ -26,7 +28,6 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
     >
       <Link to={`/campaign/${id}`} className="group block">
         <div className="gradient-card overflow-hidden rounded-xl border border-border/50 transition-all duration-300 group-hover:border-primary/50 group-hover:box-glow-purple">
-          {/* Image */}
           <div className="relative aspect-square overflow-hidden">
             <img
               src={image}
@@ -37,35 +38,32 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
             <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
             {hot && (
               <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-destructive/90 px-2.5 py-1 text-xs font-bold text-destructive-foreground backdrop-blur-sm">
-                <Flame className="h-3 w-3" /> HOT
+                <Flame className="h-3 w-3" /> {t("hot")}
               </div>
             )}
             {isLow && (
               <div className="absolute right-3 top-3 rounded-full bg-accent/90 px-2.5 py-1 text-xs font-bold text-accent-foreground backdrop-blur-sm animate-pulse-glow">
-                Almost Gone!
+                {t("almostGone")}
               </div>
             )}
           </div>
 
-          {/* Info */}
           <div className="p-4">
             <h3 className="mb-2 font-display text-sm font-semibold tracking-wide text-foreground">
               {title}
             </h3>
 
-            {/* Price */}
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Ticket className="h-4 w-4 text-accent" />
                 <span className="text-lg font-bold text-accent">${price}</span>
-                <span className="text-xs text-muted-foreground">/ticket</span>
+                <span className="text-xs text-muted-foreground">{t("ticket")}</span>
               </div>
             </div>
 
-            {/* Progress */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Remaining</span>
+                <span className="text-muted-foreground">{t("remaining")}</span>
                 <span className={isLow ? "font-semibold text-destructive" : "text-muted-foreground"}>
                   {remaining}/{total}
                 </span>
