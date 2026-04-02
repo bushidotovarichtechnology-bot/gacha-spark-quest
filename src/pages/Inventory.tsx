@@ -194,7 +194,7 @@ const Inventory = () => {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Package className="mb-3 h-12 w-12 text-muted-foreground/30" />
             <p className="font-display text-sm text-muted-foreground">
-              {items.length === 0 ? "No prizes yet — go draw some!" : "No items in this category"}
+              {items.length === 0 ? t("noPrizesYet") : t("noItemsCategory")}
             </p>
           </div>
         )}
