@@ -300,7 +300,7 @@ const CampaignDetail = () => {
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
           <div className="mr-auto text-sm">
-            <span className="text-muted-foreground">Price: </span>
+            <span className="text-muted-foreground">{t("price")}: </span>
             <span className="font-bold text-accent">${campaign.price}</span>
           </div>
           <Button
