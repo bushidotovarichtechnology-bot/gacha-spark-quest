@@ -89,8 +89,10 @@ const tierGlowMap: Record<string, string> = {
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaign = campaignData[id || ""] || fallbackCampaign;
+  const campaignId = id || "mystery-box";
   const totalRemaining = campaign.tiers.reduce((s, t) => s + t.remaining, 0);
   const totalTickets = campaign.tiers.reduce((s, t) => s + t.total, 0);
+  const { addPrize } = useGacha();
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
@@ -102,9 +104,7 @@ const CampaignDetail = () => {
     setDrawCount(count);
     setIsDrawing(true);
 
-    // Simulate draw after animation
     setTimeout(() => {
-      // Weighted random tier selection
       const weights = campaign.tiers.map(t => t.remaining);
       const totalWeight = weights.reduce((a, b) => a + b, 0);
       let r = Math.random() * totalWeight;
@@ -115,10 +115,21 @@ const CampaignDetail = () => {
       }
       const prize = selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)];
       setDrawnPrize({ tier: selectedTier.label, color: selectedTier.color, prize });
+
+      // Persist to inventory
+      addPrize({
+        prize,
+        tier: selectedTier.label as "S" | "A" | "B" | "C",
+        campaign: campaign.title,
+        campaignId,
+        image: campaign.image,
+        coinValue: selectedTier.label === "S" ? 1000 : selectedTier.label === "A" ? 200 : selectedTier.label === "B" ? 80 : 15,
+      });
+
       setIsDrawing(false);
       setShowResult(true);
     }, 2400);
-  }, [isDrawing, campaign.tiers]);
+  }, [isDrawing, campaign, campaignId, addPrize]);
 
   return (
     <div className="min-h-screen pb-28">
