@@ -173,7 +173,7 @@ const CampaignDetail = () => {
 
         {/* Prize Tiers */}
         <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.2em] text-accent">
-          Prize Pool
+          {t("prizePool")}
         </h2>
         <div className="space-y-3">
           {campaign.tiers.map((tier, i) => {
