@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Coins, Package, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGacha } from "@/context/GachaContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
