@@ -98,8 +98,8 @@ const Inventory = () => {
             />
           </div>
           <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
-            <span>{drawsSinceTierA} draws</span>
-            <span>{pityThreshold} draws</span>
+            <span>{drawsSinceTierA} {t("draws")}</span>
+            <span>{pityThreshold} {t("draws")}</span>
           </div>
         </motion.div>
 
