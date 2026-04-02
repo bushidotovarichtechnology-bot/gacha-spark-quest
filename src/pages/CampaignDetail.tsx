@@ -197,7 +197,7 @@ const CampaignDetail = () => {
                         {tier.name}
                       </h3>
                       <span className={`text-xs font-semibold ${tier.remaining <= 2 ? "text-destructive animate-pulse-glow" : "text-muted-foreground"}`}>
-                        {tier.remaining}/{tier.total} left
+                        {tier.remaining}/{tier.total} {t("left")}
                       </span>
                     </div>
                     {/* Prize list */}
