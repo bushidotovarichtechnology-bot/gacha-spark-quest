@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { useGacha } from "@/context/GachaContext";
+import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: string; label: string }> = {
