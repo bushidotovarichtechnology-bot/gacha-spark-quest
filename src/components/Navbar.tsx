@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGacha } from "@/context/GachaContext";
 
 const Navbar = () => {
+  const { totalCoins } = useGacha();
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
