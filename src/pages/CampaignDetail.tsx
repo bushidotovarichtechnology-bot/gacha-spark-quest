@@ -234,8 +234,8 @@ const CampaignDetail = () => {
           <div className="flex items-center gap-3">
             <Crown className="h-6 w-6 shrink-0 text-accent" />
             <div>
-              <h3 className="font-display text-sm font-bold text-accent">Last One Prize</h3>
-              <p className="text-xs text-muted-foreground">The person who draws the very last ticket wins an exclusive bonus reward!</p>
+              <h3 className="font-display text-sm font-bold text-accent">{t("lastOnePrizeTitle")}</h3>
+              <p className="text-xs text-muted-foreground">{t("lastOnePrizeDetail")}</p>
             </div>
           </div>
         </motion.div>
