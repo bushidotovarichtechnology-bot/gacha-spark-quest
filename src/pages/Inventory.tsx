@@ -60,7 +60,7 @@ const Inventory = () => {
           <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 text-center box-glow-gold">
             <Coins className="mx-auto mb-1 h-5 w-5 text-accent" />
             <p className="font-display text-xl font-bold text-accent">{totalCoins.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Gacha Coins</p>
+            <p className="text-xs text-muted-foreground">{t("gachaCoins")}</p>
           </div>
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-center">
             <Star className="mx-auto mb-1 h-5 w-5 text-primary" />
