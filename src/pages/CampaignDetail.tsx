@@ -317,7 +317,7 @@ const CampaignDetail = () => {
             disabled={isDrawing}
             className="gap-1.5 px-5"
           >
-            <Sparkles className="h-4 w-4" /> Draw 10x
+            <Sparkles className="h-4 w-4" /> {t("draw10x")}
           </Button>
         </div>
       </div>
