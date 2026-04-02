@@ -55,7 +55,7 @@ const Inventory = () => {
           <div className="rounded-xl border border-border bg-card p-3 text-center">
             <Package className="mx-auto mb-1 h-5 w-5 text-primary" />
             <p className="font-display text-xl font-bold text-foreground">{items.length}</p>
-            <p className="text-xs text-muted-foreground">Total Items</p>
+            <p className="text-xs text-muted-foreground">{t("totalItems")}</p>
           </div>
           <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 text-center box-glow-gold">
             <Coins className="mx-auto mb-1 h-5 w-5 text-accent" />
