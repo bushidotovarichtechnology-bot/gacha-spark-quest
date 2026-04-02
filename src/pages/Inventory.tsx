@@ -26,8 +26,8 @@ const Inventory = () => {
 
   const handleRecycle = (id: string, prizeName: string) => {
     const value = recycleItem(id);
-    toast.success(`Recycled "${prizeName}"`, {
-      description: `+${value} Gacha Coins earned!`,
+    toast.success(t("recycledTitle", { name: prizeName }), {
+      description: t("recycledDesc", { value }),
       icon: <Coins className="h-4 w-4 text-accent" />,
     });
   };
