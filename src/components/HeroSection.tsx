@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 import heroImage from "@/assets/hero-gacha.jpg";
 
 const HeroSection = () => {
+  const { t } = useI18n();
+
   return (
     <section className="relative overflow-hidden pt-16">
-      {/* Background */}
       <div className="absolute inset-0 gradient-hero" />
       <div className="absolute inset-0">
         <img
@@ -32,16 +34,16 @@ const HeroSection = () => {
             transition={{ delay: 0.2 }}
             className="mb-4 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent"
           >
-            ⚔️ The Way of Fortune
+            {t("wayOfFortune")}
           </motion.p>
 
           <h1 className="mb-6 font-display text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-            Draw Your
-            <span className="block text-glow-purple text-primary"> Destiny</span>
+            {t("drawYour")}
+            <span className="block text-glow-purple text-primary"> {t("destiny")}</span>
           </h1>
 
           <p className="mx-auto mb-8 max-w-md text-base text-muted-foreground sm:text-lg">
-            Limited pools. Rare prizes. Every draw brings you closer to the ultimate reward.
+            {t("heroDesc")}
           </p>
 
           <motion.div
@@ -51,12 +53,11 @@ const HeroSection = () => {
           >
             <Button variant="gold" size="lg" className="gap-2 px-8 py-6 text-base">
               <Sparkles className="h-5 w-5" />
-              Test Your Luck Now!
+              {t("testYourLuck")}
             </Button>
           </motion.div>
         </motion.div>
 
-        {/* Scroll indicator */}
         <motion.div
           className="absolute bottom-8"
           animate={{ y: [0, 8, 0] }}

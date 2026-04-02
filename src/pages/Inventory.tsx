@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { useGacha } from "@/context/GachaContext";
+import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: string; label: string }> = {
@@ -16,6 +17,7 @@ const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: st
 
 const Inventory = () => {
   const { items, totalCoins, drawsSinceTierA, recycleItem, pityThreshold } = useGacha();
+  const { t } = useI18n();
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
 
   const filteredItems = filter === "all" ? items : items.filter((i) => i.tier === filter);
@@ -24,8 +26,8 @@ const Inventory = () => {
 
   const handleRecycle = (id: string, prizeName: string) => {
     const value = recycleItem(id);
-    toast.success(`Recycled "${prizeName}"`, {
-      description: `+${value} Gacha Coins earned!`,
+    toast.success(t("recycledTitle", { name: prizeName }), {
+      description: t("recycledDesc", { value }),
       icon: <Coins className="h-4 w-4 text-accent" />,
     });
   };
@@ -43,9 +45,9 @@ const Inventory = () => {
       <div className="container mx-auto px-4 pt-24">
         <div className="mb-8">
           <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            My Inventory
+            {t("myInventory")}
           </h1>
-          <p className="text-sm text-muted-foreground">Your collection of prizes from Bushido Gacha draws.</p>
+          <p className="text-sm text-muted-foreground">{t("yourCollection")}</p>
         </div>
 
         {/* Stats row */}
@@ -53,22 +55,22 @@ const Inventory = () => {
           <div className="rounded-xl border border-border bg-card p-3 text-center">
             <Package className="mx-auto mb-1 h-5 w-5 text-primary" />
             <p className="font-display text-xl font-bold text-foreground">{items.length}</p>
-            <p className="text-xs text-muted-foreground">Total Items</p>
+            <p className="text-xs text-muted-foreground">{t("totalItems")}</p>
           </div>
           <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 text-center box-glow-gold">
             <Coins className="mx-auto mb-1 h-5 w-5 text-accent" />
             <p className="font-display text-xl font-bold text-accent">{totalCoins.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Gacha Coins</p>
+            <p className="text-xs text-muted-foreground">{t("gachaCoins")}</p>
           </div>
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-center">
             <Star className="mx-auto mb-1 h-5 w-5 text-primary" />
             <p className="font-display text-xl font-bold text-foreground">{tierCounts.A + tierCounts.S}</p>
-            <p className="text-xs text-muted-foreground">Rare+ Items</p>
+            <p className="text-xs text-muted-foreground">{t("rareItems")}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3 text-center">
             <Recycle className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
             <p className="font-display text-xl font-bold text-foreground">{tierCounts.B + tierCounts.C}</p>
-            <p className="text-xs text-muted-foreground">Recyclable</p>
+            <p className="text-xs text-muted-foreground">{t("recyclable")}</p>
           </div>
         </div>
 
@@ -81,12 +83,10 @@ const Inventory = () => {
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="font-display text-xs font-semibold uppercase tracking-wider text-primary">
-                Pity Counter
-              </span>
+              <span className="font-display text-xs font-semibold uppercase tracking-wider text-primary">{t("pityCounter")}</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">{pityThreshold - drawsSinceTierA}</span> more draws for guaranteed Tier A!
+              <span className="font-semibold text-foreground">{pityThreshold - drawsSinceTierA}</span> {t("moreDrawsForTierA")}
             </span>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-background/50">
@@ -98,8 +98,8 @@ const Inventory = () => {
             />
           </div>
           <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
-            <span>{drawsSinceTierA} draws</span>
-            <span>{pityThreshold} draws</span>
+            <span>{drawsSinceTierA} {t("draws")}</span>
+            <span>{pityThreshold} {t("draws")}</span>
           </div>
         </motion.div>
 
@@ -118,7 +118,7 @@ const Inventory = () => {
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f === "all" ? "All" : f === "S" ? "Grand" : `Tier ${f}`}
+                {f === "all" ? t("all") : f === "S" ? t("grand") : `${t("tierA").split(" ")[0]} ${f}`}
                 <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-primary-foreground/20" : "bg-background/40"}`}>
                   {count}
                 </span>
@@ -174,7 +174,7 @@ const Inventory = () => {
                         className="w-full gap-1.5 border-border/50 text-xs hover:border-accent/50 hover:text-accent"
                       >
                         <Recycle className="h-3 w-3" />
-                        Recycle · +{item.coinValue}
+                        {t("recycle")} · +{item.coinValue}
                         <Coins className="h-3 w-3 text-accent" />
                       </Button>
                     ) : (
@@ -194,7 +194,7 @@ const Inventory = () => {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Package className="mb-3 h-12 w-12 text-muted-foreground/30" />
             <p className="font-display text-sm text-muted-foreground">
-              {items.length === 0 ? "No prizes yet — go draw some!" : "No items in this category"}
+              {items.length === 0 ? t("noPrizesYet") : t("noItemsCategory")}
             </p>
           </div>
         )}

@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CampaignCard from "@/components/CampaignCard";
 import { Sparkles, Shield, Clock, Trophy } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -19,20 +20,21 @@ const campaigns = [
   { id: "mystery-box-2", title: "Midnight Mystery Box", image: campaignBlindbox, price: 3, remaining: 120, total: 300, hot: false },
 ];
 
-const features = [
-  { icon: Shield, title: "Verified Fair", desc: "Provably fair draws with transparent odds" },
-  { icon: Clock, title: "Limited Pools", desc: "Once tickets sell out, the campaign ends" },
-  { icon: Trophy, title: "Pity System", desc: "Guaranteed rare after a set number of draws" },
-  { icon: Sparkles, title: "Last One Prize", desc: "The final ticket wins a special bonus prize" },
-];
-
 const Index = () => {
+  const { t } = useI18n();
+
+  const features = [
+    { icon: Shield, title: t("verifiedFair"), desc: t("verifiedFairDesc") },
+    { icon: Clock, title: t("limitedPools"), desc: t("limitedPoolsDesc") },
+    { icon: Trophy, title: t("pitySystem"), desc: t("pitySystemDesc") },
+    { icon: Sparkles, title: t("lastOnePrize"), desc: t("lastOnePrizeDesc") },
+  ];
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <HeroSection />
 
-      {/* Features strip */}
       <section className="border-y border-border/50 bg-secondary/30">
         <div className="container mx-auto grid grid-cols-2 gap-4 px-4 py-8 md:grid-cols-4">
           {features.map((f, i) => (
@@ -52,7 +54,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Campaigns */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <motion.div
@@ -62,10 +63,10 @@ const Index = () => {
             className="mb-10 text-center"
           >
             <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
-              Live Now
+              {t("liveNow")}
             </p>
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Featured Campaigns
+              {t("featuredCampaigns")}
             </h2>
           </motion.div>
 
@@ -77,11 +78,10 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border/50 py-8">
         <div className="container mx-auto px-4 text-center">
           <p className="font-display text-xs tracking-wider text-muted-foreground">
-            © 2026 BUSHIDO GACHA — All rights reserved
+            {t("allRightsReserved")}
           </p>
         </div>
       </footer>

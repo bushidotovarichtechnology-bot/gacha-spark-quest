@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Star, Gift, Award, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/context/I18nContext";
 
 interface PrizeRevealModalProps {
   open: boolean;
@@ -17,6 +18,7 @@ const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof 
 };
 
 const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalProps) => {
+  const { t } = useI18n();
   if (!prize) return null;
   const config = tierConfig[prize.tier] || tierConfig.C;
   const isRare = prize.tier === "S" || prize.tier === "A";
@@ -39,12 +41,10 @@ const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalP
             onClick={(e) => e.stopPropagation()}
             className={`relative w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6 text-center ${config.glow}`}
           >
-            {/* Close button */}
             <button onClick={onClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
 
-            {/* Confetti-like particles for rare */}
             {isRare && (
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 {Array.from({ length: 12 }).map((_, i) => (
@@ -64,7 +64,6 @@ const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalP
               </div>
             )}
 
-            {/* Tier badge */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -76,22 +75,21 @@ const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalP
               </div>
             </motion.div>
 
-            {/* Result text */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
               <p className="mb-1 font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                {drawCount > 1 ? `${drawCount}x Draw Result` : "You Drew"}
+                {drawCount > 1 ? t("drawResult", { count: drawCount }) : t("youDrew")}
               </p>
               <h2 className={`mb-2 font-display text-lg font-black ${isRare ? "text-glow-gold text-accent" : "text-foreground"}`}>
-                {prize.tier === "S" ? "🔥 GRAND PRIZE 🔥" : `Tier ${prize.tier}`}
+                {prize.tier === "S" ? t("grandPrizeFire") : `${t("tierA").split(" ")[0]} ${prize.tier}`}
               </h2>
               <p className="mb-6 text-base font-semibold text-foreground">{prize.prize}</p>
 
               <Button variant={isRare ? "gold" : "neon"} onClick={onClose} className="w-full">
-                {isRare ? "Claim Reward!" : "Continue"}
+                {isRare ? t("claimReward") : t("continue")}
               </Button>
             </motion.div>
           </motion.div>

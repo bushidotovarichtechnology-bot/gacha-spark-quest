@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
 import { useGacha } from "@/context/GachaContext";
+import { useI18n } from "@/context/I18nContext";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -93,6 +94,7 @@ const CampaignDetail = () => {
   const totalRemaining = campaign.tiers.reduce((s, t) => s + t.remaining, 0);
   const totalTickets = campaign.tiers.reduce((s, t) => s + t.total, 0);
   const { addPrize } = useGacha();
+  const { t } = useI18n();
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
@@ -142,7 +144,7 @@ const CampaignDetail = () => {
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="container mx-auto">
             <Link to="/" className="mb-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground">
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to Campaigns
+              <ArrowLeft className="h-3.5 w-3.5" /> {t("backToCampaigns")}
             </Link>
             <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {campaign.title}
@@ -158,20 +160,20 @@ const CampaignDetail = () => {
         <div className="mb-8 flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Ticket className="h-4 w-4 text-accent" />
-            <span className="text-sm font-semibold text-foreground">${campaign.price}/ticket</span>
+            <span className="text-sm font-semibold text-foreground">${campaign.price}{t("ticket")}</span>
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm text-foreground">
               <span className="font-semibold">{totalRemaining}</span>
-              <span className="text-muted-foreground">/{totalTickets} left</span>
+              <span className="text-muted-foreground">/{totalTickets} {t("left")}</span>
             </span>
           </div>
         </div>
 
         {/* Prize Tiers */}
         <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.2em] text-accent">
-          Prize Pool
+          {t("prizePool")}
         </h2>
         <div className="space-y-3">
           {campaign.tiers.map((tier, i) => {
@@ -195,7 +197,7 @@ const CampaignDetail = () => {
                         {tier.name}
                       </h3>
                       <span className={`text-xs font-semibold ${tier.remaining <= 2 ? "text-destructive animate-pulse-glow" : "text-muted-foreground"}`}>
-                        {tier.remaining}/{tier.total} left
+                        {tier.remaining}/{tier.total} {t("left")}
                       </span>
                     </div>
                     {/* Prize list */}
@@ -232,8 +234,8 @@ const CampaignDetail = () => {
           <div className="flex items-center gap-3">
             <Crown className="h-6 w-6 shrink-0 text-accent" />
             <div>
-              <h3 className="font-display text-sm font-bold text-accent">Last One Prize</h3>
-              <p className="text-xs text-muted-foreground">The person who draws the very last ticket wins an exclusive bonus reward!</p>
+              <h3 className="font-display text-sm font-bold text-accent">{t("lastOnePrizeTitle")}</h3>
+              <p className="text-xs text-muted-foreground">{t("lastOnePrizeDetail")}</p>
             </div>
           </div>
         </motion.div>
@@ -279,7 +281,7 @@ const CampaignDetail = () => {
                 transition={{ duration: 1.5, repeat: Infinity }}
                 className="font-display text-sm tracking-widest text-muted-foreground"
               >
-                {drawCount > 1 ? `Drawing ${drawCount}x...` : "Drawing..."}
+                {drawCount > 1 ? t("drawingMulti", { count: drawCount }) : t("drawing")}
               </motion.p>
             </div>
           </motion.div>
@@ -298,7 +300,7 @@ const CampaignDetail = () => {
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
           <div className="mr-auto text-sm">
-            <span className="text-muted-foreground">Price: </span>
+            <span className="text-muted-foreground">{t("price")}: </span>
             <span className="font-bold text-accent">${campaign.price}</span>
           </div>
           <Button
@@ -307,7 +309,7 @@ const CampaignDetail = () => {
             disabled={isDrawing}
             className="gap-1.5 px-5"
           >
-            <Zap className="h-4 w-4" /> Draw 1x
+            <Zap className="h-4 w-4" /> {t("draw1x")}
           </Button>
           <Button
             variant="gold"
@@ -315,7 +317,7 @@ const CampaignDetail = () => {
             disabled={isDrawing}
             className="gap-1.5 px-5"
           >
-            <Sparkles className="h-4 w-4" /> Draw 10x
+            <Sparkles className="h-4 w-4" /> {t("draw10x")}
           </Button>
         </div>
       </div>
