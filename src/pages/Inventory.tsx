@@ -86,7 +86,7 @@ const Inventory = () => {
               <span className="font-display text-xs font-semibold uppercase tracking-wider text-primary">{t("pityCounter")}</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">{pityThreshold - drawsSinceTierA}</span> more draws for guaranteed Tier A!
+              <span className="font-semibold text-foreground">{pityThreshold - drawsSinceTierA}</span> {t("moreDrawsForTierA")}
             </span>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-background/50">
