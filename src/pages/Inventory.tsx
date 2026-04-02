@@ -83,9 +83,7 @@ const Inventory = () => {
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="font-display text-xs font-semibold uppercase tracking-wider text-primary">
-                Pity Counter
-              </span>
+              <span className="font-display text-xs font-semibold uppercase tracking-wider text-primary">{t("pityCounter")}</span>
             </div>
             <span className="text-xs text-muted-foreground">
               <span className="font-semibold text-foreground">{pityThreshold - drawsSinceTierA}</span> more draws for guaranteed Tier A!
