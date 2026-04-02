@@ -94,6 +94,7 @@ const CampaignDetail = () => {
   const totalRemaining = campaign.tiers.reduce((s, t) => s + t.remaining, 0);
   const totalTickets = campaign.tiers.reduce((s, t) => s + t.total, 0);
   const { addPrize } = useGacha();
+  const { t } = useI18n();
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
