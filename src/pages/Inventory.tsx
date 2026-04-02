@@ -1,25 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, Trash2 } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-
-import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
-import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
-import campaignWallet from "@/assets/campaign-wallet.jpg";
-import campaignFigurine from "@/assets/campaign-figurine.jpg";
-import campaignGaming from "@/assets/campaign-gaming.jpg";
-
-interface InventoryItem {
-  id: string;
-  prize: string;
-  tier: "S" | "A" | "B" | "C";
-  campaign: string;
-  image: string;
-  coinValue: number;
-  wonAt: string;
-}
+import { useGacha } from "@/context/GachaContext";
+import { formatDistanceToNow } from "date-fns";
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: string; label: string }> = {
   S: { color: "text-accent", icon: Crown, gradient: "from-accent/30 to-accent/5", label: "Grand Prize" },
@@ -28,35 +14,18 @@ const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: st
   C: { color: "text-muted-foreground", icon: Award, gradient: "from-muted/40 to-muted/10", label: "Tier C" },
 };
 
-const initialInventory: InventoryItem[] = [
-  { id: "1", prize: "Premium Headphones", tier: "A", campaign: "Mystery Blind Box", image: campaignBlindbox, coinValue: 200, wonAt: "2 hours ago" },
-  { id: "2", prize: "Wireless Mouse", tier: "B", campaign: "Mystery Blind Box", image: campaignBlindbox, coinValue: 80, wonAt: "3 hours ago" },
-  { id: "3", prize: "Sticker Pack", tier: "C", campaign: "Mystery Blind Box", image: campaignBlindbox, coinValue: 15, wonAt: "3 hours ago" },
-  { id: "4", prize: "Webcam", tier: "B", campaign: "Ultimate Desk Setup", image: campaignDesksetup, coinValue: 90, wonAt: "1 day ago" },
-  { id: "5", prize: "$25 Gift Card", tier: "B", campaign: "Digital Wallets", image: campaignWallet, coinValue: 100, wonAt: "1 day ago" },
-  { id: "6", prize: "Pin Badge", tier: "C", campaign: "Mystery Blind Box", image: campaignBlindbox, coinValue: 10, wonAt: "2 days ago" },
-  { id: "7", prize: "Keychain", tier: "C", campaign: "Mystery Blind Box", image: campaignBlindbox, coinValue: 10, wonAt: "2 days ago" },
-  { id: "8", prize: "Mini Figure", tier: "C", campaign: "Rare Figurine Collection", image: campaignFigurine, coinValue: 20, wonAt: "3 days ago" },
-  { id: "9", prize: "Grip Case", tier: "C", campaign: "Gaming Console Bundle", image: campaignGaming, coinValue: 12, wonAt: "4 days ago" },
-];
-
-const PITY_THRESHOLD = 10;
-
 const Inventory = () => {
-  const [items, setItems] = useState<InventoryItem[]>(initialInventory);
+  const { items, totalCoins, drawsSinceTierA, recycleItem, pityThreshold } = useGacha();
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
-  const [totalCoins, setTotalCoins] = useState(1250);
-  const [drawsSinceTierA, setDrawsSinceTierA] = useState(7);
 
   const filteredItems = filter === "all" ? items : items.filter((i) => i.tier === filter);
-  const pityProgress = (drawsSinceTierA / PITY_THRESHOLD) * 100;
+  const pityProgress = Math.min((drawsSinceTierA / pityThreshold) * 100, 100);
   const recyclableTiers = ["B", "C"];
 
-  const handleRecycle = (item: InventoryItem) => {
-    setItems((prev) => prev.filter((i) => i.id !== item.id));
-    setTotalCoins((prev) => prev + item.coinValue);
-    toast.success(`Recycled "${item.prize}"`, {
-      description: `+${item.coinValue} Gacha Coins earned!`,
+  const handleRecycle = (id: string, prizeName: string) => {
+    const value = recycleItem(id);
+    toast.success(`Recycled "${prizeName}"`, {
+      description: `+${value} Gacha Coins earned!`,
       icon: <Coins className="h-4 w-4 text-accent" />,
     });
   };
@@ -72,7 +41,6 @@ const Inventory = () => {
     <div className="min-h-screen pb-8">
       <Navbar />
       <div className="container mx-auto px-4 pt-24">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             My Inventory
@@ -118,7 +86,7 @@ const Inventory = () => {
               </span>
             </div>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">{PITY_THRESHOLD - drawsSinceTierA}</span> more draws for guaranteed Tier A!
+              <span className="font-semibold text-foreground">{pityThreshold - drawsSinceTierA}</span> more draws for guaranteed Tier A!
             </span>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-background/50">
@@ -131,7 +99,7 @@ const Inventory = () => {
           </div>
           <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
             <span>{drawsSinceTierA} draws</span>
-            <span>{PITY_THRESHOLD} draws</span>
+            <span>{pityThreshold} draws</span>
           </div>
         </motion.div>
 
@@ -165,6 +133,10 @@ const Inventory = () => {
             {filteredItems.map((item) => {
               const meta = tierMeta[item.tier];
               const canRecycle = recyclableTiers.includes(item.tier);
+              const timeAgo = (() => {
+                try { return formatDistanceToNow(new Date(item.wonAt), { addSuffix: true }); }
+                catch { return item.wonAt; }
+              })();
               return (
                 <motion.div
                   key={item.id}
@@ -175,7 +147,6 @@ const Inventory = () => {
                   transition={{ duration: 0.25 }}
                   className={`group overflow-hidden rounded-xl border border-border/50 bg-gradient-to-b ${meta.gradient} transition-all hover:border-primary/40`}
                 >
-                  {/* Image */}
                   <div className="relative aspect-square overflow-hidden">
                     <img
                       src={item.image}
@@ -184,24 +155,22 @@ const Inventory = () => {
                       className="h-full w-full object-cover opacity-60 transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-                    {/* Tier badge */}
                     <div className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 font-display text-xs font-black ${meta.color}`}>
                       {item.tier}
                     </div>
                   </div>
 
-                  {/* Info */}
                   <div className="p-3">
                     <h3 className="mb-0.5 truncate font-display text-xs font-semibold text-foreground">
                       {item.prize}
                     </h3>
-                    <p className="mb-2 truncate text-[10px] text-muted-foreground">{item.campaign}</p>
+                    <p className="mb-2 truncate text-[10px] text-muted-foreground">{item.campaign} · {timeAgo}</p>
 
                     {canRecycle ? (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRecycle(item)}
+                        onClick={() => handleRecycle(item.id, item.prize)}
                         className="w-full gap-1.5 border-border/50 text-xs hover:border-accent/50 hover:text-accent"
                       >
                         <Recycle className="h-3 w-3" />
@@ -224,7 +193,9 @@ const Inventory = () => {
         {filteredItems.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Package className="mb-3 h-12 w-12 text-muted-foreground/30" />
-            <p className="font-display text-sm text-muted-foreground">No items in this category</p>
+            <p className="font-display text-sm text-muted-foreground">
+              {items.length === 0 ? "No prizes yet — go draw some!" : "No items in this category"}
+            </p>
           </div>
         )}
       </div>
