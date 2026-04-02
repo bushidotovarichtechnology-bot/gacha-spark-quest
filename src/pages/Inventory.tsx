@@ -174,7 +174,7 @@ const Inventory = () => {
                         className="w-full gap-1.5 border-border/50 text-xs hover:border-accent/50 hover:text-accent"
                       >
                         <Recycle className="h-3 w-3" />
-                        Recycle · +{item.coinValue}
+                        {t("recycle")} · +{item.coinValue}
                         <Coins className="h-3 w-3 text-accent" />
                       </Button>
                     ) : (
