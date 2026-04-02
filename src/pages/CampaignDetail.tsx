@@ -281,7 +281,7 @@ const CampaignDetail = () => {
                 transition={{ duration: 1.5, repeat: Infinity }}
                 className="font-display text-sm tracking-widest text-muted-foreground"
               >
-                {drawCount > 1 ? `Drawing ${drawCount}x...` : "Drawing..."}
+                {drawCount > 1 ? t("drawingMulti", { count: drawCount }) : t("drawing")}
               </motion.p>
             </div>
           </motion.div>
