@@ -5,6 +5,7 @@ import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket } from "luci
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
+import { useGacha } from "@/context/GachaContext";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
