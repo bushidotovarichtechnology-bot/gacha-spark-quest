@@ -65,7 +65,7 @@ const Inventory = () => {
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-center">
             <Star className="mx-auto mb-1 h-5 w-5 text-primary" />
             <p className="font-display text-xl font-bold text-foreground">{tierCounts.A + tierCounts.S}</p>
-            <p className="text-xs text-muted-foreground">Rare+ Items</p>
+            <p className="text-xs text-muted-foreground">{t("rareItems")}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3 text-center">
             <Recycle className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
