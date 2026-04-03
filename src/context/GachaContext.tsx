@@ -60,19 +60,31 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<InventoryItem[]>(saved?.items ?? []);
   const [totalCoins, setTotalCoins] = useState<number>(saved?.totalCoins ?? 0);
   const [drawsSinceTierA, setDrawsSinceTierA] = useState<number>(saved?.drawsSinceTierA ?? 0);
+  const [drawHistory, setDrawHistory] = useState<DrawHistoryEntry[]>(saved?.drawHistory ?? []);
 
   useEffect(() => {
-    saveState(items, totalCoins, drawsSinceTierA);
-  }, [items, totalCoins, drawsSinceTierA]);
+    saveState(items, totalCoins, drawsSinceTierA, drawHistory);
+  }, [items, totalCoins, drawsSinceTierA, drawHistory]);
 
   const addPrize = useCallback((prize: Omit<InventoryItem, "id" | "wonAt">) => {
+    const now = new Date().toISOString();
     const newItem: InventoryItem = {
       ...prize,
       coinValue: prize.coinValue || coinValues[prize.tier] || 15,
       id: crypto.randomUUID(),
-      wonAt: new Date().toISOString(),
+      wonAt: now,
     };
     setItems((prev) => [newItem, ...prev]);
+
+    const historyEntry: DrawHistoryEntry = {
+      id: crypto.randomUUID(),
+      prize: prize.prize,
+      tier: prize.tier,
+      campaign: prize.campaign,
+      campaignId: prize.campaignId,
+      drawnAt: now,
+    };
+    setDrawHistory((prev) => [historyEntry, ...prev]);
 
     if (prize.tier === "S" || prize.tier === "A") {
       setDrawsSinceTierA(0);
