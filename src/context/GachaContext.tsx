@@ -105,7 +105,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <GachaContext.Provider value={{ items, totalCoins, drawsSinceTierA, addPrize, recycleItem, pityThreshold: PITY_THRESHOLD }}>
+    <GachaContext.Provider value={{ items, totalCoins, drawsSinceTierA, drawHistory, addPrize, recycleItem, pityThreshold: PITY_THRESHOLD }}>
       {children}
     </GachaContext.Provider>
   );

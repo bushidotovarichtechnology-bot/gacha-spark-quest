@@ -13,6 +13,7 @@ const Navbar = () => {
   const navLinks = [
     { to: "/", label: t("home"), icon: Home },
     { to: "/inventory", label: t("myInventory"), icon: Package },
+    { to: "/history", label: t("drawHistory"), icon: History },
   ];
 
   const toggleLocale = () => setLocale(locale === "en" ? "id" : "en");
