@@ -11,10 +11,20 @@ export interface InventoryItem {
   wonAt: string;
 }
 
+export interface DrawHistoryEntry {
+  id: string;
+  prize: string;
+  tier: "S" | "A" | "B" | "C";
+  campaign: string;
+  campaignId: string;
+  drawnAt: string;
+}
+
 interface GachaState {
   items: InventoryItem[];
   totalCoins: number;
   drawsSinceTierA: number;
+  drawHistory: DrawHistoryEntry[];
   addPrize: (prize: Omit<InventoryItem, "id" | "wonAt">) => void;
   recycleItem: (id: string) => number;
   pityThreshold: number;
@@ -33,8 +43,8 @@ function loadState() {
   return null;
 }
 
-function saveState(items: InventoryItem[], totalCoins: number, drawsSinceTierA: number) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, totalCoins, drawsSinceTierA }));
+function saveState(items: InventoryItem[], totalCoins: number, drawsSinceTierA: number, drawHistory: DrawHistoryEntry[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, totalCoins, drawsSinceTierA, drawHistory }));
 }
 
 const GachaContext = createContext<GachaState | null>(null);
@@ -50,19 +60,31 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<InventoryItem[]>(saved?.items ?? []);
   const [totalCoins, setTotalCoins] = useState<number>(saved?.totalCoins ?? 0);
   const [drawsSinceTierA, setDrawsSinceTierA] = useState<number>(saved?.drawsSinceTierA ?? 0);
+  const [drawHistory, setDrawHistory] = useState<DrawHistoryEntry[]>(saved?.drawHistory ?? []);
 
   useEffect(() => {
-    saveState(items, totalCoins, drawsSinceTierA);
-  }, [items, totalCoins, drawsSinceTierA]);
+    saveState(items, totalCoins, drawsSinceTierA, drawHistory);
+  }, [items, totalCoins, drawsSinceTierA, drawHistory]);
 
   const addPrize = useCallback((prize: Omit<InventoryItem, "id" | "wonAt">) => {
+    const now = new Date().toISOString();
     const newItem: InventoryItem = {
       ...prize,
       coinValue: prize.coinValue || coinValues[prize.tier] || 15,
       id: crypto.randomUUID(),
-      wonAt: new Date().toISOString(),
+      wonAt: now,
     };
     setItems((prev) => [newItem, ...prev]);
+
+    const historyEntry: DrawHistoryEntry = {
+      id: crypto.randomUUID(),
+      prize: prize.prize,
+      tier: prize.tier,
+      campaign: prize.campaign,
+      campaignId: prize.campaignId,
+      drawnAt: now,
+    };
+    setDrawHistory((prev) => [historyEntry, ...prev]);
 
     if (prize.tier === "S" || prize.tier === "A") {
       setDrawsSinceTierA(0);
@@ -83,7 +105,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <GachaContext.Provider value={{ items, totalCoins, drawsSinceTierA, addPrize, recycleItem, pityThreshold: PITY_THRESHOLD }}>
+    <GachaContext.Provider value={{ items, totalCoins, drawsSinceTierA, drawHistory, addPrize, recycleItem, pityThreshold: PITY_THRESHOLD }}>
       {children}
     </GachaContext.Provider>
   );

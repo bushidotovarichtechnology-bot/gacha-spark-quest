@@ -8,6 +8,7 @@ import { I18nProvider } from "./context/I18nContext";
 import Index from "./pages/Index.tsx";
 import CampaignDetail from "./pages/CampaignDetail.tsx";
 import Inventory from "./pages/Inventory.tsx";
+import DrawHistory from "./pages/DrawHistory.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/campaign/:id" element={<CampaignDetail />} />
             <Route path="/inventory" element={<Inventory />} />
+            <Route path="/history" element={<DrawHistory />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

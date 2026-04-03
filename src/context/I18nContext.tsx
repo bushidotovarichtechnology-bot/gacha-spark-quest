@@ -78,6 +78,11 @@ const translations = {
     recycledDesc: "+{value} Gacha Coins earned!",
     yourCollection: "Your collection of prizes from Bushido Gacha draws.",
 
+    // Draw History
+    drawHistory: "Draw History",
+    drawHistoryDesc: "A log of all your past gacha draws.",
+    noDrawsYet: "No draws yet — go try your luck!",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -156,6 +161,11 @@ const translations = {
     recycledTitle: "Didaur ulang \"{name}\"",
     recycledDesc: "+{value} Koin Gacha diperoleh!",
     yourCollection: "Koleksi hadiah dari tarikan Bushido Gacha kamu.",
+
+    // Draw History
+    drawHistory: "Riwayat Tarikan",
+    drawHistoryDesc: "Catatan semua tarikan gacha kamu.",
+    noDrawsYet: "Belum ada tarikan — ayo coba keberuntunganmu!",
 
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
