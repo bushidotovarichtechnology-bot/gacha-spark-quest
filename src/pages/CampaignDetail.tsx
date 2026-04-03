@@ -299,7 +299,7 @@ const CampaignDetail = () => {
       <PrizeRevealModal
         open={showResult}
         onClose={() => setShowResult(false)}
-        prize={drawnPrize}
+        prizes={drawnPrizes}
         drawCount={drawCount}
       />
 
