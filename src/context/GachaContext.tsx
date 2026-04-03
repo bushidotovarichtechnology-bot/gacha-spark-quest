@@ -11,10 +11,20 @@ export interface InventoryItem {
   wonAt: string;
 }
 
+export interface DrawHistoryEntry {
+  id: string;
+  prize: string;
+  tier: "S" | "A" | "B" | "C";
+  campaign: string;
+  campaignId: string;
+  drawnAt: string;
+}
+
 interface GachaState {
   items: InventoryItem[];
   totalCoins: number;
   drawsSinceTierA: number;
+  drawHistory: DrawHistoryEntry[];
   addPrize: (prize: Omit<InventoryItem, "id" | "wonAt">) => void;
   recycleItem: (id: string) => number;
   pityThreshold: number;
