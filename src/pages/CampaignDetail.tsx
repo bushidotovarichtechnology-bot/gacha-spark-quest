@@ -87,58 +87,104 @@ const tierGlowMap: Record<string, string> = {
   "text-muted-foreground": "",
 };
 
+const CAMPAIGN_STORAGE_KEY = "bushido-campaign-remaining";
+
+function loadCampaignRemaining(): Record<string, Record<string, number>> {
+  try {
+    const raw = localStorage.getItem(CAMPAIGN_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+function saveCampaignRemaining(data: Record<string, Record<string, number>>) {
+  localStorage.setItem(CAMPAIGN_STORAGE_KEY, JSON.stringify(data));
+}
+
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const campaign = campaignData[id || ""] || fallbackCampaign;
+  const baseCampaign = campaignData[id || ""] || fallbackCampaign;
   const campaignId = id || "mystery-box";
-  const totalRemaining = campaign.tiers.reduce((s, t) => s + t.remaining, 0);
-  const totalTickets = campaign.tiers.reduce((s, t) => s + t.total, 0);
   const { addPrize } = useGacha();
   const { t } = useI18n();
+
+  // Track remaining per tier per campaign in state + localStorage
+  const [remainingMap, setRemainingMap] = useState<Record<string, number>>(() => {
+    const saved = loadCampaignRemaining()[campaignId];
+    if (saved) return saved;
+    const initial: Record<string, number> = {};
+    baseCampaign.tiers.forEach((tier) => {
+      initial[tier.label] = tier.remaining;
+    });
+    return initial;
+  });
+
+  const tiers = baseCampaign.tiers.map((tier) => ({
+    ...tier,
+    remaining: Math.max(remainingMap[tier.label] ?? tier.remaining, 0),
+  }));
+
+  const totalRemaining = tiers.reduce((s, t) => s + t.remaining, 0);
+  const totalTickets = tiers.reduce((s, t) => s + t.total, 0);
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
 
-  const drawOnce = useCallback(() => {
-    const weights = campaign.tiers.map(t => t.remaining);
-    const totalWeight = weights.reduce((a, b) => a + b, 0);
-    let r = Math.random() * totalWeight;
-    let selectedTier = campaign.tiers[campaign.tiers.length - 1];
-    for (const tier of campaign.tiers) {
-      r -= tier.remaining;
-      if (r <= 0) { selectedTier = tier; break; }
-    }
-    const prize = selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)];
-
-    addPrize({
-      prize,
-      tier: selectedTier.label as "S" | "A" | "B" | "C",
-      campaign: campaign.title,
-      campaignId,
-      image: campaign.image,
-      coinValue: selectedTier.label === "S" ? 1000 : selectedTier.label === "A" ? 200 : selectedTier.label === "B" ? 80 : 15,
-    });
-
-    return { tier: selectedTier.label, color: selectedTier.color, prize };
-  }, [campaign, campaignId, addPrize]);
-
   const handleDraw = useCallback((count: number) => {
-    if (isDrawing) return;
-    setDrawCount(count);
+    if (isDrawing || totalRemaining <= 0) return;
+    const actualCount = Math.min(count, totalRemaining);
+    setDrawCount(actualCount);
     setIsDrawing(true);
 
     setTimeout(() => {
       const results: { tier: string; color: string; prize: string }[] = [];
-      for (let i = 0; i < count; i++) {
-        results.push(drawOnce());
+      // Work with a mutable copy of remaining
+      const currentRemaining = { ...remainingMap };
+
+      for (let i = 0; i < actualCount; i++) {
+        const activeTiers = tiers.map((tier) => ({
+          ...tier,
+          remaining: Math.max(currentRemaining[tier.label] ?? 0, 0),
+        })).filter((tier) => tier.remaining > 0);
+
+        if (activeTiers.length === 0) break;
+
+        const totalWeight = activeTiers.reduce((a, b) => a + b.remaining, 0);
+        let r = Math.random() * totalWeight;
+        let selectedTier = activeTiers[activeTiers.length - 1];
+        for (const tier of activeTiers) {
+          r -= tier.remaining;
+          if (r <= 0) { selectedTier = tier; break; }
+        }
+
+        const prize = selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)];
+        currentRemaining[selectedTier.label] = (currentRemaining[selectedTier.label] ?? 0) - 1;
+
+        addPrize({
+          prize,
+          tier: selectedTier.label as "S" | "A" | "B" | "C",
+          campaign: baseCampaign.title,
+          campaignId,
+          image: baseCampaign.image,
+          coinValue: selectedTier.label === "S" ? 1000 : selectedTier.label === "A" ? 200 : selectedTier.label === "B" ? 80 : 15,
+        });
+
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize });
       }
+
+      // Save updated remaining
+      setRemainingMap(currentRemaining);
+      const allSaved = loadCampaignRemaining();
+      allSaved[campaignId] = currentRemaining;
+      saveCampaignRemaining(allSaved);
+
       setDrawnPrizes(results);
       setIsDrawing(false);
       setShowResult(true);
     }, 2400);
-  }, [isDrawing, drawOnce]);
+  }, [isDrawing, totalRemaining, remainingMap, tiers, baseCampaign, campaignId, addPrize]);
 
   return (
     <div className="min-h-screen pb-28">
@@ -146,7 +192,7 @@ const CampaignDetail = () => {
 
       {/* Hero banner */}
       <div className="relative h-56 overflow-hidden pt-16 sm:h-72">
-        <img src={campaign.image} alt={campaign.title} className="h-full w-full object-cover" />
+        <img src={baseCampaign.image} alt={baseCampaign.title} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="container mx-auto">
@@ -154,7 +200,7 @@ const CampaignDetail = () => {
               <ArrowLeft className="h-3.5 w-3.5" /> {t("backToCampaigns")}
             </Link>
             <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {campaign.title}
+              {baseCampaign.title}
             </h1>
           </div>
         </div>
@@ -162,12 +208,12 @@ const CampaignDetail = () => {
 
       <div className="container mx-auto px-4 pt-6">
         {/* Description & stats */}
-        <p className="mb-6 max-w-xl text-sm text-muted-foreground">{campaign.description}</p>
+        <p className="mb-6 max-w-xl text-sm text-muted-foreground">{baseCampaign.description}</p>
 
         <div className="mb-8 flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Ticket className="h-4 w-4 text-accent" />
-            <span className="text-sm font-semibold text-foreground">${campaign.price}{t("ticket")}</span>
+            <span className="text-sm font-semibold text-foreground">${baseCampaign.price}{t("ticket")}</span>
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -183,7 +229,7 @@ const CampaignDetail = () => {
           {t("prizePool")}
         </h2>
         <div className="space-y-3">
-          {campaign.tiers.map((tier, i) => {
+          {tiers.map((tier, i) => {
             const pct = tier.total > 0 ? (tier.remaining / tier.total) * 100 : 0;
             return (
               <motion.div
@@ -308,7 +354,7 @@ const CampaignDetail = () => {
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
           <div className="mr-auto text-sm">
             <span className="text-muted-foreground">{t("price")}: </span>
-            <span className="font-bold text-accent">${campaign.price}</span>
+            <span className="font-bold text-accent">${baseCampaign.price}</span>
           </div>
           <Button
             variant="neon"
