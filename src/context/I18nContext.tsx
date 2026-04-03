@@ -162,6 +162,11 @@ const translations = {
     recycledDesc: "+{value} Koin Gacha diperoleh!",
     yourCollection: "Koleksi hadiah dari tarikan Bushido Gacha kamu.",
 
+    // Draw History
+    drawHistory: "Riwayat Tarikan",
+    drawHistoryDesc: "Catatan semua tarikan gacha kamu.",
+    noDrawsYet: "Belum ada tarikan — ayo coba keberuntunganmu!",
+
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
     returnHome: "Kembali ke Beranda",
