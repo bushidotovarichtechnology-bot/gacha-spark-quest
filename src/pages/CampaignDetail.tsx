@@ -192,7 +192,7 @@ const CampaignDetail = () => {
 
       {/* Hero banner */}
       <div className="relative h-56 overflow-hidden pt-16 sm:h-72">
-        <img src={campaign.image} alt={campaign.title} className="h-full w-full object-cover" />
+        <img src={baseCampaign.image} alt={baseCampaign.title} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="container mx-auto">
@@ -200,7 +200,7 @@ const CampaignDetail = () => {
               <ArrowLeft className="h-3.5 w-3.5" /> {t("backToCampaigns")}
             </Link>
             <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {campaign.title}
+              {baseCampaign.title}
             </h1>
           </div>
         </div>
@@ -208,12 +208,12 @@ const CampaignDetail = () => {
 
       <div className="container mx-auto px-4 pt-6">
         {/* Description & stats */}
-        <p className="mb-6 max-w-xl text-sm text-muted-foreground">{campaign.description}</p>
+        <p className="mb-6 max-w-xl text-sm text-muted-foreground">{baseCampaign.description}</p>
 
         <div className="mb-8 flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Ticket className="h-4 w-4 text-accent" />
-            <span className="text-sm font-semibold text-foreground">${campaign.price}{t("ticket")}</span>
+            <span className="text-sm font-semibold text-foreground">${baseCampaign.price}{t("ticket")}</span>
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -229,7 +229,7 @@ const CampaignDetail = () => {
           {t("prizePool")}
         </h2>
         <div className="space-y-3">
-          {campaign.tiers.map((tier, i) => {
+          {tiers.map((tier, i) => {
             const pct = tier.total > 0 ? (tier.remaining / tier.total) * 100 : 0;
             return (
               <motion.div
@@ -354,7 +354,7 @@ const CampaignDetail = () => {
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
           <div className="mr-auto text-sm">
             <span className="text-muted-foreground">{t("price")}: </span>
-            <span className="font-bold text-accent">${campaign.price}</span>
+            <span className="font-bold text-accent">${baseCampaign.price}</span>
           </div>
           <Button
             variant="neon"
