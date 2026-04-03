@@ -98,8 +98,31 @@ const CampaignDetail = () => {
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [drawnPrize, setDrawnPrize] = useState<{ tier: string; color: string; prize: string } | null>(null);
+  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
+
+  const drawOnce = useCallback(() => {
+    const weights = campaign.tiers.map(t => t.remaining);
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * totalWeight;
+    let selectedTier = campaign.tiers[campaign.tiers.length - 1];
+    for (const tier of campaign.tiers) {
+      r -= tier.remaining;
+      if (r <= 0) { selectedTier = tier; break; }
+    }
+    const prize = selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)];
+
+    addPrize({
+      prize,
+      tier: selectedTier.label as "S" | "A" | "B" | "C",
+      campaign: campaign.title,
+      campaignId,
+      image: campaign.image,
+      coinValue: selectedTier.label === "S" ? 1000 : selectedTier.label === "A" ? 200 : selectedTier.label === "B" ? 80 : 15,
+    });
+
+    return { tier: selectedTier.label, color: selectedTier.color, prize };
+  }, [campaign, campaignId, addPrize]);
 
   const handleDraw = useCallback((count: number) => {
     if (isDrawing) return;
@@ -107,31 +130,15 @@ const CampaignDetail = () => {
     setIsDrawing(true);
 
     setTimeout(() => {
-      const weights = campaign.tiers.map(t => t.remaining);
-      const totalWeight = weights.reduce((a, b) => a + b, 0);
-      let r = Math.random() * totalWeight;
-      let selectedTier = campaign.tiers[campaign.tiers.length - 1];
-      for (const tier of campaign.tiers) {
-        r -= tier.remaining;
-        if (r <= 0) { selectedTier = tier; break; }
+      const results: { tier: string; color: string; prize: string }[] = [];
+      for (let i = 0; i < count; i++) {
+        results.push(drawOnce());
       }
-      const prize = selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)];
-      setDrawnPrize({ tier: selectedTier.label, color: selectedTier.color, prize });
-
-      // Persist to inventory
-      addPrize({
-        prize,
-        tier: selectedTier.label as "S" | "A" | "B" | "C",
-        campaign: campaign.title,
-        campaignId,
-        image: campaign.image,
-        coinValue: selectedTier.label === "S" ? 1000 : selectedTier.label === "A" ? 200 : selectedTier.label === "B" ? 80 : 15,
-      });
-
+      setDrawnPrizes(results);
       setIsDrawing(false);
       setShowResult(true);
     }, 2400);
-  }, [isDrawing, campaign, campaignId, addPrize]);
+  }, [isDrawing, drawOnce]);
 
   return (
     <div className="min-h-screen pb-28">
@@ -292,7 +299,7 @@ const CampaignDetail = () => {
       <PrizeRevealModal
         open={showResult}
         onClose={() => setShowResult(false)}
-        prize={drawnPrize}
+        prizes={drawnPrizes}
         drawCount={drawCount}
       />
 

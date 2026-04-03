@@ -1,12 +1,13 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Star, Gift, Award, X } from "lucide-react";
+import { Crown, Star, Gift, Award, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 
 interface PrizeRevealModalProps {
   open: boolean;
   onClose: () => void;
-  prize: { tier: string; color: string; prize: string } | null;
+  prizes: { tier: string; color: string; prize: string }[];
   drawCount: number;
 }
 
@@ -17,11 +18,39 @@ const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof 
   C: { gradient: "from-muted-foreground via-gray-400 to-muted-foreground", glow: "", icon: Award, emoji: "📦" },
 };
 
-const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalProps) => {
+const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
+
+const PrizeRevealModal = ({ open, onClose, prizes, drawCount }: PrizeRevealModalProps) => {
   const { t } = useI18n();
-  if (!prize) return null;
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!prizes.length) return null;
+
+  const isMulti = prizes.length > 1;
+  const prize = prizes[currentIndex] || prizes[0];
   const config = tierConfig[prize.tier] || tierConfig.C;
   const isRare = prize.tier === "S" || prize.tier === "A";
+  const isLast = currentIndex >= prizes.length - 1;
+
+  const handleClose = () => {
+    setCurrentIndex(0);
+    onClose();
+  };
+
+  const handleNext = () => {
+    if (isLast) {
+      handleClose();
+    } else {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) setCurrentIndex((prev) => prev - 1);
+  };
+
+  // Sort for summary: best tier first
+  const sorted = [...prizes].sort((a, b) => (tierOrder[a.tier as keyof typeof tierOrder] ?? 3) - (tierOrder[b.tier as keyof typeof tierOrder] ?? 3));
 
   return (
     <AnimatePresence>
@@ -31,9 +60,10 @@ const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalP
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md p-4"
-          onClick={onClose}
+          onClick={handleClose}
         >
           <motion.div
+            key={currentIndex}
             initial={{ scale: 0.5, opacity: 0, rotateY: 90 }}
             animate={{ scale: 1, opacity: 1, rotateY: 0 }}
             exit={{ scale: 0.8, opacity: 0 }}
@@ -41,7 +71,7 @@ const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalP
             onClick={(e) => e.stopPropagation()}
             className={`relative w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6 text-center ${config.glow}`}
           >
-            <button onClick={onClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
+            <button onClick={handleClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
 
@@ -64,6 +94,13 @@ const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalP
               </div>
             )}
 
+            {/* Counter */}
+            {isMulti && (
+              <p className="mb-2 text-xs text-muted-foreground">
+                {currentIndex + 1} / {prizes.length}
+              </p>
+            )}
+
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -81,16 +118,45 @@ const PrizeRevealModal = ({ open, onClose, prize, drawCount }: PrizeRevealModalP
               transition={{ delay: 0.4 }}
             >
               <p className="mb-1 font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                {drawCount > 1 ? t("drawResult", { count: drawCount }) : t("youDrew")}
+                {isMulti ? t("drawResult", { count: drawCount }) : t("youDrew")}
               </p>
               <h2 className={`mb-2 font-display text-lg font-black ${isRare ? "text-glow-gold text-accent" : "text-foreground"}`}>
                 {prize.tier === "S" ? t("grandPrizeFire") : `${t("tierA").split(" ")[0]} ${prize.tier}`}
               </h2>
               <p className="mb-6 text-base font-semibold text-foreground">{prize.prize}</p>
 
-              <Button variant={isRare ? "gold" : "neon"} onClick={onClose} className="w-full">
-                {isRare ? t("claimReward") : t("continue")}
-              </Button>
+              <div className="flex gap-2">
+                {isMulti && currentIndex > 0 && (
+                  <Button variant="outline" onClick={handlePrev} className="shrink-0">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button variant={isRare ? "gold" : "neon"} onClick={handleNext} className="w-full">
+                  {isLast ? (isRare ? t("claimReward") : t("continue")) : t("continue")}
+                </Button>
+                {isMulti && !isLast && (
+                  <Button variant="outline" onClick={handleNext} className="shrink-0">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Mini summary dots */}
+              {isMulti && (
+                <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+                  {sorted.map((p, i) => {
+                    const c = tierConfig[p.tier] || tierConfig.C;
+                    return (
+                      <div
+                        key={i}
+                        className={`flex h-6 w-6 items-center justify-center rounded text-[10px] font-black bg-gradient-to-br ${c.gradient} text-background`}
+                      >
+                        {p.tier}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         </motion.div>
