@@ -43,8 +43,8 @@ function loadState() {
   return null;
 }
 
-function saveState(items: InventoryItem[], totalCoins: number, drawsSinceTierA: number) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, totalCoins, drawsSinceTierA }));
+function saveState(items: InventoryItem[], totalCoins: number, drawsSinceTierA: number, drawHistory: DrawHistoryEntry[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, totalCoins, drawsSinceTierA, drawHistory }));
 }
 
 const GachaContext = createContext<GachaState | null>(null);
