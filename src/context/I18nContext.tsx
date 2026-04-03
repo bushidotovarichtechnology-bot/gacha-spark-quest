@@ -78,6 +78,11 @@ const translations = {
     recycledDesc: "+{value} Gacha Coins earned!",
     yourCollection: "Your collection of prizes from Bushido Gacha draws.",
 
+    // Draw History
+    drawHistory: "Draw History",
+    drawHistoryDesc: "A log of all your past gacha draws.",
+    noDrawsYet: "No draws yet — go try your luck!",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
