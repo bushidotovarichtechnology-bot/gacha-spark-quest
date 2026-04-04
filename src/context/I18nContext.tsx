@@ -171,6 +171,10 @@ const translations = {
     drawHistoryDesc: "Catatan semua tarikan gacha kamu.",
     noDrawsYet: "Belum ada tarikan — ayo coba keberuntunganmu!",
 
+    // Sold Out
+    soldOut: "Habis Terjual",
+    soldOutDesc: "Semua tiket sudah ditarik!",
+
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
     returnHome: "Kembali ke Beranda",
