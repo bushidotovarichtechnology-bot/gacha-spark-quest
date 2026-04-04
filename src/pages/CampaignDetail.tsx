@@ -352,26 +352,35 @@ const CampaignDetail = () => {
       {/* Fixed bottom draw buttons */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
-          <div className="mr-auto text-sm">
-            <span className="text-muted-foreground">{t("price")}: </span>
-            <span className="font-bold text-accent">${baseCampaign.price}</span>
-          </div>
-          <Button
-            variant="neon"
-            onClick={() => handleDraw(1)}
-            disabled={isDrawing}
-            className="gap-1.5 px-5"
-          >
-            <Zap className="h-4 w-4" /> {t("draw1x")}
-          </Button>
-          <Button
-            variant="gold"
-            onClick={() => handleDraw(10)}
-            disabled={isDrawing}
-            className="gap-1.5 px-5"
-          >
-            <Sparkles className="h-4 w-4" /> {t("draw10x")}
-          </Button>
+          {totalRemaining <= 0 ? (
+            <div className="flex w-full items-center justify-center gap-2 py-1">
+              <span className="font-display text-lg font-bold tracking-wider text-destructive">{t("soldOut")}</span>
+              <span className="text-sm text-muted-foreground">— {t("soldOutDesc")}</span>
+            </div>
+          ) : (
+            <>
+              <div className="mr-auto text-sm">
+                <span className="text-muted-foreground">{t("price")}: </span>
+                <span className="font-bold text-accent">${baseCampaign.price}</span>
+              </div>
+              <Button
+                variant="neon"
+                onClick={() => handleDraw(1)}
+                disabled={isDrawing || totalRemaining <= 0}
+                className="gap-1.5 px-5"
+              >
+                <Zap className="h-4 w-4" /> {t("draw1x")}
+              </Button>
+              <Button
+                variant="gold"
+                onClick={() => handleDraw(10)}
+                disabled={isDrawing || totalRemaining <= 0}
+                className="gap-1.5 px-5"
+              >
+                <Sparkles className="h-4 w-4" /> {t("draw10x")}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
