@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Coins, Package, Home, Globe, History } from "lucide-react";
+import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
@@ -46,6 +46,13 @@ const Navbar = () => {
             <Coins className="h-4 w-4 text-accent" />
             <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
           </div>
+          <Link
+            to="/topup"
+            className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110"
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            {t("topUp")}
+          </Link>
           <button
             onClick={toggleLocale}
             className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
@@ -89,6 +96,14 @@ const Navbar = () => {
                 <Coins className="h-4 w-4 text-accent" />
                 <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("gachaCoins")}</span>
               </div>
+              <Link
+                to="/topup"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 text-sm font-bold text-accent transition-colors hover:text-accent/80"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {t("topUp")}
+              </Link>
               <button
                 onClick={toggleLocale}
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"

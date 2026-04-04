@@ -27,6 +27,7 @@ interface GachaState {
   drawHistory: DrawHistoryEntry[];
   addPrize: (prize: Omit<InventoryItem, "id" | "wonAt">) => void;
   recycleItem: (id: string) => number;
+  addCoins: (amount: number) => void;
   pityThreshold: number;
 }
 
@@ -104,8 +105,12 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     return value;
   }, []);
 
+  const addCoins = useCallback((amount: number) => {
+    setTotalCoins((prev) => prev + amount);
+  }, []);
+
   return (
-    <GachaContext.Provider value={{ items, totalCoins, drawsSinceTierA, drawHistory, addPrize, recycleItem, pityThreshold: PITY_THRESHOLD }}>
+    <GachaContext.Provider value={{ items, totalCoins, drawsSinceTierA, drawHistory, addPrize, recycleItem, addCoins, pityThreshold: PITY_THRESHOLD }}>
       {children}
     </GachaContext.Provider>
   );

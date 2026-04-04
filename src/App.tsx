@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import CampaignDetail from "./pages/CampaignDetail.tsx";
 import Inventory from "./pages/Inventory.tsx";
 import DrawHistory from "./pages/DrawHistory.tsx";
+import TopUp from "./pages/TopUp.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/campaign/:id" element={<CampaignDetail />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/history" element={<DrawHistory />} />
+            <Route path="/topup" element={<TopUp />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
