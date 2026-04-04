@@ -190,6 +190,21 @@ const translations = {
     soldOut: "Habis Terjual",
     soldOutDesc: "Semua tiket sudah ditarik!",
 
+    // Top Up
+    topUpCoins: "Isi Ulang Koin",
+    topUpDesc: "Pilih paket koin untuk tarikan gacha kamu",
+    bestValue: "TERBAIK",
+    perCoin: "koin",
+    paymentMethods: "Metode pembayaran tersedia (simulasi)",
+    confirmPurchase: "Konfirmasi Pembelian",
+    confirmPurchaseDesc: "Periksa pesananmu sebelum melanjutkan",
+    purchaseSuccess: "Pembelian Berhasil!",
+    purchaseSuccessDesc: "+{coins} Koin Gacha ditambahkan!",
+    processing: "Memproses...",
+    payNow: "Bayar Sekarang",
+    simulationNote: "Ini adalah pembelian simulasi — tidak ada pembayaran sungguhan.",
+    topUp: "Isi Ulang",
+
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
     returnHome: "Kembali ke Beranda",

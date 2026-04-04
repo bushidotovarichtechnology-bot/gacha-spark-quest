@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/campaign/:id" element={<CampaignDetail />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/history" element={<DrawHistory />} />
+            <Route path="/topup" element={<TopUp />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
