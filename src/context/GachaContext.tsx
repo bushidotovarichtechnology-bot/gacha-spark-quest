@@ -27,6 +27,7 @@ interface GachaState {
   drawHistory: DrawHistoryEntry[];
   addPrize: (prize: Omit<InventoryItem, "id" | "wonAt">) => void;
   recycleItem: (id: string) => number;
+  addCoins: (amount: number) => void;
   pityThreshold: number;
 }
 
