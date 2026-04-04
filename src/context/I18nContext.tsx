@@ -83,6 +83,10 @@ const translations = {
     drawHistoryDesc: "A log of all your past gacha draws.",
     noDrawsYet: "No draws yet — go try your luck!",
 
+    // Sold Out
+    soldOut: "Sold Out",
+    soldOutDesc: "All tickets have been drawn!",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
