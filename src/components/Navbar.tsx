@@ -46,6 +46,13 @@ const Navbar = () => {
             <Coins className="h-4 w-4 text-accent" />
             <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
           </div>
+          <Link
+            to="/topup"
+            className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110"
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            {t("topUp")}
+          </Link>
           <button
             onClick={toggleLocale}
             className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
