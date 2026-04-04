@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import CampaignDetail from "./pages/CampaignDetail.tsx";
 import Inventory from "./pages/Inventory.tsx";
 import DrawHistory from "./pages/DrawHistory.tsx";
+import TopUp from "./pages/TopUp.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
