@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart } from "lucide-react";
+import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const { totalCoins } = useGacha();
   const { t, locale, setLocale } = useI18n();
+  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
@@ -53,6 +55,23 @@ const Navbar = () => {
             <ShoppingCart className="h-3.5 w-3.5" />
             {t("topUp")}
           </Link>
+          {user ? (
+            <button
+              onClick={signOut}
+              className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              {t("logout")}
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-all hover:brightness-110"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              {t("login")}
+            </Link>
+          )}
           <button
             onClick={toggleLocale}
             className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
@@ -104,6 +123,24 @@ const Navbar = () => {
                 <ShoppingCart className="h-4 w-4" />
                 {t("topUp")}
               </Link>
+              {user ? (
+                <button
+                  onClick={() => { signOut(); setIsOpen(false); }}
+                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t("logout")}
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {t("login")}
+                </Link>
+              )}
               <button
                 onClick={toggleLocale}
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
