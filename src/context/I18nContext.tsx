@@ -102,6 +102,27 @@ const translations = {
     simulationNote: "This is a simulated purchase — no real payment is charged.",
     topUp: "Top Up",
 
+    // Auth
+    login: "Login",
+    loginDesc: "Sign in to your Bushido Gacha account",
+    loginFailed: "Login failed",
+    loginSuccess: "Welcome back!",
+    loginWithGoogle: "Sign in with Google",
+    register: "Register",
+    registerDesc: "Create a new Bushido Gacha account",
+    registerFailed: "Registration failed",
+    registerSuccess: "Registration successful!",
+    checkEmail: "Please check your email to verify your account.",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    passwordMismatch: "Passwords do not match",
+    passwordTooShort: "Password must be at least 6 characters",
+    signUpWithGoogle: "Sign up with Google",
+    noAccount: "Don't have an account?",
+    hasAccount: "Already have an account?",
+    or: "or",
+    logout: "Logout",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
