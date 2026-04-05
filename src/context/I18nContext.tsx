@@ -226,6 +226,27 @@ const translations = {
     simulationNote: "Ini adalah pembelian simulasi — tidak ada pembayaran sungguhan.",
     topUp: "Isi Ulang",
 
+    // Auth
+    login: "Masuk",
+    loginDesc: "Masuk ke akun Bushido Gacha kamu",
+    loginFailed: "Gagal masuk",
+    loginSuccess: "Selamat datang kembali!",
+    loginWithGoogle: "Masuk dengan Google",
+    register: "Daftar",
+    registerDesc: "Buat akun Bushido Gacha baru",
+    registerFailed: "Gagal mendaftar",
+    registerSuccess: "Pendaftaran berhasil!",
+    checkEmail: "Silakan cek email untuk verifikasi akun.",
+    password: "Kata Sandi",
+    confirmPassword: "Konfirmasi Kata Sandi",
+    passwordMismatch: "Kata sandi tidak cocok",
+    passwordTooShort: "Kata sandi minimal 6 karakter",
+    signUpWithGoogle: "Daftar dengan Google",
+    noAccount: "Belum punya akun?",
+    hasAccount: "Sudah punya akun?",
+    or: "atau",
+    logout: "Keluar",
+
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
     returnHome: "Kembali ke Beranda",
