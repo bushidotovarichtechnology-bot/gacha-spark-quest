@@ -94,6 +94,11 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-xs text-accent hover:underline">
+                  {t("forgotPasswordLink")}
+                </Link>
+              </div>
               <Button type="submit" variant="neon" className="w-full" disabled={loading}>
                 {loading ? t("processing") : t("login")}
               </Button>
