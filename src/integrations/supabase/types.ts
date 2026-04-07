@@ -94,6 +94,36 @@ export type Database = {
         }
         Relationships: []
       }
+      draws: {
+        Row: {
+          campaign_id: string
+          coin_value: number
+          created_at: string
+          id: string
+          prize_name: string
+          tier_label: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          coin_value?: number
+          created_at?: string
+          id?: string
+          prize_name: string
+          tier_label: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          coin_value?: number
+          created_at?: string
+          id?: string
+          prize_name?: string
+          tier_label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tier_prizes: {
         Row: {
           created_at: string
@@ -149,6 +179,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_stats: { Args: never; Returns: Json }
+      get_popular_campaigns: {
+        Args: { lim?: number }
+        Returns: {
+          campaign_id: string
+          campaign_title: string
+          draw_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
