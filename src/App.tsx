@@ -7,6 +7,7 @@ import { GachaProvider } from "./context/GachaContext";
 import { I18nProvider } from "./context/I18nContext";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import CampaignDetail from "./pages/CampaignDetail.tsx";
 import Inventory from "./pages/Inventory.tsx";
@@ -17,6 +18,12 @@ import Register from "./pages/Register.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AdminLogin from "./pages/admin/AdminLogin.tsx";
+import AdminLayout from "./pages/admin/AdminLayout.tsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
+import AdminUsers from "./pages/admin/AdminUsers.tsx";
+import AdminCampaigns from "./pages/admin/AdminCampaigns.tsx";
+import AdminProbability from "./pages/admin/AdminProbability.tsx";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +46,13 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="campaigns" element={<AdminCampaigns />} />
+              <Route path="probability" element={<AdminProbability />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
