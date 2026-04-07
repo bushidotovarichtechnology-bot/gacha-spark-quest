@@ -149,13 +149,23 @@ const CampaignDetail = () => {
         results.push({ tier: selectedTier.label, color: selectedTier.color, prize });
       }
 
-      // Update remaining counts in database
-      const updates = Object.entries(remainingCopy).map(([tierId, rem]) =>
+      // Update remaining counts in database & record draws
+      const tierUpdates = Object.entries(remainingCopy).map(([tierId, rem]) =>
         supabase.from("campaign_tiers").update({ remaining: rem }).eq("id", tierId)
       );
-      await Promise.all(updates);
 
-      // Invalidate cache so UI reflects updated remaining
+      const drawInserts = user ? results.map((r) =>
+        supabase.from("draws").insert({
+          user_id: user.id,
+          campaign_id: campaign.id,
+          tier_label: r.tier,
+          prize_name: r.prize,
+          coin_value: coinValues[r.tier] || 15,
+        })
+      ) : [];
+
+      await Promise.all([...tierUpdates, ...drawInserts]);
+
       queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
 
