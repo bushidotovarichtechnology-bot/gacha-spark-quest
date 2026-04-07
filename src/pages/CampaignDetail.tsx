@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
+import { supabase } from "@/integrations/supabase/client";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -14,64 +16,25 @@ import campaignWallet from "@/assets/campaign-wallet.jpg";
 import campaignFigurine from "@/assets/campaign-figurine.jpg";
 import campaignGaming from "@/assets/campaign-gaming.jpg";
 
-const campaignData: Record<string, {
-  title: string; image: string; price: number; description: string;
-  tiers: { name: string; label: string; color: string; icon: typeof Crown; remaining: number; total: number; prizes: string[] }[];
-}> = {
-  "mystery-box": {
-    title: "Mystery Blind Box", image: campaignBlindbox, price: 5,
-    description: "What lies inside the mystery box? Rare collectibles, limited-edition gear, or the legendary Grand Prize await the bold.",
-    tiers: [
-      { name: "Grand Prize", label: "S", color: "text-accent", icon: Crown, remaining: 1, total: 1, prizes: ["24K Gold-Plated Katana Replica"] },
-      { name: "Tier A", label: "A", color: "text-neon-purple", icon: Star, remaining: 2, total: 3, prizes: ["Premium Headphones", "Mechanical Keyboard", "Smart Watch"] },
-      { name: "Tier B", label: "B", color: "text-neon-pink", icon: Gift, remaining: 15, total: 20, prizes: ["Wireless Mouse", "LED Strip Lights", "Phone Stand"] },
-      { name: "Tier C", label: "C", color: "text-muted-foreground", icon: Award, remaining: 27, total: 76, prizes: ["Sticker Pack", "Keychain", "Pin Badge"] },
-    ],
-  },
-  "desk-setup": {
-    title: "Ultimate Desk Setup", image: campaignDesksetup, price: 15,
-    description: "Build your dream workstation. Every ticket is a chance at premium peripherals, monitors, and the ultimate ergonomic throne.",
-    tiers: [
-      { name: "Grand Prize", label: "S", color: "text-accent", icon: Crown, remaining: 1, total: 1, prizes: ["Full Ergonomic Desk Setup"] },
-      { name: "Tier A", label: "A", color: "text-neon-purple", icon: Star, remaining: 1, total: 3, prizes: ["4K Monitor", "Standing Desk", "Herman Miller Chair"] },
-      { name: "Tier B", label: "B", color: "text-neon-pink", icon: Gift, remaining: 5, total: 16, prizes: ["Webcam", "Desk Mat", "Monitor Arm"] },
-      { name: "Tier C", label: "C", color: "text-muted-foreground", icon: Award, remaining: 5, total: 30, prizes: ["Cable Organizer", "Coaster Set", "USB Hub"] },
-    ],
-  },
-  "digital-wallet": {
-    title: "Digital Wallets", image: campaignWallet, price: 8,
-    description: "Crypto meets fortune. Draw for loaded digital wallets, hardware keys, and the ultimate blockchain treasure.",
-    tiers: [
-      { name: "Grand Prize", label: "S", color: "text-accent", icon: Crown, remaining: 1, total: 1, prizes: ["$500 Crypto Wallet"] },
-      { name: "Tier A", label: "A", color: "text-neon-purple", icon: Star, remaining: 3, total: 5, prizes: ["$100 Gift Card", "Hardware Wallet", "NFT Bundle"] },
-      { name: "Tier B", label: "B", color: "text-neon-pink", icon: Gift, remaining: 30, total: 44, prizes: ["$25 Gift Card", "Token Pack", "Digital Art"] },
-      { name: "Tier C", label: "C", color: "text-muted-foreground", icon: Award, remaining: 44, total: 150, prizes: ["$5 Credit", "Sticker Pack", "Badge"] },
-    ],
-  },
-  "rare-figurine": {
-    title: "Rare Figurine Collection", image: campaignFigurine, price: 10,
-    description: "Limited-edition anime figurines await. Will you pull the ultra-rare 1-of-1 chase variant?",
-    tiers: [
-      { name: "Grand Prize", label: "S", color: "text-accent", icon: Crown, remaining: 1, total: 1, prizes: ["Chase Variant 1/1 Figurine"] },
-      { name: "Tier A", label: "A", color: "text-neon-purple", icon: Star, remaining: 1, total: 2, prizes: ["Premium Scale Figure", "Signed Art Print"] },
-      { name: "Tier B", label: "B", color: "text-neon-pink", icon: Gift, remaining: 3, total: 7, prizes: ["Standard Figure", "Art Book"] },
-      { name: "Tier C", label: "C", color: "text-muted-foreground", icon: Award, remaining: 3, total: 20, prizes: ["Mini Figure", "Poster", "Acrylic Stand"] },
-    ],
-  },
-  "gaming-bundle": {
-    title: "Gaming Console Bundle", image: campaignGaming, price: 20,
-    description: "The ultimate gamer draw. Consoles, controllers, and the legendary collector's edition are all in the pool.",
-    tiers: [
-      { name: "Grand Prize", label: "S", color: "text-accent", icon: Crown, remaining: 1, total: 1, prizes: ["PS5 Pro + Game Library"] },
-      { name: "Tier A", label: "A", color: "text-neon-purple", icon: Star, remaining: 1, total: 2, prizes: ["Nintendo Switch OLED", "Xbox Controller Elite"] },
-      { name: "Tier B", label: "B", color: "text-neon-pink", icon: Gift, remaining: 2, total: 7, prizes: ["Gaming Headset", "Pro Controller"] },
-      { name: "Tier C", label: "C", color: "text-muted-foreground", icon: Award, remaining: 1, total: 15, prizes: ["Game Pass 1-Month", "Grip Case", "Thumb Grips"] },
-    ],
-  },
+const imageMap: Record<string, string> = {
+  "/assets/campaign-blindbox.jpg": campaignBlindbox,
+  "/assets/campaign-desksetup.jpg": campaignDesksetup,
+  "/assets/campaign-wallet.jpg": campaignWallet,
+  "/assets/campaign-figurine.jpg": campaignFigurine,
+  "/assets/campaign-gaming.jpg": campaignGaming,
 };
 
-// Fallback
-const fallbackCampaign = campaignData["mystery-box"];
+function resolveImage(url: string) {
+  return imageMap[url] || url || campaignBlindbox;
+}
+
+const iconMap: Record<string, typeof Crown> = { S: Crown, A: Star, B: Gift, C: Award };
+const colorMap: Record<string, string> = {
+  S: "text-accent",
+  A: "text-neon-purple",
+  B: "text-neon-pink",
+  C: "text-muted-foreground",
+};
 
 const tierBgMap: Record<string, string> = {
   "text-accent": "bg-accent/10 border-accent/30",
@@ -87,104 +50,118 @@ const tierGlowMap: Record<string, string> = {
   "text-muted-foreground": "",
 };
 
-const CAMPAIGN_STORAGE_KEY = "bushido-campaign-remaining";
-
-function loadCampaignRemaining(): Record<string, Record<string, number>> {
-  try {
-    const raw = localStorage.getItem(CAMPAIGN_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return {};
-}
-
-function saveCampaignRemaining(data: Record<string, Record<string, number>>) {
-  localStorage.setItem(CAMPAIGN_STORAGE_KEY, JSON.stringify(data));
-}
+const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const baseCampaign = campaignData[id || ""] || fallbackCampaign;
-  const campaignId = id || "mystery-box";
+  const campaignId = id || "";
   const { addPrize } = useGacha();
   const { t } = useI18n();
+  const queryClient = useQueryClient();
 
-  // Track remaining per tier per campaign in state + localStorage
-  const [remainingMap, setRemainingMap] = useState<Record<string, number>>(() => {
-    const saved = loadCampaignRemaining()[campaignId];
-    if (saved) return saved;
-    const initial: Record<string, number> = {};
-    baseCampaign.tiers.forEach((tier) => {
-      initial[tier.label] = tier.remaining;
-    });
-    return initial;
+  const { data: campaign, isLoading } = useQuery({
+    queryKey: ["campaign", campaignId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("*, campaign_tiers(*, tier_prizes(*))")
+        .eq("id", campaignId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!campaignId,
   });
-
-  const tiers = baseCampaign.tiers.map((tier) => ({
-    ...tier,
-    remaining: Math.max(remainingMap[tier.label] ?? tier.remaining, 0),
-  }));
-
-  const totalRemaining = tiers.reduce((s, t) => s + t.remaining, 0);
-  const totalTickets = tiers.reduce((s, t) => s + t.total, 0);
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
 
-  const handleDraw = useCallback((count: number) => {
+  if (isLoading || !campaign) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="flex items-center justify-center pt-32">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        </div>
+      </div>
+    );
+  }
+
+  const image = resolveImage(campaign.image_url);
+  const tiers = [...(campaign.campaign_tiers || [])]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((tier) => ({
+      ...tier,
+      color: colorMap[tier.label] || "text-muted-foreground",
+      icon: iconMap[tier.label] || Award,
+      prizes: (tier.tier_prizes || []).map((p: { name: string }) => p.name),
+    }));
+
+  const totalRemaining = tiers.reduce((s, t) => s + t.remaining, 0);
+  const totalTickets = tiers.reduce((s, t) => s + t.total, 0);
+
+  const handleDraw = (count: number) => {
     if (isDrawing || totalRemaining <= 0) return;
     const actualCount = Math.min(count, totalRemaining);
     setDrawCount(actualCount);
     setIsDrawing(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const results: { tier: string; color: string; prize: string }[] = [];
-      // Work with a mutable copy of remaining
-      const currentRemaining = { ...remainingMap };
+      const remainingCopy: Record<string, number> = {};
+      tiers.forEach((t) => { remainingCopy[t.id] = t.remaining; });
 
       for (let i = 0; i < actualCount; i++) {
-        const activeTiers = tiers.map((tier) => ({
-          ...tier,
-          remaining: Math.max(currentRemaining[tier.label] ?? 0, 0),
-        })).filter((tier) => tier.remaining > 0);
+        const activeTiers = tiers
+          .map((t) => ({ ...t, remaining: Math.max(remainingCopy[t.id] ?? 0, 0) }))
+          .filter((t) => t.remaining > 0);
 
         if (activeTiers.length === 0) break;
 
-        const totalWeight = activeTiers.reduce((a, b) => a + b.remaining, 0);
+        // Weighted random using probability_weight
+        const totalWeight = activeTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
         let r = Math.random() * totalWeight;
         let selectedTier = activeTiers[activeTiers.length - 1];
         for (const tier of activeTiers) {
-          r -= tier.remaining;
+          r -= Number(tier.probability_weight);
           if (r <= 0) { selectedTier = tier; break; }
         }
 
-        const prize = selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)];
-        currentRemaining[selectedTier.label] = (currentRemaining[selectedTier.label] ?? 0) - 1;
+        const prize = selectedTier.prizes.length > 0
+          ? selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)]
+          : selectedTier.name;
+
+        remainingCopy[selectedTier.id] = (remainingCopy[selectedTier.id] ?? 0) - 1;
 
         addPrize({
           prize,
           tier: selectedTier.label as "S" | "A" | "B" | "C",
-          campaign: baseCampaign.title,
-          campaignId,
-          image: baseCampaign.image,
-          coinValue: selectedTier.label === "S" ? 1000 : selectedTier.label === "A" ? 200 : selectedTier.label === "B" ? 80 : 15,
+          campaign: campaign.title,
+          campaignId: campaign.id,
+          image,
+          coinValue: coinValues[selectedTier.label] || 15,
         });
 
         results.push({ tier: selectedTier.label, color: selectedTier.color, prize });
       }
 
-      // Save updated remaining
-      setRemainingMap(currentRemaining);
-      const allSaved = loadCampaignRemaining();
-      allSaved[campaignId] = currentRemaining;
-      saveCampaignRemaining(allSaved);
+      // Update remaining counts in database
+      const updates = Object.entries(remainingCopy).map(([tierId, rem]) =>
+        supabase.from("campaign_tiers").update({ remaining: rem }).eq("id", tierId)
+      );
+      await Promise.all(updates);
+
+      // Invalidate cache so UI reflects updated remaining
+      queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
 
       setDrawnPrizes(results);
       setIsDrawing(false);
       setShowResult(true);
     }, 2400);
-  }, [isDrawing, totalRemaining, remainingMap, tiers, baseCampaign, campaignId, addPrize]);
+  };
 
   return (
     <div className="min-h-screen pb-28">
@@ -192,7 +169,7 @@ const CampaignDetail = () => {
 
       {/* Hero banner */}
       <div className="relative h-56 overflow-hidden pt-16 sm:h-72">
-        <img src={baseCampaign.image} alt={baseCampaign.title} className="h-full w-full object-cover" />
+        <img src={image} alt={campaign.title} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="container mx-auto">
@@ -200,20 +177,19 @@ const CampaignDetail = () => {
               <ArrowLeft className="h-3.5 w-3.5" /> {t("backToCampaigns")}
             </Link>
             <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {baseCampaign.title}
+              {campaign.title}
             </h1>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 pt-6">
-        {/* Description & stats */}
-        <p className="mb-6 max-w-xl text-sm text-muted-foreground">{baseCampaign.description}</p>
+        <p className="mb-6 max-w-xl text-sm text-muted-foreground">{campaign.description}</p>
 
         <div className="mb-8 flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Ticket className="h-4 w-4 text-accent" />
-            <span className="text-sm font-semibold text-foreground">${baseCampaign.price}{t("ticket")}</span>
+            <span className="text-sm font-semibold text-foreground">${campaign.price}{t("ticket")}</span>
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -224,7 +200,6 @@ const CampaignDetail = () => {
           </div>
         </div>
 
-        {/* Prize Tiers */}
         <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.2em] text-accent">
           {t("prizePool")}
         </h2>
@@ -233,14 +208,13 @@ const CampaignDetail = () => {
             const pct = tier.total > 0 ? (tier.remaining / tier.total) * 100 : 0;
             return (
               <motion.div
-                key={tier.name}
+                key={tier.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
                 className={`overflow-hidden rounded-xl border p-4 ${tierBgMap[tier.color]} ${tierGlowMap[tier.color]}`}
               >
                 <div className="flex items-start gap-3">
-                  {/* Tier badge */}
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background/50 font-display text-lg font-black ${tier.color}`}>
                     {tier.label}
                   </div>
@@ -253,7 +227,6 @@ const CampaignDetail = () => {
                         {tier.remaining}/{tier.total} {t("left")}
                       </span>
                     </div>
-                    {/* Prize list */}
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       {tier.prizes.map((p) => (
                         <span key={p} className="rounded-md bg-background/40 px-2 py-0.5 text-xs text-foreground/80">
@@ -261,7 +234,6 @@ const CampaignDetail = () => {
                         </span>
                       ))}
                     </div>
-                    {/* Progress bar */}
                     <div className="h-1.5 overflow-hidden rounded-full bg-background/30">
                       <motion.div
                         className={`h-full rounded-full ${tier.color === "text-accent" ? "bg-accent" : tier.color === "text-neon-purple" ? "bg-primary" : tier.color === "text-neon-pink" ? "bg-neon-pink" : "bg-muted-foreground"}`}
@@ -277,7 +249,6 @@ const CampaignDetail = () => {
           })}
         </div>
 
-        {/* Last One Prize callout */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -294,7 +265,6 @@ const CampaignDetail = () => {
         </motion.div>
       </div>
 
-      {/* Draw animation overlay */}
       <AnimatePresence>
         {isDrawing && (
           <motion.div
@@ -304,7 +274,6 @@ const CampaignDetail = () => {
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md"
           >
             <div className="flex flex-col items-center gap-6">
-              {/* Shaking box */}
               <motion.div
                 animate={{
                   rotate: [0, -5, 5, -8, 8, -3, 3, 0],
@@ -313,7 +282,6 @@ const CampaignDetail = () => {
                 transition={{ duration: 0.5, repeat: 3, ease: "easeInOut" }}
                 className="relative"
               >
-                {/* Glow rings */}
                 <motion.div
                   animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }}
                   transition={{ duration: 1.2, repeat: Infinity }}
@@ -341,7 +309,6 @@ const CampaignDetail = () => {
         )}
       </AnimatePresence>
 
-      {/* Result modal */}
       <PrizeRevealModal
         open={showResult}
         onClose={() => setShowResult(false)}
@@ -349,7 +316,6 @@ const CampaignDetail = () => {
         drawCount={drawCount}
       />
 
-      {/* Fixed bottom draw buttons */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
           {totalRemaining <= 0 ? (
@@ -361,7 +327,7 @@ const CampaignDetail = () => {
             <>
               <div className="mr-auto text-sm">
                 <span className="text-muted-foreground">{t("price")}: </span>
-                <span className="font-bold text-accent">${baseCampaign.price}</span>
+                <span className="font-bold text-accent">${campaign.price}</span>
               </div>
               <Button
                 variant="neon"

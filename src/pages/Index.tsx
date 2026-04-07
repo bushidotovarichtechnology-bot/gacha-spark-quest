@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CampaignCard from "@/components/CampaignCard";
 import { Sparkles, Shield, Clock, Trophy } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
+import { supabase } from "@/integrations/supabase/client";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -11,17 +13,49 @@ import campaignWallet from "@/assets/campaign-wallet.jpg";
 import campaignFigurine from "@/assets/campaign-figurine.jpg";
 import campaignGaming from "@/assets/campaign-gaming.jpg";
 
-const campaigns = [
-  { id: "mystery-box", title: "Mystery Blind Box", image: campaignBlindbox, price: 5, remaining: 45, total: 100, hot: true },
-  { id: "desk-setup", title: "Ultimate Desk Setup", image: campaignDesksetup, price: 15, remaining: 12, total: 50, hot: false },
-  { id: "digital-wallet", title: "Digital Wallets", image: campaignWallet, price: 8, remaining: 78, total: 200, hot: true },
-  { id: "rare-figurine", title: "Rare Figurine Collection", image: campaignFigurine, price: 10, remaining: 8, total: 30, hot: false },
-  { id: "gaming-bundle", title: "Gaming Console Bundle", image: campaignGaming, price: 20, remaining: 5, total: 25, hot: true },
-  { id: "mystery-box-2", title: "Midnight Mystery Box", image: campaignBlindbox, price: 3, remaining: 120, total: 300, hot: false },
-];
+// Fallback image map for campaigns using local assets
+const imageMap: Record<string, string> = {
+  "/assets/campaign-blindbox.jpg": campaignBlindbox,
+  "/assets/campaign-desksetup.jpg": campaignDesksetup,
+  "/assets/campaign-wallet.jpg": campaignWallet,
+  "/assets/campaign-figurine.jpg": campaignFigurine,
+  "/assets/campaign-gaming.jpg": campaignGaming,
+};
+
+function resolveImage(url: string) {
+  return imageMap[url] || url || campaignBlindbox;
+}
 
 const Index = () => {
   const { t } = useI18n();
+
+  const { data: campaigns = [], isLoading } = useQuery({
+    queryKey: ["campaigns"],
+    queryFn: async () => {
+      const { data: camps, error } = await supabase
+        .from("campaigns")
+        .select("*, campaign_tiers(remaining, total)")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      return (camps || []).map((c) => {
+        const tiers = c.campaign_tiers || [];
+        const remaining = tiers.reduce((s: number, t: { remaining: number }) => s + t.remaining, 0);
+        const total = tiers.reduce((s: number, t: { total: number }) => s + t.total, 0);
+        return {
+          id: c.id,
+          title: c.title,
+          image: resolveImage(c.image_url),
+          price: c.price,
+          remaining,
+          total,
+          hot: c.is_hot,
+        };
+      });
+    },
+  });
 
   const features = [
     { icon: Shield, title: t("verifiedFair"), desc: t("verifiedFairDesc") },
@@ -70,11 +104,19 @@ const Index = () => {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
-            {campaigns.map((c) => (
-              <CampaignCard key={c.id} {...c} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-64 animate-pulse rounded-xl bg-secondary" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
+              {campaigns.map((c) => (
+                <CampaignCard key={c.id} {...c} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
