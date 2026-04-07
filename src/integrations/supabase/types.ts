@@ -14,16 +14,151 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaign_tiers: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          label: string
+          name: string
+          probability_weight: number
+          remaining: number
+          sort_order: number
+          total: number
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          label: string
+          name: string
+          probability_weight?: number
+          remaining?: number
+          sort_order?: number
+          total?: number
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          name?: string
+          probability_weight?: number
+          remaining?: number
+          sort_order?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_tiers_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_url: string
+          is_active: boolean
+          is_hot: boolean
+          price: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id: string
+          image_url?: string
+          is_active?: boolean
+          is_hot?: boolean
+          price?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          is_hot?: boolean
+          price?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tier_prizes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          tier_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          tier_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          tier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tier_prizes_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +285,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
