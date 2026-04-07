@@ -9,7 +9,6 @@ import { Plus, Trash2, Save, ChevronDown, ChevronUp } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
-type CampaignTier = Tables<"campaign_tiers"> & { tier_prizes: Tables<"tier_prizes">[] };
 
 const emptyTier = { label: "C", name: "", total: 1, remaining: 1, probability_weight: 1, sort_order: 0 };
 
