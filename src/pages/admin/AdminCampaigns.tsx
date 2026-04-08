@@ -201,6 +201,18 @@ const AdminCampaigns = () => {
                   <span className="text-xs text-muted-foreground">Hot</span>
                   <Switch checked={c.is_hot} onCheckedChange={(v) => updateCampaign(c.id, { is_hot: v })} />
                 </div>
+                <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="Upload image">
+                  <Image className="h-4 w-4 text-muted-foreground" />
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const url = await uploadCampaignImage(file, c.id);
+                      await updateCampaign(c.id, { image_url: url });
+                      toast({ title: "Image updated!" });
+                    } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
+                  }} />
+                </label>
                 <Button variant="ghost" size="sm" onClick={() => toggleExpand(c.id)}>
                   {expandedId === c.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
