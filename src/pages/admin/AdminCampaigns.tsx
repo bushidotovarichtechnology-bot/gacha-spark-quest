@@ -5,8 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, Save, ChevronDown, ChevronUp, Upload, Image } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+const uploadCampaignImage = async (file: File, campaignId: string) => {
+  const ext = file.name.split(".").pop();
+  const path = `${campaignId}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("campaign-images").upload(path, file, { upsert: true });
+  if (error) throw error;
+  return `${SUPABASE_URL}/storage/v1/object/public/campaign-images/${path}`;
+};
 
 type Campaign = Tables<"campaigns">;
 
@@ -138,9 +148,32 @@ const AdminCampaigns = () => {
           </div>
           <Input placeholder="Description" value={newCampaign.description} onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })} />
           <div className="grid grid-cols-2 gap-3">
-            <Input placeholder="Image URL" value={newCampaign.image_url} onChange={(e) => setNewCampaign({ ...newCampaign, image_url: e.target.value })} />
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Image (upload or URL)</label>
+              <div className="flex gap-2">
+                <Input placeholder="Image URL" value={newCampaign.image_url} onChange={(e) => setNewCampaign({ ...newCampaign, image_url: e.target.value })} className="flex-1" />
+                <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-input bg-background hover:bg-accent">
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !newCampaign.id) { toast({ title: "Set Campaign ID first", variant: "destructive" }); return; }
+                    try {
+                      const url = await uploadCampaignImage(file, newCampaign.id);
+                      setNewCampaign({ ...newCampaign, image_url: url });
+                      toast({ title: "Image uploaded!" });
+                    } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
+                  }} />
+                </label>
+              </div>
+            </div>
             <Input type="number" placeholder="Price" value={newCampaign.price} onChange={(e) => setNewCampaign({ ...newCampaign, price: Number(e.target.value) })} />
           </div>
+          {newCampaign.image_url && (
+            <div className="flex items-center gap-2">
+              <img src={newCampaign.image_url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
+              <span className="text-xs text-muted-foreground truncate flex-1">{newCampaign.image_url}</span>
+            </div>
+          )}
           <Button onClick={createCampaign} disabled={loading} className="gap-1.5">
             <Plus className="h-4 w-4" /> Create Campaign
           </Button>
@@ -168,6 +201,18 @@ const AdminCampaigns = () => {
                   <span className="text-xs text-muted-foreground">Hot</span>
                   <Switch checked={c.is_hot} onCheckedChange={(v) => updateCampaign(c.id, { is_hot: v })} />
                 </div>
+                <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="Upload image">
+                  <Image className="h-4 w-4 text-muted-foreground" />
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const url = await uploadCampaignImage(file, c.id);
+                      await updateCampaign(c.id, { image_url: url });
+                      toast({ title: "Image updated!" });
+                    } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
+                  }} />
+                </label>
                 <Button variant="ghost" size="sm" onClick={() => toggleExpand(c.id)}>
                   {expandedId === c.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
