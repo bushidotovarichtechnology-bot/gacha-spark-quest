@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
 import { useI18n } from "@/context/I18nContext";
 import { Button } from "@/components/ui/button";
