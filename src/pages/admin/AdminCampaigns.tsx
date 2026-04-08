@@ -5,8 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, Save, ChevronDown, ChevronUp, Upload, Image } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+const uploadCampaignImage = async (file: File, campaignId: string) => {
+  const ext = file.name.split(".").pop();
+  const path = `${campaignId}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("campaign-images").upload(path, file, { upsert: true });
+  if (error) throw error;
+  return `${SUPABASE_URL}/storage/v1/object/public/campaign-images/${path}`;
+};
 
 type Campaign = Tables<"campaigns">;
 
