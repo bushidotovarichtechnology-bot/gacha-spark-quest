@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, ChevronDown, ChevronUp, Upload, Image } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
+import { CampaignRow } from "@/components/admin/CampaignRow";
 import { TierEditor, type CampaignTier } from "@/components/admin/TierEditor";
 import type { Tables } from "@/integrations/supabase/types";
 
