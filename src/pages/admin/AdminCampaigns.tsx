@@ -150,69 +150,46 @@ const AdminCampaigns = () => {
 
       <div className="space-y-3">
         {campaigns.map((c) => (
-          <Card key={c.id} className="border-border/50">
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                {c.image_url && <img src={c.image_url} alt={c.title} className="h-10 w-10 rounded-lg object-cover" />}
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm truncate">{c.title}</p>
-                  <p className="text-xs text-muted-foreground">ID: {c.id} • ${c.price}/ticket</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Active</span>
-                  <Switch checked={c.is_active} onCheckedChange={(v) => updateCampaign(c.id, { is_active: v })} />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Hot</span>
-                  <Switch checked={c.is_hot} onCheckedChange={(v) => updateCampaign(c.id, { is_hot: v })} />
-                </div>
-                <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="Upload image">
-                  <Image className="h-4 w-4 text-muted-foreground" />
-                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      const url = await uploadCampaignImage(file, c.id);
-                      await updateCampaign(c.id, { image_url: url });
-                      toast({ title: "Image updated!" });
-                    } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
-                  }} />
-                </label>
-                <Button variant="ghost" size="sm" onClick={() => toggleExpand(c.id)}>
-                  {expandedId === c.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => deleteCampaign(c.id)} className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {expandedId === c.id && (
-              <CardContent className="border-t border-border/50 pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold">Tiers & Prizes</h3>
-                  <Button size="sm" variant="outline" onClick={() => addTier(c.id)} className="gap-1">
-                    <Plus className="h-3 w-3" /> Add Tier
-                  </Button>
-                </div>
-                <div className="space-y-4">
-                  {tiers.map((tier) => (
-                    <TierEditor
-                      key={tier.id}
-                      tier={tier}
-                      onUpdate={(u) => updateTier(tier.id, u)}
-                      onDelete={() => deleteTier(tier.id, c.id)}
-                      onAddPrize={(name) => addPrize(tier.id, name)}
-                      onDeletePrize={deletePrize}
-                      onRefresh={() => fetchTiers(c.id)}
-                    />
-                  ))}
-                  {tiers.length === 0 && <p className="text-sm text-muted-foreground">No tiers yet. Add one to get started.</p>}
-                </div>
-              </CardContent>
-            )}
+          <Card key={c.id} className="border-border/50 group">
+            <CampaignRow
+              campaign={c}
+              isExpanded={expandedId === c.id}
+              onToggleExpand={() => toggleExpand(c.id)}
+              onUpdate={updateCampaign}
+              onDelete={deleteCampaign}
+              onUploadImage={async (id, file) => {
+                try {
+                  const url = await uploadCampaignImage(file, id);
+                  await updateCampaign(id, { image_url: url });
+                  toast({ title: "Image updated!" });
+                } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
+              }}
+            >
+              {expandedId === c.id && (
+                <CardContent className="border-t border-border/50 pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold">Tiers & Prizes</h3>
+                    <Button size="sm" variant="outline" onClick={() => addTier(c.id)} className="gap-1">
+                      <Plus className="h-3 w-3" /> Add Tier
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {tiers.map((tier) => (
+                      <TierEditor
+                        key={tier.id}
+                        tier={tier}
+                        onUpdate={(u) => updateTier(tier.id, u)}
+                        onDelete={() => deleteTier(tier.id, c.id)}
+                        onAddPrize={(name) => addPrize(tier.id, name)}
+                        onDeletePrize={deletePrize}
+                        onRefresh={() => fetchTiers(c.id)}
+                      />
+                    ))}
+                    {tiers.length === 0 && <p className="text-sm text-muted-foreground">No tiers yet. Add one to get started.</p>}
+                  </div>
+                </CardContent>
+              )}
+            </CampaignRow>
           </Card>
         ))}
         {campaigns.length === 0 && (
