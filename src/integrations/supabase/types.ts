@@ -19,6 +19,7 @@ export type Database = {
           campaign_id: string
           created_at: string
           id: string
+          image_url: string
           label: string
           name: string
           probability_weight: number
@@ -30,6 +31,7 @@ export type Database = {
           campaign_id: string
           created_at?: string
           id?: string
+          image_url?: string
           label: string
           name: string
           probability_weight?: number
@@ -41,6 +43,7 @@ export type Database = {
           campaign_id?: string
           created_at?: string
           id?: string
+          image_url?: string
           label?: string
           name?: string
           probability_weight?: number
@@ -128,18 +131,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string
           name: string
           tier_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string
           name: string
           tier_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          image_url?: string
           name?: string
           tier_id?: string
         }
