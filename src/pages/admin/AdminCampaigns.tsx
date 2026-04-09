@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save, ChevronDown, ChevronUp, Upload, Image } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, Upload, Image } from "lucide-react";
+import { TierEditor, type CampaignTier } from "@/components/admin/TierEditor";
 import type { Tables } from "@/integrations/supabase/types";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -28,8 +29,6 @@ const AdminCampaigns = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [tiers, setTiers] = useState<CampaignTier[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // New campaign form
   const [newCampaign, setNewCampaign] = useState({ id: "", title: "", description: "", image_url: "", price: 5 });
 
   const fetchCampaigns = async () => {
@@ -49,13 +48,8 @@ const AdminCampaigns = () => {
   useEffect(() => { fetchCampaigns(); }, []);
 
   const toggleExpand = (id: string) => {
-    if (expandedId === id) {
-      setExpandedId(null);
-      setTiers([]);
-    } else {
-      setExpandedId(id);
-      fetchTiers(id);
-    }
+    if (expandedId === id) { setExpandedId(null); setTiers([]); }
+    else { setExpandedId(id); fetchTiers(id); }
   };
 
   const createCampaign = async () => {
@@ -65,56 +59,32 @@ const AdminCampaigns = () => {
     }
     setLoading(true);
     const { error } = await supabase.from("campaigns").insert(newCampaign);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Campaign created!" });
-      setNewCampaign({ id: "", title: "", description: "", image_url: "", price: 5 });
-      fetchCampaigns();
-    }
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Campaign created!" }); setNewCampaign({ id: "", title: "", description: "", image_url: "", price: 5 }); fetchCampaigns(); }
     setLoading(false);
   };
 
   const updateCampaign = async (id: string, updates: Partial<Campaign>) => {
     const { error } = await supabase.from("campaigns").update(updates).eq("id", id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Updated!" });
-      fetchCampaigns();
-    }
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Updated!" }); fetchCampaigns(); }
   };
 
   const deleteCampaign = async (id: string) => {
     const { error } = await supabase.from("campaigns").delete().eq("id", id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Campaign deleted" });
-      if (expandedId === id) { setExpandedId(null); setTiers([]); }
-      fetchCampaigns();
-    }
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Campaign deleted" }); if (expandedId === id) { setExpandedId(null); setTiers([]); } fetchCampaigns(); }
   };
 
-  // Tier management
   const addTier = async (campaignId: string) => {
-    const { error } = await supabase.from("campaign_tiers").insert({
-      campaign_id: campaignId,
-      ...emptyTier,
-      sort_order: tiers.length,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      fetchTiers(campaignId);
-    }
+    const { error } = await supabase.from("campaign_tiers").insert({ campaign_id: campaignId, ...emptyTier, sort_order: tiers.length });
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else fetchTiers(campaignId);
   };
 
   const updateTier = async (tierId: string, updates: Record<string, unknown>) => {
     const { error } = await supabase.from("campaign_tiers").update(updates).eq("id", tierId);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
   };
 
   const deleteTier = async (tierId: string, campaignId: string) => {
@@ -122,7 +92,6 @@ const AdminCampaigns = () => {
     fetchTiers(campaignId);
   };
 
-  // Prize management
   const addPrize = async (tierId: string, name: string) => {
     if (!name.trim()) return;
     await supabase.from("tier_prizes").insert({ tier_id: tierId, name: name.trim() });
@@ -138,7 +107,6 @@ const AdminCampaigns = () => {
     <div>
       <h1 className="mb-6 font-display text-2xl font-bold tracking-wider">Campaign Management</h1>
 
-      {/* Create new campaign */}
       <Card className="mb-6 border-border/50">
         <CardHeader><CardTitle className="text-sm">Create New Campaign</CardTitle></CardHeader>
         <CardContent className="space-y-3">
@@ -180,7 +148,6 @@ const AdminCampaigns = () => {
         </CardContent>
       </Card>
 
-      {/* Campaign list */}
       <div className="space-y-3">
         {campaigns.map((c) => (
           <Card key={c.id} className="border-border/50">
@@ -222,7 +189,6 @@ const AdminCampaigns = () => {
               </div>
             </div>
 
-            {/* Expanded: Tiers & Prizes */}
             {expandedId === c.id && (
               <CardContent className="border-t border-border/50 pt-4">
                 <div className="flex items-center justify-between mb-3">
@@ -256,87 +222,5 @@ const AdminCampaigns = () => {
     </div>
   );
 };
-
-// Tier editor sub-component
-function TierEditor({
-  tier,
-  onUpdate,
-  onDelete,
-  onAddPrize,
-  onDeletePrize,
-  onRefresh,
-}: {
-  tier: CampaignTier;
-  onUpdate: (u: Record<string, unknown>) => void;
-  onDelete: () => void;
-  onAddPrize: (name: string) => void;
-  onDeletePrize: (id: string) => void;
-  onRefresh: () => void;
-}) {
-  const [label, setLabel] = useState(tier.label);
-  const [name, setName] = useState(tier.name);
-  const [total, setTotal] = useState(tier.total);
-  const [remaining, setRemaining] = useState(tier.remaining);
-  const [weight, setWeight] = useState(tier.probability_weight);
-  const [newPrize, setNewPrize] = useState("");
-
-  const save = () => {
-    onUpdate({ label, name, total, remaining, probability_weight: weight });
-    onRefresh();
-  };
-
-  const tierColors: Record<string, string> = { S: "border-accent/50", A: "border-primary/50", B: "border-neon-pink/50", C: "border-border" };
-
-  return (
-    <div className={`rounded-lg border p-3 ${tierColors[label] || "border-border"}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <select value={label} onChange={(e) => setLabel(e.target.value)} className="rounded bg-secondary px-2 py-1 text-sm font-bold">
-          <option value="S">S</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </select>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tier name" className="h-8 text-sm flex-1" />
-        <Button size="sm" variant="ghost" onClick={save}><Save className="h-3.5 w-3.5" /></Button>
-        <Button size="sm" variant="ghost" onClick={onDelete} className="text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
-      </div>
-      <div className="grid grid-cols-3 gap-2 mb-2">
-        <div>
-          <label className="text-xs text-muted-foreground">Total</label>
-          <Input type="number" value={total} onChange={(e) => setTotal(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Remaining</label>
-          <Input type="number" value={remaining} onChange={(e) => setRemaining(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Weight</label>
-          <Input type="number" step="0.1" value={weight} onChange={(e) => setWeight(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-      </div>
-      {/* Prizes */}
-      <div className="space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">Prizes:</p>
-        {tier.tier_prizes.map((p) => (
-          <div key={p.id} className="flex items-center justify-between rounded bg-secondary/50 px-2 py-1">
-            <span className="text-xs">{p.name}</span>
-            <button onClick={() => onDeletePrize(p.id)} className="text-destructive hover:text-destructive/80">
-              <Trash2 className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
-        <div className="flex gap-1">
-          <Input value={newPrize} onChange={(e) => setNewPrize(e.target.value)} placeholder="New prize name" className="h-7 text-xs flex-1"
-            onKeyDown={(e) => { if (e.key === "Enter") { onAddPrize(newPrize); setNewPrize(""); } }} />
-          <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => { onAddPrize(newPrize); setNewPrize(""); }}>
-            <Plus className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type CampaignTier = Tables<"campaign_tiers"> & { tier_prizes: Tables<"tier_prizes">[] };
 
 export default AdminCampaigns;
