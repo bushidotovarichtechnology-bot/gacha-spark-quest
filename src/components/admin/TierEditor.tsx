@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Save, Trash2, Plus, Upload } from "lucide-react";
+import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
@@ -83,7 +84,9 @@ export function TierEditor({
         </select>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tier name" className="h-8 text-sm flex-1" />
         <Button size="sm" variant="ghost" onClick={save}><Save className="h-3.5 w-3.5" /></Button>
-        <Button size="sm" variant="ghost" onClick={onDelete} className="text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+        <ConfirmDelete title="Hapus Tier?" description={`Tier "${name}" beserta semua hadiahnya akan dihapus.`} onConfirm={onDelete}>
+          <Button size="sm" variant="ghost" className="text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+        </ConfirmDelete>
       </div>
 
       {/* Tier image */}
@@ -128,9 +131,11 @@ export function TierEditor({
                 if (file) handlePrizeImageUpload(p.id, file);
               }} />
             </label>
-            <button onClick={() => onDeletePrize(p.id)} className="text-destructive hover:text-destructive/80">
-              <Trash2 className="h-3 w-3" />
-            </button>
+            <ConfirmDelete title="Hapus Hadiah?" description={`Hadiah "${p.name}" akan dihapus dari tier ini.`} onConfirm={() => onDeletePrize(p.id)}>
+              <button className="text-destructive hover:text-destructive/80">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </ConfirmDelete>
           </div>
         ))}
         <div className="flex gap-1">

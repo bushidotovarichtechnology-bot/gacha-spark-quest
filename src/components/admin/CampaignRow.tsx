@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, ChevronDown, ChevronUp, Image, Pencil, Check, X } from "lucide-react";
+import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -86,9 +87,11 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
             <Button variant="ghost" size="sm" onClick={onToggleExpand}>
               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(c.id)} className="text-destructive hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <ConfirmDelete title="Hapus Campaign?" description={`Campaign "${c.title}" akan dihapus beserta semua tier dan hadiahnya. Tindakan ini tidak dapat dibatalkan.`} onConfirm={() => onDelete(c.id)}>
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </ConfirmDelete>
           </div>
         )}
       </div>
