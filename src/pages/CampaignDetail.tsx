@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -74,6 +74,24 @@ const CampaignDetail = () => {
     },
     enabled: !!campaignId,
   });
+
+  // Realtime: auto-refetch when campaign_tiers for this campaign changes
+  useEffect(() => {
+    const channel = supabase
+      .channel(`detail-campaign-tiers-${campaignId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "campaign_tiers", filter: `campaign_id=eq.${campaignId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [campaignId, queryClient]);
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
