@@ -31,6 +31,9 @@ const Index = () => {
 
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ["campaigns"],
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data: camps, error } = await supabase
         .from("campaigns")
