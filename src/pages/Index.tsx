@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CampaignCard from "@/components/CampaignCard";
@@ -28,7 +29,25 @@ function resolveImage(url: string) {
 
 const Index = () => {
   const { t } = useI18n();
+  const queryClient = useQueryClient();
 
+  // Realtime: auto-refetch when campaign_tiers changes (e.g. another user draws)
+  useEffect(() => {
+    const channel = supabase
+      .channel("home-campaign-tiers")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "campaign_tiers" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ["campaigns"],
     staleTime: 0,
