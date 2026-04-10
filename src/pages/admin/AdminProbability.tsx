@@ -75,7 +75,7 @@ const AdminProbability = () => {
 
   const saveCampaignWeights = async (campaignId: string) => {
     const tiers = tiersByCampaign[campaignId] || [];
-    const updates: Promise<any>[] = [];
+    const updates: PromiseLike<any>[] = [];
 
     tiers.forEach((tier) => {
       updates.push(
