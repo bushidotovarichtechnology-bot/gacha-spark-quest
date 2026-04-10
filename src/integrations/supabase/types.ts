@@ -189,6 +189,15 @@ export type Database = {
     }
     Functions: {
       get_admin_stats: { Args: never; Returns: Json }
+      get_all_users_admin: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          last_sign_in_at: string
+        }[]
+      }
       get_popular_campaigns: {
         Args: { lim?: number }
         Returns: {
