@@ -1,0 +1,1 @@
+ALTER TABLE public.tier_prizes ADD COLUMN probability_weight numeric NOT NULL DEFAULT 1.0;

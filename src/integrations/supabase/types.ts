@@ -133,6 +133,7 @@ export type Database = {
           id: string
           image_url: string
           name: string
+          probability_weight: number
           tier_id: string
         }
         Insert: {
@@ -140,6 +141,7 @@ export type Database = {
           id?: string
           image_url?: string
           name: string
+          probability_weight?: number
           tier_id: string
         }
         Update: {
@@ -147,6 +149,7 @@ export type Database = {
           id?: string
           image_url?: string
           name?: string
+          probability_weight?: number
           tier_id?: string
         }
         Relationships: [
