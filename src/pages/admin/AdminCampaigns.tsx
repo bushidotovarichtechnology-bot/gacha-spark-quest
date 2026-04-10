@@ -85,6 +85,8 @@ const AdminCampaigns = () => {
   const updateTier = async (tierId: string, updates: Record<string, unknown>) => {
     const { error } = await supabase.from("campaign_tiers").update(updates).eq("id", tierId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else toast({ title: "Tier updated!" });
+    if (expandedId) fetchTiers(expandedId);
   };
 
   const deleteTier = async (tierId: string, campaignId: string) => {
