@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CampaignCard from "@/components/CampaignCard";
