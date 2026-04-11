@@ -60,6 +60,17 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-muted-foreground">$</span>
                 <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="h-7 text-xs w-20" />
+                <Select value={subcategoryId || "none"} onValueChange={(v) => setSubcategoryId(v === "none" ? "" : v)}>
+                  <SelectTrigger className="h-7 text-xs w-40">
+                    <SelectValue placeholder="Kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Tanpa kategori</SelectItem>
+                    {subcategoryOptions.map((opt) => (
+                      <SelectItem key={opt.id} value={opt.id}>{opt.category_name} → {opt.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button size="sm" variant="ghost" onClick={saveEdit} className="h-7 w-7 p-0 text-primary"><Check className="h-3.5 w-3.5" /></Button>
                 <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 w-7 p-0 text-muted-foreground"><X className="h-3.5 w-3.5" /></Button>
               </div>
