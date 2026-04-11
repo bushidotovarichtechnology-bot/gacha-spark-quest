@@ -53,6 +53,7 @@ const App = () => (
               <Route path="users" element={<AdminUsers />} />
               <Route path="campaigns" element={<AdminCampaigns />} />
               <Route path="probability" element={<AdminProbability />} />
+              <Route path="categories" element={<AdminCategories />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
