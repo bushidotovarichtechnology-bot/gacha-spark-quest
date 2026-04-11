@@ -62,7 +62,7 @@ const AdminCampaigns = () => {
     if (data) setTiers(data as CampaignTier[]);
   };
 
-  useEffect(() => { fetchCampaigns(); }, []);
+  useEffect(() => { fetchCampaigns(); fetchSubcategoryOptions(); }, []);
 
   const toggleExpand = (id: string) => {
     if (expandedId === id) { setExpandedId(null); setTiers([]); }
@@ -75,9 +75,17 @@ const AdminCampaigns = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("campaigns").insert(newCampaign);
+    const payload = {
+      id: newCampaign.id,
+      title: newCampaign.title,
+      description: newCampaign.description,
+      image_url: newCampaign.image_url,
+      price: newCampaign.price,
+      ...(newCampaign.subcategory_id ? { subcategory_id: newCampaign.subcategory_id } : {}),
+    };
+    const { error } = await supabase.from("campaigns").insert(payload);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Campaign created!" }); setNewCampaign({ id: "", title: "", description: "", image_url: "", price: 5 }); fetchCampaigns(); }
+    else { toast({ title: "Campaign created!" }); setNewCampaign({ id: "", title: "", description: "", image_url: "", price: 5, subcategory_id: "" }); fetchCampaigns(); }
     setLoading(false);
   };
 
