@@ -133,6 +133,10 @@ const Index = () => {
             </h2>
           </motion.div>
 
+          <div className="mb-8">
+            <CategoryMenu selectedSubcategoryId={selectedSubcategoryId} onSelect={setSelectedSubcategoryId} />
+          </div>
+
           {isLoading ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
               {[...Array(6)].map((_, i) => (
