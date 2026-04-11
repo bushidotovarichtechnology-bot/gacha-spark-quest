@@ -51,17 +51,22 @@ const Index = () => {
     };
   }, [queryClient]);
   const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ["campaigns"],
+    queryKey: ["campaigns", selectedSubcategoryId],
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data: camps, error } = await supabase
+      let query = supabase
         .from("campaigns")
         .select("*, campaign_tiers(remaining, total)")
         .eq("is_active", true)
         .order("created_at", { ascending: true });
 
+      if (selectedSubcategoryId) {
+        query = query.eq("subcategory_id", selectedSubcategoryId);
+      }
+
+      const { data: camps, error } = await query;
       if (error) throw error;
 
       return (camps || []).map((c) => {
