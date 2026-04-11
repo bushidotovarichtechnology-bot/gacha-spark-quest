@@ -163,6 +163,20 @@ const AdminCampaigns = () => {
             </div>
             <Input type="number" placeholder="Price" value={newCampaign.price} onChange={(e) => setNewCampaign({ ...newCampaign, price: Number(e.target.value) })} />
           </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Subkategori (opsional)</label>
+            <Select value={newCampaign.subcategory_id || "none"} onValueChange={(v) => setNewCampaign({ ...newCampaign, subcategory_id: v === "none" ? "" : v })}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Pilih subkategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Tanpa kategori</SelectItem>
+                {subcategoryOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>{opt.category_name} → {opt.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {newCampaign.image_url && (
             <div className="flex items-center gap-2">
               <img src={newCampaign.image_url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
