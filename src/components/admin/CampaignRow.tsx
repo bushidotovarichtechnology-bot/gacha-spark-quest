@@ -26,23 +26,25 @@ interface CampaignRowProps {
   children?: React.ReactNode;
 }
 
-export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate, onDelete, onUploadImage, children }: CampaignRowProps) {
+export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate, onDelete, onUploadImage, subcategoryOptions = [], children }: CampaignRowProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(c.title);
   const [description, setDescription] = useState(c.description);
   const [price, setPrice] = useState(c.price);
+  const [subcategoryId, setSubcategoryId] = useState(c.subcategory_id || "");
 
   const startEdit = () => {
     setTitle(c.title);
     setDescription(c.description);
     setPrice(c.price);
+    setSubcategoryId(c.subcategory_id || "");
     setEditing(true);
   };
 
   const cancelEdit = () => setEditing(false);
 
   const saveEdit = async () => {
-    await onUpdate(c.id, { title, description, price });
+    await onUpdate(c.id, { title, description, price, subcategory_id: subcategoryId || null } as any);
     setEditing(false);
   };
 
