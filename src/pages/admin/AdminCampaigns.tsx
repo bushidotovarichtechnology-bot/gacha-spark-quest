@@ -8,8 +8,15 @@ import { Plus, Upload } from "lucide-react";
 import { CampaignRow } from "@/components/admin/CampaignRow";
 import { TierEditor, type CampaignTier } from "@/components/admin/TierEditor";
 import type { Tables } from "@/integrations/supabase/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+interface SubcategoryOption {
+  id: string;
+  name: string;
+  category_name: string;
+}
 
 const uploadCampaignImage = async (file: File, campaignId: string) => {
   const ext = file.name.split(".").pop();
@@ -29,7 +36,17 @@ const AdminCampaigns = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [tiers, setTiers] = useState<CampaignTier[]>([]);
   const [loading, setLoading] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({ id: "", title: "", description: "", image_url: "", price: 5 });
+  const [newCampaign, setNewCampaign] = useState({ id: "", title: "", description: "", image_url: "", price: 5, subcategory_id: "" });
+  const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryOption[]>([]);
+
+  const fetchSubcategoryOptions = async () => {
+    const { data: cats } = await supabase.from("categories").select("id, name").order("sort_order");
+    const { data: subs } = await supabase.from("subcategories").select("id, name, category_id").order("sort_order");
+    if (cats && subs) {
+      const catMap = Object.fromEntries(cats.map((c) => [c.id, c.name]));
+      setSubcategoryOptions(subs.map((s) => ({ id: s.id, name: s.name, category_name: catMap[s.category_id] || "" })));
+    }
+  };
 
   const fetchCampaigns = async () => {
     const { data } = await supabase.from("campaigns").select("*").order("created_at", { ascending: false });
