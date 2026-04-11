@@ -198,6 +198,7 @@ const AdminCampaigns = () => {
               onToggleExpand={() => toggleExpand(c.id)}
               onUpdate={updateCampaign}
               onDelete={deleteCampaign}
+              subcategoryOptions={subcategoryOptions}
               onUploadImage={async (id, file) => {
                 try {
                   const url = await uploadCampaignImage(file, id);
