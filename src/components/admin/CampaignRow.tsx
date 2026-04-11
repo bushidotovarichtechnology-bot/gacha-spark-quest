@@ -4,9 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, ChevronDown, ChevronUp, Image, Pencil, Check, X } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
+
+interface SubcategoryOption {
+  id: string;
+  name: string;
+  category_name: string;
+}
 
 interface CampaignRowProps {
   campaign: Campaign;
@@ -15,6 +22,7 @@ interface CampaignRowProps {
   onUpdate: (id: string, updates: Partial<Campaign>) => Promise<void>;
   onDelete: (id: string) => void;
   onUploadImage: (id: string, file: File) => void;
+  subcategoryOptions?: SubcategoryOption[];
   children?: React.ReactNode;
 }
 
