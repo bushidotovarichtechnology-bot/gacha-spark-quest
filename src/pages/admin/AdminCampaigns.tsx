@@ -8,8 +8,15 @@ import { Plus, Upload } from "lucide-react";
 import { CampaignRow } from "@/components/admin/CampaignRow";
 import { TierEditor, type CampaignTier } from "@/components/admin/TierEditor";
 import type { Tables } from "@/integrations/supabase/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+interface SubcategoryOption {
+  id: string;
+  name: string;
+  category_name: string;
+}
 
 const uploadCampaignImage = async (file: File, campaignId: string) => {
   const ext = file.name.split(".").pop();
@@ -29,7 +36,17 @@ const AdminCampaigns = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [tiers, setTiers] = useState<CampaignTier[]>([]);
   const [loading, setLoading] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({ id: "", title: "", description: "", image_url: "", price: 5 });
+  const [newCampaign, setNewCampaign] = useState({ id: "", title: "", description: "", image_url: "", price: 5, subcategory_id: "" });
+  const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryOption[]>([]);
+
+  const fetchSubcategoryOptions = async () => {
+    const { data: cats } = await supabase.from("categories").select("id, name").order("sort_order");
+    const { data: subs } = await supabase.from("subcategories").select("id, name, category_id").order("sort_order");
+    if (cats && subs) {
+      const catMap = Object.fromEntries(cats.map((c) => [c.id, c.name]));
+      setSubcategoryOptions(subs.map((s) => ({ id: s.id, name: s.name, category_name: catMap[s.category_id] || "" })));
+    }
+  };
 
   const fetchCampaigns = async () => {
     const { data } = await supabase.from("campaigns").select("*").order("created_at", { ascending: false });
@@ -45,7 +62,7 @@ const AdminCampaigns = () => {
     if (data) setTiers(data as CampaignTier[]);
   };
 
-  useEffect(() => { fetchCampaigns(); }, []);
+  useEffect(() => { fetchCampaigns(); fetchSubcategoryOptions(); }, []);
 
   const toggleExpand = (id: string) => {
     if (expandedId === id) { setExpandedId(null); setTiers([]); }
@@ -58,9 +75,17 @@ const AdminCampaigns = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("campaigns").insert(newCampaign);
+    const payload = {
+      id: newCampaign.id,
+      title: newCampaign.title,
+      description: newCampaign.description,
+      image_url: newCampaign.image_url,
+      price: newCampaign.price,
+      ...(newCampaign.subcategory_id ? { subcategory_id: newCampaign.subcategory_id } : {}),
+    };
+    const { error } = await supabase.from("campaigns").insert(payload);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Campaign created!" }); setNewCampaign({ id: "", title: "", description: "", image_url: "", price: 5 }); fetchCampaigns(); }
+    else { toast({ title: "Campaign created!" }); setNewCampaign({ id: "", title: "", description: "", image_url: "", price: 5, subcategory_id: "" }); fetchCampaigns(); }
     setLoading(false);
   };
 
@@ -138,6 +163,20 @@ const AdminCampaigns = () => {
             </div>
             <Input type="number" placeholder="Price" value={newCampaign.price} onChange={(e) => setNewCampaign({ ...newCampaign, price: Number(e.target.value) })} />
           </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Subkategori (opsional)</label>
+            <Select value={newCampaign.subcategory_id || "none"} onValueChange={(v) => setNewCampaign({ ...newCampaign, subcategory_id: v === "none" ? "" : v })}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Pilih subkategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Tanpa kategori</SelectItem>
+                {subcategoryOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>{opt.category_name} → {opt.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {newCampaign.image_url && (
             <div className="flex items-center gap-2">
               <img src={newCampaign.image_url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
@@ -159,6 +198,7 @@ const AdminCampaigns = () => {
               onToggleExpand={() => toggleExpand(c.id)}
               onUpdate={updateCampaign}
               onDelete={deleteCampaign}
+              subcategoryOptions={subcategoryOptions}
               onUploadImage={async (id, file) => {
                 try {
                   const url = await uploadCampaignImage(file, id);

@@ -4,9 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, ChevronDown, ChevronUp, Image, Pencil, Check, X } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
+
+interface SubcategoryOption {
+  id: string;
+  name: string;
+  category_name: string;
+}
 
 interface CampaignRowProps {
   campaign: Campaign;
@@ -15,26 +22,29 @@ interface CampaignRowProps {
   onUpdate: (id: string, updates: Partial<Campaign>) => Promise<void>;
   onDelete: (id: string) => void;
   onUploadImage: (id: string, file: File) => void;
+  subcategoryOptions?: SubcategoryOption[];
   children?: React.ReactNode;
 }
 
-export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate, onDelete, onUploadImage, children }: CampaignRowProps) {
+export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate, onDelete, onUploadImage, subcategoryOptions = [], children }: CampaignRowProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(c.title);
   const [description, setDescription] = useState(c.description);
   const [price, setPrice] = useState(c.price);
+  const [subcategoryId, setSubcategoryId] = useState(c.subcategory_id || "");
 
   const startEdit = () => {
     setTitle(c.title);
     setDescription(c.description);
     setPrice(c.price);
+    setSubcategoryId(c.subcategory_id || "");
     setEditing(true);
   };
 
   const cancelEdit = () => setEditing(false);
 
   const saveEdit = async () => {
-    await onUpdate(c.id, { title, description, price });
+    await onUpdate(c.id, { title, description, price, subcategory_id: subcategoryId || null } as any);
     setEditing(false);
   };
 
@@ -50,6 +60,17 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-muted-foreground">$</span>
                 <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="h-7 text-xs w-20" />
+                <Select value={subcategoryId || "none"} onValueChange={(v) => setSubcategoryId(v === "none" ? "" : v)}>
+                  <SelectTrigger className="h-7 text-xs w-40">
+                    <SelectValue placeholder="Kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Tanpa kategori</SelectItem>
+                    {subcategoryOptions.map((opt) => (
+                      <SelectItem key={opt.id} value={opt.id}>{opt.category_name} → {opt.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button size="sm" variant="ghost" onClick={saveEdit} className="h-7 w-7 p-0 text-primary"><Check className="h-3.5 w-3.5" /></Button>
                 <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 w-7 p-0 text-muted-foreground"><X className="h-3.5 w-3.5" /></Button>
               </div>

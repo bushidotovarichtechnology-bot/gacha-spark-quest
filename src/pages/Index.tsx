@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
@@ -7,6 +7,7 @@ import CampaignCard from "@/components/CampaignCard";
 import { Sparkles, Shield, Clock, Trophy } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
+import CategoryMenu from "@/components/CategoryMenu";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -30,6 +31,7 @@ function resolveImage(url: string) {
 const Index = () => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
 
   // Realtime: auto-refetch when campaign_tiers changes (e.g. another user draws)
   useEffect(() => {
@@ -49,17 +51,22 @@ const Index = () => {
     };
   }, [queryClient]);
   const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ["campaigns"],
+    queryKey: ["campaigns", selectedSubcategoryId],
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data: camps, error } = await supabase
+      let query = supabase
         .from("campaigns")
         .select("*, campaign_tiers(remaining, total)")
         .eq("is_active", true)
         .order("created_at", { ascending: true });
 
+      if (selectedSubcategoryId) {
+        query = query.eq("subcategory_id", selectedSubcategoryId);
+      }
+
+      const { data: camps, error } = await query;
       if (error) throw error;
 
       return (camps || []).map((c) => {
@@ -125,6 +132,10 @@ const Index = () => {
               {t("featuredCampaigns")}
             </h2>
           </motion.div>
+
+          <div className="mb-8">
+            <CategoryMenu selectedSubcategoryId={selectedSubcategoryId} onSelect={setSelectedSubcategoryId} />
+          </div>
 
           {isLoading ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
