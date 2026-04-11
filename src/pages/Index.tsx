@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
@@ -7,6 +7,7 @@ import CampaignCard from "@/components/CampaignCard";
 import { Sparkles, Shield, Clock, Trophy } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
+import CategoryMenu from "@/components/CategoryMenu";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -30,6 +31,7 @@ function resolveImage(url: string) {
 const Index = () => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
 
   // Realtime: auto-refetch when campaign_tiers changes (e.g. another user draws)
   useEffect(() => {

@@ -24,6 +24,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import AdminUsers from "./pages/admin/AdminUsers.tsx";
 import AdminCampaigns from "./pages/admin/AdminCampaigns.tsx";
 import AdminProbability from "./pages/admin/AdminProbability.tsx";
+import AdminCategories from "./pages/admin/AdminCategories.tsx";
 
 const queryClient = new QueryClient();
 
