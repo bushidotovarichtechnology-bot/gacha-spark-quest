@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, icons } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Category {
   id: string;
   name: string;
   sort_order: number;
+  icon: string;
 }
 
 interface Subcategory {
@@ -21,6 +22,12 @@ interface CategoryMenuProps {
   selectedSubcategoryId: string | null;
   onSelect: (subcategoryId: string | null) => void;
 }
+
+const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
+  if (!name || !(name in icons)) return null;
+  const LucideIcon = icons[name as keyof typeof icons];
+  return <LucideIcon className={className} />;
+};
 
 const CategoryMenu = ({ selectedSubcategoryId, onSelect }: CategoryMenuProps) => {
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
@@ -71,12 +78,13 @@ const CategoryMenu = ({ selectedSubcategoryId, onSelect }: CategoryMenuProps) =>
             <button
               onClick={() => setExpandedCat(isExpanded ? null : cat.id)}
               className={cn(
-                "flex items-center gap-1 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors",
+                "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               )}
             >
+              <DynamicIcon name={cat.icon} className="h-3.5 w-3.5" />
               {cat.name}
               {subs.length > 0 && <ChevronDown className={cn("h-3 w-3 transition-transform", isExpanded && "rotate-180")} />}
             </button>
