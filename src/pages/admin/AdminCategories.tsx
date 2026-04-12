@@ -4,12 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, icons } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const ICON_OPTIONS = [
+  "", "Smartphone", "Laptop", "Gamepad2", "Watch", "Headphones", "Camera",
+  "Tv", "Monitor", "Tablet", "Speaker", "Cpu", "HardDrive", "Wifi",
+  "Gift", "ShoppingBag", "Star", "Heart", "Zap", "Crown", "Gem",
+  "Shirt", "Car", "Home", "Music", "Book", "Palette", "Utensils",
+  "Dumbbell", "Plane", "Trophy", "Sparkles", "Flame", "Package",
+];
 
 interface Category {
   id: string;
   name: string;
   sort_order: number;
+  icon: string;
 }
 
 interface Subcategory {
@@ -19,15 +29,23 @@ interface Subcategory {
   sort_order: number;
 }
 
+const IconPreview = ({ name }: { name: string }) => {
+  if (!name || !(name in icons)) return null;
+  const LucideIcon = icons[name as keyof typeof icons];
+  return <LucideIcon className="h-4 w-4" />;
+};
+
 const AdminCategories = () => {
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [newCatName, setNewCatName] = useState("");
+  const [newCatIcon, setNewCatIcon] = useState("");
   const [newSubName, setNewSubName] = useState("");
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
   const [editingCat, setEditingCat] = useState<string | null>(null);
   const [editingCatName, setEditingCatName] = useState("");
+  const [editingCatIcon, setEditingCatIcon] = useState("");
   const [editingSub, setEditingSub] = useState<string | null>(null);
   const [editingSubName, setEditingSubName] = useState("");
 
@@ -50,14 +68,14 @@ const AdminCategories = () => {
 
   const createCategory = async () => {
     if (!newCatName.trim()) return;
-    const { error } = await supabase.from("categories").insert({ name: newCatName.trim(), sort_order: categories.length });
+    const { error } = await supabase.from("categories").insert({ name: newCatName.trim(), sort_order: categories.length, icon: newCatIcon });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Kategori ditambahkan!" }); setNewCatName(""); fetchCategories(); }
+    else { toast({ title: "Kategori ditambahkan!" }); setNewCatName(""); setNewCatIcon(""); fetchCategories(); }
   };
 
   const updateCategory = async (id: string) => {
     if (!editingCatName.trim()) return;
-    const { error } = await supabase.from("categories").update({ name: editingCatName.trim() }).eq("id", id);
+    const { error } = await supabase.from("categories").update({ name: editingCatName.trim(), icon: editingCatIcon }).eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Kategori diperbarui!" }); setEditingCat(null); fetchCategories(); }
   };
@@ -88,6 +106,29 @@ const AdminCategories = () => {
     else { toast({ title: "Subkategori dihapus" }); if (expandedCat) fetchSubcategories(expandedCat); }
   };
 
+  const IconSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <Select value={value || "_none"} onValueChange={(v) => onChange(v === "_none" ? "" : v)}>
+      <SelectTrigger className="h-8 w-[140px] text-xs">
+        <SelectValue>
+          <span className="flex items-center gap-1.5">
+            <IconPreview name={value} />
+            {value || "Pilih ikon"}
+          </span>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent className="max-h-[240px]">
+        <SelectItem value="_none">Tanpa ikon</SelectItem>
+        {ICON_OPTIONS.filter(Boolean).map((name) => (
+          <SelectItem key={name} value={name}>
+            <span className="flex items-center gap-2">
+              <IconPreview name={name} /> {name}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <div>
       <h1 className="mb-6 font-display text-2xl font-bold tracking-wider">Category Management</h1>
@@ -97,6 +138,7 @@ const AdminCategories = () => {
         <CardContent>
           <div className="flex gap-2">
             <Input placeholder="Nama kategori (misal: Gadget)" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && createCategory()} />
+            <IconSelect value={newCatIcon} onChange={setNewCatIcon} />
             <Button onClick={createCategory} className="gap-1.5 shrink-0"><Plus className="h-4 w-4" /> Tambah</Button>
           </div>
         </CardContent>
@@ -113,13 +155,17 @@ const AdminCategories = () => {
               {editingCat === cat.id ? (
                 <div className="flex flex-1 items-center gap-2">
                   <Input value={editingCatName} onChange={(e) => setEditingCatName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && updateCategory(cat.id)} className="h-8 text-sm" />
+                  <IconSelect value={editingCatIcon} onChange={setEditingCatIcon} />
                   <Button size="sm" variant="ghost" onClick={() => updateCategory(cat.id)}><Check className="h-3.5 w-3.5" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => setEditingCat(null)}><X className="h-3.5 w-3.5" /></Button>
                 </div>
               ) : (
                 <>
-                  <span className="flex-1 text-sm font-medium">{cat.name}</span>
-                  <Button size="sm" variant="ghost" onClick={() => { setEditingCat(cat.id); setEditingCatName(cat.name); }}><Edit2 className="h-3.5 w-3.5" /></Button>
+                  <span className="flex flex-1 items-center gap-2 text-sm font-medium">
+                    <IconPreview name={cat.icon} />
+                    {cat.name}
+                  </span>
+                  <Button size="sm" variant="ghost" onClick={() => { setEditingCat(cat.id); setEditingCatName(cat.name); setEditingCatIcon(cat.icon); }}><Edit2 className="h-3.5 w-3.5" /></Button>
                   <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteCategory(cat.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </>
               )}

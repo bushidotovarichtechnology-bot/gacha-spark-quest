@@ -111,18 +111,21 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          icon: string
           id: string
           name: string
           sort_order: number
         }
         Insert: {
           created_at?: string
+          icon?: string
           id?: string
           name: string
           sort_order?: number
         }
         Update: {
           created_at?: string
+          icon?: string
           id?: string
           name?: string
           sort_order?: number
