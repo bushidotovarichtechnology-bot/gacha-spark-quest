@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, icons } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, GripVertical, icons } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const ICON_OPTIONS = [
   "", "Smartphone", "Laptop", "Gamepad2", "Watch", "Headphones", "Camera",
@@ -48,6 +49,12 @@ const AdminCategories = () => {
   const [editingCatIcon, setEditingCatIcon] = useState("");
   const [editingSub, setEditingSub] = useState<string | null>(null);
   const [editingSubName, setEditingSubName] = useState("");
+
+  // Drag state
+  const [dragCatId, setDragCatId] = useState<string | null>(null);
+  const [dragOverCatId, setDragOverCatId] = useState<string | null>(null);
+  const [dragSubId, setDragSubId] = useState<string | null>(null);
+  const [dragOverSubId, setDragOverSubId] = useState<string | null>(null);
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("sort_order");
@@ -106,6 +113,50 @@ const AdminCategories = () => {
     else { toast({ title: "Subkategori dihapus" }); if (expandedCat) fetchSubcategories(expandedCat); }
   };
 
+  // --- Drag & Drop: Categories ---
+  const handleCatDrop = async () => {
+    if (!dragCatId || !dragOverCatId || dragCatId === dragOverCatId) {
+      setDragCatId(null);
+      setDragOverCatId(null);
+      return;
+    }
+    const fromIdx = categories.findIndex((c) => c.id === dragCatId);
+    const toIdx = categories.findIndex((c) => c.id === dragOverCatId);
+    const reordered = [...categories];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    setCategories(reordered);
+    setDragCatId(null);
+    setDragOverCatId(null);
+
+    const updates = reordered.map((c, i) => supabase.from("categories").update({ sort_order: i }).eq("id", c.id));
+    await Promise.all(updates);
+    toast({ title: "Urutan kategori diperbarui!" });
+  };
+
+  // --- Drag & Drop: Subcategories ---
+  const handleSubDrop = async () => {
+    if (!dragSubId || !dragOverSubId || dragSubId === dragOverSubId) {
+      setDragSubId(null);
+      setDragOverSubId(null);
+      return;
+    }
+    const fromIdx = subcategories.findIndex((s) => s.id === dragSubId);
+    const toIdx = subcategories.findIndex((s) => s.id === dragOverSubId);
+    const reordered = [...subcategories];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    setSubcategories(reordered);
+    setDragSubId(null);
+    setDragOverSubId(null);
+
+    const updates = reordered.map((s, i) => supabase.from("subcategories").update({ sort_order: i }).eq("id", s.id));
+    await Promise.all(updates);
+    toast({ title: "Urutan subkategori diperbarui!" });
+  };
+
   const IconSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <Select value={value || "_none"} onValueChange={(v) => onChange(v === "_none" ? "" : v)}>
       <SelectTrigger className="h-8 w-[140px] text-xs">
@@ -146,8 +197,22 @@ const AdminCategories = () => {
 
       <div className="space-y-2">
         {categories.map((cat) => (
-          <Card key={cat.id} className="border-border/50">
-            <div className="flex items-center gap-2 p-3">
+          <Card
+            key={cat.id}
+            className={cn(
+              "border-border/50 transition-all",
+              dragOverCatId === cat.id && dragCatId !== cat.id && "border-primary/50 bg-primary/5"
+            )}
+            draggable
+            onDragStart={() => setDragCatId(cat.id)}
+            onDragOver={(e) => { e.preventDefault(); setDragOverCatId(cat.id); }}
+            onDragLeave={() => setDragOverCatId(null)}
+            onDrop={(e) => { e.preventDefault(); handleCatDrop(); }}
+            onDragEnd={() => { setDragCatId(null); setDragOverCatId(null); }}
+          >
+            <div className="flex items-center gap-1 p-3">
+              <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing" />
+
               <button onClick={() => toggleExpand(cat.id)} className="shrink-0 text-muted-foreground hover:text-foreground">
                 {expandedCat === cat.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </button>
@@ -179,7 +244,20 @@ const AdminCategories = () => {
                 </div>
                 <div className="space-y-1">
                   {subcategories.map((sub) => (
-                    <div key={sub.id} className="flex items-center gap-2 rounded-md px-3 py-1.5 hover:bg-secondary/50">
+                    <div
+                      key={sub.id}
+                      draggable
+                      onDragStart={(e) => { e.stopPropagation(); setDragSubId(sub.id); }}
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverSubId(sub.id); }}
+                      onDragLeave={() => setDragOverSubId(null)}
+                      onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleSubDrop(); }}
+                      onDragEnd={() => { setDragSubId(null); setDragOverSubId(null); }}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50",
+                        dragOverSubId === sub.id && dragSubId !== sub.id && "bg-primary/10"
+                      )}
+                    >
+                      <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-muted-foreground/40 hover:text-muted-foreground active:cursor-grabbing" />
                       {editingSub === sub.id ? (
                         <div className="flex flex-1 items-center gap-2">
                           <Input value={editingSubName} onChange={(e) => setEditingSubName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && updateSubcategory(sub.id)} className="h-7 text-xs" />
