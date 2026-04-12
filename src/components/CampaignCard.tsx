@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Ticket, Flame } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
+import { useEffect, useRef, useState } from "react";
 
 interface CampaignCardProps {
   id: string;
@@ -17,6 +18,17 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
   const { t } = useI18n();
   const percentage = (remaining / total) * 100;
   const isLow = percentage < 30;
+  const prevRemaining = useRef(remaining);
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    if (prevRemaining.current !== remaining) {
+      setFlash(true);
+      prevRemaining.current = remaining;
+      const timer = setTimeout(() => setFlash(false), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [remaining]);
 
   return (
     <motion.div
@@ -27,7 +39,7 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
       transition={{ duration: 0.3 }}
     >
       <Link to={`/campaign/${id}`} className="group block">
-        <div className="gradient-card overflow-hidden rounded-xl border border-border/50 transition-all duration-300 group-hover:border-primary/50 group-hover:box-glow-purple">
+        <div className={`gradient-card overflow-hidden rounded-xl border transition-all duration-300 group-hover:border-primary/50 group-hover:box-glow-purple ${flash ? "border-accent/80 box-glow-gold" : "border-border/50"}`}>
           <div className="relative aspect-square overflow-hidden">
             <img
               src={image}
@@ -64,17 +76,16 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">{t("remaining")}</span>
-                <span className={isLow ? "font-semibold text-destructive" : "text-muted-foreground"}>
+                <span className={`transition-all duration-300 ${flash ? "text-accent font-bold scale-110" : isLow ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
                   {remaining}/{total}
                 </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-secondary">
                 <motion.div
-                  className={`h-full rounded-full ${isLow ? "bg-destructive" : "bg-primary"}`}
+                  className={`h-full rounded-full transition-colors duration-500 ${flash ? "bg-accent" : isLow ? "bg-destructive" : "bg-primary"}`}
                   initial={{ width: 0 }}
-                  whileInView={{ width: `${percentage}%` }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, ease: "easeOut" }}
+                  animate={{ width: `${percentage}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
                 />
               </div>
             </div>
