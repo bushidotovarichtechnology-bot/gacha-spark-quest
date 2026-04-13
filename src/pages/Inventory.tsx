@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-import { useGacha } from "@/context/GachaContext";
+import { useGacha, type InventoryItem } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
+import ClaimPrizeForm from "@/components/ClaimPrizeForm";
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: string; label: string }> = {
   S: { color: "text-accent", icon: Crown, gradient: "from-accent/30 to-accent/5", label: "Grand Prize" },
@@ -20,9 +21,12 @@ const Inventory = () => {
   const { t } = useI18n();
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
 
+  const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
+
   const filteredItems = filter === "all" ? items : items.filter((i) => i.tier === filter);
   const pityProgress = Math.min((drawsSinceTierA / pityThreshold) * 100, 100);
   const recyclableTiers = ["B", "C"];
+  const claimableTiers = ["S", "A"];
 
   const handleRecycle = (id: string, prizeName: string) => {
     const value = recycleItem(id);
@@ -166,7 +170,17 @@ const Inventory = () => {
                     </h3>
                     <p className="mb-2 truncate text-[10px] text-muted-foreground">{item.campaign} · {timeAgo}</p>
 
-                    {canRecycle ? (
+                    {claimableTiers.includes(item.tier) ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setClaimingItem(item)}
+                        className="w-full gap-1.5 border-primary/50 text-xs hover:border-primary hover:text-primary"
+                      >
+                        <PackageCheck className="h-3 w-3" />
+                        {t("claimPrizeBtn")}
+                      </Button>
+                    ) : canRecycle ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -199,6 +213,20 @@ const Inventory = () => {
           </div>
         )}
       </div>
+
+      {/* Claim Prize Modal */}
+      <AnimatePresence>
+        {claimingItem && (
+          <ClaimPrizeForm
+            item={claimingItem}
+            onClose={() => setClaimingItem(null)}
+            onClaimed={(itemId) => {
+              recycleItem(itemId);
+              setClaimingItem(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
