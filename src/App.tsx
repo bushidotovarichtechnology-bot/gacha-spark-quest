@@ -25,6 +25,7 @@ import AdminUsers from "./pages/admin/AdminUsers.tsx";
 import AdminCampaigns from "./pages/admin/AdminCampaigns.tsx";
 import AdminProbability from "./pages/admin/AdminProbability.tsx";
 import AdminCategories from "./pages/admin/AdminCategories.tsx";
+import AdminClaims from "./pages/admin/AdminClaims.tsx";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="campaigns" element={<AdminCampaigns />} />
               <Route path="probability" element={<AdminProbability />} />
               <Route path="categories" element={<AdminCategories />} />
+              <Route path="claims" element={<AdminClaims />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
