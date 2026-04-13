@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Loader2, Eye, X, Trash2, User, FileText, Clock } from "lucide-react";
+import { Mail, Loader2, Eye, X, Trash2, User, FileText, Clock, Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
@@ -12,6 +13,8 @@ interface ContactMessage {
   email: string;
   subject: string;
   message: string;
+  reply: string | null;
+  replied_at: string | null;
   created_at: string;
 }
 
@@ -19,17 +22,23 @@ const AdminMessages = () => {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ContactMessage | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
 
   const fetchMessages = async () => {
     const { data, error } = await supabase
       .from("contact_messages")
       .select("*")
       .order("created_at", { ascending: false });
-    if (!error && data) setMessages(data);
+    if (!error && data) setMessages(data as ContactMessage[]);
     setLoading(false);
   };
 
   useEffect(() => { fetchMessages(); }, []);
+
+  useEffect(() => {
+    if (selected) setReplyText(selected.reply || "");
+  }, [selected]);
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("contact_messages").delete().eq("id", id);
@@ -40,6 +49,28 @@ const AdminMessages = () => {
       if (selected?.id === id) setSelected(null);
       toast.success("Pesan dihapus");
     }
+  };
+
+  const handleReply = async () => {
+    if (!selected || !replyText.trim()) return;
+    setSending(true);
+    const { error } = await supabase
+      .from("contact_messages")
+      .update({ reply: replyText.trim(), replied_at: new Date().toISOString() } as any)
+      .eq("id", selected.id);
+    setSending(false);
+    if (error) {
+      toast.error("Gagal mengirim balasan");
+    } else {
+      const updated = { ...selected, reply: replyText.trim(), replied_at: new Date().toISOString() };
+      setMessages((prev) => prev.map((m) => m.id === selected.id ? updated : m));
+      setSelected(updated);
+      toast.success("Balasan berhasil disimpan");
+    }
+  };
+
+  const fmtTime = (d: string) => {
+    try { return formatDistanceToNow(new Date(d), { addSuffix: true }); } catch { return d; }
   };
 
   if (loading) {
@@ -64,6 +95,7 @@ const AdminMessages = () => {
               <tr className="border-b border-border bg-muted/30">
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Sender</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Subject</th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Date</th>
                 <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Actions</th>
               </tr>
@@ -78,8 +110,19 @@ const AdminMessages = () => {
                   <td className="px-4 py-3">
                     <p className="text-foreground line-clamp-1">{msg.subject}</p>
                   </td>
+                  <td className="px-4 py-3">
+                    {msg.replied_at ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-500">
+                        <CheckCircle2 className="h-3 w-3" /> Replied
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-500">
+                        <Clock className="h-3 w-3" /> Pending
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {(() => { try { return formatDistanceToNow(new Date(msg.created_at), { addSuffix: true }); } catch { return msg.created_at; } })()}
+                    {fmtTime(msg.created_at)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
@@ -107,7 +150,7 @@ const AdminMessages = () => {
         )}
       </div>
 
-      {/* Detail modal */}
+      {/* Detail & Reply modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-card">
@@ -132,21 +175,57 @@ const AdminMessages = () => {
                 </div>
                 <div className="flex items-start gap-2">
                   <Clock className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    {(() => { try { return formatDistanceToNow(new Date(selected.created_at), { addSuffix: true }); } catch { return selected.created_at; } })()}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{fmtTime(selected.created_at)}</p>
                 </div>
               </div>
+
+              {/* Original message */}
               <div className="rounded-xl bg-muted/30 p-4">
+                <p className="mb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pesan</p>
                 <p className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">{selected.message}</p>
               </div>
-              <div className="flex justify-end">
-                <ConfirmDelete onConfirm={() => handleDelete(selected.id)}>
-                  <Button variant="destructive" size="sm" className="gap-1.5">
-                    <Trash2 className="h-4 w-4" />
-                    Hapus
+
+              {/* Existing reply */}
+              {selected.reply && (
+                <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4">
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                    <p className="text-xs font-semibold text-green-500 uppercase tracking-wider">Balasan Admin</p>
+                    {selected.replied_at && (
+                      <span className="text-xs text-muted-foreground ml-auto">{fmtTime(selected.replied_at)}</span>
+                    )}
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm text-foreground leading-relaxed">{selected.reply}</p>
+                </div>
+              )}
+
+              {/* Reply form */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {selected.reply ? "Edit Balasan" : "Tulis Balasan"}
+                </p>
+                <Textarea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Tulis balasan untuk pesan ini..."
+                  className="min-h-[100px]"
+                />
+                <div className="flex items-center justify-between">
+                  <ConfirmDelete onConfirm={() => handleDelete(selected.id)}>
+                    <Button variant="destructive" size="sm" className="gap-1.5">
+                      <Trash2 className="h-4 w-4" /> Hapus
+                    </Button>
+                  </ConfirmDelete>
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={!replyText.trim() || sending}
+                    onClick={handleReply}
+                  >
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {selected.reply ? "Update Balasan" : "Kirim Balasan"}
                   </Button>
-                </ConfirmDelete>
+                </div>
               </div>
             </div>
           </div>
