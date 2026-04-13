@@ -73,6 +73,14 @@ const TopUp = () => {
         throw new Error(error?.message || "Failed to create payment");
       }
 
+      // Set client key dynamically
+      if (data.client_key) {
+        const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
+        if (script) {
+          script.setAttribute("data-client-key", data.client_key);
+        }
+      }
+
       setSelectedPackage(null);
 
       // Open Midtrans Snap popup
