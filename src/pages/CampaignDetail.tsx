@@ -103,8 +103,20 @@ const CampaignDetail = () => {
       )
       .subscribe();
 
+    const pityChannel = supabase
+      .channel(`pity-settings-${campaignId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pity_settings", filter: `campaign_id=eq.${campaignId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["pity_settings", campaignId] });
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(pityChannel);
     };
   }, [campaignId, queryClient]);
 
