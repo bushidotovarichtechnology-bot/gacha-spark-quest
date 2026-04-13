@@ -12,6 +12,7 @@ import Index from "./pages/Index.tsx";
 import CampaignDetail from "./pages/CampaignDetail.tsx";
 import Inventory from "./pages/Inventory.tsx";
 import DrawHistory from "./pages/DrawHistory.tsx";
+import ClaimHistory from "./pages/ClaimHistory.tsx";
 import TopUp from "./pages/TopUp.tsx";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/campaign/:id" element={<ProtectedRoute><CampaignDetail /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><DrawHistory /></ProtectedRoute>} />
+            <Route path="/claims" element={<ProtectedRoute><ClaimHistory /></ProtectedRoute>} />
             <Route path="/topup" element={<ProtectedRoute><TopUp /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

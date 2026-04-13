@@ -167,6 +167,11 @@ const translations = {
     tierBLabel: "Tier B",
     tierCLabel: "Tier C",
 
+    // Claim History
+    claimHistory: "Claim History",
+    claimHistoryDesc: "Track the status of your prize claims.",
+    noClaimsYet: "No claims yet — claim a prize from your inventory!",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -334,6 +339,11 @@ const translations = {
     tierALabel: "Tingkat A",
     tierBLabel: "Tingkat B",
     tierCLabel: "Tingkat C",
+
+    // Claim History
+    claimHistory: "Riwayat Klaim",
+    claimHistoryDesc: "Pantau status klaim hadiah kamu.",
+    noClaimsYet: "Belum ada klaim — ambil hadiah dari inventori kamu!",
 
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
