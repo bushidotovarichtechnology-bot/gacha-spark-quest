@@ -18,6 +18,7 @@ import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import AboutUs from "./pages/AboutUs.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/history" element={<ProtectedRoute><DrawHistory /></ProtectedRoute>} />
             <Route path="/claims" element={<ProtectedRoute><ClaimHistory /></ProtectedRoute>} />
             <Route path="/topup" element={<ProtectedRoute><TopUp /></ProtectedRoute>} />
+            <Route path="/about" element={<AboutUs />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

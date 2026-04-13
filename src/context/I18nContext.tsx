@@ -179,6 +179,25 @@ const translations = {
     claimHistoryDesc: "Track the status of your prize claims.",
     noClaimsYet: "No claims yet — claim a prize from your inventory!",
 
+    // About Us
+    aboutUs: "About Us",
+    aboutTitle: "About PT. BUSHIDO TOVARICH TECHNOLOGY",
+    aboutSubtitle: "The fusion of Japanese discipline and bold innovation — powering the future of digital entertainment in Southeast Asia.",
+    aboutStoryTitle: "Our Story",
+    aboutStoryP1: "PT. BUSHIDO TOVARICH TECHNOLOGY was founded with a singular vision: to bring the thrill of gacha culture to a wider audience through fair, transparent, and exciting digital experiences. Inspired by the Bushido code of honor, we believe every player deserves a fair chance at winning.",
+    aboutStoryP2: "Based in Indonesia, our team combines cutting-edge technology with a deep passion for gaming culture. From provably fair draw algorithms to our unique pity system, every feature is designed to put the player first.",
+    aboutValuesTitle: "Our Values",
+    aboutValueFairTitle: "Fairness First",
+    aboutValueFairDesc: "Every draw uses provably fair algorithms with transparent odds — no hidden manipulation.",
+    aboutValueInnovationTitle: "Bold Innovation",
+    aboutValueInnovationDesc: "We push boundaries with features like pity systems, last-one prizes, and real-time prize pools.",
+    aboutValueCommunityTitle: "Community Driven",
+    aboutValueCommunityDesc: "Built by gamers, for gamers. Your feedback shapes every update we ship.",
+    aboutValueTransparencyTitle: "Full Transparency",
+    aboutValueTransparencyDesc: "Open odds, public prize pools, and clear rules — what you see is what you get.",
+    aboutCtaTitle: "Ready to Draw Your Destiny?",
+    aboutCtaDesc: "Join thousands of players and test your luck today.",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -358,6 +377,25 @@ const translations = {
     claimHistory: "Riwayat Klaim",
     claimHistoryDesc: "Pantau status klaim hadiah kamu.",
     noClaimsYet: "Belum ada klaim — ambil hadiah dari inventori kamu!",
+
+    // About Us
+    aboutUs: "Tentang Kami",
+    aboutTitle: "Tentang PT. BUSHIDO TOVARICH TECHNOLOGY",
+    aboutSubtitle: "Perpaduan disiplin Jepang dan inovasi berani — menggerakkan masa depan hiburan digital di Asia Tenggara.",
+    aboutStoryTitle: "Cerita Kami",
+    aboutStoryP1: "PT. BUSHIDO TOVARICH TECHNOLOGY didirikan dengan visi tunggal: menghadirkan sensasi budaya gacha kepada audiens yang lebih luas melalui pengalaman digital yang adil, transparan, dan seru. Terinspirasi oleh kode kehormatan Bushido, kami percaya setiap pemain berhak mendapat kesempatan yang adil untuk menang.",
+    aboutStoryP2: "Berbasis di Indonesia, tim kami menggabungkan teknologi mutakhir dengan passion mendalam terhadap budaya gaming. Dari algoritma undian yang terbukti adil hingga sistem pity unik kami, setiap fitur dirancang untuk mengutamakan pemain.",
+    aboutValuesTitle: "Nilai-Nilai Kami",
+    aboutValueFairTitle: "Keadilan Utama",
+    aboutValueFairDesc: "Setiap undian menggunakan algoritma yang terbukti adil dengan peluang transparan — tanpa manipulasi tersembunyi.",
+    aboutValueInnovationTitle: "Inovasi Berani",
+    aboutValueInnovationDesc: "Kami mendorong batas dengan fitur seperti sistem pity, hadiah terakhir, dan pool hadiah real-time.",
+    aboutValueCommunityTitle: "Berbasis Komunitas",
+    aboutValueCommunityDesc: "Dibuat oleh gamer, untuk gamer. Masukan kamu membentuk setiap update yang kami rilis.",
+    aboutValueTransparencyTitle: "Transparansi Penuh",
+    aboutValueTransparencyDesc: "Peluang terbuka, pool hadiah publik, dan aturan jelas — apa yang kamu lihat adalah yang kamu dapatkan.",
+    aboutCtaTitle: "Siap Menarik Takdirmu?",
+    aboutCtaDesc: "Bergabung dengan ribuan pemain dan coba keberuntunganmu hari ini.",
 
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",

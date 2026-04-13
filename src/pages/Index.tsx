@@ -8,6 +8,7 @@ import { Sparkles, Shield, Clock, Trophy } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import CategoryMenu from "@/components/CategoryMenu";
+import { Link } from "react-router-dom";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -161,6 +162,9 @@ const Index = () => {
           <p className="text-xs text-muted-foreground">
             {t("companyName")}
           </p>
+          <Link to="/about" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
+            {t("aboutUs")}
+          </Link>
           <p className="font-display text-xs tracking-wider text-muted-foreground">
             {t("allRightsReserved")}
           </p>
