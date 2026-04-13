@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Coins, Sparkles, Zap, Crown, ArrowLeft, Check } from "lucide-react";
+import { Coins, Sparkles, Zap, Crown, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
+import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import {
   Dialog,
@@ -14,6 +15,20 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+declare global {
+  interface Window {
+    snap: {
+      pay: (token: string, options: {
+        onSuccess?: (result: any) => void;
+        onPending?: (result: any) => void;
+        onError?: (result: any) => void;
+        onClose?: () => void;
+      }) => void;
+    };
+  }
+}
 
 const coinPackages = [
   { id: "starter", coins: 100, price: 15000, icon: Coins, popular: false },
@@ -25,27 +40,88 @@ const coinPackages = [
 const TopUp = () => {
   const { addCoins } = useGacha();
   const { t } = useI18n();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedPackage, setSelectedPackage] = useState<typeof coinPackages[0] | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [midtransReady, setMidtransReady] = useState(false);
+
+  useEffect(() => {
+    // Set client key on snap script
+    const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
+    if (script) {
+      const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+      if (clientKey) {
+        script.setAttribute("data-client-key", clientKey);
+      }
+      // Check if snap is ready
+      const checkSnap = setInterval(() => {
+        if (window.snap) {
+          setMidtransReady(true);
+          clearInterval(checkSnap);
+        }
+      }, 500);
+      return () => clearInterval(checkSnap);
+    }
+  }, []);
 
   const handlePurchase = async () => {
-    if (!selectedPackage) return;
+    if (!selectedPackage || !user) return;
     setProcessing(true);
 
-    // Simulate payment processing
-    await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const { data, error } = await supabase.functions.invoke("create-midtrans-token", {
+        body: {
+          package_id: selectedPackage.id,
+          coins: selectedPackage.coins,
+          amount: selectedPackage.price,
+        },
+      });
 
-    addCoins(selectedPackage.coins);
-    setProcessing(false);
-    setSelectedPackage(null);
+      if (error || !data?.token) {
+        throw new Error(error?.message || "Failed to create payment");
+      }
 
-    toast({
-      title: t("purchaseSuccess"),
-      description: t("purchaseSuccessDesc", {
-        coins: selectedPackage.coins.toLocaleString(),
-      }),
-    });
+      setSelectedPackage(null);
+
+      // Open Midtrans Snap popup
+      window.snap.pay(data.token, {
+        onSuccess: (result: any) => {
+          addCoins(selectedPackage.coins);
+          toast({
+            title: t("purchaseSuccess"),
+            description: t("purchaseSuccessDesc", {
+              coins: selectedPackage.coins.toLocaleString(),
+            }),
+          });
+        },
+        onPending: (result: any) => {
+          toast({
+            title: "Pembayaran Pending",
+            description: "Silakan selesaikan pembayaran Anda. Koin akan ditambahkan setelah pembayaran dikonfirmasi.",
+          });
+        },
+        onError: (result: any) => {
+          toast({
+            title: "Pembayaran Gagal",
+            description: "Terjadi kesalahan saat memproses pembayaran.",
+            variant: "destructive",
+          });
+        },
+        onClose: () => {
+          console.log("Payment popup closed");
+        },
+      });
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Gagal memproses pembayaran",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const formatRupiah = (value: number) =>
@@ -108,11 +184,11 @@ const TopUp = () => {
           ))}
         </div>
 
-        {/* Simulated payment methods */}
+        {/* Payment methods info */}
         <div className="mx-auto mt-10 max-w-md text-center">
           <p className="text-xs text-muted-foreground">{t("paymentMethods")}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-            {["GoPay", "OVO", "DANA", "ShopeePay", "BCA VA", "BRI VA"].map(
+            {["GoPay", "OVO", "DANA", "ShopeePay", "BCA VA", "BRI VA", "QRIS", "Credit Card"].map(
               (m) => (
                 <span
                   key={m}
@@ -163,7 +239,7 @@ const TopUp = () => {
               >
                 {processing ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-foreground border-t-transparent" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     {t("processing")}
                   </span>
                 ) : (
@@ -174,7 +250,7 @@ const TopUp = () => {
                 )}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                {t("simulationNote")}
+                Pembayaran diproses melalui Midtrans
               </p>
             </div>
           )}
