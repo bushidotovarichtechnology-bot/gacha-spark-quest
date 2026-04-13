@@ -57,7 +57,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize, totalCoins, spendCoins } = useGacha();
+  const { addPrize, totalCoins, spendCoins, drawsSinceTierA, pityThreshold } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -147,19 +147,46 @@ const CampaignDetail = () => {
       tiers.forEach((t) => { remainingCopy[t.id] = t.remaining; });
 
       for (let i = 0; i < actualCount; i++) {
+        // Track pity across draws in this batch
+        let localPityCount = drawsSinceTierA;
+
         const activeTiers = tiers
           .map((t) => ({ ...t, remaining: Math.max(remainingCopy[t.id] ?? 0, 0) }))
           .filter((t) => t.remaining > 0);
 
         if (activeTiers.length === 0) break;
 
-        // Weighted random using probability_weight
-        const totalWeight = activeTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
-        let r = Math.random() * totalWeight;
-        let selectedTier = activeTiers[activeTiers.length - 1];
-        for (const tier of activeTiers) {
-          r -= Number(tier.probability_weight);
-          if (r <= 0) { selectedTier = tier; break; }
+        let selectedTier;
+
+        // Pity system: force tier A or S when threshold reached
+        const isPityDraw = localPityCount >= pityThreshold - 1;
+        const rareTiers = activeTiers.filter((t) => t.label === "S" || t.label === "A");
+
+        if (isPityDraw && rareTiers.length > 0) {
+          // Force a rare tier
+          const totalRareWeight = rareTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
+          let r = Math.random() * totalRareWeight;
+          selectedTier = rareTiers[rareTiers.length - 1];
+          for (const tier of rareTiers) {
+            r -= Number(tier.probability_weight);
+            if (r <= 0) { selectedTier = tier; break; }
+          }
+        } else {
+          // Normal weighted random
+          const totalWeight = activeTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
+          let r = Math.random() * totalWeight;
+          selectedTier = activeTiers[activeTiers.length - 1];
+          for (const tier of activeTiers) {
+            r -= Number(tier.probability_weight);
+            if (r <= 0) { selectedTier = tier; break; }
+          }
+        }
+
+        // Update local pity counter
+        if (selectedTier.label === "S" || selectedTier.label === "A") {
+          localPityCount = 0;
+        } else {
+          localPityCount++;
         }
 
         const prize = selectedTier.prizes.length > 0
