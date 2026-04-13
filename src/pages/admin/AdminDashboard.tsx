@@ -45,6 +45,7 @@ const AdminDashboard = () => {
   const [popular, setPopular] = useState<PopularCampaign[]>([]);
   const [extraStats, setExtraStats] = useState({ tiers: 0, prizes: 0 });
   const [pitySettings, setPitySettings] = useState<PitySetting[]>([]);
+  const [pityTriggerCount, setPityTriggerCount] = useState(0);
 
   useEffect(() => {
     const fetchAll = async () => {
