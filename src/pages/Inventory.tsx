@@ -234,6 +234,45 @@ const Inventory = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Recycle Confirmation Dialog */}
+      <AlertDialog open={!!recyclingItem} onOpenChange={(open) => !open && setRecyclingItem(null)}>
+        <AlertDialogContent className="border-border bg-card">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+              <AlertTriangle className="h-6 w-6 text-accent" />
+            </div>
+            <AlertDialogTitle className="text-center font-display">
+              {t("recycleConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              {recyclingItem && (
+                <>
+                  <span className="font-semibold text-foreground">{recyclingItem.prize}</span>
+                  <span className="text-muted-foreground"> ({recyclingItem.tier})</span>
+                  <br />
+                  {t("recycleConfirmDesc", { value: recyclingItem?.coinValue ?? 0 })}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="border-border">{t("back")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => {
+                if (recyclingItem) {
+                  handleRecycle(recyclingItem.id, recyclingItem.prize);
+                  setRecyclingItem(null);
+                }
+              }}
+            >
+              <Recycle className="mr-1.5 h-4 w-4" />
+              {t("recycle")} · +{recyclingItem?.coinValue ?? 0} <Coins className="ml-1 h-3.5 w-3.5" />
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
