@@ -266,6 +266,7 @@ const CampaignDetail = () => {
           tier_label: r.tier,
           prize_name: r.prize,
           coin_value: coinValues[r.tier] || 15,
+          is_pity: r.isPityReward,
         })
       ) : [];
 
