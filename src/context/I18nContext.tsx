@@ -29,6 +29,7 @@ const translations = {
     // Index
     liveNow: "Live Now",
     featuredCampaigns: "Featured Campaigns",
+    companyName: "PT. BUSHIDO TOVARICH TECHNOLOGY",
     allRightsReserved: "© 2026 BUSHIDO GACHA — All rights reserved",
 
     // Campaign Card
@@ -208,6 +209,7 @@ const translations = {
     // Index
     liveNow: "Sedang Berlangsung",
     featuredCampaigns: "Kampanye Unggulan",
+    companyName: "PT. BUSHIDO TOVARICH TECHNOLOGY",
     allRightsReserved: "© 2026 BUSHIDO GACHA — Hak cipta dilindungi",
 
     // Campaign Card
