@@ -162,6 +162,69 @@ export type Database = {
         }
         Relationships: []
       }
+      prize_claims: {
+        Row: {
+          address: string
+          campaign_id: string
+          city: string
+          coin_value: number
+          created_at: string
+          id: string
+          image_url: string
+          notes: string | null
+          phone: string
+          postal_code: string
+          prize_name: string
+          province: string
+          recipient_name: string
+          shipping_method: string
+          status: string
+          tier_label: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          campaign_id: string
+          city: string
+          coin_value?: number
+          created_at?: string
+          id?: string
+          image_url?: string
+          notes?: string | null
+          phone: string
+          postal_code: string
+          prize_name: string
+          province: string
+          recipient_name: string
+          shipping_method?: string
+          status?: string
+          tier_label: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          campaign_id?: string
+          city?: string
+          coin_value?: number
+          created_at?: string
+          id?: string
+          image_url?: string
+          notes?: string | null
+          phone?: string
+          postal_code?: string
+          prize_name?: string
+          province?: string
+          recipient_name?: string
+          shipping_method?: string
+          status?: string
+          tier_label?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subcategories: {
         Row: {
           category_id: string
