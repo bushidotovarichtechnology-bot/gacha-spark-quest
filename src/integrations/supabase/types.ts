@@ -171,6 +171,7 @@ export type Database = {
           coin_value: number
           created_at: string
           id: string
+          is_pity: boolean
           prize_name: string
           tier_label: string
           user_id: string
@@ -180,6 +181,7 @@ export type Database = {
           coin_value?: number
           created_at?: string
           id?: string
+          is_pity?: boolean
           prize_name: string
           tier_label: string
           user_id: string
@@ -189,6 +191,7 @@ export type Database = {
           coin_value?: number
           created_at?: string
           id?: string
+          is_pity?: boolean
           prize_name?: string
           tier_label?: string
           user_id?: string
