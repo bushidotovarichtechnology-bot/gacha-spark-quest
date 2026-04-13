@@ -139,6 +139,8 @@ export type Database = {
           id: string
           message: string
           name: string
+          replied_at: string | null
+          reply: string | null
           subject: string
         }
         Insert: {
@@ -147,6 +149,8 @@ export type Database = {
           id?: string
           message: string
           name: string
+          replied_at?: string | null
+          reply?: string | null
           subject: string
         }
         Update: {
@@ -155,6 +159,8 @@ export type Database = {
           id?: string
           message?: string
           name?: string
+          replied_at?: string | null
+          reply?: string | null
           subject?: string
         }
         Relationships: []
