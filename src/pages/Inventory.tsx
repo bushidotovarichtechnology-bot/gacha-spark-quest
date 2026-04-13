@@ -196,7 +196,7 @@ const Inventory = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRecycle(item.id, item.prize)}
+                        onClick={() => setRecyclingItem(item)}
                         className="w-full gap-1.5 border-border/50 text-xs hover:border-accent/50 hover:text-accent"
                       >
                         <Recycle className="h-3 w-3" />
