@@ -14,6 +14,7 @@ import Inventory from "./pages/Inventory.tsx";
 import DrawHistory from "./pages/DrawHistory.tsx";
 import ClaimHistory from "./pages/ClaimHistory.tsx";
 import TopUp from "./pages/TopUp.tsx";
+import TransactionHistory from "./pages/TransactionHistory.tsx";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/history" element={<ProtectedRoute><DrawHistory /></ProtectedRoute>} />
             <Route path="/claims" element={<ProtectedRoute><ClaimHistory /></ProtectedRoute>} />
             <Route path="/topup" element={<ProtectedRoute><TopUp /></ProtectedRoute>} />
+            <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/login" element={<Login />} />
