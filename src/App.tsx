@@ -29,6 +29,7 @@ import AdminCampaigns from "./pages/admin/AdminCampaigns.tsx";
 import AdminProbability from "./pages/admin/AdminProbability.tsx";
 import AdminCategories from "./pages/admin/AdminCategories.tsx";
 import AdminClaims from "./pages/admin/AdminClaims.tsx";
+import AdminMessages from "./pages/admin/AdminMessages.tsx";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="probability" element={<AdminProbability />} />
               <Route path="categories" element={<AdminCategories />} />
               <Route path="claims" element={<AdminClaims />} />
+              <Route path="messages" element={<AdminMessages />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
