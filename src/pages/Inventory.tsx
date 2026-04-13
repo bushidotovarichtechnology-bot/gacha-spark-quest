@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -8,6 +8,16 @@ import { useGacha, type InventoryItem } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 import ClaimPrizeForm from "@/components/ClaimPrizeForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: string; label: string }> = {
   S: { color: "text-accent", icon: Crown, gradient: "from-accent/30 to-accent/5", label: "Grand Prize" },
@@ -22,6 +32,7 @@ const Inventory = () => {
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
 
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
+  const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
 
   const filteredItems = filter === "all" ? items : items.filter((i) => i.tier === filter);
   const pityProgress = Math.min((drawsSinceTierA / pityThreshold) * 100, 100);
