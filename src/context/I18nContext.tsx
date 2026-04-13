@@ -76,6 +76,8 @@ const translations = {
     recycle: "Recycle",
     recycledTitle: "Recycled \"{name}\"",
     recycledDesc: "+{value} Gacha Coins earned!",
+    recycleConfirmTitle: "Recycle this prize?",
+    recycleConfirmDesc: "You will receive +{value} Gacha Coins. This action cannot be undone.",
     yourCollection: "Your collection of prizes from Bushido Gacha draws.",
 
     // Draw History
@@ -251,6 +253,8 @@ const translations = {
     recycle: "Daur Ulang",
     recycledTitle: "Didaur ulang \"{name}\"",
     recycledDesc: "+{value} Koin Gacha diperoleh!",
+    recycleConfirmTitle: "Daur ulang hadiah ini?",
+    recycleConfirmDesc: "Kamu akan mendapat +{value} Koin Gacha. Tindakan ini tidak bisa dibatalkan.",
     yourCollection: "Koleksi hadiah dari tarikan Bushido Gacha kamu.",
 
     // Draw History

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -8,6 +8,16 @@ import { useGacha, type InventoryItem } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 import ClaimPrizeForm from "@/components/ClaimPrizeForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: string; label: string }> = {
   S: { color: "text-accent", icon: Crown, gradient: "from-accent/30 to-accent/5", label: "Grand Prize" },
@@ -22,6 +32,7 @@ const Inventory = () => {
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
 
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
+  const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
 
   const filteredItems = filter === "all" ? items : items.filter((i) => i.tier === filter);
   const pityProgress = Math.min((drawsSinceTierA / pityThreshold) * 100, 100);
@@ -185,7 +196,7 @@ const Inventory = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRecycle(item.id, item.prize)}
+                        onClick={() => setRecyclingItem(item)}
                         className="w-full gap-1.5 border-border/50 text-xs hover:border-accent/50 hover:text-accent"
                       >
                         <Recycle className="h-3 w-3" />
@@ -223,6 +234,45 @@ const Inventory = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Recycle Confirmation Dialog */}
+      <AlertDialog open={!!recyclingItem} onOpenChange={(open) => !open && setRecyclingItem(null)}>
+        <AlertDialogContent className="border-border bg-card">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+              <AlertTriangle className="h-6 w-6 text-accent" />
+            </div>
+            <AlertDialogTitle className="text-center font-display">
+              {t("recycleConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              {recyclingItem && (
+                <>
+                  <span className="font-semibold text-foreground">{recyclingItem.prize}</span>
+                  <span className="text-muted-foreground"> ({recyclingItem.tier})</span>
+                  <br />
+                  {t("recycleConfirmDesc", { value: recyclingItem?.coinValue ?? 0 })}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="border-border">{t("back")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => {
+                if (recyclingItem) {
+                  handleRecycle(recyclingItem.id, recyclingItem.prize);
+                  setRecyclingItem(null);
+                }
+              }}
+            >
+              <Recycle className="mr-1.5 h-4 w-4" />
+              {t("recycle")} · +{recyclingItem?.coinValue ?? 0} <Coins className="ml-1 h-3.5 w-3.5" />
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
