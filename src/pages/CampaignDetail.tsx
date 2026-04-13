@@ -58,7 +58,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize, totalCoins, spendCoins, drawsSinceTierA, pityThreshold } = useGacha();
+  const { addPrize, totalCoins, spendCoins, drawsSinceTierA } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -73,6 +73,19 @@ const CampaignDetail = () => {
         .single();
       if (error) throw error;
       return data;
+    },
+    enabled: !!campaignId,
+  });
+
+  const { data: pitySettings } = useQuery({
+    queryKey: ["pity_settings", campaignId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pity_settings")
+        .select("*")
+        .eq("campaign_id", campaignId)
+        .maybeSingle();
+      return data as { threshold: number; guaranteed_tier: string; is_enabled: boolean } | null;
     },
     enabled: !!campaignId,
   });
@@ -100,6 +113,10 @@ const CampaignDetail = () => {
   const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
+
+  const pityEnabled = pitySettings?.is_enabled ?? true;
+  const pityThreshold = pitySettings?.threshold ?? 10;
+  const pityGuaranteedTier = pitySettings?.guaranteed_tier ?? "A";
 
   if (isLoading || !campaign) {
     return (
@@ -162,8 +179,10 @@ const CampaignDetail = () => {
         let selectedTier;
 
         // Pity system: force tier A or S when threshold reached
-        const isPityDraw = localPityCount >= pityThreshold - 1;
-        const rareTiers = activeTiers.filter((t) => t.label === "S" || t.label === "A");
+        const isPityDraw = pityEnabled && localPityCount >= pityThreshold - 1;
+        const tierOrder = ["S", "A", "B", "C"];
+        const guaranteedIdx = tierOrder.indexOf(pityGuaranteedTier);
+        const rareTiers = activeTiers.filter((t) => tierOrder.indexOf(t.label) <= guaranteedIdx);
 
         if (isPityDraw && rareTiers.length > 0) {
           batchHasPity = true;
@@ -340,6 +359,7 @@ const CampaignDetail = () => {
         </motion.div>
 
         {/* Pity System Indicator */}
+        {pityEnabled && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -373,6 +393,7 @@ const CampaignDetail = () => {
               : `${pityThreshold - drawsSinceTierA} ${t("moreDrawsForTierA")}`}
           </p>
         </motion.div>
+        )}
       </div>
 
       <AnimatePresence>
