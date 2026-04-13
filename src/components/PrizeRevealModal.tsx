@@ -7,8 +7,9 @@ import { useI18n } from "@/context/I18nContext";
 interface PrizeRevealModalProps {
   open: boolean;
   onClose: () => void;
-  prizes: { tier: string; color: string; prize: string }[];
+  prizes: { tier: string; color: string; prize: string; isPityReward?: boolean }[];
   drawCount: number;
+  hasPityReward?: boolean;
 }
 
 const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof Crown; emoji: string }> = {
@@ -20,7 +21,7 @@ const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof 
 
 const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
 
-const PrizeRevealModal = ({ open, onClose, prizes, drawCount }: PrizeRevealModalProps) => {
+const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: PrizeRevealModalProps) => {
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
