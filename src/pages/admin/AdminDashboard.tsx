@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Package, Layers, Trophy, Zap, CalendarDays, TrendingUp, Shield, ShieldCheck, BarChart3 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface AdminStats {
   total_users: number;
@@ -27,12 +28,42 @@ interface PitySetting {
   is_enabled: boolean;
 }
 
+interface PityTrendRow {
+  date: string;
+  pity_count: number;
+}
+
 const TIER_COLORS: Record<string, string> = {
   S: "hsl(var(--accent))",
   A: "hsl(280, 80%, 60%)",
   B: "hsl(210, 80%, 60%)",
   C: "hsl(150, 60%, 50%)",
 };
+
+function aggregateByWeek(data: PityTrendRow[]) {
+  const weeks: Record<string, number> = {};
+  data.forEach((d) => {
+    const date = new Date(d.date);
+    const weekStart = new Date(date);
+    weekStart.setDate(date.getDate() - date.getDay());
+    const key = weekStart.toISOString().slice(0, 10);
+    weeks[key] = (weeks[key] || 0) + d.pity_count;
+  });
+  return Object.entries(weeks)
+    .map(([date, count]) => ({ date, pity_count: count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function aggregateByMonth(data: PityTrendRow[]) {
+  const months: Record<string, number> = {};
+  data.forEach((d) => {
+    const key = d.date.slice(0, 7); // YYYY-MM
+    months[key] = (months[key] || 0) + d.pity_count;
+  });
+  return Object.entries(months)
+    .map(([date, count]) => ({ date, pity_count: count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState<AdminStats>({
@@ -46,16 +77,18 @@ const AdminDashboard = () => {
   const [extraStats, setExtraStats] = useState({ tiers: 0, prizes: 0 });
   const [pitySettings, setPitySettings] = useState<PitySetting[]>([]);
   const [pityTriggerCount, setPityTriggerCount] = useState(0);
+  const [pityTrend, setPityTrend] = useState<PityTrendRow[]>([]);
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [adminStats, popularCampaigns, tiers, prizes, pity, pityDraws] = await Promise.all([
+      const [adminStats, popularCampaigns, tiers, prizes, pity, pityDraws, trend] = await Promise.all([
         supabase.rpc("get_admin_stats"),
         supabase.rpc("get_popular_campaigns", { lim: 5 }),
         supabase.from("campaign_tiers").select("id", { count: "exact", head: true }),
         supabase.from("tier_prizes").select("id", { count: "exact", head: true }),
         supabase.from("pity_settings").select("*"),
         supabase.from("draws").select("id", { count: "exact", head: true }).eq("is_pity", true),
+        supabase.rpc("get_pity_trend", { days_back: 90 }),
       ]);
 
       if (adminStats.data) setStats(adminStats.data as unknown as AdminStats);
@@ -66,6 +99,7 @@ const AdminDashboard = () => {
       });
       if (pity.data) setPitySettings(pity.data as unknown as PitySetting[]);
       setPityTriggerCount(pityDraws.count ?? 0);
+      if (trend.data) setPityTrend(trend.data as unknown as PityTrendRow[]);
     };
     fetchAll();
   }, []);
@@ -104,6 +138,12 @@ const AdminDashboard = () => {
     tierDistribution.map((t) => [t.tier, { label: `Tier ${t.tier}`, color: t.fill }])
   );
 
+  // Trend data
+  const weeklyTrend = useMemo(() => aggregateByWeek(pityTrend), [pityTrend]);
+  const monthlyTrend = useMemo(() => aggregateByMonth(pityTrend), [pityTrend]);
+
+  const trendChartConfig = { pity_count: { label: "Pity Triggers", color: "hsl(var(--accent))" } };
+
   const cards = [
     { label: "Total Users", value: stats.total_users, icon: Users, color: "text-primary" },
     { label: "Total Draws", value: stats.total_draws, icon: Zap, color: "text-accent" },
@@ -113,6 +153,28 @@ const AdminDashboard = () => {
     { label: "Total Tiers", value: extraStats.tiers, icon: Layers, color: "text-muted-foreground" },
     { label: "Total Prizes", value: extraStats.prizes, icon: Trophy, color: "text-neon-pink" },
   ];
+
+  const renderTrendChart = (data: PityTrendRow[], dateFormatter?: (v: string) => string) => (
+    <ChartContainer config={trendChartConfig} className="max-h-[250px] w-full">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 10 }}
+          tickFormatter={dateFormatter || ((v: string) => v.slice(5))}
+        />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+        <Line
+          type="monotone"
+          dataKey="pity_count"
+          stroke="hsl(var(--accent))"
+          strokeWidth={2}
+          dot={{ r: 3, fill: "hsl(var(--accent))" }}
+        />
+        <ChartTooltip content={<ChartTooltipContent />} />
+      </LineChart>
+    </ChartContainer>
+  );
 
   return (
     <div>
@@ -189,6 +251,49 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Pity Trend Chart */}
+      <Card className="mt-6 border-border/50">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Pity Trigger Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="daily">
+            <TabsList className="mb-4">
+              <TabsTrigger value="daily">Per Hari</TabsTrigger>
+              <TabsTrigger value="weekly">Per Minggu</TabsTrigger>
+              <TabsTrigger value="monthly">Per Bulan</TabsTrigger>
+            </TabsList>
+            <TabsContent value="daily">
+              {pityTrend.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">Belum ada data pity triggers.</p>
+              ) : (
+                renderTrendChart(pityTrend)
+              )}
+            </TabsContent>
+            <TabsContent value="weekly">
+              {weeklyTrend.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">Belum ada data pity triggers.</p>
+              ) : (
+                renderTrendChart(weeklyTrend, (v) => {
+                  const d = new Date(v);
+                  return `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleString("default", { month: "short" })}`;
+                })
+              )}
+            </TabsContent>
+            <TabsContent value="monthly">
+              {monthlyTrend.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">Belum ada data pity triggers.</p>
+              ) : (
+                renderTrendChart(monthlyTrend, (v) => {
+                  const [y, m] = v.split("-");
+                  return new Date(+y, +m - 1).toLocaleString("default", { month: "short", year: "2-digit" });
+                })
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       {tierDistribution.length > 0 && (
