@@ -420,6 +420,7 @@ const CampaignDetail = () => {
         onClose={() => setShowResult(false)}
         prizes={drawnPrizes}
         drawCount={drawCount}
+        hasPityReward={hasPityReward}
       />
 
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
