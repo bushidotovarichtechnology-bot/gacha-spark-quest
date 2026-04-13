@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
+import dinoUnboxAsset from "@/assets/dino-unbox.mp4.asset.json";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
 import campaignWallet from "@/assets/campaign-wallet.jpg";
 import campaignFigurine from "@/assets/campaign-figurine.jpg";
@@ -96,8 +97,9 @@ const CampaignDetail = () => {
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string }[]>([]);
+  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
+  const [hasPityReward, setHasPityReward] = useState(false);
 
   if (isLoading || !campaign) {
     return (
@@ -142,7 +144,8 @@ const CampaignDetail = () => {
     setIsDrawing(true);
 
     setTimeout(async () => {
-      const results: { tier: string; color: string; prize: string }[] = [];
+      const results: { tier: string; color: string; prize: string; isPityReward?: boolean }[] = [];
+      let batchHasPity = false;
       const remainingCopy: Record<string, number> = {};
       tiers.forEach((t) => { remainingCopy[t.id] = t.remaining; });
 
@@ -163,6 +166,7 @@ const CampaignDetail = () => {
         const rareTiers = activeTiers.filter((t) => t.label === "S" || t.label === "A");
 
         if (isPityDraw && rareTiers.length > 0) {
+          batchHasPity = true;
           // Force a rare tier
           const totalRareWeight = rareTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
           let r = Math.random() * totalRareWeight;
@@ -204,7 +208,7 @@ const CampaignDetail = () => {
           coinValue: coinValues[selectedTier.label] || 15,
         });
 
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize });
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize, isPityReward: isPityDraw && rareTiers.length > 0 });
       }
 
       // Update remaining counts in database & record draws
