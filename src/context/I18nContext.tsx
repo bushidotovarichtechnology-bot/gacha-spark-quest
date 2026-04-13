@@ -61,6 +61,8 @@ const translations = {
     grandPrizeFire: "🔥 GRAND PRIZE 🔥",
     claimReward: "Claim Reward!",
     continue: "Continue",
+    skipAll: "Skip All",
+    drawSummary: "Summary",
 
     // Inventory
     totalItems: "Total Items",
@@ -238,6 +240,8 @@ const translations = {
     grandPrizeFire: "🔥 HADIAH UTAMA 🔥",
     claimReward: "Klaim Hadiah!",
     continue: "Lanjutkan",
+    skipAll: "Lewati Semua",
+    drawSummary: "Ringkasan",
 
     // Inventory
     totalItems: "Total Item",
