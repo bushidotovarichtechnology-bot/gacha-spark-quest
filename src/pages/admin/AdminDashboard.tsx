@@ -176,6 +176,18 @@ const AdminDashboard = () => {
             <p className="text-xs text-muted-foreground">of campaigns</p>
           </CardContent>
         </Card>
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Pity Triggers</CardTitle>
+            <Zap className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-accent">{pityTriggerCount}</p>
+            <p className="text-xs text-muted-foreground">
+              {stats.total_draws > 0 ? `${((pityTriggerCount / stats.total_draws) * 100).toFixed(1)}% of all draws` : "total pity draws"}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts */}
