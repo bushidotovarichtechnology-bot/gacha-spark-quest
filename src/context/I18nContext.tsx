@@ -240,6 +240,8 @@ const translations = {
     grandPrizeFire: "🔥 HADIAH UTAMA 🔥",
     claimReward: "Klaim Hadiah!",
     continue: "Lanjutkan",
+    skipAll: "Lewati Semua",
+    drawSummary: "Ringkasan",
 
     // Inventory
     totalItems: "Total Item",
