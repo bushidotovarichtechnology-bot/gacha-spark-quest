@@ -114,6 +114,10 @@ const CampaignDetail = () => {
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
 
+  const pityEnabled = pitySettings?.is_enabled ?? true;
+  const pityThreshold = pitySettings?.threshold ?? 10;
+  const pityGuaranteedTier = pitySettings?.guaranteed_tier ?? "A";
+
   if (isLoading || !campaign) {
     return (
       <div className="min-h-screen">
@@ -175,8 +179,10 @@ const CampaignDetail = () => {
         let selectedTier;
 
         // Pity system: force tier A or S when threshold reached
-        const isPityDraw = localPityCount >= pityThreshold - 1;
-        const rareTiers = activeTiers.filter((t) => t.label === "S" || t.label === "A");
+        const isPityDraw = pityEnabled && localPityCount >= pityThreshold - 1;
+        const tierOrder = ["S", "A", "B", "C"];
+        const guaranteedIdx = tierOrder.indexOf(pityGuaranteedTier);
+        const rareTiers = activeTiers.filter((t) => tierOrder.indexOf(t.label) <= guaranteedIdx);
 
         if (isPityDraw && rareTiers.length > 0) {
           batchHasPity = true;
@@ -353,6 +359,7 @@ const CampaignDetail = () => {
         </motion.div>
 
         {/* Pity System Indicator */}
+        {pityEnabled && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -386,6 +393,7 @@ const CampaignDetail = () => {
               : `${pityThreshold - drawsSinceTierA} ${t("moreDrawsForTierA")}`}
           </p>
         </motion.div>
+        )}
       </div>
 
       <AnimatePresence>
