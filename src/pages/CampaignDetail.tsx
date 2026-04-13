@@ -232,6 +232,7 @@ const CampaignDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
 
       setDrawnPrizes(results);
+      setHasPityReward(batchHasPity);
       setIsDrawing(false);
       setShowResult(true);
     }, 2400);
