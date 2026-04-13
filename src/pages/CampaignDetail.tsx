@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
+import dinoUnboxAsset from "@/assets/dino-unbox.mp4.asset.json";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
 import campaignWallet from "@/assets/campaign-wallet.jpg";
 import campaignFigurine from "@/assets/campaign-figurine.jpg";
@@ -96,8 +97,9 @@ const CampaignDetail = () => {
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string }[]>([]);
+  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
+  const [hasPityReward, setHasPityReward] = useState(false);
 
   if (isLoading || !campaign) {
     return (
@@ -142,7 +144,8 @@ const CampaignDetail = () => {
     setIsDrawing(true);
 
     setTimeout(async () => {
-      const results: { tier: string; color: string; prize: string }[] = [];
+      const results: { tier: string; color: string; prize: string; isPityReward?: boolean }[] = [];
+      let batchHasPity = false;
       const remainingCopy: Record<string, number> = {};
       tiers.forEach((t) => { remainingCopy[t.id] = t.remaining; });
 
@@ -163,6 +166,7 @@ const CampaignDetail = () => {
         const rareTiers = activeTiers.filter((t) => t.label === "S" || t.label === "A");
 
         if (isPityDraw && rareTiers.length > 0) {
+          batchHasPity = true;
           // Force a rare tier
           const totalRareWeight = rareTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
           let r = Math.random() * totalRareWeight;
@@ -204,7 +208,7 @@ const CampaignDetail = () => {
           coinValue: coinValues[selectedTier.label] || 15,
         });
 
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize });
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize, isPityReward: isPityDraw && rareTiers.length > 0 });
       }
 
       // Update remaining counts in database & record draws
@@ -228,6 +232,7 @@ const CampaignDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
 
       setDrawnPrizes(results);
+      setHasPityReward(batchHasPity);
       setIsDrawing(false);
       setShowResult(true);
     }, 2400);
@@ -376,30 +381,26 @@ const CampaignDetail = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-lg"
           >
-            <div className="flex flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-4">
+              {/* Dino unboxing video */}
               <motion.div
-                animate={{
-                  rotate: [0, -5, 5, -8, 8, -3, 3, 0],
-                  scale: [1, 1.05, 1, 1.08, 1, 1.03, 1],
-                }}
-                transition={{ duration: 0.5, repeat: 3, ease: "easeInOut" }}
-                className="relative"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", damping: 12 }}
+                className="relative overflow-hidden rounded-2xl border-2 border-primary/50 box-glow-purple"
+                style={{ width: 280, height: 280 }}
               >
-                <motion.div
-                  animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                  className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl"
+                <video
+                  src={dinoUnboxAsset.url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover"
                 />
-                <motion.div
-                  animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
-                  transition={{ duration: 0.8, repeat: Infinity, delay: 0.3 }}
-                  className="absolute inset-0 rounded-2xl bg-accent/20 blur-xl"
-                />
-                <div className="relative flex h-32 w-32 items-center justify-center rounded-2xl border-2 border-primary/50 bg-card box-glow-purple">
-                  <span className="text-5xl">🎁</span>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
               </motion.div>
 
               <motion.p
@@ -419,6 +420,7 @@ const CampaignDetail = () => {
         onClose={() => setShowResult(false)}
         prizes={drawnPrizes}
         drawCount={drawCount}
+        hasPityReward={hasPityReward}
       />
 
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">

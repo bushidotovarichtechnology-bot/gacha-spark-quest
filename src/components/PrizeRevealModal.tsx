@@ -7,8 +7,9 @@ import { useI18n } from "@/context/I18nContext";
 interface PrizeRevealModalProps {
   open: boolean;
   onClose: () => void;
-  prizes: { tier: string; color: string; prize: string }[];
+  prizes: { tier: string; color: string; prize: string; isPityReward?: boolean }[];
   drawCount: number;
+  hasPityReward?: boolean;
 }
 
 const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof Crown; emoji: string }> = {
@@ -20,7 +21,7 @@ const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof 
 
 const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
 
-const PrizeRevealModal = ({ open, onClose, prizes, drawCount }: PrizeRevealModalProps) => {
+const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: PrizeRevealModalProps) => {
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
@@ -117,6 +118,9 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount }: PrizeRevealModal
                         <p className={`truncate text-sm font-semibold ${rare ? "text-accent" : "text-foreground"}`}>
                           {p.prize}
                         </p>
+                        {p.isPityReward && (
+                          <span className="text-[9px] font-bold text-accent">★ PITY</span>
+                        )}
                       </div>
                       <span className="text-lg">{c.emoji}</span>
                     </motion.div>
@@ -150,13 +154,61 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount }: PrizeRevealModal
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", damping: 15, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
-              className={`relative w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6 text-center ${config.glow}`}
+              className={`relative w-full max-w-sm overflow-hidden rounded-2xl border bg-card p-6 text-center ${
+                prize.isPityReward ? "border-accent box-glow-gold" : `border-border ${config.glow}`
+              }`}
             >
-              <button onClick={handleClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
+              <button onClick={handleClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground z-10">
                 <X className="h-5 w-5" />
               </button>
 
-              {isRare && (
+              {/* Pity reward special effect */}
+              {prize.isPityReward && (
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  {/* Rotating golden rays */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-[-50%] opacity-20"
+                    style={{
+                      background: "conic-gradient(from 0deg, transparent, hsl(var(--accent)), transparent, hsl(var(--accent)), transparent, hsl(var(--accent)), transparent)",
+                    }}
+                  />
+                  {/* Pity badge */}
+                  <motion.div
+                    initial={{ scale: 0, rotate: -20 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+                    className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-yellow-400 px-2.5 py-1 text-[10px] font-black text-background shadow-lg"
+                  >
+                    <Star className="h-3 w-3" />
+                    PITY REWARD
+                  </motion.div>
+                  {/* Extra sparkle particles */}
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <motion.div
+                      key={`pity-${i}`}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0],
+                        x: `${Math.random() * 100}%`,
+                        y: `${Math.random() * 100}%`,
+                      }}
+                      transition={{
+                        duration: 1.5 + Math.random(),
+                        delay: Math.random() * 2,
+                        repeat: Infinity,
+                        repeatDelay: Math.random() * 2,
+                      }}
+                      className="absolute h-1.5 w-1.5 rounded-full bg-accent"
+                      style={{ filter: "blur(0.5px)" }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {isRare && !prize.isPityReward && (
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <motion.div
