@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Package, Layers, Trophy, Zap, CalendarDays, TrendingUp, Shield, ShieldCheck, BarChart3 } from "lucide-react";
+import { Users, Package, Layers, Trophy, Zap, CalendarDays, TrendingUp, Shield, ShieldCheck, BarChart3, DollarSign, CreditCard, Receipt } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -33,12 +33,30 @@ interface PityTrendRow {
   pity_count: number;
 }
 
+interface Transaction {
+  id: string;
+  amount: number;
+  coins: number;
+  status: string;
+  payment_type: string | null;
+  created_at: string;
+}
+
 const TIER_COLORS: Record<string, string> = {
   S: "hsl(var(--accent))",
   A: "hsl(280, 80%, 60%)",
   B: "hsl(210, 80%, 60%)",
   C: "hsl(150, 60%, 50%)",
 };
+
+const PAYMENT_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--accent))",
+  "hsl(280, 80%, 60%)",
+  "hsl(210, 80%, 60%)",
+  "hsl(150, 60%, 50%)",
+  "hsl(30, 80%, 60%)",
+];
 
 function aggregateByWeek(data: PityTrendRow[]) {
   const weeks: Record<string, number> = {};
@@ -57,13 +75,16 @@ function aggregateByWeek(data: PityTrendRow[]) {
 function aggregateByMonth(data: PityTrendRow[]) {
   const months: Record<string, number> = {};
   data.forEach((d) => {
-    const key = d.date.slice(0, 7); // YYYY-MM
+    const key = d.date.slice(0, 7);
     months[key] = (months[key] || 0) + d.pity_count;
   });
   return Object.entries(months)
     .map(([date, count]) => ({ date, pity_count: count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
+
+const formatRupiah = (value: number) =>
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState<AdminStats>({
@@ -78,10 +99,11 @@ const AdminDashboard = () => {
   const [pitySettings, setPitySettings] = useState<PitySetting[]>([]);
   const [pityTriggerCount, setPityTriggerCount] = useState(0);
   const [pityTrend, setPityTrend] = useState<PityTrendRow[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [adminStats, popularCampaigns, tiers, prizes, pity, pityDraws, trend] = await Promise.all([
+      const [adminStats, popularCampaigns, tiers, prizes, pity, pityDraws, trend, txData] = await Promise.all([
         supabase.rpc("get_admin_stats"),
         supabase.rpc("get_popular_campaigns", { lim: 5 }),
         supabase.from("campaign_tiers").select("id", { count: "exact", head: true }),
@@ -89,6 +111,7 @@ const AdminDashboard = () => {
         supabase.from("pity_settings").select("*"),
         supabase.from("draws").select("id", { count: "exact", head: true }).eq("is_pity", true),
         supabase.rpc("get_pity_trend", { days_back: 90 }),
+        supabase.from("transactions").select("id, amount, coins, status, payment_type, created_at"),
       ]);
 
       if (adminStats.data) setStats(adminStats.data as unknown as AdminStats);
@@ -100,16 +123,50 @@ const AdminDashboard = () => {
       if (pity.data) setPitySettings(pity.data as unknown as PitySetting[]);
       setPityTriggerCount(pityDraws.count ?? 0);
       if (trend.data) setPityTrend(trend.data as unknown as PityTrendRow[]);
+      if (txData.data) setTransactions(txData.data as unknown as Transaction[]);
     };
     fetchAll();
   }, []);
+
+  // Payment stats
+  const settledTx = transactions.filter((t) => t.status === "settlement");
+  const totalRevenue = settledTx.reduce((sum, t) => sum + t.amount, 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const txToday = transactions.filter((t) => t.created_at.slice(0, 10) === today).length;
+  const settledToday = settledTx.filter((t) => t.created_at.slice(0, 10) === today).length;
+
+  // Payment method distribution
+  const paymentMethodCounts: Record<string, number> = {};
+  settledTx.forEach((t) => {
+    const method = t.payment_type || "unknown";
+    paymentMethodCounts[method] = (paymentMethodCounts[method] || 0) + 1;
+  });
+  const paymentMethodData = Object.entries(paymentMethodCounts)
+    .map(([method, count], i) => ({ method, count, fill: PAYMENT_COLORS[i % PAYMENT_COLORS.length] }))
+    .sort((a, b) => b.count - a.count);
+
+  const paymentChartConfig = Object.fromEntries(
+    paymentMethodData.map((p) => [p.method, { label: p.method, color: p.fill }])
+  );
+
+  // Revenue trend (last 30 days)
+  const revenueTrend = useMemo(() => {
+    const daily: Record<string, number> = {};
+    settledTx.forEach((t) => {
+      const d = t.created_at.slice(0, 10);
+      daily[d] = (daily[d] || 0) + t.amount;
+    });
+    return Object.entries(daily)
+      .map(([date, revenue]) => ({ date, revenue }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-30);
+  }, [transactions]);
 
   // Pity stats
   const totalPity = pitySettings.length;
   const enabledPity = pitySettings.filter((p) => p.is_enabled).length;
   const disabledPity = totalPity - enabledPity;
 
-  // Tier distribution
   const tierCounts: Record<string, number> = {};
   pitySettings.forEach((p) => {
     if (p.is_enabled) {
@@ -123,7 +180,6 @@ const AdminDashboard = () => {
       return order.indexOf(a.tier) - order.indexOf(b.tier);
     });
 
-  // Threshold distribution
   const thresholdData = pitySettings
     .filter((p) => p.is_enabled)
     .reduce<Record<number, number>>((acc, p) => {
@@ -138,7 +194,6 @@ const AdminDashboard = () => {
     tierDistribution.map((t) => [t.tier, { label: `Tier ${t.tier}`, color: t.fill }])
   );
 
-  // Trend data
   const weeklyTrend = useMemo(() => aggregateByWeek(pityTrend), [pityTrend]);
   const monthlyTrend = useMemo(() => aggregateByMonth(pityTrend), [pityTrend]);
 
@@ -192,6 +247,98 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Payment Statistics */}
+      <h2 className="mb-4 mt-8 font-display text-sm font-semibold uppercase tracking-[0.2em] text-accent">
+        Payment Statistics
+      </h2>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-xl font-bold text-accent">{formatRupiah(totalRevenue)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Total Transactions</CardTitle>
+            <Receipt className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{transactions.length}</p>
+            <p className="text-xs text-muted-foreground">{settledTx.length} settled</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Transactions Today</CardTitle>
+            <CalendarDays className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{txToday}</p>
+            <p className="text-xs text-muted-foreground">{settledToday} settled</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Payment Methods</CardTitle>
+            <CreditCard className="h-4 w-4 text-neon-pink" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{Object.keys(paymentMethodCounts).length}</p>
+            <p className="text-xs text-muted-foreground">unique methods</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Revenue Trend & Payment Method Charts */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Revenue Trend (Last 30 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {revenueTrend.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">Belum ada data revenue.</p>
+            ) : (
+              <ChartContainer config={{ revenue: { label: "Revenue", color: "hsl(var(--accent))" } }} className="max-h-[200px] w-full">
+                <BarChart data={revenueTrend}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v: string) => v.slice(5)} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                  <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                  <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatRupiah(value as number)} />} />
+                </BarChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Popular Payment Methods</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {paymentMethodData.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">Belum ada data pembayaran.</p>
+            ) : (
+              <ChartContainer config={paymentChartConfig} className="mx-auto aspect-square max-h-[200px]">
+                <PieChart>
+                  <Pie data={paymentMethodData} dataKey="count" nameKey="method" cx="50%" cy="50%" outerRadius={70} label={({ method, count }) => `${method}: ${count}`}>
+                    {paymentMethodData.map((entry) => (
+                      <Cell key={entry.method} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Pity System Stats */}
@@ -298,7 +445,6 @@ const AdminDashboard = () => {
       {/* Charts */}
       {tierDistribution.length > 0 && (
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {/* Guaranteed Tier Distribution */}
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground">Guaranteed Tier Distribution</CardTitle>
@@ -317,7 +463,6 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Threshold Distribution */}
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground">Threshold Distribution</CardTitle>
