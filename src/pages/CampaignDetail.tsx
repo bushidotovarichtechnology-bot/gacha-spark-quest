@@ -108,8 +108,20 @@ const CampaignDetail = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "pity_settings", filter: `campaign_id=eq.${campaignId}` },
-        () => {
+        (payload) => {
           queryClient.invalidateQueries({ queryKey: ["pity_settings", campaignId] });
+          if (payload.eventType === "UPDATE") {
+            const newData = payload.new as any;
+            if (!newData.is_enabled) {
+              toast.info("Pity system telah dinonaktifkan untuk campaign ini");
+            } else {
+              toast.info(`Pity system diperbarui: threshold ${newData.threshold} draw, tier ${newData.guaranteed_tier} dijamin`);
+            }
+          } else if (payload.eventType === "DELETE") {
+            toast.info("Pity system telah dihapus untuk campaign ini");
+          } else if (payload.eventType === "INSERT") {
+            toast.info("Pity system telah diaktifkan untuk campaign ini!");
+          }
         }
       )
       .subscribe();
