@@ -58,7 +58,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize, totalCoins, spendCoins, drawsSinceTierA, pityThreshold } = useGacha();
+  const { addPrize, totalCoins, spendCoins, drawsSinceTierA } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -73,6 +73,19 @@ const CampaignDetail = () => {
         .single();
       if (error) throw error;
       return data;
+    },
+    enabled: !!campaignId,
+  });
+
+  const { data: pitySettings } = useQuery({
+    queryKey: ["pity_settings", campaignId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pity_settings")
+        .select("*")
+        .eq("campaign_id", campaignId)
+        .maybeSingle();
+      return data as { threshold: number; guaranteed_tier: string; is_enabled: boolean } | null;
     },
     enabled: !!campaignId,
   });
