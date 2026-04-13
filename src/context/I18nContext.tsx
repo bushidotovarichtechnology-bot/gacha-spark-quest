@@ -86,6 +86,7 @@ const translations = {
     // Sold Out
     soldOut: "Sold Out",
     soldOutDesc: "All tickets have been drawn!",
+    insufficientCoins: "Not enough coins! Top up to continue drawing.",
 
     // Top Up
     topUpCoins: "Top Up Coins",
@@ -259,6 +260,7 @@ const translations = {
     // Sold Out
     soldOut: "Habis Terjual",
     soldOutDesc: "Semua tiket sudah ditarik!",
+    insufficientCoins: "Koin tidak cukup! Isi ulang untuk melanjutkan tarikan.",
 
     // Top Up
     topUpCoins: "Isi Ulang Koin",
