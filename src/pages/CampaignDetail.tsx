@@ -2,11 +2,12 @@ import { useState, useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket } from "lucide-react";
+import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
 import { useGacha } from "@/context/GachaContext";
+import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,7 +57,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize } = useGacha();
+  const { addPrize, totalCoins, spendCoins } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -125,6 +126,18 @@ const CampaignDetail = () => {
   const handleDraw = (count: number) => {
     if (isDrawing || totalRemaining <= 0) return;
     const actualCount = Math.min(count, totalRemaining);
+    const totalCost = actualCount * campaign.price;
+
+    if (totalCoins < totalCost) {
+      toast.error(t("insufficientCoins"));
+      return;
+    }
+
+    if (!spendCoins(totalCost)) {
+      toast.error(t("insufficientCoins"));
+      return;
+    }
+
     setDrawCount(actualCount);
     setIsDrawing(true);
 
@@ -355,9 +368,15 @@ const CampaignDetail = () => {
             </div>
           ) : (
             <>
-              <div className="mr-auto text-sm">
-                <span className="text-muted-foreground">{t("price")}: </span>
-                <span className="font-bold text-accent">${campaign.price}</span>
+              <div className="mr-auto flex flex-col">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">{t("price")}: </span>
+                  <span className="font-bold text-accent">{campaign.price} coins</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Coins className="h-3 w-3 text-accent" />
+                  <span>{totalCoins.toLocaleString()}</span>
+                </div>
               </div>
               <Button
                 variant="neon"
