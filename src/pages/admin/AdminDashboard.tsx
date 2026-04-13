@@ -65,6 +65,7 @@ const AdminDashboard = () => {
         prizes: prizes.count ?? 0,
       });
       if (pity.data) setPitySettings(pity.data as unknown as PitySetting[]);
+      setPityTriggerCount(pityDraws.count ?? 0);
     };
     fetchAll();
   }, []);
