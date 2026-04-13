@@ -87,6 +87,7 @@ const translations = {
     soldOut: "Sold Out",
     soldOutDesc: "All tickets have been drawn!",
     insufficientCoins: "Not enough coins! Top up to continue drawing.",
+    pityReady: "🔥 Next draw guarantees Tier A or higher!",
 
     // Top Up
     topUpCoins: "Top Up Coins",
@@ -261,6 +262,7 @@ const translations = {
     soldOut: "Habis Terjual",
     soldOutDesc: "Semua tiket sudah ditarik!",
     insufficientCoins: "Koin tidak cukup! Isi ulang untuk melanjutkan tarikan.",
+    pityReady: "🔥 Tarikan berikutnya dijamin Tingkat A atau lebih tinggi!",
 
     // Top Up
     topUpCoins: "Isi Ulang Koin",
