@@ -170,7 +170,8 @@ const Inventory = () => {
                     </h3>
                     <p className="mb-2 truncate text-[10px] text-muted-foreground">{item.campaign} · {timeAgo}</p>
 
-                    {claimableTiers.includes(item.tier) ? (
+                    <div className="flex flex-col gap-1.5">
+                      {/* Claim button — available for all tiers */}
                       <Button
                         variant="outline"
                         size="sm"
@@ -180,7 +181,7 @@ const Inventory = () => {
                         <PackageCheck className="h-3 w-3" />
                         {t("claimPrizeBtn")}
                       </Button>
-                    ) : canRecycle ? (
+                      {/* Recycle button — available for all tiers */}
                       <Button
                         variant="outline"
                         size="sm"
@@ -191,12 +192,7 @@ const Inventory = () => {
                         {t("recycle")} · +{item.coinValue}
                         <Coins className="h-3 w-3 text-accent" />
                       </Button>
-                    ) : (
-                      <div className={`flex items-center justify-center gap-1.5 rounded-md bg-background/30 py-1.5 text-xs font-semibold ${meta.color}`}>
-                        <meta.icon className="h-3 w-3" />
-                        {meta.label}
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </motion.div>
               );
