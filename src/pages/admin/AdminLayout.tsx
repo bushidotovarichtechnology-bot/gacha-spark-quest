@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck } from "lucide-react";
+import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/admin/campaigns", label: "Campaigns", icon: Package },
   { to: "/admin/categories", label: "Categories", icon: FolderTree },
   { to: "/admin/claims", label: "Prize Claims", icon: PackageCheck },
+  { to: "/admin/messages", label: "Messages", icon: Mail },
   { to: "/admin/probability", label: "Probability", icon: Settings },
 ];
 
