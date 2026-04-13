@@ -402,6 +402,13 @@ export type Database = {
           last_sign_in_at: string
         }[]
       }
+      get_pity_trend: {
+        Args: { days_back?: number }
+        Returns: {
+          date: string
+          pity_count: number
+        }[]
+      }
       get_popular_campaigns: {
         Args: { lim?: number }
         Returns: {
