@@ -365,7 +365,7 @@ const CampaignDetail = () => {
           <p className="text-xs text-muted-foreground">
             {drawsSinceTierA >= pityThreshold
               ? t("pityReady")
-              : t("moreDrawsForTierA", { 0: String(pityThreshold - drawsSinceTierA) }).replace("{0}", String(pityThreshold - drawsSinceTierA))}
+              : `${pityThreshold - drawsSinceTierA} ${t("moreDrawsForTierA")}`}
           </p>
         </motion.div>
       </div>
