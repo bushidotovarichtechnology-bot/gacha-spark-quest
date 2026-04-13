@@ -162,9 +162,14 @@ const Index = () => {
           <p className="text-xs text-muted-foreground">
             {t("companyName")}
           </p>
-          <Link to="/about" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
-            {t("aboutUs")}
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/about" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
+              {t("aboutUs")}
+            </Link>
+            <Link to="/contact" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
+              {t("contactUs")}
+            </Link>
+          </div>
           <p className="font-display text-xs tracking-wider text-muted-foreground">
             {t("allRightsReserved")}
           </p>
