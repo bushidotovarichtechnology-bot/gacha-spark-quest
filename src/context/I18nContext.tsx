@@ -76,6 +76,8 @@ const translations = {
     recycle: "Recycle",
     recycledTitle: "Recycled \"{name}\"",
     recycledDesc: "+{value} Gacha Coins earned!",
+    recycleConfirmTitle: "Recycle this prize?",
+    recycleConfirmDesc: "You will receive +{value} Gacha Coins. This action cannot be undone.",
     yourCollection: "Your collection of prizes from Bushido Gacha draws.",
 
     // Draw History
