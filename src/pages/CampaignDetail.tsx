@@ -333,6 +333,41 @@ const CampaignDetail = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Pity System Indicator */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6 }}
+          className={`mt-4 rounded-xl border p-4 ${
+            drawsSinceTierA >= pityThreshold - 2
+              ? "border-primary/60 bg-primary/10 box-glow-purple"
+              : "border-border bg-secondary/30"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary" />
+              <h3 className="font-display text-sm font-bold text-foreground">{t("pitySystem")}</h3>
+            </div>
+            <span className={`text-xs font-bold ${drawsSinceTierA >= pityThreshold - 2 ? "text-primary animate-pulse" : "text-muted-foreground"}`}>
+              {drawsSinceTierA}/{pityThreshold}
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-background/50 mb-2">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((drawsSinceTierA / pityThreshold) * 100, 100)}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {drawsSinceTierA >= pityThreshold
+              ? t("pityReady")
+              : t("moreDrawsForTierA", { 0: String(pityThreshold - drawsSinceTierA) }).replace("{0}", String(pityThreshold - drawsSinceTierA))}
+          </p>
+        </motion.div>
       </div>
 
       <AnimatePresence>
