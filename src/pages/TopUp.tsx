@@ -47,22 +47,13 @@ const TopUp = () => {
   const [midtransReady, setMidtransReady] = useState(false);
 
   useEffect(() => {
-    // Set client key on snap script
-    const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
-    if (script) {
-      const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
-      if (clientKey) {
-        script.setAttribute("data-client-key", clientKey);
+    const checkSnap = setInterval(() => {
+      if (window.snap) {
+        setMidtransReady(true);
+        clearInterval(checkSnap);
       }
-      // Check if snap is ready
-      const checkSnap = setInterval(() => {
-        if (window.snap) {
-          setMidtransReady(true);
-          clearInterval(checkSnap);
-        }
-      }, 500);
-      return () => clearInterval(checkSnap);
-    }
+    }, 500);
+    return () => clearInterval(checkSnap);
   }, []);
 
   const handlePurchase = async () => {
