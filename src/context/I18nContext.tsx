@@ -198,6 +198,22 @@ const translations = {
     aboutCtaTitle: "Ready to Draw Your Destiny?",
     aboutCtaDesc: "Join thousands of players and test your luck today.",
 
+    // Contact Us
+    contactUs: "Contact Us",
+    contactTitle: "Contact Us",
+    contactSubtitle: "Have a question, feedback, or partnership inquiry? We'd love to hear from you.",
+    contactName: "Name",
+    contactNamePh: "Your full name",
+    contactSubject: "Subject",
+    contactSubjectPh: "What is this about?",
+    contactMessage: "Message",
+    contactMessagePh: "Write your message here...",
+    contactSend: "Send Message",
+    contactSuccess: "Message Sent!",
+    contactSuccessDesc: "Thank you for reaching out. We'll get back to you soon.",
+    contactFailed: "Failed to send message",
+    contactFieldRequired: "This field is required",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -396,6 +412,22 @@ const translations = {
     aboutValueTransparencyDesc: "Peluang terbuka, pool hadiah publik, dan aturan jelas — apa yang kamu lihat adalah yang kamu dapatkan.",
     aboutCtaTitle: "Siap Menarik Takdirmu?",
     aboutCtaDesc: "Bergabung dengan ribuan pemain dan coba keberuntunganmu hari ini.",
+
+    // Contact Us
+    contactUs: "Hubungi Kami",
+    contactTitle: "Hubungi Kami",
+    contactSubtitle: "Punya pertanyaan, masukan, atau ingin bekerja sama? Kami senang mendengar dari kamu.",
+    contactName: "Nama",
+    contactNamePh: "Nama lengkap kamu",
+    contactSubject: "Subjek",
+    contactSubjectPh: "Tentang apa ini?",
+    contactMessage: "Pesan",
+    contactMessagePh: "Tulis pesan kamu di sini...",
+    contactSend: "Kirim Pesan",
+    contactSuccess: "Pesan Terkirim!",
+    contactSuccessDesc: "Terima kasih telah menghubungi kami. Kami akan segera membalas.",
+    contactFailed: "Gagal mengirim pesan",
+    contactFieldRequired: "Kolom ini wajib diisi",
 
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
