@@ -99,8 +99,14 @@ Deno.serve(async (req) => {
       snap_token: midtransData.token,
     });
 
+    const clientKey = Deno.env.get("MIDTRANS_CLIENT_KEY") || "";
+
     return new Response(
-      JSON.stringify({ token: midtransData.token, order_id: orderId }),
+      JSON.stringify({ 
+        token: midtransData.token, 
+        order_id: orderId,
+        client_key: clientKey,
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
