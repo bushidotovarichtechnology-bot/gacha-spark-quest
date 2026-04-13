@@ -61,6 +61,8 @@ const translations = {
     grandPrizeFire: "🔥 GRAND PRIZE 🔥",
     claimReward: "Claim Reward!",
     continue: "Continue",
+    skipAll: "Skip All",
+    drawSummary: "Summary",
 
     // Inventory
     totalItems: "Total Items",
