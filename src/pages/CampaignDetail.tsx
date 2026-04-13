@@ -57,7 +57,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize, totalCoins, spendCoins } = useGacha();
+  const { addPrize, totalCoins, spendCoins, drawsSinceTierA, pityThreshold } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -147,19 +147,46 @@ const CampaignDetail = () => {
       tiers.forEach((t) => { remainingCopy[t.id] = t.remaining; });
 
       for (let i = 0; i < actualCount; i++) {
+        // Track pity across draws in this batch
+        let localPityCount = drawsSinceTierA;
+
         const activeTiers = tiers
           .map((t) => ({ ...t, remaining: Math.max(remainingCopy[t.id] ?? 0, 0) }))
           .filter((t) => t.remaining > 0);
 
         if (activeTiers.length === 0) break;
 
-        // Weighted random using probability_weight
-        const totalWeight = activeTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
-        let r = Math.random() * totalWeight;
-        let selectedTier = activeTiers[activeTiers.length - 1];
-        for (const tier of activeTiers) {
-          r -= Number(tier.probability_weight);
-          if (r <= 0) { selectedTier = tier; break; }
+        let selectedTier;
+
+        // Pity system: force tier A or S when threshold reached
+        const isPityDraw = localPityCount >= pityThreshold - 1;
+        const rareTiers = activeTiers.filter((t) => t.label === "S" || t.label === "A");
+
+        if (isPityDraw && rareTiers.length > 0) {
+          // Force a rare tier
+          const totalRareWeight = rareTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
+          let r = Math.random() * totalRareWeight;
+          selectedTier = rareTiers[rareTiers.length - 1];
+          for (const tier of rareTiers) {
+            r -= Number(tier.probability_weight);
+            if (r <= 0) { selectedTier = tier; break; }
+          }
+        } else {
+          // Normal weighted random
+          const totalWeight = activeTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
+          let r = Math.random() * totalWeight;
+          selectedTier = activeTiers[activeTiers.length - 1];
+          for (const tier of activeTiers) {
+            r -= Number(tier.probability_weight);
+            if (r <= 0) { selectedTier = tier; break; }
+          }
+        }
+
+        // Update local pity counter
+        if (selectedTier.label === "S" || selectedTier.label === "A") {
+          localPityCount = 0;
+        } else {
+          localPityCount++;
         }
 
         const prize = selectedTier.prizes.length > 0
@@ -305,6 +332,41 @@ const CampaignDetail = () => {
               <p className="text-xs text-muted-foreground">{t("lastOnePrizeDetail")}</p>
             </div>
           </div>
+        </motion.div>
+
+        {/* Pity System Indicator */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6 }}
+          className={`mt-4 rounded-xl border p-4 ${
+            drawsSinceTierA >= pityThreshold - 2
+              ? "border-primary/60 bg-primary/10 box-glow-purple"
+              : "border-border bg-secondary/30"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary" />
+              <h3 className="font-display text-sm font-bold text-foreground">{t("pitySystem")}</h3>
+            </div>
+            <span className={`text-xs font-bold ${drawsSinceTierA >= pityThreshold - 2 ? "text-primary animate-pulse" : "text-muted-foreground"}`}>
+              {drawsSinceTierA}/{pityThreshold}
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-background/50 mb-2">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((drawsSinceTierA / pityThreshold) * 100, 100)}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {drawsSinceTierA >= pityThreshold
+              ? t("pityReady")
+              : `${pityThreshold - drawsSinceTierA} ${t("moreDrawsForTierA")}`}
+          </p>
         </motion.div>
       </div>
 
