@@ -368,9 +368,15 @@ const CampaignDetail = () => {
             </div>
           ) : (
             <>
-              <div className="mr-auto text-sm">
-                <span className="text-muted-foreground">{t("price")}: </span>
-                <span className="font-bold text-accent">${campaign.price}</span>
+              <div className="mr-auto flex flex-col">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">{t("price")}: </span>
+                  <span className="font-bold text-accent">{campaign.price} coins</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Coins className="h-3 w-3 text-accent" />
+                  <span>{totalCoins.toLocaleString()}</span>
+                </div>
               </div>
               <Button
                 variant="neon"
