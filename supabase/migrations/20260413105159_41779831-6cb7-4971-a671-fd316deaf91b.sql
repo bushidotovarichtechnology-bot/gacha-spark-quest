@@ -1,0 +1,1 @@
+ALTER TABLE public.draws ADD COLUMN is_pity boolean NOT NULL DEFAULT false;

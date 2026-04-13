@@ -45,15 +45,17 @@ const AdminDashboard = () => {
   const [popular, setPopular] = useState<PopularCampaign[]>([]);
   const [extraStats, setExtraStats] = useState({ tiers: 0, prizes: 0 });
   const [pitySettings, setPitySettings] = useState<PitySetting[]>([]);
+  const [pityTriggerCount, setPityTriggerCount] = useState(0);
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [adminStats, popularCampaigns, tiers, prizes, pity] = await Promise.all([
+      const [adminStats, popularCampaigns, tiers, prizes, pity, pityDraws] = await Promise.all([
         supabase.rpc("get_admin_stats"),
         supabase.rpc("get_popular_campaigns", { lim: 5 }),
         supabase.from("campaign_tiers").select("id", { count: "exact", head: true }),
         supabase.from("tier_prizes").select("id", { count: "exact", head: true }),
         supabase.from("pity_settings").select("*"),
+        supabase.from("draws").select("id", { count: "exact", head: true }).eq("is_pity", true),
       ]);
 
       if (adminStats.data) setStats(adminStats.data as unknown as AdminStats);
@@ -63,6 +65,7 @@ const AdminDashboard = () => {
         prizes: prizes.count ?? 0,
       });
       if (pity.data) setPitySettings(pity.data as unknown as PitySetting[]);
+      setPityTriggerCount(pityDraws.count ?? 0);
     };
     fetchAll();
   }, []);
@@ -171,6 +174,18 @@ const AdminDashboard = () => {
               {stats.total_campaigns > 0 ? Math.round((enabledPity / stats.total_campaigns) * 100) : 0}%
             </p>
             <p className="text-xs text-muted-foreground">of campaigns</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Pity Triggers</CardTitle>
+            <Zap className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-accent">{pityTriggerCount}</p>
+            <p className="text-xs text-muted-foreground">
+              {stats.total_draws > 0 ? `${((pityTriggerCount / stats.total_draws) * 100).toFixed(1)}% of all draws` : "total pity draws"}
+            </p>
           </CardContent>
         </Card>
       </div>
