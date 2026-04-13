@@ -195,6 +195,44 @@ export type Database = {
         }
         Relationships: []
       }
+      pity_settings: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          guaranteed_tier: string
+          id: string
+          is_enabled: boolean
+          threshold: number
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          guaranteed_tier?: string
+          id?: string
+          is_enabled?: boolean
+          threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          guaranteed_tier?: string
+          id?: string
+          is_enabled?: boolean
+          threshold?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pity_settings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prize_claims: {
         Row: {
           address: string
