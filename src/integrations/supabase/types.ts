@@ -366,6 +366,48 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          amount: number
+          coins: number
+          created_at: string
+          id: string
+          order_id: string
+          package_id: string
+          payment_type: string | null
+          snap_token: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          coins: number
+          created_at?: string
+          id?: string
+          order_id: string
+          package_id: string
+          payment_type?: string | null
+          snap_token?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          coins?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          package_id?: string
+          payment_type?: string | null
+          snap_token?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
