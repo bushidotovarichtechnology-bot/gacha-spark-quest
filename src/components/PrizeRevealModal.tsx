@@ -118,6 +118,9 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                         <p className={`truncate text-sm font-semibold ${rare ? "text-accent" : "text-foreground"}`}>
                           {p.prize}
                         </p>
+                        {p.isPityReward && (
+                          <span className="text-[9px] font-bold text-accent">★ PITY</span>
+                        )}
                       </div>
                       <span className="text-lg">{c.emoji}</span>
                     </motion.div>
