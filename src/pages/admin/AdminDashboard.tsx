@@ -49,12 +49,13 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [adminStats, popularCampaigns, tiers, prizes, pity] = await Promise.all([
+      const [adminStats, popularCampaigns, tiers, prizes, pity, pityDraws] = await Promise.all([
         supabase.rpc("get_admin_stats"),
         supabase.rpc("get_popular_campaigns", { lim: 5 }),
         supabase.from("campaign_tiers").select("id", { count: "exact", head: true }),
         supabase.from("tier_prizes").select("id", { count: "exact", head: true }),
         supabase.from("pity_settings").select("*"),
+        supabase.from("draws").select("id", { count: "exact", head: true }).eq("is_pity", true),
       ]);
 
       if (adminStats.data) setStats(adminStats.data as unknown as AdminStats);
