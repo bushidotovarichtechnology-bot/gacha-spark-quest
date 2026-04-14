@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Gift, Plus, Pencil, Trash2, Save, X } from "lucide-react";
+import { Gift, Plus, Pencil, Trash2, Save, X, Upload, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -25,6 +27,8 @@ const AdminRewards = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<RewardForm>(emptyForm);
   const [showAdd, setShowAdd] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: rewards = [], isLoading } = useQuery({
     queryKey: ["admin-rewards"],
@@ -43,6 +47,43 @@ const AdminRewards = () => {
       return data;
     },
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("File harus berupa gambar");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Ukuran file maksimal 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `reward-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("reward-images")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("reward-images")
+        .getPublicUrl(fileName);
+
+      setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+      toast.success("Gambar berhasil diupload");
+    } catch (err: any) {
+      toast.error("Gagal upload: " + err.message);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -99,25 +140,89 @@ const AdminRewards = () => {
           <Gift className="h-5 w-5 text-primary" /> Redeem Rewards
         </h1>
         <Button size="sm" onClick={() => { setShowAdd(true); setEditId(null); setForm(emptyForm); }}>
-          <Plus className="mr-1.5 h-4 w-4" /> Tambah
+          <Plus className="mr-1.5 h-4 w-4" /> Tambah Hadiah
         </Button>
       </div>
 
       {showAdd && (
-        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-          <h2 className="text-sm font-bold">{editId ? "Edit Reward" : "Tambah Reward"}</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input placeholder="Nama" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <Input placeholder="Image URL" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-            <Input placeholder="Deskripsi" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <Input type="number" placeholder="Harga Tiket" value={form.ticket_cost} onChange={(e) => setForm({ ...form, ticket_cost: Number(e.target.value) })} />
-            <Input type="number" placeholder="Stok" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} />
-            <div className="flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+          <h2 className="text-sm font-bold">{editId ? "Edit Hadiah" : "Tambah Hadiah Baru"}</h2>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Nama Hadiah</Label>
+              <Input placeholder="Contoh: Voucher 50K" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Deskripsi</Label>
+              <Input placeholder="Deskripsi singkat hadiah" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs text-muted-foreground">Gambar Hadiah</Label>
+              <div className="flex items-center gap-3">
+                {form.image_url && (
+                  <img src={form.image_url} alt="Preview" className="h-16 w-16 rounded-lg border border-border object-cover" />
+                )}
+                <div className="flex flex-1 gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="mr-1.5 h-4 w-4" />
+                    {uploading ? "Mengupload..." : "Upload Gambar"}
+                  </Button>
+                  <Input
+                    placeholder="Atau masukkan URL gambar"
+                    value={form.image_url}
+                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Jumlah Tiket untuk Ditukarkan</Label>
+              <Input type="number" min={1} placeholder="10" value={form.ticket_cost} onChange={(e) => setForm({ ...form, ticket_cost: Number(e.target.value) })} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Tipe Tiket</Label>
+              <select
+                value={form.ticket_type}
+                onChange={(e) => setForm({ ...form, ticket_type: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="standard">Standard</option>
+                <option value="premium">Premium</option>
+                <option value="vip">VIP</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Stok Tersedia</Label>
+              <Input type="number" min={0} placeholder="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} />
+            </div>
+
+            <div className="flex items-end gap-2 pb-1">
               <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-              <span className="text-sm">{form.is_active ? "Aktif" : "Nonaktif"}</span>
+              <Label className="text-sm">{form.is_active ? "Aktif" : "Nonaktif"}</Label>
             </div>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex gap-2 pt-1">
             <Button size="sm" onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending}>
               <Save className="mr-1.5 h-4 w-4" /> Simpan
             </Button>
@@ -128,55 +233,69 @@ const AdminRewards = () => {
         </div>
       )}
 
-      {/* Rewards List */}
-      <div className="space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-        {rewards.map((r) => (
-          <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
-            <div className="flex items-center gap-3">
-              {r.image_url && <img src={r.image_url} alt={r.name} className="h-10 w-10 rounded object-cover" />}
-              <div>
-                <span className="text-sm font-semibold">{r.name}</span>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>🎫 {r.ticket_cost}</span>
-                  <span>📦 Stok: {r.stock}</span>
-                  <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Aktif" : "Nonaktif"}</Badge>
+      <Tabs defaultValue="rewards">
+        <TabsList>
+          <TabsTrigger value="rewards">Daftar Hadiah ({rewards.length})</TabsTrigger>
+          <TabsTrigger value="claims">Penukaran ({claims.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="rewards">
+          <div className="space-y-2">
+            {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+            {rewards.length === 0 && !isLoading && <p className="text-sm text-muted-foreground">Belum ada hadiah. Klik "Tambah Hadiah" untuk menambahkan.</p>}
+            {rewards.map((r) => (
+              <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+                <div className="flex items-center gap-3">
+                  {r.image_url ? (
+                    <img src={r.image_url} alt={r.name} className="h-12 w-12 rounded-lg border border-border object-cover" />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted">
+                      <Image className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-sm font-semibold">{r.name}</span>
+                    {r.description && <p className="text-xs text-muted-foreground">{r.description}</p>}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <span>🎫 {r.ticket_cost} tiket ({r.ticket_type})</span>
+                      <span>📦 Stok: {r.stock}</span>
+                      <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Aktif" : "Nonaktif"}</Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => startEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(r.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
-            </div>
-            <div className="flex gap-1">
-              <Button size="icon" variant="ghost" onClick={() => startEdit(r)}><Pencil className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(r.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </TabsContent>
 
-      {/* Recent Claims */}
-      <div>
-        <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">Penukaran Terbaru</h2>
-        <div className="space-y-2">
-          {claims.length === 0 && <p className="text-sm text-muted-foreground">Belum ada penukaran.</p>}
-          {claims.map((c) => (
-            <div key={c.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
-              <div>
-                <span className="text-sm font-semibold">{c.reward_name}</span>
-                <p className="text-xs text-muted-foreground">🎫 {c.tickets_spent} tiket • {new Date(c.created_at).toLocaleDateString("id-ID")}</p>
+        <TabsContent value="claims">
+          <div className="space-y-2">
+            {claims.length === 0 && <p className="text-sm text-muted-foreground">Belum ada penukaran.</p>}
+            {claims.map((c) => (
+              <div key={c.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+                <div>
+                  <span className="text-sm font-semibold">{c.reward_name}</span>
+                  <p className="text-xs text-muted-foreground">🎫 {c.tickets_spent} tiket • {new Date(c.created_at).toLocaleDateString("id-ID")}</p>
+                </div>
+                <select
+                  value={c.status}
+                  onChange={(e) => updateClaimStatus.mutate({ id: c.id, status: e.target.value })}
+                  className="rounded border border-border bg-background px-2 py-1 text-xs"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="completed">Completed</option>
+                  <option value="rejected">Rejected</option>
+                </select>
               </div>
-              <select
-                value={c.status}
-                onChange={(e) => updateClaimStatus.mutate({ id: c.id, status: e.target.value })}
-                className="rounded border border-border bg-background px-2 py-1 text-xs"
-              >
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
