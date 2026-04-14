@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star } from "lucide-react";
+import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star, Gift } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const navItems = [
   { to: "/admin/messages", label: "Messages", icon: Mail },
   { to: "/admin/pity", label: "Pity System", icon: Star },
   { to: "/admin/probability", label: "Probability", icon: Settings },
+  { to: "/admin/rewards", label: "Rewards", icon: Gift },
 ];
 
 const AdminLayout = () => {
