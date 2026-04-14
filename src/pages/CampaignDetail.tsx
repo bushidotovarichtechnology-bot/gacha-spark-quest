@@ -259,6 +259,8 @@ const CampaignDetail = () => {
         supabase.from("campaign_tiers").update({ remaining: rem }).eq("id", tierId)
       );
 
+      const ticketValues: Record<string, number> = { S: 5, A: 3, B: 2, C: 1 };
+
       const drawInserts = user ? results.map((r) =>
         supabase.from("draws").insert({
           user_id: user.id,
@@ -267,10 +269,32 @@ const CampaignDetail = () => {
           prize_name: r.prize,
           coin_value: coinValues[r.tier] || 15,
           is_pity: r.isPityReward,
-        })
+        }).select("id").single()
       ) : [];
 
-      await Promise.all([...tierUpdates, ...drawInserts]);
+      const drawResults = await Promise.all([...tierUpdates, ...drawInserts]);
+
+      // Insert redeem tickets for each draw
+      if (user) {
+        const ticketInserts = results.map((r, idx) => {
+          const drawResult = drawResults[Object.keys(remainingCopy).length + idx] as any;
+          const drawId = drawResult?.data?.id;
+          const qty = ticketValues[r.tier] || 1;
+          return drawId ? supabase.from("redeem_tickets").insert({
+            user_id: user.id,
+            campaign_id: campaign.id,
+            draw_id: drawId,
+            ticket_type: "standard",
+            quantity: qty,
+            remaining: qty,
+          }) : Promise.resolve();
+        });
+        await Promise.all(ticketInserts);
+
+        // Show ticket notification
+        const totalTickets = results.reduce((sum, r) => sum + (ticketValues[r.tier] || 1), 0);
+        toast.success(`🎫 Kamu mendapat ${totalTickets} tiket redeem!`);
+      }
 
       queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
