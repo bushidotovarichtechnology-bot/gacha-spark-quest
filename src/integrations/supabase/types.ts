@@ -299,6 +299,116 @@ export type Database = {
         }
         Relationships: []
       }
+      redeem_claims: {
+        Row: {
+          created_at: string
+          id: string
+          reward_id: string
+          reward_name: string
+          status: string
+          tickets_spent: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reward_id: string
+          reward_name: string
+          status?: string
+          tickets_spent: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reward_id?: string
+          reward_name?: string
+          status?: string
+          tickets_spent?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redeem_claims_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "redeem_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redeem_rewards: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_url: string
+          is_active: boolean
+          name: string
+          stock: number
+          ticket_cost: number
+          ticket_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          name: string
+          stock?: number
+          ticket_cost?: number
+          ticket_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          name?: string
+          stock?: number
+          ticket_cost?: number
+          ticket_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      redeem_tickets: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          draw_id: string
+          id: string
+          quantity: number
+          remaining: number
+          ticket_type: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          draw_id: string
+          id?: string
+          quantity?: number
+          remaining?: number
+          ticket_type?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          draw_id?: string
+          id?: string
+          quantity?: number
+          remaining?: number
+          ticket_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subcategories: {
         Row: {
           category_id: string
@@ -457,6 +567,13 @@ export type Database = {
           campaign_id: string
           campaign_title: string
           draw_count: number
+        }[]
+      }
+      get_user_ticket_balance: {
+        Args: { _user_id: string }
+        Returns: {
+          ticket_type: string
+          total_remaining: number
         }[]
       }
       has_role: {

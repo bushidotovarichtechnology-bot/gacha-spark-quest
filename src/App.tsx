@@ -32,6 +32,8 @@ import AdminCategories from "./pages/admin/AdminCategories.tsx";
 import AdminClaims from "./pages/admin/AdminClaims.tsx";
 import AdminMessages from "./pages/admin/AdminMessages.tsx";
 import AdminPitySettings from "./pages/admin/AdminPitySettings.tsx";
+import AdminRewards from "./pages/admin/AdminRewards.tsx";
+import RedeemStore from "./pages/RedeemStore.tsx";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,7 @@ const App = () => (
             <Route path="/claims" element={<ProtectedRoute><ClaimHistory /></ProtectedRoute>} />
             <Route path="/topup" element={<ProtectedRoute><TopUp /></ProtectedRoute>} />
             <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>} />
+            <Route path="/redeem" element={<ProtectedRoute><RedeemStore /></ProtectedRoute>} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/login" element={<Login />} />
@@ -68,6 +71,7 @@ const App = () => (
               <Route path="claims" element={<AdminClaims />} />
               <Route path="messages" element={<AdminMessages />} />
               <Route path="pity" element={<AdminPitySettings />} />
+              <Route path="rewards" element={<AdminRewards />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
