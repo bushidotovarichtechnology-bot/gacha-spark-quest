@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins } from "lucide-react";
+import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
@@ -490,6 +490,59 @@ const CampaignDetail = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Grand Prize (Tier S) Info */}
+        {(() => {
+          const tierS = tiers.find((t) => t.label === "S");
+          if (!tierS || tierS.prizes.length === 0) return null;
+          const tierSRemaining = tierS.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
+          if (tierSRemaining <= 0) return null;
+          const nonSRemaining = totalRemaining - tierSRemaining;
+          const isUnlocked = nonSRemaining <= 0;
+          const progressPct = totalTickets > 0 ? Math.min(((totalTickets - totalRemaining) / (totalTickets - tierSRemaining)) * 100, 100) : 0;
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.55 }}
+              className={`mt-4 rounded-xl border p-4 ${
+                isUnlocked
+                  ? "border-accent/60 bg-accent/10 box-glow-gold animate-pulse"
+                  : "border-primary/30 bg-primary/5"
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <Trophy className={`h-6 w-6 shrink-0 ${isUnlocked ? "text-accent" : "text-primary/60"}`} />
+                <div className="flex-1">
+                  <h3 className="font-display text-sm font-bold text-foreground">
+                    {isUnlocked ? "🎉 Grand Prize Terbuka!" : "Grand Prize (Tier S)"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {isUnlocked
+                      ? "Semua hadiah lain sudah habis — Grand Prize siap untuk dimenangkan!"
+                      : "Grand Prize hanya bisa didapatkan ketika menjadi satu-satunya hadiah yang tersisa."}
+                  </p>
+                </div>
+              </div>
+              {!isUnlocked && (
+                <>
+                  <div className="h-2 overflow-hidden rounded-full bg-background/50 mb-1.5">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-primary/70 to-accent"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPct}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Sisa <span className="font-semibold text-foreground">{nonSRemaining}</span> hadiah lagi sebelum Grand Prize terbuka
+                  </p>
+                </>
+              )}
+            </motion.div>
+          );
+        })()}
 
         {/* Pity System Indicator */}
         {pityEnabled && (
