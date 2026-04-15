@@ -4,11 +4,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CampaignCard from "@/components/CampaignCard";
-import { Sparkles, Shield, Clock, Trophy } from "lucide-react";
+import { Sparkles, Shield, Clock, Trophy, Crown } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import CategoryMenu from "@/components/CategoryMenu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
+import defaultAvatar from "@/assets/default-avatar.png";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
@@ -28,6 +32,89 @@ const imageMap: Record<string, string> = {
 function resolveImage(url: string) {
   return imageMap[url] || url || campaignBlindbox;
 }
+
+interface GrandPrizeWinner {
+  draw_id: string;
+  display_name: string;
+  avatar_url: string;
+  prize_name: string;
+  campaign_title: string;
+  won_at: string;
+}
+
+const GrandPrizePreview = () => {
+  const [winners, setWinners] = useState<GrandPrizeWinner[]>([]);
+
+  useEffect(() => {
+    supabase.rpc("get_grand_prize_winners", { lim: 5 }).then(({ data }) => {
+      if (data) setWinners(data as unknown as GrandPrizeWinner[]);
+    });
+  }, []);
+
+  if (winners.length === 0) return null;
+
+  return (
+    <section className="border-t border-border/50 py-12">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="mb-6 text-center"
+        >
+          <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
+            Hall of Fame
+          </p>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
+            Pemenang Grand Prize
+          </h2>
+        </motion.div>
+
+        <div className="mx-auto max-w-lg space-y-2">
+          {winners.map((w, i) => (
+            <motion.div
+              key={w.draw_id}
+              initial={{ opacity: 0, x: -15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className={`flex items-center gap-3 rounded-xl border p-3 ${
+                i === 0 ? "border-accent/40 bg-accent/5" : "border-border/50 bg-card"
+              }`}
+            >
+              <span className="text-lg font-black w-7 text-center">
+                {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+              </span>
+              <Avatar className="h-9 w-9 border-2 border-accent/20">
+                <AvatarImage src={w.avatar_url || defaultAvatar} />
+                <AvatarFallback><img src={defaultAvatar} alt="" className="h-full w-full object-cover" /></AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-foreground">{w.display_name}</p>
+                <p className="flex items-center gap-1 truncate text-xs text-accent">
+                  <Crown className="h-3 w-3 shrink-0" /> {w.prize_name}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {w.campaign_title} · {formatDistanceToNow(new Date(w.won_at), { addSuffix: true, locale: idLocale })}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-4 text-center">
+          <Link
+            to="/leaderboard"
+            className="inline-flex items-center gap-2 rounded-full bg-accent/10 border border-accent/30 px-4 py-2 text-sm font-semibold text-accent transition-all hover:bg-accent/20"
+          >
+            <Trophy className="h-4 w-4" />
+            Lihat Semua Pemenang
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const Index = () => {
   const { t } = useI18n();
@@ -153,6 +240,9 @@ const Index = () => {
           )}
         </div>
       </section>
+
+      {/* Grand Prize Leaderboard Preview */}
+      <GrandPrizePreview />
 
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">

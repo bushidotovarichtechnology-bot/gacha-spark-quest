@@ -853,6 +853,19 @@ export type Database = {
           last_sign_in_at: string
         }[]
       }
+      get_grand_prize_winners: {
+        Args: { lim?: number }
+        Returns: {
+          avatar_url: string
+          campaign_id: string
+          campaign_title: string
+          display_name: string
+          draw_id: string
+          prize_name: string
+          user_id: string
+          won_at: string
+        }[]
+      }
       get_pity_trend: {
         Args: { days_back?: number }
         Returns: {
