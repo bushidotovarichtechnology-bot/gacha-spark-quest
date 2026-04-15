@@ -16,6 +16,7 @@ import ClaimHistory from "./pages/ClaimHistory.tsx";
 import TopUp from "./pages/TopUp.tsx";
 import TransactionHistory from "./pages/TransactionHistory.tsx";
 import TransactionDetail from "./pages/TransactionDetail.tsx";
+import Leaderboard from "./pages/Leaderboard.tsx";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";

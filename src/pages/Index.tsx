@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CampaignCard from "@/components/CampaignCard";
-import { Sparkles, Shield, Clock, Trophy } from "lucide-react";
+import { Sparkles, Shield, Clock, Trophy, Crown } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import CategoryMenu from "@/components/CategoryMenu";
