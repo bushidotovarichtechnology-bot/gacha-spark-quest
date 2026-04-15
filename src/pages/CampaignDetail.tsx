@@ -281,13 +281,15 @@ const CampaignDetail = () => {
           prizeRemainingCopy[selectedPrize.id] = newRemaining;
         }
 
+        const prizeCoinValue = selectedPrize.coin_value > 0 ? selectedPrize.coin_value : (coinValues[selectedTier.label] || 15);
+
         addPrize({
           prize: selectedPrize.name,
           tier: selectedTier.label as "S" | "A" | "B" | "C",
           campaign: campaign.title,
           campaignId: campaign.id,
           image,
-          coinValue: coinValues[selectedTier.label] || 15,
+          coinValue: prizeCoinValue,
         });
 
         results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0 });
