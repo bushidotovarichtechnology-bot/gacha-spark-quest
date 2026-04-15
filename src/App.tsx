@@ -36,6 +36,7 @@ import AdminRewards from "./pages/admin/AdminRewards.tsx";
 import AdminCoinPackages from "./pages/admin/AdminCoinPackages.tsx";
 import RedeemStore from "./pages/RedeemStore.tsx";
 import GiftCoins from "./pages/GiftCoins.tsx";
+import Profile from "./pages/Profile.tsx";
 
 const queryClient = new QueryClient();
 
