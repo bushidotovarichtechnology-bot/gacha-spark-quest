@@ -366,14 +366,14 @@ const CampaignDetail = () => {
                       <h3 className={`font-display text-sm font-semibold ${tier.color}`}>
                         {tier.name}
                       </h3>
-                      <span className={`text-xs font-semibold ${tier.remaining <= 2 ? "text-destructive animate-pulse-glow" : "text-muted-foreground"}`}>
-                        {tier.remaining}/{tier.total} {t("left")}
+                      <span className={`text-xs font-semibold ${tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0) <= 2 ? "text-destructive animate-pulse-glow" : "text-muted-foreground"}`}>
+                        {tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0)}/{tier.prizes.reduce((s: number, p: any) => s + p.total, 0)} {t("left")}
                       </span>
                     </div>
                     <div className="mb-2 flex flex-wrap gap-1.5">
-                      {tier.prizes.map((p) => (
-                        <span key={p} className="rounded-md bg-background/40 px-2 py-0.5 text-xs text-foreground/80">
-                          {p}
+                      {tier.prizes.map((p: any) => (
+                        <span key={p.id} className="rounded-md bg-background/40 px-2 py-0.5 text-xs text-foreground/80">
+                          {p.name} <span className="text-muted-foreground">({p.remaining}/{p.total})</span>
                         </span>
                       ))}
                     </div>
