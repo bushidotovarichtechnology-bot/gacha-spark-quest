@@ -739,6 +739,72 @@ export type Database = {
         }
         Relationships: []
       }
+      user_coins: {
+        Row: {
+          balance: number
+          created_at: string
+          draws_since_tier_a: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          draws_since_tier_a?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          draws_since_tier_a?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_inventory: {
+        Row: {
+          campaign_id: string
+          campaign_name: string
+          coin_value: number
+          created_at: string
+          id: string
+          image_url: string
+          prize_name: string
+          tier_label: string
+          user_id: string
+          won_at: string
+        }
+        Insert: {
+          campaign_id?: string
+          campaign_name?: string
+          coin_value?: number
+          created_at?: string
+          id?: string
+          image_url?: string
+          prize_name: string
+          tier_label: string
+          user_id: string
+          won_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          campaign_name?: string
+          coin_value?: number
+          created_at?: string
+          id?: string
+          image_url?: string
+          prize_name?: string
+          tier_label?: string
+          user_id?: string
+          won_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
