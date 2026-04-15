@@ -170,6 +170,11 @@ const CampaignDetail = () => {
   const totalTickets = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.total, 0), 0);
 
   const handleDraw = (count: number) => {
+    if (!user) {
+      toast.error("Silakan login terlebih dahulu untuk melakukan gacha!");
+      navigate("/login");
+      return;
+    }
     if (isDrawing || totalRemaining <= 0) return;
     const actualCount = Math.min(count, totalRemaining);
     const totalCost = actualCount * campaign.price;
