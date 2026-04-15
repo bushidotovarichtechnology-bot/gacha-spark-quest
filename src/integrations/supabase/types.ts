@@ -744,25 +744,31 @@ export type Database = {
       }
       user_coins: {
         Row: {
+          active_discount_percent: number
           balance: number
           created_at: string
           draws_since_tier_a: number
+          free_draws: number
           id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          active_discount_percent?: number
           balance?: number
           created_at?: string
           draws_since_tier_a?: number
+          free_draws?: number
           id?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          active_discount_percent?: number
           balance?: number
           created_at?: string
           draws_since_tier_a?: number
+          free_draws?: number
           id?: string
           updated_at?: string
           user_id?: string
