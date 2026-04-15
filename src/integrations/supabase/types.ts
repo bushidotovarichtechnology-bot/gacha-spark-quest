@@ -132,6 +132,36 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_gifts: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          message: string
+          receiver_email: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          message?: string
+          receiver_email?: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          message?: string
+          receiver_email?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       coin_packages: {
         Row: {
           bonus_coins: number
