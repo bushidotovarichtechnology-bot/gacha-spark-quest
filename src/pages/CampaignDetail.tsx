@@ -381,16 +381,31 @@ const CampaignDetail = () => {
                         {tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0)}/{tier.prizes.reduce((s: number, p: any) => s + p.total, 0)} {t("left")}
                       </span>
                     </div>
-                    <div className="mb-2 flex flex-wrap gap-1.5">
+                    <div className="mb-2 flex flex-wrap gap-2">
                       {tier.prizes.map((p: any) => (
-                        <span key={p.id} className={`rounded-md px-2 py-0.5 text-xs ${p.remaining <= 0 ? "bg-destructive/20 text-destructive line-through opacity-60" : "bg-background/40 text-foreground/80"}`}>
-                          {p.name}
-                          {p.remaining <= 0 ? (
-                            <span className="ml-1 rounded bg-destructive/30 px-1 py-px text-[10px] font-bold text-destructive no-underline inline-block" style={{ textDecoration: 'none' }}>Habis</span>
+                        <div
+                          key={p.id}
+                          className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs cursor-pointer transition-all hover:scale-105 ${p.remaining <= 0 ? "bg-destructive/20 opacity-60" : "bg-background/40 hover:bg-background/60"}`}
+                          onClick={() => p.image_url && setPreviewImage({ url: p.image_url, name: p.name })}
+                        >
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded-md object-cover ring-1 ring-border/50" />
                           ) : (
-                            <span className="text-muted-foreground"> ({p.remaining}/{p.total})</span>
+                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                              <Gift className="h-3.5 w-3.5" />
+                            </div>
                           )}
-                        </span>
+                          <div className="flex flex-col">
+                            <span className={`font-medium leading-tight ${p.remaining <= 0 ? "line-through text-destructive/70" : "text-foreground/80"}`}>
+                              {p.name}
+                            </span>
+                            {p.remaining <= 0 ? (
+                              <span className="rounded bg-destructive/30 px-1 py-px text-[10px] font-bold text-destructive w-fit">Habis</span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">({p.remaining}/{p.total})</span>
+                            )}
+                          </div>
+                        </div>
                       ))}
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-background/30">
