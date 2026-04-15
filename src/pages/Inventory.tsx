@@ -34,6 +34,8 @@ const Inventory = () => {
 
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
   const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
+  const [bulkRecycleOpen, setBulkRecycleOpen] = useState(false);
+  const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC">("C");
 
   const filteredItems = (() => {
     let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
@@ -54,6 +56,24 @@ const Inventory = () => {
       description: t("recycledDesc", { value }),
       icon: <Coins className="h-4 w-4 text-accent" />,
     });
+  };
+
+  const getBulkRecycleItems = () => {
+    if (bulkRecycleTier === "BC") return items.filter((i) => i.tier === "B" || i.tier === "C");
+    return items.filter((i) => i.tier === bulkRecycleTier);
+  };
+
+  const handleBulkRecycle = () => {
+    const toRecycle = getBulkRecycleItems();
+    let totalValue = 0;
+    toRecycle.forEach((item) => {
+      totalValue += recycleItem(item.id);
+    });
+    toast.success(`${toRecycle.length} item berhasil didaur ulang!`, {
+      description: `+${totalValue.toLocaleString()} koin diterima`,
+      icon: <Coins className="h-4 w-4 text-accent" />,
+    });
+    setBulkRecycleOpen(false);
   };
 
   const tierCounts = {
@@ -173,7 +193,36 @@ const Inventory = () => {
           </div>
         </div>
 
-        {/* Items grid */}
+        {/* Bulk Recycle */}
+        {(tierCounts.B + tierCounts.C) > 0 && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 px-4 py-2.5">
+            <div className="flex items-center gap-2 text-sm">
+              <Recycle className="h-4 w-4 text-accent" />
+              <span className="text-muted-foreground">Daur ulang massal:</span>
+            </div>
+            <div className="flex gap-2">
+              {tierCounts.C > 0 && (
+                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                  onClick={() => { setBulkRecycleTier("C"); setBulkRecycleOpen(true); }}>
+                  Tier C ({tierCounts.C})
+                </Button>
+              )}
+              {tierCounts.B > 0 && (
+                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                  onClick={() => { setBulkRecycleTier("B"); setBulkRecycleOpen(true); }}>
+                  Tier B ({tierCounts.B})
+                </Button>
+              )}
+              {tierCounts.B > 0 && tierCounts.C > 0 && (
+                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                  onClick={() => { setBulkRecycleTier("BC"); setBulkRecycleOpen(true); }}>
+                  B + C ({tierCounts.B + tierCounts.C})
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:gap-4">
           <AnimatePresence mode="popLayout">
             {filteredItems.map((item) => {
@@ -300,6 +349,46 @@ const Inventory = () => {
             >
               <Recycle className="mr-1.5 h-4 w-4" />
               {t("recycle")} · +{recyclingItem?.coinValue ?? 0} <Coins className="ml-1 h-3.5 w-3.5" />
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Recycle Confirmation Dialog */}
+      <AlertDialog open={bulkRecycleOpen} onOpenChange={setBulkRecycleOpen}>
+        <AlertDialogContent className="border-border bg-card">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+              <Recycle className="h-6 w-6 text-accent" />
+            </div>
+            <AlertDialogTitle className="text-center font-display">
+              Daur Ulang Massal
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              {(() => {
+                const bulkItems = getBulkRecycleItems();
+                const totalVal = bulkItems.reduce((s, i) => s + i.coinValue, 0);
+                const tierLabel = bulkRecycleTier === "BC" ? "Tier B & C" : `Tier ${bulkRecycleTier}`;
+                return (
+                  <>
+                    Daur ulang <span className="font-semibold text-foreground">{bulkItems.length} item {tierLabel}</span> sekaligus?
+                    <br />
+                    Kamu akan mendapatkan <span className="font-semibold text-accent">+{totalVal.toLocaleString()} koin</span>.
+                    <br />
+                    <span className="text-destructive text-xs mt-1 block">Tindakan ini tidak bisa dibatalkan.</span>
+                  </>
+                );
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="border-border">{t("back")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={handleBulkRecycle}
+            >
+              <Recycle className="mr-1.5 h-4 w-4" />
+              Daur Ulang {getBulkRecycleItems().length} Item
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
