@@ -190,6 +190,18 @@ const Navbar = () => {
                     <Coins className="h-4 w-4 text-accent" />
                     <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("gachaCoins")}</span>
                   </div>
+                  {freeDraws > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Gamepad2 className="h-4 w-4 text-green-400" />
+                      <span className="text-sm font-bold text-green-400">{freeDraws}x Gacha Gratis</span>
+                    </div>
+                  )}
+                  {activeDiscountPercent > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Percent className="h-4 w-4 text-orange-400" />
+                      <span className="text-sm font-bold text-orange-400">Diskon {activeDiscountPercent}% Aktif</span>
+                    </div>
+                  )}
                   <Link
                     to="/topup"
                     onClick={() => setIsOpen(false)}
