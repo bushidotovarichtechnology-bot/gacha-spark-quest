@@ -383,6 +383,48 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          display_name: string
+          id: string
+          phone: string
+          postal_code: string
+          province: string
+          recipient_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string
+          city?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          phone?: string
+          postal_code?: string
+          province?: string
+          recipient_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          phone?: string
+          postal_code?: string
+          province?: string
+          recipient_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       redeem_claims: {
         Row: {
           created_at: string
