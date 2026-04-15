@@ -56,10 +56,26 @@ function SortablePrizeRow({
         <GripVertical className="h-3.5 w-3.5" />
       </button>
       {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-cover" />}
-      <span className={`text-xs flex-1 ${p.remaining <= 0 ? "line-through text-destructive/70" : ""}`}>
-        {p.name}
-        {p.remaining <= 0 && <span className="ml-1 rounded bg-destructive/20 px-1 py-px text-[10px] font-bold text-destructive">Habis</span>}
-      </span>
+      <div className="flex-1 space-y-1">
+        <Input
+          className="h-6 text-xs"
+          value={p.name}
+          onChange={async (e) => {
+            await supabase.from("tier_prizes").update({ name: e.target.value }).eq("id", p.id);
+            onRefresh();
+          }}
+          placeholder="Nama prize"
+        />
+        <Input
+          className="h-6 text-xs"
+          value={p.description ?? ""}
+          onChange={async (e) => {
+            await supabase.from("tier_prizes").update({ description: e.target.value }).eq("id", p.id);
+            onRefresh();
+          }}
+          placeholder="Deskripsi/spesifikasi prize"
+        />
+      </div>
       <div className="flex items-center gap-1">
         <label className="text-[10px] text-muted-foreground">Rem</label>
         <Input type="number" className="h-6 w-14 text-xs" value={p.remaining} onChange={async (e) => {
