@@ -293,6 +293,7 @@ const Inventory = () => {
                 try { return formatDistanceToNow(new Date(item.wonAt), { addSuffix: true }); }
                 catch { return item.wonAt; }
               })();
+              const isSelected = selectedIds.has(item.id);
               return (
                 <motion.div
                   key={item.id}
@@ -301,7 +302,10 @@ const Inventory = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.25 }}
-                  className={`group overflow-hidden rounded-xl border border-border/50 bg-gradient-to-b ${meta.gradient} transition-all hover:border-primary/40`}
+                  className={`group overflow-hidden rounded-xl border bg-gradient-to-b ${meta.gradient} transition-all hover:border-primary/40 ${
+                    isSelected ? "border-accent ring-2 ring-accent/30" : "border-border/50"
+                  } ${selectMode ? "cursor-pointer" : ""}`}
+                  onClick={selectMode ? () => toggleSelect(item.id) : undefined}
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <img
