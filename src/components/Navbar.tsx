@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket } from "lucide-react";
+import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket, Gift } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
@@ -19,6 +19,7 @@ const Navbar = () => {
     { to: "/claims", label: t("claimHistory"), icon: ClipboardList },
     { to: "/transactions", label: "Transaksi", icon: Receipt },
     { to: "/redeem", label: "Redeem", icon: Ticket },
+    { to: "/gift", label: "Gift Koin", icon: Gift },
   ];
 
   const toggleLocale = () => setLocale(locale === "en" ? "id" : "en");
