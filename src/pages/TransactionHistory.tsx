@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins } from "lucide-react";
+import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
+import { useGacha } from "@/context/GachaContext";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Transaction {
   id: string;
@@ -17,6 +20,7 @@ interface Transaction {
   amount: number;
   status: string;
   payment_type: string | null;
+  snap_token: string | null;
   created_at: string;
 }
 
@@ -32,11 +36,17 @@ const statusConfig: Record<string, { icon: typeof CheckCircle; color: string; la
 const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
+const canRetry = (status: string) => ["expire", "cancel", "deny"].includes(status);
+
 const TransactionHistory = () => {
   const { user } = useAuth();
   const { t } = useI18n();
+  const { refreshCoins } = useGacha();
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const prevStatusRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -45,22 +55,60 @@ const TransactionHistory = () => {
         .from("transactions")
         .select("*")
         .order("created_at", { ascending: false });
-      if (data) setTransactions(data as unknown as Transaction[]);
+      if (data) {
+        const txs = data as unknown as Transaction[];
+        setTransactions(txs);
+        // Store initial statuses
+        const statusMap: Record<string, string> = {};
+        txs.forEach((tx) => { statusMap[tx.id] = tx.status; });
+        prevStatusRef.current = statusMap;
+      }
       setLoading(false);
     };
     fetchTx();
 
-    // Subscribe to realtime changes for user's transactions
+    // Subscribe to realtime changes
     const channel = supabase
       .channel("user-transactions")
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "transactions" },
         (payload) => {
+          const newTx = payload.new as any;
+          const prevStatus = prevStatusRef.current[newTx.id];
+
+          // In-app notification when status changes to settlement
+          if (prevStatus && prevStatus !== "settlement" && newTx.status === "settlement") {
+            toast.success("Pembayaran Berhasil! 🎉", {
+              description: `+${newTx.coins?.toLocaleString()} koin telah ditambahkan ke saldo kamu.`,
+              duration: 8000,
+            });
+            // Refresh coin balance
+            refreshCoins?.();
+          } else if (prevStatus === "pending" && newTx.status === "deny") {
+            toast.error("Pembayaran Ditolak", {
+              description: "Transaksi kamu ditolak oleh payment gateway.",
+              duration: 6000,
+            });
+          } else if (prevStatus === "pending" && newTx.status === "expire") {
+            toast.warning("Pembayaran Kedaluwarsa", {
+              description: "Waktu pembayaran habis. Silakan coba lagi.",
+              duration: 6000,
+            });
+          } else if (prevStatus === "pending" && newTx.status === "cancel") {
+            toast.error("Pembayaran Dibatalkan", {
+              description: "Transaksi telah dibatalkan.",
+              duration: 6000,
+            });
+          }
+
+          // Update prev status tracking
+          prevStatusRef.current[newTx.id] = newTx.status;
+
           setTransactions((prev) =>
             prev.map((tx) =>
-              tx.id === payload.new.id
-                ? { ...tx, status: payload.new.status, payment_type: payload.new.payment_type }
+              tx.id === newTx.id
+                ? { ...tx, status: newTx.status, payment_type: newTx.payment_type }
                 : tx
             )
           );
@@ -71,7 +119,67 @@ const TransactionHistory = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, refreshCoins]);
+
+  const handleRetry = async (tx: Transaction) => {
+    if (!user) return;
+    setRetrying(tx.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-midtrans-token", {
+        body: {
+          package_id: tx.package_id,
+          coins: tx.coins,
+          amount: tx.amount,
+        },
+      });
+
+      if (error || !data?.token) throw new Error(error?.message || "Gagal membuat transaksi baru");
+
+      if (data.client_key) {
+        const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
+        if (script) script.setAttribute("data-client-key", data.client_key);
+      }
+
+      if (window.snap) {
+        window.snap.pay(data.token, {
+          onSuccess: () => {
+            toast.success("Pembayaran Berhasil! 🎉", {
+              description: `+${tx.coins.toLocaleString()} koin telah ditambahkan.`,
+            });
+            refreshCoins?.();
+          },
+          onPending: () => {
+            toast("Menunggu Pembayaran", {
+              description: "Silakan selesaikan pembayaran Anda.",
+            });
+          },
+          onError: () => {
+            toast.error("Pembayaran Gagal", {
+              description: "Terjadi kesalahan saat memproses pembayaran.",
+            });
+          },
+          onClose: () => {
+            // Refresh transactions list
+            supabase
+              .from("transactions")
+              .select("*")
+              .order("created_at", { ascending: false })
+              .then(({ data: refreshed }) => {
+                if (refreshed) setTransactions(refreshed as unknown as Transaction[]);
+              });
+          },
+        });
+      } else {
+        toast.error("Payment gateway belum siap", {
+          description: "Silakan refresh halaman dan coba lagi.",
+        });
+      }
+    } catch (err: any) {
+      toast.error("Gagal", { description: err.message || "Tidak dapat memproses ulang transaksi." });
+    } finally {
+      setRetrying(null);
+    }
+  };
 
   const totalSpent = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.amount, 0);
   const totalCoins = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.coins, 0);
@@ -138,6 +246,7 @@ const TransactionHistory = () => {
               const cfg = statusConfig[tx.status] || statusConfig.pending;
               const StatusIcon = cfg.icon;
               const date = new Date(tx.created_at);
+              const showRetry = canRetry(tx.status);
 
               return (
                 <motion.div
@@ -147,33 +256,53 @@ const TransactionHistory = () => {
                   transition={{ delay: i * 0.05 }}
                 >
                   <Card className="border-border/50">
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <StatusIcon className={`h-6 w-6 shrink-0 ${cfg.color}`} />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground">
-                            {tx.coins.toLocaleString()} Koin
+                    <CardContent className="py-4">
+                      <div className="flex items-center gap-4">
+                        <StatusIcon className={`h-6 w-6 shrink-0 ${cfg.color}`} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {tx.coins.toLocaleString()} Koin
+                            </p>
+                            <Badge
+                              variant={tx.status === "settlement" ? "default" : "secondary"}
+                              className="text-[10px]"
+                            >
+                              {cfg.label}
+                            </Badge>
+                          </div>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                            {" · "}
+                            {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                            {tx.payment_type && ` · ${tx.payment_type}`}
                           </p>
-                          <Badge
-                            variant={tx.status === "settlement" ? "default" : "secondary"}
-                            className="text-[10px]"
-                          >
-                            {cfg.label}
-                          </Badge>
+                          <p className="mt-0.5 truncate text-[10px] text-muted-foreground/60">{tx.order_id}</p>
                         </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                          {" · "}
-                          {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-                          {tx.payment_type && ` · ${tx.payment_type}`}
-                        </p>
-                        <p className="mt-0.5 truncate text-[10px] text-muted-foreground/60">{tx.order_id}</p>
+                        <div className="text-right">
+                          <p className="font-display text-sm font-bold text-foreground">
+                            {formatRupiah(tx.amount)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-display text-sm font-bold text-foreground">
-                          {formatRupiah(tx.amount)}
-                        </p>
-                      </div>
+                      {showRetry && (
+                        <div className="mt-3 flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs"
+                            disabled={retrying === tx.id}
+                            onClick={() => handleRetry(tx)}
+                          >
+                            {retrying === tx.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-3.5 w-3.5" />
+                            )}
+                            Bayar Ulang
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
