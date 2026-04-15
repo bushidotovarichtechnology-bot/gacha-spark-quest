@@ -82,6 +82,7 @@ const Profile = () => {
       setLoadingProfile(false);
     };
     fetchProfile();
+    fetchRedemptions();
   }, [user]);
 
   const handleSaveProfile = async () => {
