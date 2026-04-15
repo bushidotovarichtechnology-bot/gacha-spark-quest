@@ -208,7 +208,81 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                 </div>
               )}
 
-              {isRare && !prize.isPityReward && (
+              {/* Grand Prize (Tier S) — Confetti explosion */}
+              {prize.tier === "S" && !prize.isPityReward && (
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  {/* Rotating golden rays */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-[-50%] opacity-15"
+                    style={{
+                      background: "conic-gradient(from 0deg, transparent, hsl(var(--accent)), transparent, hsl(var(--accent)), transparent, hsl(var(--accent)), transparent)",
+                    }}
+                  />
+                  {/* Confetti pieces */}
+                  {Array.from({ length: 40 }).map((_, i) => {
+                    const colors = [
+                      "bg-accent", "bg-primary", "bg-neon-pink",
+                      "bg-yellow-400", "bg-green-400", "bg-blue-400",
+                      "bg-red-400", "bg-purple-400", "bg-orange-400",
+                    ];
+                    const isRect = i % 3 === 0;
+                    const startX = 50 + (Math.random() - 0.5) * 20;
+                    const endX = startX + (Math.random() - 0.5) * 120;
+                    return (
+                      <motion.div
+                        key={`confetti-${i}`}
+                        initial={{
+                          y: "40%",
+                          x: `${startX}%`,
+                          opacity: 1,
+                          scale: 0,
+                          rotate: 0,
+                        }}
+                        animate={{
+                          y: `${-20 + Math.random() * 140}%`,
+                          x: `${endX}%`,
+                          opacity: [0, 1, 1, 0.8, 0],
+                          scale: [0, 1.2, 1],
+                          rotate: Math.random() * 720 - 360,
+                        }}
+                        transition={{
+                          duration: 2 + Math.random() * 1.5,
+                          delay: Math.random() * 0.6,
+                          ease: "easeOut",
+                        }}
+                        className={`absolute ${isRect ? "h-3 w-1.5 rounded-sm" : "h-2 w-2 rounded-full"} ${colors[i % colors.length]}`}
+                      />
+                    );
+                  })}
+                  {/* Sparkle stars */}
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <motion.div
+                      key={`star-${i}`}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0],
+                        x: `${10 + Math.random() * 80}%`,
+                        y: `${10 + Math.random() * 80}%`,
+                      }}
+                      transition={{
+                        duration: 1.2,
+                        delay: 0.5 + Math.random() * 1.5,
+                        repeat: Infinity,
+                        repeatDelay: 1 + Math.random() * 2,
+                      }}
+                      className="absolute text-accent text-lg"
+                    >
+                      ✦
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {/* Tier A — Simple particles */}
+              {prize.tier === "A" && !prize.isPityReward && (
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <motion.div
