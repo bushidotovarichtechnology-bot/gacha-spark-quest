@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -9,6 +14,8 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const { order_id, transaction_status, payment_type, fraud_status } = body;
+
+    console.log("Webhook received:", { order_id, transaction_status, payment_type, fraud_status });
 
     if (!order_id || !transaction_status) {
       return new Response(JSON.stringify({ error: "Invalid payload" }), {
@@ -35,6 +42,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (!tx) {
+      console.error("Transaction not found:", order_id);
       return new Response(JSON.stringify({ error: "Transaction not found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -47,11 +55,30 @@ Deno.serve(async (req) => {
       .update({ status, payment_type: payment_type || null })
       .eq("order_id", order_id);
 
+    console.log(`Transaction ${order_id} updated to status: ${status} (was: ${tx.status})`);
+
     // If settlement and not already credited, add coins to user
     if (status === "settlement" && tx.status !== "settlement") {
-      // We'll track coins via the transactions table
-      // The frontend polls for status changes and credits coins locally
-      console.log(`Payment settled for order ${order_id}: ${tx.coins} coins for user ${tx.user_id}`);
+      const { data: userCoins } = await supabase
+        .from("user_coins")
+        .select("balance")
+        .eq("user_id", tx.user_id)
+        .single();
+
+      if (userCoins) {
+        const newBalance = (userCoins.balance || 0) + tx.coins;
+        await supabase
+          .from("user_coins")
+          .update({ balance: newBalance })
+          .eq("user_id", tx.user_id);
+        console.log(`Credited ${tx.coins} coins to user ${tx.user_id}. New balance: ${newBalance}`);
+      } else {
+        // Create user_coins row if it doesn't exist
+        await supabase
+          .from("user_coins")
+          .insert({ user_id: tx.user_id, balance: tx.coins });
+        console.log(`Created user_coins for ${tx.user_id} with balance: ${tx.coins}`);
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
