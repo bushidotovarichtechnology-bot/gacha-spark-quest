@@ -19,6 +19,7 @@ const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan
 
 const Profile = () => {
   const { user } = useAuth();
+  const { addCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -39,6 +40,21 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [redeemingCoupon, setRedeemingCoupon] = useState(false);
+  const [redemptions, setRedemptions] = useState<any[]>([]);
+
+  const fetchRedemptions = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("coupon_redemptions")
+      .select("*, coupons:coupon_id(code, description)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setRedemptions(data || []);
+  };
 
   useEffect(() => {
     if (!user) return;
