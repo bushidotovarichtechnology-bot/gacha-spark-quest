@@ -134,8 +134,13 @@ export type Database = {
       }
       coin_packages: {
         Row: {
+          bonus_coins: number
+          bonus_label: string
           coins: number
           created_at: string
+          discount_end: string | null
+          discount_percent: number
+          discount_start: string | null
           icon: string
           id: string
           is_active: boolean
@@ -146,8 +151,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bonus_coins?: number
+          bonus_label?: string
           coins: number
           created_at?: string
+          discount_end?: string | null
+          discount_percent?: number
+          discount_start?: string | null
           icon?: string
           id?: string
           is_active?: boolean
@@ -158,8 +168,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bonus_coins?: number
+          bonus_label?: string
           coins?: number
           created_at?: string
+          discount_end?: string | null
+          discount_percent?: number
+          discount_start?: string | null
           icon?: string
           id?: string
           is_active?: boolean
