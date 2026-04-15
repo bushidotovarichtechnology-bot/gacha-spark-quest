@@ -444,6 +444,7 @@ export type Database = {
       tier_prizes: {
         Row: {
           created_at: string
+          description: string
           id: string
           image_url: string
           name: string
@@ -455,6 +456,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string
           id?: string
           image_url?: string
           name: string
@@ -466,6 +468,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string
           id?: string
           image_url?: string
           name?: string

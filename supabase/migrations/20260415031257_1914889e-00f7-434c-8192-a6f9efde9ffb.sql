@@ -1,0 +1,1 @@
+ALTER TABLE public.tier_prizes ADD COLUMN description text NOT NULL DEFAULT '';
