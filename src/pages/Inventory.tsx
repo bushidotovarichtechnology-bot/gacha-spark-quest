@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -35,7 +35,9 @@ const Inventory = () => {
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
   const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
   const [bulkRecycleOpen, setBulkRecycleOpen] = useState(false);
-  const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC">("C");
+  const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC" | "selected">("C");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filteredItems = (() => {
     let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
@@ -59,6 +61,7 @@ const Inventory = () => {
   };
 
   const getBulkRecycleItems = () => {
+    if (bulkRecycleTier === "selected") return items.filter((i) => selectedIds.has(i.id));
     if (bulkRecycleTier === "BC") return items.filter((i) => i.tier === "B" || i.tier === "C");
     return items.filter((i) => i.tier === bulkRecycleTier);
   };
@@ -74,6 +77,24 @@ const Inventory = () => {
       icon: <Coins className="h-4 w-4 text-accent" />,
     });
     setBulkRecycleOpen(false);
+    setSelectedIds(new Set());
+    setSelectMode(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(filteredItems.map((i) => i.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
   };
 
   const tierCounts = {
@@ -194,32 +215,72 @@ const Inventory = () => {
         </div>
 
         {/* Bulk Recycle */}
-        {(tierCounts.B + tierCounts.C) > 0 && (
-          <div className="mb-4 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 px-4 py-2.5">
-            <div className="flex items-center gap-2 text-sm">
-              <Recycle className="h-4 w-4 text-accent" />
-              <span className="text-muted-foreground">Daur ulang massal:</span>
+        {items.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 px-4 py-2.5">
+              <div className="flex items-center gap-2 text-sm">
+                <Recycle className="h-4 w-4 text-accent" />
+                <span className="text-muted-foreground">Daur ulang massal:</span>
+              </div>
+              <div className="flex gap-2 flex-wrap justify-end">
+                {tierCounts.C > 0 && (
+                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                    onClick={() => { setBulkRecycleTier("C"); setBulkRecycleOpen(true); }}>
+                    Tier C ({tierCounts.C})
+                  </Button>
+                )}
+                {tierCounts.B > 0 && (
+                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                    onClick={() => { setBulkRecycleTier("B"); setBulkRecycleOpen(true); }}>
+                    Tier B ({tierCounts.B})
+                  </Button>
+                )}
+                {tierCounts.B > 0 && tierCounts.C > 0 && (
+                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                    onClick={() => { setBulkRecycleTier("BC"); setBulkRecycleOpen(true); }}>
+                    B + C ({tierCounts.B + tierCounts.C})
+                  </Button>
+                )}
+                <Button size="sm" variant={selectMode ? "default" : "outline"}
+                  className={`h-7 gap-1 text-xs ${selectMode ? "" : "border-primary/30 hover:border-primary hover:text-primary"}`}
+                  onClick={() => { setSelectMode(!selectMode); if (selectMode) clearSelection(); }}>
+                  <CheckSquare className="h-3 w-3" />
+                  {selectMode ? "Batal Pilih" : "Pilih Item"}
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              {tierCounts.C > 0 && (
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
-                  onClick={() => { setBulkRecycleTier("C"); setBulkRecycleOpen(true); }}>
-                  Tier C ({tierCounts.C})
-                </Button>
-              )}
-              {tierCounts.B > 0 && (
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
-                  onClick={() => { setBulkRecycleTier("B"); setBulkRecycleOpen(true); }}>
-                  Tier B ({tierCounts.B})
-                </Button>
-              )}
-              {tierCounts.B > 0 && tierCounts.C > 0 && (
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
-                  onClick={() => { setBulkRecycleTier("BC"); setBulkRecycleOpen(true); }}>
-                  B + C ({tierCounts.B + tierCounts.C})
-                </Button>
-              )}
-            </div>
+
+            {/* Selection toolbar */}
+            {selectMode && (
+              <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-2">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{selectedIds.size}</span> item dipilih
+                  </span>
+                  {selectedIds.size > 0 && (
+                    <span className="text-accent font-medium text-xs">
+                      +{items.filter(i => selectedIds.has(i.id)).reduce((s, i) => s + i.coinValue, 0).toLocaleString()} koin
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={selectAllFiltered}>
+                    Pilih Semua
+                  </Button>
+                  {selectedIds.size > 0 && (
+                    <>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={clearSelection}>
+                        <XCircle className="h-3 w-3 mr-1" /> Hapus Pilihan
+                      </Button>
+                      <Button size="sm" className="h-7 text-xs gap-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                        onClick={() => { setBulkRecycleTier("selected"); setBulkRecycleOpen(true); }}>
+                        <Recycle className="h-3 w-3" /> Daur Ulang ({selectedIds.size})
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -232,6 +293,7 @@ const Inventory = () => {
                 try { return formatDistanceToNow(new Date(item.wonAt), { addSuffix: true }); }
                 catch { return item.wonAt; }
               })();
+              const isSelected = selectedIds.has(item.id);
               return (
                 <motion.div
                   key={item.id}
@@ -240,7 +302,10 @@ const Inventory = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.25 }}
-                  className={`group overflow-hidden rounded-xl border border-border/50 bg-gradient-to-b ${meta.gradient} transition-all hover:border-primary/40`}
+                  className={`group overflow-hidden rounded-xl border bg-gradient-to-b ${meta.gradient} transition-all hover:border-primary/40 ${
+                    isSelected ? "border-accent ring-2 ring-accent/30" : "border-border/50"
+                  } ${selectMode ? "cursor-pointer" : ""}`}
+                  onClick={selectMode ? () => toggleSelect(item.id) : undefined}
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <img
@@ -253,6 +318,14 @@ const Inventory = () => {
                     <div className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 font-display text-xs font-black ${meta.color}`}>
                       {item.tier}
                     </div>
+                    {selectMode && (
+                      <div className="absolute right-2 top-2">
+                        {isSelected
+                          ? <CheckSquare className="h-6 w-6 text-accent drop-shadow-md" />
+                          : <Square className="h-6 w-6 text-muted-foreground/60 drop-shadow-md" />
+                        }
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3">
@@ -368,7 +441,7 @@ const Inventory = () => {
               {(() => {
                 const bulkItems = getBulkRecycleItems();
                 const totalVal = bulkItems.reduce((s, i) => s + i.coinValue, 0);
-                const tierLabel = bulkRecycleTier === "BC" ? "Tier B & C" : `Tier ${bulkRecycleTier}`;
+                const tierLabel = bulkRecycleTier === "selected" ? "yang dipilih" : bulkRecycleTier === "BC" ? "Tier B & C" : `Tier ${bulkRecycleTier}`;
                 return (
                   <>
                     Daur ulang <span className="font-semibold text-foreground">{bulkItems.length} item {tierLabel}</span> sekaligus?
