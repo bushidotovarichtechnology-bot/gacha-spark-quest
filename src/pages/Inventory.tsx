@@ -353,6 +353,46 @@ const Inventory = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Recycle Confirmation Dialog */}
+      <AlertDialog open={bulkRecycleOpen} onOpenChange={setBulkRecycleOpen}>
+        <AlertDialogContent className="border-border bg-card">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+              <Recycle className="h-6 w-6 text-accent" />
+            </div>
+            <AlertDialogTitle className="text-center font-display">
+              Daur Ulang Massal
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              {(() => {
+                const bulkItems = getBulkRecycleItems();
+                const totalVal = bulkItems.reduce((s, i) => s + i.coinValue, 0);
+                const tierLabel = bulkRecycleTier === "BC" ? "Tier B & C" : `Tier ${bulkRecycleTier}`;
+                return (
+                  <>
+                    Daur ulang <span className="font-semibold text-foreground">{bulkItems.length} item {tierLabel}</span> sekaligus?
+                    <br />
+                    Kamu akan mendapatkan <span className="font-semibold text-accent">+{totalVal.toLocaleString()} koin</span>.
+                    <br />
+                    <span className="text-destructive text-xs mt-1 block">Tindakan ini tidak bisa dibatalkan.</span>
+                  </>
+                );
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="border-border">{t("back")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={handleBulkRecycle}
+            >
+              <Recycle className="mr-1.5 h-4 w-4" />
+              Daur Ulang {getBulkRecycleItems().length} Item
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
