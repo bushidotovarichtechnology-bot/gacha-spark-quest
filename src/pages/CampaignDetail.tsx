@@ -62,6 +62,7 @@ const CampaignDetail = () => {
   const { addPrize, totalCoins, spendCoins, drawsSinceTierA } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: campaign, isLoading } = useQuery({
