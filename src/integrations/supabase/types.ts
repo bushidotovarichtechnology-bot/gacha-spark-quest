@@ -443,6 +443,7 @@ export type Database = {
       }
       tier_prizes: {
         Row: {
+          auto_refill: boolean
           created_at: string
           description: string
           id: string
@@ -455,6 +456,7 @@ export type Database = {
           total: number
         }
         Insert: {
+          auto_refill?: boolean
           created_at?: string
           description?: string
           id?: string
@@ -467,6 +469,7 @@ export type Database = {
           total?: number
         }
         Update: {
+          auto_refill?: boolean
           created_at?: string
           description?: string
           id?: string

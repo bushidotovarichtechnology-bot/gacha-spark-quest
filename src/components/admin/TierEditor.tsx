@@ -88,6 +88,18 @@ function SortablePrizeRow({
           onRefresh();
         }} />
       </div>
+      <label className="flex items-center gap-1 cursor-pointer" title="Auto Refill: stok otomatis terisi ulang saat habis">
+        <input
+          type="checkbox"
+          checked={p.auto_refill}
+          onChange={async (e) => {
+            await supabase.from("tier_prizes").update({ auto_refill: e.target.checked }).eq("id", p.id);
+            onRefresh();
+          }}
+          className="h-3 w-3 rounded border-input accent-primary"
+        />
+        <span className="text-[10px] text-muted-foreground whitespace-nowrap">Refill</span>
+      </label>
       <label className="flex h-6 w-6 cursor-pointer items-center justify-center rounded hover:bg-accent" title="Upload gambar hadiah">
         <Upload className="h-3 w-3 text-muted-foreground" />
         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
