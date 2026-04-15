@@ -48,8 +48,21 @@ const PrizeImagePreview = ({ image, onClose }: PrizeImagePreviewProps) => {
       return next;
     });
   };
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      overlayRef.current?.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }, []);
 
-  // Swipe detection
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+
   const swipeStart = useRef<{ x: number; t: number } | null>(null);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
