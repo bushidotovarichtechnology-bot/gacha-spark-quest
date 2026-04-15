@@ -382,8 +382,13 @@ const CampaignDetail = () => {
                     </div>
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       {tier.prizes.map((p: any) => (
-                        <span key={p.id} className="rounded-md bg-background/40 px-2 py-0.5 text-xs text-foreground/80">
-                          {p.name} <span className="text-muted-foreground">({p.remaining}/{p.total})</span>
+                        <span key={p.id} className={`rounded-md px-2 py-0.5 text-xs ${p.remaining <= 0 ? "bg-destructive/20 text-destructive line-through opacity-60" : "bg-background/40 text-foreground/80"}`}>
+                          {p.name}
+                          {p.remaining <= 0 ? (
+                            <span className="ml-1 rounded bg-destructive/30 px-1 py-px text-[10px] font-bold text-destructive no-underline inline-block" style={{ textDecoration: 'none' }}>Habis</span>
+                          ) : (
+                            <span className="text-muted-foreground"> ({p.remaining}/{p.total})</span>
+                          )}
                         </span>
                       ))}
                     </div>

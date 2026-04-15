@@ -449,6 +449,7 @@ export type Database = {
           name: string
           probability_weight: number
           remaining: number
+          sort_order: number
           tier_id: string
           total: number
         }
@@ -459,6 +460,7 @@ export type Database = {
           name: string
           probability_weight?: number
           remaining?: number
+          sort_order?: number
           tier_id: string
           total?: number
         }
@@ -469,6 +471,7 @@ export type Database = {
           name?: string
           probability_weight?: number
           remaining?: number
+          sort_order?: number
           tier_id?: string
           total?: number
         }
