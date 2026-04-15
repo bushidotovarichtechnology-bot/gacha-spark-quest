@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -35,7 +35,9 @@ const Inventory = () => {
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
   const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
   const [bulkRecycleOpen, setBulkRecycleOpen] = useState(false);
-  const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC">("C");
+  const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC" | "selected">("C");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filteredItems = (() => {
     let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
