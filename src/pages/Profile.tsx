@@ -21,7 +21,7 @@ const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan
 
 const Profile = () => {
   const { user } = useAuth();
-  const { addCoins } = useGacha();
+  const { addCoins, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
