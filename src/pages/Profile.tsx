@@ -21,7 +21,7 @@ const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan
 
 const Profile = () => {
   const { user } = useAuth();
-  const { addCoins } = useGacha();
+  const { addCoins, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -189,6 +189,8 @@ const Profile = () => {
       if (data.benefit_type === "bonus_coins") {
         addCoins(data.benefit_value);
       }
+      // Refresh coins state to pick up free_draws / discount changes
+      await refreshCoins();
       toast({
         title: "Kupon Berhasil Digunakan! 🎉",
         description: data.description + (data.coupon_description ? ` — ${data.coupon_description}` : ""),

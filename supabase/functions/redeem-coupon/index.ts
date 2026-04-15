@@ -106,6 +106,49 @@ Deno.serve(async (req) => {
       .update({ used_count: coupon.used_count + 1 })
       .eq("id", coupon.id);
 
+    // Apply benefit to user_coins
+    const { data: userCoins } = await adminClient
+      .from("user_coins")
+      .select("balance, free_draws, active_discount_percent")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!userCoins) {
+      await adminClient.from("user_coins").insert({
+        user_id: user.id,
+        balance: 0,
+        free_draws: 0,
+        active_discount_percent: 0,
+      });
+    }
+
+    const currentBalance = userCoins?.balance ?? 0;
+    const currentFreeDraws = userCoins?.free_draws ?? 0;
+    const currentDiscount = userCoins?.active_discount_percent ?? 0;
+
+    switch (coupon.benefit_type) {
+      case "bonus_coins":
+        await adminClient
+          .from("user_coins")
+          .update({ balance: currentBalance + coupon.benefit_value })
+          .eq("user_id", user.id);
+        break;
+      case "free_gacha":
+        await adminClient
+          .from("user_coins")
+          .update({ free_draws: currentFreeDraws + coupon.benefit_value })
+          .eq("user_id", user.id);
+        break;
+      case "discount_percent":
+        // Use the higher discount if one is already active
+        const newDiscount = Math.max(currentDiscount, coupon.benefit_value);
+        await adminClient
+          .from("user_coins")
+          .update({ active_discount_percent: newDiscount })
+          .eq("user_id", user.id);
+        break;
+    }
+
     // Build benefit description
     let benefitDesc = "";
     switch (coupon.benefit_type) {

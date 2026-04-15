@@ -59,7 +59,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize, totalCoins, spendCoins, drawsSinceTierA } = useGacha();
+  const { addPrize, totalCoins, spendCoins, drawsSinceTierA, freeDraws, activeDiscountPercent, useFreeDraws, clearDiscount } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -177,16 +177,33 @@ const CampaignDetail = () => {
     }
     if (isDrawing || totalRemaining <= 0) return;
     const actualCount = Math.min(count, totalRemaining);
-    const totalCost = actualCount * campaign.price;
+
+    // Calculate cost considering free draws and discount
+    const freeUsed = Math.min(freeDraws, actualCount);
+    const paidCount = actualCount - freeUsed;
+    const pricePerDraw = activeDiscountPercent > 0
+      ? Math.round(campaign.price * (1 - activeDiscountPercent / 100))
+      : campaign.price;
+    const totalCost = paidCount * pricePerDraw;
 
     if (totalCoins < totalCost) {
       toast.error(t("insufficientCoins"));
       return;
     }
 
-    if (!spendCoins(totalCost)) {
+    if (totalCost > 0 && !spendCoins(totalCost)) {
       toast.error(t("insufficientCoins"));
       return;
+    }
+
+    // Consume free draws
+    if (freeUsed > 0) {
+      useFreeDraws(freeUsed);
+      toast.success(`Menggunakan ${freeUsed}x gacha gratis!`);
+    }
+    // Clear discount after use
+    if (activeDiscountPercent > 0 && paidCount > 0) {
+      clearDiscount();
     }
 
     setDrawCount(actualCount);
@@ -560,11 +577,29 @@ const CampaignDetail = () => {
               <div className="mr-auto flex flex-col">
                 <div className="text-sm">
                   <span className="text-muted-foreground">{t("price")}: </span>
-                  <span className="font-bold text-accent">{campaign.price} coins</span>
+                  {activeDiscountPercent > 0 ? (
+                    <>
+                      <span className="font-bold text-accent line-through opacity-50">{campaign.price}</span>
+                      <span className="font-bold text-accent ml-1">
+                        {Math.round(campaign.price * (1 - activeDiscountPercent / 100))} coins
+                      </span>
+                      <span className="ml-1 text-xs text-green-400">(-{activeDiscountPercent}%)</span>
+                    </>
+                  ) : (
+                    <span className="font-bold text-accent">{campaign.price} coins</span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Coins className="h-3 w-3 text-accent" />
-                  <span>{totalCoins.toLocaleString()}</span>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Coins className="h-3 w-3 text-accent" />
+                    {totalCoins.toLocaleString()}
+                  </span>
+                  {freeDraws > 0 && (
+                    <span className="flex items-center gap-1 text-green-400 font-medium">
+                      <Ticket className="h-3 w-3" />
+                      {freeDraws}x gratis
+                    </span>
+                  )}
                 </div>
               </div>
               <Button

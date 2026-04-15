@@ -33,6 +33,11 @@ interface GachaState {
   spendCoins: (amount: number) => boolean;
   pityThreshold: number;
   loading: boolean;
+  freeDraws: number;
+  activeDiscountPercent: number;
+  useFreeDraws: (count: number) => void;
+  clearDiscount: () => void;
+  refreshCoins: () => Promise<void>;
 }
 
 const PITY_THRESHOLD = 10;
@@ -53,39 +58,58 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   const [drawsSinceTierA, setDrawsSinceTierA] = useState<number>(0);
   const [drawHistory, setDrawHistory] = useState<DrawHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [freeDraws, setFreeDraws] = useState<number>(0);
+  const [activeDiscountPercent, setActiveDiscountPercent] = useState<number>(0);
 
-  // Load data from DB when user logs in
+  const refreshCoins = useCallback(async () => {
+    if (!user) return;
+    const { data: coinsData } = await supabase
+      .from("user_coins")
+      .select("balance, draws_since_tier_a, free_draws, active_discount_percent")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (coinsData) {
+      setTotalCoins(coinsData.balance);
+      setDrawsSinceTierA(coinsData.draws_since_tier_a);
+      setFreeDraws((coinsData as any).free_draws ?? 0);
+      setActiveDiscountPercent((coinsData as any).active_discount_percent ?? 0);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       setItems([]);
       setTotalCoins(0);
       setDrawsSinceTierA(0);
       setDrawHistory([]);
+      setFreeDraws(0);
+      setActiveDiscountPercent(0);
       setLoading(false);
       return;
     }
 
     const loadData = async () => {
       setLoading(true);
-      
-      // Load coins
+
       const { data: coinsData } = await supabase
         .from("user_coins")
-        .select("balance, draws_since_tier_a")
+        .select("balance, draws_since_tier_a, free_draws, active_discount_percent")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (coinsData) {
         setTotalCoins(coinsData.balance);
         setDrawsSinceTierA(coinsData.draws_since_tier_a);
+        setFreeDraws((coinsData as any).free_draws ?? 0);
+        setActiveDiscountPercent((coinsData as any).active_discount_percent ?? 0);
       } else {
-        // Create row if doesn't exist
         await supabase.from("user_coins").insert({ user_id: user.id, balance: 0, draws_since_tier_a: 0 });
         setTotalCoins(0);
         setDrawsSinceTierA(0);
+        setFreeDraws(0);
+        setActiveDiscountPercent(0);
       }
 
-      // Load inventory
       const { data: invData } = await supabase
         .from("user_inventory")
         .select("*")
@@ -105,7 +129,6 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
         })));
       }
 
-      // Load draw history
       const { data: drawData } = await supabase
         .from("draws")
         .select("id, prize_name, tier_label, campaign_id, created_at")
@@ -129,7 +152,6 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, [user]);
 
-  // Sync coins to DB
   const syncCoins = useCallback(async (balance: number, draws: number) => {
     if (!user) return;
     await supabase
@@ -143,41 +165,21 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     const cv = prize.coinValue || coinValues[prize.tier] || 15;
     const newId = crypto.randomUUID();
 
-    const newItem: InventoryItem = {
-      ...prize,
-      coinValue: cv,
-      id: newId,
-      wonAt: now,
-    };
-    setItems((prev) => [newItem, ...prev]);
-
-    const historyEntry: DrawHistoryEntry = {
-      id: crypto.randomUUID(),
-      prize: prize.prize,
-      tier: prize.tier,
-      campaign: prize.campaign,
-      campaignId: prize.campaignId,
-      drawnAt: now,
-    };
-    setDrawHistory((prev) => [historyEntry, ...prev]);
+    setItems((prev) => [{ ...prize, coinValue: cv, id: newId, wonAt: now }, ...prev]);
+    setDrawHistory((prev) => [{
+      id: crypto.randomUUID(), prize: prize.prize, tier: prize.tier,
+      campaign: prize.campaign, campaignId: prize.campaignId, drawnAt: now,
+    }, ...prev]);
 
     const newDraws = (prize.tier === "S" || prize.tier === "A") ? 0 : drawsSinceTierA + 1;
     setDrawsSinceTierA(newDraws);
 
     if (user) {
-      // Save inventory item to DB
       await supabase.from("user_inventory").insert({
-        id: newId,
-        user_id: user.id,
-        prize_name: prize.prize,
-        tier_label: prize.tier,
-        campaign_id: prize.campaignId,
-        campaign_name: prize.campaign,
-        image_url: prize.image,
-        coin_value: cv,
-        won_at: now,
+        id: newId, user_id: user.id, prize_name: prize.prize, tier_label: prize.tier,
+        campaign_id: prize.campaignId, campaign_name: prize.campaign,
+        image_url: prize.image, coin_value: cv, won_at: now,
       });
-      // Update pity counter
       await syncCoins(totalCoins, newDraws);
     }
   }, [user, drawsSinceTierA, totalCoins, syncCoins]);
@@ -191,23 +193,17 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     });
     setTotalCoins((prev) => {
       const newBal = prev + value;
-      if (user) {
-        supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
-      }
+      if (user) supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
       return newBal;
     });
-    if (user && value > 0) {
-      supabase.from("user_inventory").delete().eq("id", id);
-    }
+    if (user && value > 0) supabase.from("user_inventory").delete().eq("id", id);
     return value;
   }, [user]);
 
   const addCoins = useCallback((amount: number) => {
     setTotalCoins((prev) => {
       const newBal = prev + amount;
-      if (user) {
-        supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
-      }
+      if (user) supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
       return newBal;
     });
   }, [user]);
@@ -216,14 +212,26 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     if (totalCoins < amount) return false;
     const newBal = totalCoins - amount;
     setTotalCoins(newBal);
-    if (user) {
-      supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
-    }
+    if (user) supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
     return true;
   }, [totalCoins, user]);
 
+  const useFreeDraws = useCallback((count: number) => {
+    const newFree = Math.max(0, freeDraws - count);
+    setFreeDraws(newFree);
+    if (user) supabase.from("user_coins").update({ free_draws: newFree } as any).eq("user_id", user.id);
+  }, [freeDraws, user]);
+
+  const clearDiscount = useCallback(() => {
+    setActiveDiscountPercent(0);
+    if (user) supabase.from("user_coins").update({ active_discount_percent: 0 } as any).eq("user_id", user.id);
+  }, [user]);
+
   return (
-    <GachaContext.Provider value={{ items, totalCoins, drawsSinceTierA, drawHistory, addPrize, recycleItem, addCoins, spendCoins, pityThreshold: PITY_THRESHOLD, loading }}>
+    <GachaContext.Provider value={{
+      items, totalCoins, drawsSinceTierA, drawHistory, addPrize, recycleItem, addCoins, spendCoins,
+      pityThreshold: PITY_THRESHOLD, loading, freeDraws, activeDiscountPercent, useFreeDraws, clearDiscount, refreshCoins,
+    }}>
       {children}
     </GachaContext.Provider>
   );
