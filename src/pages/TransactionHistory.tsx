@@ -42,7 +42,7 @@ const TransactionHistory = () => {
   const { user } = useAuth();
   const { t } = useI18n();
   const { refreshCoins } = useGacha();
-  const navigate = useNavigate();
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState<string | null>(null);
