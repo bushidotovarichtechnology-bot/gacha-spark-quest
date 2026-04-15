@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins } fro
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
+import PrizeImagePreview from "@/components/PrizeImagePreview";
 import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
@@ -524,40 +525,7 @@ const CampaignDetail = () => {
         hasPityReward={hasPityReward}
       />
 
-      {/* Prize Image Preview Lightbox */}
-      <AnimatePresence>
-        {previewImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-lg p-4"
-            onClick={() => setPreviewImage(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", damping: 20 }}
-              className="relative max-w-sm w-full rounded-2xl border border-border bg-card p-3 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={previewImage.url}
-                alt={previewImage.name}
-                className="w-full rounded-xl object-contain max-h-[60vh]"
-              />
-              <p className="mt-3 text-center font-display text-sm font-semibold text-foreground">{previewImage.name}</p>
-              <button
-                onClick={() => setPreviewImage(null)}
-                className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-secondary border border-border text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
-              >
-                ✕
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PrizeImagePreview image={previewImage} onClose={() => setPreviewImage(null)} />
 
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
         <div className="container mx-auto flex items-center gap-3 px-4 py-3">
