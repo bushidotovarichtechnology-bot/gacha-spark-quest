@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone } from "lucide-react";
+import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 const WA_NUMBER = "6282231283948";
