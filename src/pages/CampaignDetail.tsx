@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins } fro
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
+import PrizeImagePreview from "@/components/PrizeImagePreview";
 import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
