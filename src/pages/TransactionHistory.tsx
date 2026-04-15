@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -255,7 +255,8 @@ const TransactionHistory = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Card className="border-border/50">
+                  <Link to={`/transactions/${tx.id}`} className="block">
+                  <Card className="border-border/50 transition-colors hover:border-primary/30 cursor-pointer">
                     <CardContent className="py-4">
                       <div className="flex items-center gap-4">
                         <StatusIcon className={`h-6 w-6 shrink-0 ${cfg.color}`} />
@@ -279,10 +280,11 @@ const TransactionHistory = () => {
                           </p>
                           <p className="mt-0.5 truncate text-[10px] text-muted-foreground/60">{tx.order_id}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="flex items-center gap-2">
                           <p className="font-display text-sm font-bold text-foreground">
                             {formatRupiah(tx.amount)}
                           </p>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                         </div>
                       </div>
                       {showRetry && (
@@ -292,7 +294,7 @@ const TransactionHistory = () => {
                             variant="outline"
                             className="gap-1.5 text-xs"
                             disabled={retrying === tx.id}
-                            onClick={() => handleRetry(tx)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRetry(tx); }}
                           >
                             {retrying === tx.id ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -305,6 +307,7 @@ const TransactionHistory = () => {
                       )}
                     </CardContent>
                   </Card>
+                  </Link>
                 </motion.div>
               );
             })}

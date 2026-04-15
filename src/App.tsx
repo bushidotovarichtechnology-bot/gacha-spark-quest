@@ -15,6 +15,7 @@ import DrawHistory from "./pages/DrawHistory.tsx";
 import ClaimHistory from "./pages/ClaimHistory.tsx";
 import TopUp from "./pages/TopUp.tsx";
 import TransactionHistory from "./pages/TransactionHistory.tsx";
+import TransactionDetail from "./pages/TransactionDetail.tsx";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/claims" element={<ProtectedRoute><ClaimHistory /></ProtectedRoute>} />
             <Route path="/topup" element={<ProtectedRoute><TopUp /></ProtectedRoute>} />
             <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>} />
+            <Route path="/transactions/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
             <Route path="/redeem" element={<ProtectedRoute><RedeemStore /></ProtectedRoute>} />
             <Route path="/gift" element={<ProtectedRoute><GiftCoins /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
