@@ -148,8 +148,47 @@ const TopUp = () => {
         if (script) script.setAttribute("data-client-key", data.client_key);
       }
 
-      const pkg = selectedPackage;
+      const orderId = data.order_id;
       setSelectedPackage(null);
+
+      const pollTransactionStatus = async (oid: string, coinsAmount: number) => {
+        let attempts = 0;
+        const maxAttempts = 30;
+        const interval = setInterval(async () => {
+          attempts++;
+          const { data: txData } = await supabase
+            .from("transactions")
+            .select("status")
+            .eq("order_id", oid)
+            .single();
+
+          if (txData && txData.status !== "pending") {
+            clearInterval(interval);
+            if (txData.status === "settlement") {
+              // Refresh coins from DB
+              const { data: coinData } = await supabase
+                .from("user_coins")
+                .select("balance")
+                .eq("user_id", user!.id)
+                .single();
+              if (coinData) {
+                addCoins(coinData.balance - (coinData.balance - coinsAmount) + coinsAmount - coinsAmount);
+                // Force refresh by reloading coins context
+                window.dispatchEvent(new Event("coins-updated"));
+              }
+              toast({
+                title: t("purchaseSuccess"),
+                description: t("purchaseSuccessDesc", { coins: coinsAmount.toLocaleString() }),
+              });
+            } else if (txData.status === "deny" || txData.status === "cancel") {
+              toast({ title: "Pembayaran Gagal", description: "Pembayaran ditolak atau dibatalkan.", variant: "destructive" });
+            } else if (txData.status === "expire") {
+              toast({ title: "Pembayaran Kedaluwarsa", description: "Waktu pembayaran telah habis.", variant: "destructive" });
+            }
+          }
+          if (attempts >= maxAttempts) clearInterval(interval);
+        }, 3000);
+      };
 
       window.snap.pay(data.token, {
         onSuccess: () => {
@@ -160,12 +199,16 @@ const TopUp = () => {
           });
         },
         onPending: () => {
-          toast({ title: "Pembayaran Pending", description: "Silakan selesaikan pembayaran Anda." });
+          toast({ title: "Pembayaran Pending", description: "Status akan diperbarui otomatis. Silakan cek riwayat transaksi." });
+          pollTransactionStatus(orderId, totalCoins);
         },
         onError: () => {
           toast({ title: "Pembayaran Gagal", description: "Terjadi kesalahan saat memproses pembayaran.", variant: "destructive" });
         },
-        onClose: () => console.log("Payment popup closed"),
+        onClose: () => {
+          // Poll status in case user closed after paying
+          pollTransactionStatus(orderId, totalCoins);
+        },
       });
     } catch (err: any) {
       console.error("Payment error:", err);

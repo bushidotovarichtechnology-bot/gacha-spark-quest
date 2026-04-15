@@ -49,6 +49,28 @@ const TransactionHistory = () => {
       setLoading(false);
     };
     fetchTx();
+
+    // Subscribe to realtime changes for user's transactions
+    const channel = supabase
+      .channel("user-transactions")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "transactions" },
+        (payload) => {
+          setTransactions((prev) =>
+            prev.map((tx) =>
+              tx.id === payload.new.id
+                ? { ...tx, status: payload.new.status, payment_type: payload.new.payment_type }
+                : tx
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const totalSpent = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.amount, 0);
