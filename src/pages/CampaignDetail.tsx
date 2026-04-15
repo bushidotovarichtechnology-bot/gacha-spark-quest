@@ -577,11 +577,29 @@ const CampaignDetail = () => {
               <div className="mr-auto flex flex-col">
                 <div className="text-sm">
                   <span className="text-muted-foreground">{t("price")}: </span>
-                  <span className="font-bold text-accent">{campaign.price} coins</span>
+                  {activeDiscountPercent > 0 ? (
+                    <>
+                      <span className="font-bold text-accent line-through opacity-50">{campaign.price}</span>
+                      <span className="font-bold text-accent ml-1">
+                        {Math.round(campaign.price * (1 - activeDiscountPercent / 100))} coins
+                      </span>
+                      <span className="ml-1 text-xs text-green-400">(-{activeDiscountPercent}%)</span>
+                    </>
+                  ) : (
+                    <span className="font-bold text-accent">{campaign.price} coins</span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Coins className="h-3 w-3 text-accent" />
-                  <span>{totalCoins.toLocaleString()}</span>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Coins className="h-3 w-3 text-accent" />
+                    {totalCoins.toLocaleString()}
+                  </span>
+                  {freeDraws > 0 && (
+                    <span className="flex items-center gap-1 text-green-400 font-medium">
+                      <Ticket className="h-3 w-3" />
+                      {freeDraws}x gratis
+                    </span>
+                  )}
                 </div>
               </div>
               <Button
