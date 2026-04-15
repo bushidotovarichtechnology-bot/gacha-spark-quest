@@ -77,6 +77,13 @@ function SortablePrizeRow({
         />
       </div>
       <div className="flex items-center gap-1">
+        <label className="text-[10px] text-muted-foreground">Koin</label>
+        <Input type="number" className="h-6 w-16 text-xs" value={(p as any).coin_value ?? 0} onChange={async (e) => {
+          await supabase.from("tier_prizes").update({ coin_value: Number(e.target.value) } as any).eq("id", p.id);
+          onRefresh();
+        }} placeholder="0" title="Nilai daur ulang (koin)" />
+      </div>
+      <div className="flex items-center gap-1">
         <label className="text-[10px] text-muted-foreground">Rem</label>
         <Input type="number" className="h-6 w-14 text-xs" value={p.remaining} onChange={async (e) => {
           await supabase.from("tier_prizes").update({ remaining: Number(e.target.value) }).eq("id", p.id);
