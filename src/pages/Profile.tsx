@@ -232,7 +232,61 @@ const Profile = () => {
               </motion.div>
             </TabsContent>
 
-            {/* Password Tab */}
+            {/* Coupon Tab */}
+            <TabsContent value="coupon">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-display text-lg">
+                      <Ticket className="h-5 w-5 text-primary" /> Redeem Kupon
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Masukkan kode kupon"
+                        className="bg-secondary font-mono"
+                        maxLength={30}
+                      />
+                      <Button onClick={handleRedeemCoupon} disabled={redeemingCoupon || !couponCode.trim()}>
+                        {redeemingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                      </Button>
+                    </div>
+
+                    {/* Redemption History */}
+                    {redemptions.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">Riwayat Kupon</p>
+                        {redemptions.map((r: any) => {
+                          const benefitIcon = r.benefit_type === "bonus_coins" ? Coins : r.benefit_type === "free_gacha" ? Gamepad2 : Percent;
+                          const BIcon = benefitIcon;
+                          const benefitText = r.benefit_type === "bonus_coins"
+                            ? `+${r.benefit_value.toLocaleString()} Koin`
+                            : r.benefit_type === "free_gacha"
+                            ? `${r.benefit_value}x Gacha Gratis`
+                            : `Diskon ${r.benefit_value}%`;
+                          return (
+                            <div key={r.id} className="flex items-center gap-3 rounded-lg bg-secondary p-3">
+                              <BIcon className="h-4 w-4 text-accent shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground">{(r as any).coupons?.code || "—"}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                </p>
+                              </div>
+                              <Badge variant="secondary" className="text-xs">{benefitText}</Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
             <TabsContent value="password">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <Card className="border-border/50">
