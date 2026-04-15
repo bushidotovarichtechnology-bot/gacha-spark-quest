@@ -280,12 +280,12 @@ const CampaignDetail = () => {
         }).select("id").single()
       ) : [];
 
-      const drawResults = await Promise.all([...tierUpdates, ...drawInserts]);
+      const drawResults = await Promise.all([...prizeUpdates, ...drawInserts]);
 
       // Insert redeem tickets for each draw
       if (user) {
         const ticketInserts = results.map((r, idx) => {
-          const drawResult = drawResults[Object.keys(remainingCopy).length + idx] as any;
+          const drawResult = drawResults[Object.keys(prizeRemainingCopy).length + idx] as any;
           const drawId = drawResult?.data?.id;
           const qty = ticketValues[r.tier] || 1;
           return drawId ? supabase.from("redeem_tickets").insert({
