@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, Fragment } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins } from "lucide-react";
@@ -62,6 +62,7 @@ const CampaignDetail = () => {
   const { addPrize, totalCoins, spendCoins, drawsSinceTierA } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: campaign, isLoading } = useQuery({
@@ -169,6 +170,11 @@ const CampaignDetail = () => {
   const totalTickets = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.total, 0), 0);
 
   const handleDraw = (count: number) => {
+    if (!user) {
+      toast.error("Silakan login terlebih dahulu untuk melakukan gacha!");
+      navigate("/login");
+      return;
+    }
     if (isDrawing || totalRemaining <= 0) return;
     const actualCount = Math.min(count, totalRemaining);
     const totalCost = actualCount * campaign.price;
