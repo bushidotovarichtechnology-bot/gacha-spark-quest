@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import defaultAvatar from "@/assets/default-avatar.png";
 
 const Navbar = () => {
-  const { totalCoins } = useGacha();
+  const { totalCoins, freeDraws, activeDiscountPercent } = useGacha();
   const { t, locale, setLocale } = useI18n();
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
