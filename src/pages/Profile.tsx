@@ -122,6 +122,33 @@ const Profile = () => {
     setSavingPassword(false);
   };
 
+  const handleRedeemCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setRedeemingCoupon(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-coupon", {
+        body: { code: couponCode.trim() },
+      });
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || "Gagal redeem kupon");
+      }
+      // Apply benefit
+      if (data.benefit_type === "bonus_coins") {
+        addCoins(data.benefit_value);
+      }
+      toast({
+        title: "Kupon Berhasil Digunakan! 🎉",
+        description: data.description + (data.coupon_description ? ` — ${data.coupon_description}` : ""),
+      });
+      setCouponCode("");
+      fetchRedemptions();
+    } catch (err: any) {
+      toast({ title: "Gagal", description: err.message, variant: "destructive" });
+    } finally {
+      setRedeemingCoupon(false);
+    }
+  };
+
   if (loadingProfile) {
     return (
       <div className="min-h-screen bg-background">
@@ -149,8 +176,9 @@ const Profile = () => {
 
         <div className="mx-auto max-w-lg">
           <Tabs defaultValue="address" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="address" className="gap-1 text-xs"><MapPin className="h-3.5 w-3.5" /> Alamat</TabsTrigger>
+              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Kupon</TabsTrigger>
               <TabsTrigger value="password" className="gap-1 text-xs"><Lock className="h-3.5 w-3.5" /> Password</TabsTrigger>
               <TabsTrigger value="help" className="gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" /> Bantuan</TabsTrigger>
             </TabsList>
