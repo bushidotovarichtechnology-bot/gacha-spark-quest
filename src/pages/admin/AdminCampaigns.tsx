@@ -119,9 +119,9 @@ const AdminCampaigns = () => {
     fetchTiers(campaignId);
   };
 
-  const addPrize = async (tierId: string, name: string) => {
+  const addPrize = async (tierId: string, name: string, total: number = 1) => {
     if (!name.trim()) return;
-    await supabase.from("tier_prizes").insert({ tier_id: tierId, name: name.trim() });
+    await supabase.from("tier_prizes").insert({ tier_id: tierId, name: name.trim(), total, remaining: total });
     if (expandedId) fetchTiers(expandedId);
   };
 
@@ -222,7 +222,7 @@ const AdminCampaigns = () => {
                         tier={tier}
                         onUpdate={(u) => updateTier(tier.id, u)}
                         onDelete={() => deleteTier(tier.id, c.id)}
-                        onAddPrize={(name) => addPrize(tier.id, name)}
+                        onAddPrize={(name, total) => addPrize(tier.id, name, total)}
                         onDeletePrize={deletePrize}
                         onRefresh={() => fetchTiers(c.id)}
                       />

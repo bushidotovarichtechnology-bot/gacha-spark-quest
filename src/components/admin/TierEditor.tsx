@@ -30,7 +30,7 @@ export function TierEditor({
   tier: CampaignTier;
   onUpdate: (u: Record<string, unknown>) => void;
   onDelete: () => void;
-  onAddPrize: (name: string, imageUrl?: string) => void;
+  onAddPrize: (name: string, total: number, imageUrl?: string) => void;
   onDeletePrize: (id: string) => void;
   onRefresh: () => void;
 }) {
@@ -41,6 +41,7 @@ export function TierEditor({
   const [remaining, setRemaining] = useState(tier.remaining);
   const [weight, setWeight] = useState(tier.probability_weight);
   const [newPrize, setNewPrize] = useState("");
+  const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
 
   const save = () => {
@@ -124,6 +125,18 @@ export function TierEditor({
           <div key={p.id} className="flex items-center gap-2 rounded bg-secondary/50 px-2 py-1">
             {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-cover" />}
             <span className="text-xs flex-1">{p.name}</span>
+            <div className="flex items-center gap-1">
+              <label className="text-[10px] text-muted-foreground">Rem</label>
+              <Input type="number" className="h-6 w-14 text-xs" value={p.remaining} onChange={async (e) => {
+                await supabase.from("tier_prizes").update({ remaining: Number(e.target.value) }).eq("id", p.id);
+                onRefresh();
+              }} />
+              <span className="text-[10px] text-muted-foreground">/</span>
+              <Input type="number" className="h-6 w-14 text-xs" value={p.total} onChange={async (e) => {
+                await supabase.from("tier_prizes").update({ total: Number(e.target.value) }).eq("id", p.id);
+                onRefresh();
+              }} />
+            </div>
             <label className="flex h-6 w-6 cursor-pointer items-center justify-center rounded hover:bg-accent" title="Upload gambar hadiah">
               <Upload className="h-3 w-3 text-muted-foreground" />
               <input type="file" accept="image/*" className="hidden" onChange={(e) => {
@@ -140,8 +153,9 @@ export function TierEditor({
         ))}
         <div className="flex gap-1">
           <Input value={newPrize} onChange={(e) => setNewPrize(e.target.value)} placeholder="New prize name" className="h-7 text-xs flex-1"
-            onKeyDown={(e) => { if (e.key === "Enter") { onAddPrize(newPrize); setNewPrize(""); } }} />
-          <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => { onAddPrize(newPrize); setNewPrize(""); }}>
+            onKeyDown={(e) => { if (e.key === "Enter") { onAddPrize(newPrize, newPrizeTotal); setNewPrize(""); setNewPrizeTotal(1); } }} />
+          <Input type="number" value={newPrizeTotal} onChange={(e) => setNewPrizeTotal(Number(e.target.value))} placeholder="Qty" className="h-7 w-14 text-xs" />
+          <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => { onAddPrize(newPrize, newPrizeTotal); setNewPrize(""); setNewPrizeTotal(1); }}>
             <Plus className="h-3 w-3" />
           </Button>
         </div>

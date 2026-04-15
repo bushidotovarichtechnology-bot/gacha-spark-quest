@@ -160,11 +160,11 @@ const CampaignDetail = () => {
       ...tier,
       color: colorMap[tier.label] || "text-muted-foreground",
       icon: iconMap[tier.label] || Award,
-      prizes: (tier.tier_prizes || []).map((p: { name: string }) => p.name),
+      prizes: (tier.tier_prizes || []).map((p: any) => ({ id: p.id, name: p.name, total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1) })),
     }));
 
-  const totalRemaining = tiers.reduce((s, t) => s + t.remaining, 0);
-  const totalTickets = tiers.reduce((s, t) => s + t.total, 0);
+  const totalRemaining = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.remaining, 0), 0);
+  const totalTickets = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.total, 0), 0);
 
   const handleDraw = (count: number) => {
     if (isDrawing || totalRemaining <= 0) return;
@@ -187,22 +187,27 @@ const CampaignDetail = () => {
     setTimeout(async () => {
       const results: { tier: string; color: string; prize: string; isPityReward?: boolean }[] = [];
       let batchHasPity = false;
-      const remainingCopy: Record<string, number> = {};
-      tiers.forEach((t) => { remainingCopy[t.id] = t.remaining; });
+      // Track remaining per prize
+      const prizeRemainingCopy: Record<string, number> = {};
+      tiers.forEach((t) => {
+        t.prizes.forEach((p: any) => { prizeRemainingCopy[p.id] = p.remaining; });
+      });
 
       for (let i = 0; i < actualCount; i++) {
-        // Track pity across draws in this batch
         let localPityCount = drawsSinceTierA;
 
+        // Build active tiers based on prizes that still have remaining
         const activeTiers = tiers
-          .map((t) => ({ ...t, remaining: Math.max(remainingCopy[t.id] ?? 0, 0) }))
-          .filter((t) => t.remaining > 0);
+          .map((t) => {
+            const activePrizes = t.prizes.filter((p: any) => (prizeRemainingCopy[p.id] ?? 0) > 0);
+            return { ...t, prizes: activePrizes, tierRemaining: activePrizes.reduce((s: number, p: any) => s + (prizeRemainingCopy[p.id] ?? 0), 0) };
+          })
+          .filter((t) => t.tierRemaining > 0);
 
         if (activeTiers.length === 0) break;
 
         let selectedTier;
 
-        // Pity system: force tier A or S when threshold reached
         const isPityDraw = pityEnabled && localPityCount >= pityThreshold - 1;
         const tierOrder = ["S", "A", "B", "C"];
         const guaranteedIdx = tierOrder.indexOf(pityGuaranteedTier);
@@ -210,7 +215,6 @@ const CampaignDetail = () => {
 
         if (isPityDraw && rareTiers.length > 0) {
           batchHasPity = true;
-          // Force a rare tier
           const totalRareWeight = rareTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
           let r = Math.random() * totalRareWeight;
           selectedTier = rareTiers[rareTiers.length - 1];
@@ -219,7 +223,6 @@ const CampaignDetail = () => {
             if (r <= 0) { selectedTier = tier; break; }
           }
         } else {
-          // Normal weighted random
           const totalWeight = activeTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
           let r = Math.random() * totalWeight;
           selectedTier = activeTiers[activeTiers.length - 1];
@@ -229,21 +232,26 @@ const CampaignDetail = () => {
           }
         }
 
-        // Update local pity counter
         if (selectedTier.label === "S" || selectedTier.label === "A") {
           localPityCount = 0;
         } else {
           localPityCount++;
         }
 
-        const prize = selectedTier.prizes.length > 0
-          ? selectedTier.prizes[Math.floor(Math.random() * selectedTier.prizes.length)]
-          : selectedTier.name;
+        // Pick a specific prize weighted by probability_weight
+        const activePrizes = selectedTier.prizes;
+        const totalPrizeWeight = activePrizes.reduce((a: number, p: any) => a + p.probability_weight, 0);
+        let pr = Math.random() * totalPrizeWeight;
+        let selectedPrize = activePrizes[activePrizes.length - 1];
+        for (const p of activePrizes) {
+          pr -= p.probability_weight;
+          if (pr <= 0) { selectedPrize = p; break; }
+        }
 
-        remainingCopy[selectedTier.id] = (remainingCopy[selectedTier.id] ?? 0) - 1;
+        prizeRemainingCopy[selectedPrize.id] = (prizeRemainingCopy[selectedPrize.id] ?? 0) - 1;
 
         addPrize({
-          prize,
+          prize: selectedPrize.name,
           tier: selectedTier.label as "S" | "A" | "B" | "C",
           campaign: campaign.title,
           campaignId: campaign.id,
@@ -251,12 +259,12 @@ const CampaignDetail = () => {
           coinValue: coinValues[selectedTier.label] || 15,
         });
 
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize, isPityReward: isPityDraw && rareTiers.length > 0 });
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0 });
       }
 
-      // Update remaining counts in database & record draws
-      const tierUpdates = Object.entries(remainingCopy).map(([tierId, rem]) =>
-        supabase.from("campaign_tiers").update({ remaining: rem }).eq("id", tierId)
+      // Update remaining counts per prize in database
+      const prizeUpdates = Object.entries(prizeRemainingCopy).map(([prizeId, rem]) =>
+        supabase.from("tier_prizes").update({ remaining: rem }).eq("id", prizeId)
       );
 
       const ticketValues: Record<string, number> = { S: 5, A: 3, B: 2, C: 1 };
@@ -272,12 +280,12 @@ const CampaignDetail = () => {
         }).select("id").single()
       ) : [];
 
-      const drawResults = await Promise.all([...tierUpdates, ...drawInserts]);
+      const drawResults = await Promise.all([...prizeUpdates, ...drawInserts]);
 
       // Insert redeem tickets for each draw
       if (user) {
         const ticketInserts = results.map((r, idx) => {
-          const drawResult = drawResults[Object.keys(remainingCopy).length + idx] as any;
+          const drawResult = drawResults[Object.keys(prizeRemainingCopy).length + idx] as any;
           const drawId = drawResult?.data?.id;
           const qty = ticketValues[r.tier] || 1;
           return drawId ? supabase.from("redeem_tickets").insert({
@@ -348,7 +356,9 @@ const CampaignDetail = () => {
         </h2>
         <div className="space-y-3">
           {tiers.map((tier, i) => {
-            const pct = tier.total > 0 ? (tier.remaining / tier.total) * 100 : 0;
+            const tierRemaining = tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
+            const tierTotal = tier.prizes.reduce((s: number, p: any) => s + p.total, 0);
+            const pct = tierTotal > 0 ? (tierRemaining / tierTotal) * 100 : 0;
             return (
               <motion.div
                 key={tier.id}
@@ -366,14 +376,14 @@ const CampaignDetail = () => {
                       <h3 className={`font-display text-sm font-semibold ${tier.color}`}>
                         {tier.name}
                       </h3>
-                      <span className={`text-xs font-semibold ${tier.remaining <= 2 ? "text-destructive animate-pulse-glow" : "text-muted-foreground"}`}>
-                        {tier.remaining}/{tier.total} {t("left")}
+                      <span className={`text-xs font-semibold ${tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0) <= 2 ? "text-destructive animate-pulse-glow" : "text-muted-foreground"}`}>
+                        {tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0)}/{tier.prizes.reduce((s: number, p: any) => s + p.total, 0)} {t("left")}
                       </span>
                     </div>
                     <div className="mb-2 flex flex-wrap gap-1.5">
-                      {tier.prizes.map((p) => (
-                        <span key={p} className="rounded-md bg-background/40 px-2 py-0.5 text-xs text-foreground/80">
-                          {p}
+                      {tier.prizes.map((p: any) => (
+                        <span key={p.id} className="rounded-md bg-background/40 px-2 py-0.5 text-xs text-foreground/80">
+                          {p.name} <span className="text-muted-foreground">({p.remaining}/{p.total})</span>
                         </span>
                       ))}
                     </div>
