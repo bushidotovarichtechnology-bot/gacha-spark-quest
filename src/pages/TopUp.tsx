@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Coins, Sparkles, Zap, Crown, ArrowLeft, Check, Loader2, Gift, Percent } from "lucide-react";
+import { Coins, Sparkles, Zap, Crown, ArrowLeft, Check, Loader2, Gift, Percent, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useGacha } from "@/context/GachaContext";
@@ -56,6 +56,45 @@ const isPromoActive = (pkg: CoinPackage) => {
 
 const getDiscountedPrice = (pkg: CoinPackage) =>
   isPromoActive(pkg) ? Math.round(pkg.price * (1 - pkg.discount_percent / 100)) : pkg.price;
+
+const useCountdown = (endTime: string | null) => {
+  const [timeLeft, setTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    if (!endTime) return;
+
+    const calculateTimeLeft = () => {
+      const end = new Date(endTime).getTime();
+      const now = new Date().getTime();
+      const diff = end - now;
+
+      if (diff <= 0) {
+        setTimeLeft("");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeLeft(`${days}h ${hours}j ${minutes}m`);
+      } else if (hours > 0) {
+        setTimeLeft(`${hours}j ${minutes}m ${seconds}d`);
+      } else {
+        setTimeLeft(`${minutes}m ${seconds}d`);
+      }
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(interval);
+  }, [endTime]);
+
+  return timeLeft;
+};
 
 const TopUp = () => {
   const { addCoins } = useGacha();
@@ -136,8 +175,75 @@ const TopUp = () => {
     }
   };
 
-  const formatRupiah = (value: number) =>
+const formatRupiah = (value: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
+
+  const CoinPackageCard = ({ pkg, index, onSelect }: { pkg: CoinPackage; index: number; onSelect: (pkg: CoinPackage) => void }) => {
+    const Icon = ICON_MAP[pkg.icon] || Coins;
+    const promo = isPromoActive(pkg);
+    const finalPrice = getDiscountedPrice(pkg);
+    const totalCoins = pkg.coins + pkg.bonus_coins;
+    const countdown = useCountdown(promo ? pkg.discount_end : null);
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 }}
+        className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
+          pkg.is_popular ? "border-accent bg-accent/5 box-glow-gold" : "border-border bg-card hover:border-primary/50"
+        }`}
+        onClick={() => onSelect(pkg)}
+      >
+        {/* Badges */}
+        {pkg.is_popular && (
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground">
+            {t("bestValue")}
+          </span>
+        )}
+        {promo && (
+          <span className="absolute -top-3 right-2 rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold text-white flex items-center gap-1">
+            <Percent className="h-3 w-3" /> {pkg.discount_percent}%
+          </span>
+        )}
+
+        <Icon className={`mx-auto h-10 w-10 ${pkg.is_popular ? "text-accent" : "text-primary"}`} />
+
+        <div className="mt-4 font-display text-2xl font-bold text-foreground">
+          {pkg.coins.toLocaleString()}
+        </div>
+        {pkg.bonus_coins > 0 && (
+          <div className="flex items-center justify-center gap-1 text-xs font-medium text-accent">
+            <Gift className="h-3 w-3" />
+            +{pkg.bonus_coins.toLocaleString()} bonus
+          </div>
+        )}
+        <div className="text-sm text-muted-foreground">{t("gachaCoins")}</div>
+
+        <div className="mt-4">
+          {promo ? (
+            <>
+              <div className="text-xs text-muted-foreground line-through">{formatRupiah(pkg.price)}</div>
+              <div className="text-lg font-semibold text-green-400">{formatRupiah(finalPrice)}</div>
+            </>
+          ) : (
+            <div className="text-lg font-semibold text-foreground">{formatRupiah(pkg.price)}</div>
+          )}
+        </div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          {formatRupiah(Math.round(finalPrice / totalCoins))}/{t("perCoin")}
+        </div>
+
+        {/* Countdown Timer */}
+        {promo && countdown && (
+          <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-green-500/10 px-2 py-1 text-xs font-medium text-green-400">
+            <Clock className="h-3 w-3" />
+            {countdown}
+          </div>
+        )}
+      </motion.div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -157,64 +263,7 @@ const TopUp = () => {
           <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : (
           <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {coinPackages.map((pkg, i) => {
-              const Icon = ICON_MAP[pkg.icon] || Coins;
-              const promo = isPromoActive(pkg);
-              const finalPrice = getDiscountedPrice(pkg);
-              const totalCoins = pkg.coins + pkg.bonus_coins;
-
-              return (
-                <motion.div
-                  key={pkg.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
-                    pkg.is_popular ? "border-accent bg-accent/5 box-glow-gold" : "border-border bg-card hover:border-primary/50"
-                  }`}
-                  onClick={() => setSelectedPackage(pkg)}
-                >
-                  {/* Badges */}
-                  {pkg.is_popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground">
-                      {t("bestValue")}
-                    </span>
-                  )}
-                  {promo && (
-                    <span className="absolute -top-3 right-2 rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold text-white flex items-center gap-1">
-                      <Percent className="h-3 w-3" /> {pkg.discount_percent}%
-                    </span>
-                  )}
-
-                  <Icon className={`mx-auto h-10 w-10 ${pkg.is_popular ? "text-accent" : "text-primary"}`} />
-
-                  <div className="mt-4 font-display text-2xl font-bold text-foreground">
-                    {pkg.coins.toLocaleString()}
-                  </div>
-                  {pkg.bonus_coins > 0 && (
-                    <div className="flex items-center justify-center gap-1 text-xs font-medium text-accent">
-                      <Gift className="h-3 w-3" />
-                      +{pkg.bonus_coins.toLocaleString()} bonus
-                    </div>
-                  )}
-                  <div className="text-sm text-muted-foreground">{t("gachaCoins")}</div>
-
-                  <div className="mt-4">
-                    {promo ? (
-                      <>
-                        <div className="text-xs text-muted-foreground line-through">{formatRupiah(pkg.price)}</div>
-                        <div className="text-lg font-semibold text-green-400">{formatRupiah(finalPrice)}</div>
-                      </>
-                    ) : (
-                      <div className="text-lg font-semibold text-foreground">{formatRupiah(pkg.price)}</div>
-                    )}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {formatRupiah(Math.round(finalPrice / totalCoins))}/{t("perCoin")}
-                  </div>
-                </motion.div>
-              );
-            })}
+            {coinPackages.map((pkg, i) => <CoinPackageCard key={pkg.id} pkg={pkg} index={i} onSelect={setSelectedPackage} />)}
           </div>
         )}
 
