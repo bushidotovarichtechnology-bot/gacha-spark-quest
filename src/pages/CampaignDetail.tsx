@@ -137,6 +137,7 @@ const CampaignDetail = () => {
   const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
