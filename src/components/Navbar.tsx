@@ -48,17 +48,21 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
-          <div className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5">
-            <Coins className="h-4 w-4 text-accent" />
-            <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
-          </div>
-          <Link
-            to="/topup"
-            className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110"
-          >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            {t("topUp")}
-          </Link>
+          {user && (
+            <>
+              <div className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5">
+                <Coins className="h-4 w-4 text-accent" />
+                <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
+              </div>
+              <Link
+                to="/topup"
+                className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110"
+              >
+                <ShoppingCart className="h-3.5 w-3.5" />
+                {t("topUp")}
+              </Link>
+            </>
+          )}
           {user ? (
             <div className="flex items-center gap-2">
               <Link
@@ -124,18 +128,22 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-              <div className="flex items-center gap-2">
-                <Coins className="h-4 w-4 text-accent" />
-                <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("gachaCoins")}</span>
-              </div>
-              <Link
-                to="/topup"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2 text-sm font-bold text-accent transition-colors hover:text-accent/80"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {t("topUp")}
-              </Link>
+              {user && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-accent" />
+                    <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("gachaCoins")}</span>
+                  </div>
+                  <Link
+                    to="/topup"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 text-sm font-bold text-accent transition-colors hover:text-accent/80"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    {t("topUp")}
+                  </Link>
+                </>
+              )}
               {user ? (
                 <button
                   onClick={() => { signOut(); setIsOpen(false); }}
