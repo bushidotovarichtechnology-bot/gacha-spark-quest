@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight, Maximize, Minimize } from "lucide-react";
 
 interface PrizeImage {
   url: string;
@@ -17,6 +17,8 @@ const PrizeImagePreview = ({ image, onClose }: PrizeImagePreviewProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const lastTouchDistance = useRef<number | null>(null);
   const lastTouchCenter = useRef<{ x: number; y: number } | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
@@ -46,8 +48,21 @@ const PrizeImagePreview = ({ image, onClose }: PrizeImagePreviewProps) => {
       return next;
     });
   };
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      overlayRef.current?.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }, []);
 
-  // Swipe detection
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+
   const swipeStart = useRef<{ x: number; t: number } | null>(null);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -139,6 +154,7 @@ const PrizeImagePreview = ({ image, onClose }: PrizeImagePreviewProps) => {
     <AnimatePresence>
       {image && (
         <motion.div
+          ref={overlayRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -147,6 +163,7 @@ const PrizeImagePreview = ({ image, onClose }: PrizeImagePreviewProps) => {
         >
           {/* Controls */}
           <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+            <button onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/80 border border-border text-foreground hover:bg-secondary transition-colors">{isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}</button>
             <button onClick={(e) => { e.stopPropagation(); setScale((s) => clampScale(s + 0.5)); }} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/80 border border-border text-foreground hover:bg-secondary transition-colors"><ZoomIn className="h-4 w-4" /></button>
             <button onClick={(e) => { e.stopPropagation(); setScale((s) => clampScale(s - 0.5)); }} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/80 border border-border text-foreground hover:bg-secondary transition-colors"><ZoomOut className="h-4 w-4" /></button>
             <button onClick={(e) => { e.stopPropagation(); resetZoom(); }} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/80 border border-border text-foreground hover:bg-secondary transition-colors"><RotateCcw className="h-4 w-4" /></button>
