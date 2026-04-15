@@ -162,7 +162,7 @@ const CampaignDetail = () => {
       ...tier,
       color: colorMap[tier.label] || "text-muted-foreground",
       icon: iconMap[tier.label] || Award,
-      prizes: (tier.tier_prizes || []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((p: any) => ({ id: p.id, name: p.name, description: p.description || "", total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1), image_url: p.image_url || "" })),
+      prizes: (tier.tier_prizes || []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((p: any) => ({ id: p.id, name: p.name, description: p.description || "", total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1), image_url: p.image_url || "", auto_refill: p.auto_refill ?? false })),
     }));
 
   const totalRemaining = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.remaining, 0), 0);
@@ -250,7 +250,13 @@ const CampaignDetail = () => {
           if (pr <= 0) { selectedPrize = p; break; }
         }
 
-        prizeRemainingCopy[selectedPrize.id] = (prizeRemainingCopy[selectedPrize.id] ?? 0) - 1;
+        const newRemaining = (prizeRemainingCopy[selectedPrize.id] ?? 0) - 1;
+        // Auto-refill: if remaining hits 0 and auto_refill is enabled, reset to total
+        if (newRemaining <= 0 && selectedPrize.auto_refill) {
+          prizeRemainingCopy[selectedPrize.id] = selectedPrize.total;
+        } else {
+          prizeRemainingCopy[selectedPrize.id] = newRemaining;
+        }
 
         addPrize({
           prize: selectedPrize.name,
