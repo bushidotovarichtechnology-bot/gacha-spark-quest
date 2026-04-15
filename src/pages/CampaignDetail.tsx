@@ -160,11 +160,11 @@ const CampaignDetail = () => {
       ...tier,
       color: colorMap[tier.label] || "text-muted-foreground",
       icon: iconMap[tier.label] || Award,
-      prizes: (tier.tier_prizes || []).map((p: { name: string }) => p.name),
+      prizes: (tier.tier_prizes || []).map((p: any) => ({ id: p.id, name: p.name, total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1) })),
     }));
 
-  const totalRemaining = tiers.reduce((s, t) => s + t.remaining, 0);
-  const totalTickets = tiers.reduce((s, t) => s + t.total, 0);
+  const totalRemaining = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.remaining, 0), 0);
+  const totalTickets = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.total, 0), 0);
 
   const handleDraw = (count: number) => {
     if (isDrawing || totalRemaining <= 0) return;
