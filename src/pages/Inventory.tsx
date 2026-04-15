@@ -215,32 +215,72 @@ const Inventory = () => {
         </div>
 
         {/* Bulk Recycle */}
-        {(tierCounts.B + tierCounts.C) > 0 && (
-          <div className="mb-4 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 px-4 py-2.5">
-            <div className="flex items-center gap-2 text-sm">
-              <Recycle className="h-4 w-4 text-accent" />
-              <span className="text-muted-foreground">Daur ulang massal:</span>
+        {items.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 px-4 py-2.5">
+              <div className="flex items-center gap-2 text-sm">
+                <Recycle className="h-4 w-4 text-accent" />
+                <span className="text-muted-foreground">Daur ulang massal:</span>
+              </div>
+              <div className="flex gap-2 flex-wrap justify-end">
+                {tierCounts.C > 0 && (
+                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                    onClick={() => { setBulkRecycleTier("C"); setBulkRecycleOpen(true); }}>
+                    Tier C ({tierCounts.C})
+                  </Button>
+                )}
+                {tierCounts.B > 0 && (
+                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                    onClick={() => { setBulkRecycleTier("B"); setBulkRecycleOpen(true); }}>
+                    Tier B ({tierCounts.B})
+                  </Button>
+                )}
+                {tierCounts.B > 0 && tierCounts.C > 0 && (
+                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
+                    onClick={() => { setBulkRecycleTier("BC"); setBulkRecycleOpen(true); }}>
+                    B + C ({tierCounts.B + tierCounts.C})
+                  </Button>
+                )}
+                <Button size="sm" variant={selectMode ? "default" : "outline"}
+                  className={`h-7 gap-1 text-xs ${selectMode ? "" : "border-primary/30 hover:border-primary hover:text-primary"}`}
+                  onClick={() => { setSelectMode(!selectMode); if (selectMode) clearSelection(); }}>
+                  <CheckSquare className="h-3 w-3" />
+                  {selectMode ? "Batal Pilih" : "Pilih Item"}
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              {tierCounts.C > 0 && (
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
-                  onClick={() => { setBulkRecycleTier("C"); setBulkRecycleOpen(true); }}>
-                  Tier C ({tierCounts.C})
-                </Button>
-              )}
-              {tierCounts.B > 0 && (
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
-                  onClick={() => { setBulkRecycleTier("B"); setBulkRecycleOpen(true); }}>
-                  Tier B ({tierCounts.B})
-                </Button>
-              )}
-              {tierCounts.B > 0 && tierCounts.C > 0 && (
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs border-accent/30 hover:border-accent hover:text-accent"
-                  onClick={() => { setBulkRecycleTier("BC"); setBulkRecycleOpen(true); }}>
-                  B + C ({tierCounts.B + tierCounts.C})
-                </Button>
-              )}
-            </div>
+
+            {/* Selection toolbar */}
+            {selectMode && (
+              <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-2">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{selectedIds.size}</span> item dipilih
+                  </span>
+                  {selectedIds.size > 0 && (
+                    <span className="text-accent font-medium text-xs">
+                      +{items.filter(i => selectedIds.has(i.id)).reduce((s, i) => s + i.coinValue, 0).toLocaleString()} koin
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={selectAllFiltered}>
+                    Pilih Semua
+                  </Button>
+                  {selectedIds.size > 0 && (
+                    <>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={clearSelection}>
+                        <XCircle className="h-3 w-3 mr-1" /> Hapus Pilihan
+                      </Button>
+                      <Button size="sm" className="h-7 text-xs gap-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                        onClick={() => { setBulkRecycleTier("selected"); setBulkRecycleOpen(true); }}>
+                        <Recycle className="h-3 w-3" /> Daur Ulang ({selectedIds.size})
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
