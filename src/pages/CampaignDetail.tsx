@@ -222,12 +222,20 @@ const CampaignDetail = () => {
         let localPityCount = drawsSinceTierA;
 
         // Build active tiers based on prizes that still have remaining
-        const activeTiers = tiers
+        const allActiveTiers = tiers
           .map((t) => {
             const activePrizes = t.prizes.filter((p: any) => (prizeRemainingCopy[p.id] ?? 0) > 0);
             return { ...t, prizes: activePrizes, tierRemaining: activePrizes.reduce((s: number, p: any) => s + (prizeRemainingCopy[p.id] ?? 0), 0) };
           })
           .filter((t) => t.tierRemaining > 0);
+
+        // Grand Prize (Tier S) can only be obtained when it's the ONLY prize remaining
+        const totalRemainingAll = allActiveTiers.reduce((s, t) => s + t.tierRemaining, 0);
+        const tierSOnly = allActiveTiers.filter((t) => t.label === "S");
+        const tierSRemaining = tierSOnly.reduce((s, t) => s + t.tierRemaining, 0);
+        const activeTiers = (tierSRemaining > 0 && totalRemainingAll > tierSRemaining)
+          ? allActiveTiers.filter((t) => t.label !== "S") // Exclude S if other prizes still exist
+          : allActiveTiers;
 
         if (activeTiers.length === 0) break;
 
