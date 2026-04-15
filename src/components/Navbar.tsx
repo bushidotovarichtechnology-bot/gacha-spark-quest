@@ -38,7 +38,7 @@ const Navbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-6 md:flex">
-          {navLinks.map((link) => (
+          {user && navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -117,7 +117,7 @@ const Navbar = () => {
             className="overflow-hidden border-b border-border/50 bg-background/95 backdrop-blur-xl md:hidden"
           >
             <div className="container mx-auto flex flex-col gap-4 py-4">
-              {navLinks.map((link) => (
+              {user && navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
