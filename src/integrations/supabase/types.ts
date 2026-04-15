@@ -448,7 +448,9 @@ export type Database = {
           image_url: string
           name: string
           probability_weight: number
+          remaining: number
           tier_id: string
+          total: number
         }
         Insert: {
           created_at?: string
@@ -456,7 +458,9 @@ export type Database = {
           image_url?: string
           name: string
           probability_weight?: number
+          remaining?: number
           tier_id: string
+          total?: number
         }
         Update: {
           created_at?: string
@@ -464,7 +468,9 @@ export type Database = {
           image_url?: string
           name?: string
           probability_weight?: number
+          remaining?: number
           tier_id?: string
+          total?: number
         }
         Relationships: [
           {
