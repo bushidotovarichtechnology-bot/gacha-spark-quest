@@ -292,7 +292,7 @@ const CampaignDetail = () => {
           coinValue: prizeCoinValue,
         });
 
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0 });
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
       }
 
       // Update remaining counts per prize in database
@@ -308,7 +308,7 @@ const CampaignDetail = () => {
           campaign_id: campaign.id,
           tier_label: r.tier,
           prize_name: r.prize,
-          coin_value: coinValues[r.tier] || 15,
+          coin_value: r.coinValue,
           is_pity: r.isPityReward,
         }).select("id").single()
       ) : [];
