@@ -58,6 +58,24 @@ const Inventory = () => {
     });
   };
 
+  const getBulkRecycleItems = () => {
+    if (bulkRecycleTier === "BC") return items.filter((i) => i.tier === "B" || i.tier === "C");
+    return items.filter((i) => i.tier === bulkRecycleTier);
+  };
+
+  const handleBulkRecycle = () => {
+    const toRecycle = getBulkRecycleItems();
+    let totalValue = 0;
+    toRecycle.forEach((item) => {
+      totalValue += recycleItem(item.id);
+    });
+    toast.success(`${toRecycle.length} item berhasil didaur ulang!`, {
+      description: `+${totalValue.toLocaleString()} koin diterima`,
+      icon: <Coins className="h-4 w-4 text-accent" />,
+    });
+    setBulkRecycleOpen(false);
+  };
+
   const tierCounts = {
     S: items.filter((i) => i.tier === "S").length,
     A: items.filter((i) => i.tier === "A").length,
