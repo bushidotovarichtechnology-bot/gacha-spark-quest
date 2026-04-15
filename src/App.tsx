@@ -64,6 +64,7 @@ const App = () => (
             <Route path="/redeem" element={<ProtectedRoute><RedeemStore /></ProtectedRoute>} />
             <Route path="/gift" element={<ProtectedRoute><GiftCoins /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/login" element={<Login />} />
