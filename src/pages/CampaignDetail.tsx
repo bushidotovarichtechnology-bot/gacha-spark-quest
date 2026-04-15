@@ -406,6 +406,9 @@ const CampaignDetail = () => {
                             <span className={`font-medium leading-tight ${p.remaining <= 0 ? "line-through text-destructive/70" : "text-foreground/80"}`}>
                               {p.name}
                             </span>
+                            {p.description && (
+                              <span className="text-[10px] text-muted-foreground/70 leading-tight line-clamp-2">{p.description}</span>
+                            )}
                             {p.remaining <= 0 ? (
                               <span className="rounded bg-destructive/30 px-1 py-px text-[10px] font-bold text-destructive w-fit">Habis</span>
                             ) : (
