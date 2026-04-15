@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Package, MapPin, Truck, ChevronRight, X, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   const [form, setForm] = useState({
     recipientName: "",
@@ -41,6 +42,30 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     shippingMethod: "regular",
     notes: "",
   });
+
+  // Auto-fill from profile
+  useEffect(() => {
+    if (!user) { setLoadingProfile(false); return; }
+    supabase
+      .from("profiles")
+      .select("recipient_name, phone, address, city, province, postal_code")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setForm((prev) => ({
+            ...prev,
+            recipientName: data.recipient_name || prev.recipientName,
+            phone: data.phone || prev.phone,
+            address: data.address || prev.address,
+            city: data.city || prev.city,
+            province: data.province || prev.province,
+            postalCode: data.postal_code || prev.postalCode,
+          }));
+        }
+        setLoadingProfile(false);
+      });
+  }, [user]);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
