@@ -441,7 +441,7 @@ const Inventory = () => {
               {(() => {
                 const bulkItems = getBulkRecycleItems();
                 const totalVal = bulkItems.reduce((s, i) => s + i.coinValue, 0);
-                const tierLabel = bulkRecycleTier === "BC" ? "Tier B & C" : `Tier ${bulkRecycleTier}`;
+                const tierLabel = bulkRecycleTier === "selected" ? "yang dipilih" : bulkRecycleTier === "BC" ? "Tier B & C" : `Tier ${bulkRecycleTier}`;
                 return (
                   <>
                     Daur ulang <span className="font-semibold text-foreground">{bulkItems.length} item {tierLabel}</span> sekaligus?
