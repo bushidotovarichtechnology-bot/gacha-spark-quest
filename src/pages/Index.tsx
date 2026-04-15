@@ -158,6 +158,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Grand Prize Leaderboard Preview */}
+      <GrandPrizePreview />
+
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
           <span className="font-display text-sm font-bold tracking-wider text-foreground">
