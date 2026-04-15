@@ -60,13 +60,22 @@ const Navbar = () => {
             {t("topUp")}
           </Link>
           {user ? (
-            <button
-              onClick={signOut}
-              className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              {t("logout")}
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/profile"
+                className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <User className="h-3.5 w-3.5" />
+                Profil
+              </Link>
+              <button
+                onClick={signOut}
+                className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                {t("logout")}
+              </button>
+            </div>
           ) : (
             <Link
               to="/login"
