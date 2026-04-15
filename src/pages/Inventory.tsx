@@ -61,6 +61,7 @@ const Inventory = () => {
   };
 
   const getBulkRecycleItems = () => {
+    if (bulkRecycleTier === "selected") return items.filter((i) => selectedIds.has(i.id));
     if (bulkRecycleTier === "BC") return items.filter((i) => i.tier === "B" || i.tier === "C");
     return items.filter((i) => i.tier === bulkRecycleTier);
   };
