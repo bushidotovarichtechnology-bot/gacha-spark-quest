@@ -52,7 +52,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/campaign/:id" element={<ProtectedRoute><CampaignDetail /></ProtectedRoute>} />
+            <Route path="/campaign/:id" element={<CampaignDetail />} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><DrawHistory /></ProtectedRoute>} />
             <Route path="/claims" element={<ProtectedRoute><ClaimHistory /></ProtectedRoute>} />
