@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface InventoryItem {
   id: string;
@@ -67,6 +68,19 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     saveState(items, totalCoins, drawsSinceTierA, drawHistory);
   }, [items, totalCoins, drawsSinceTierA, drawHistory]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setItems([]);
+        setTotalCoins(0);
+        setDrawsSinceTierA(0);
+        setDrawHistory([]);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const addPrize = useCallback((prize: Omit<InventoryItem, "id" | "wonAt">) => {
     const now = new Date().toISOString();
