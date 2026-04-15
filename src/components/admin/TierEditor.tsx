@@ -41,6 +41,7 @@ export function TierEditor({
   const [remaining, setRemaining] = useState(tier.remaining);
   const [weight, setWeight] = useState(tier.probability_weight);
   const [newPrize, setNewPrize] = useState("");
+  const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
 
   const save = () => {
