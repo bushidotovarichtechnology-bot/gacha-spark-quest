@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins } from "lucide-react";
+import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
