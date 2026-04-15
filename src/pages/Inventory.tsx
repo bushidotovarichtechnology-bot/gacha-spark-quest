@@ -34,6 +34,8 @@ const Inventory = () => {
 
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
   const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
+  const [bulkRecycleOpen, setBulkRecycleOpen] = useState(false);
+  const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC">("C");
 
   const filteredItems = (() => {
     let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
