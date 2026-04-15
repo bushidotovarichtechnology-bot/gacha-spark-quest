@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -30,11 +30,20 @@ const Inventory = () => {
   const { items, totalCoins, drawsSinceTierA, recycleItem, pityThreshold } = useGacha();
   const { t } = useI18n();
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
+  const [sortBy, setSortBy] = useState<"newest" | "coin_high" | "coin_low">("newest");
 
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
   const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
 
-  const filteredItems = filter === "all" ? items : items.filter((i) => i.tier === filter);
+  const filteredItems = (() => {
+    let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
+    switch (sortBy) {
+      case "coin_high": list.sort((a, b) => b.coinValue - a.coinValue); break;
+      case "coin_low": list.sort((a, b) => a.coinValue - b.coinValue); break;
+      default: break; // already newest first from context
+    }
+    return list;
+  })();
   const pityProgress = Math.min((drawsSinceTierA / pityThreshold) * 100, 100);
   const recyclableTiers = ["B", "C"];
   const claimableTiers = ["S", "A"];
@@ -118,28 +127,50 @@ const Inventory = () => {
           </div>
         </motion.div>
 
-        {/* Filter tabs */}
-        <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
-          {(["all", "S", "A", "B", "C"] as const).map((f) => {
-            const active = filter === f;
-            const count = f === "all" ? items.length : tierCounts[f];
-            return (
+        {/* Filter & Sort */}
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {(["all", "S", "A", "B", "C"] as const).map((f) => {
+              const active = filter === f;
+              const count = f === "all" ? items.length : tierCounts[f];
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                    active
+                      ? "bg-primary text-primary-foreground box-glow-purple"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {f === "all" ? t("all") : f === "S" ? t("grand") : `${t("tierA").split(" ")[0]} ${f}`}
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-primary-foreground/20" : "bg-background/40"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-1.5">
+            {([
+              { key: "newest", label: "Terbaru", icon: ArrowUpDown },
+              { key: "coin_high", label: "Koin ↑", icon: ArrowUp },
+              { key: "coin_low", label: "Koin ↓", icon: ArrowDown },
+            ] as const).map(({ key, label, icon: Icon }) => (
               <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                  active
-                    ? "bg-primary text-primary-foreground box-glow-purple"
+                key={key}
+                onClick={() => setSortBy(key)}
+                className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${
+                  sortBy === key
+                    ? "bg-accent/15 text-accent border border-accent/30"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f === "all" ? t("all") : f === "S" ? t("grand") : `${t("tierA").split(" ")[0]} ${f}`}
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-primary-foreground/20" : "bg-background/40"}`}>
-                  {count}
-                </span>
+                <Icon className="h-3 w-3" />
+                {label}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
         {/* Items grid */}
