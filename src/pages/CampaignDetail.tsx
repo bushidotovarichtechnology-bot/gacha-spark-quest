@@ -210,7 +210,7 @@ const CampaignDetail = () => {
     setIsDrawing(true);
 
     setTimeout(async () => {
-      const results: { tier: string; color: string; prize: string; isPityReward?: boolean }[] = [];
+      const results: { tier: string; color: string; prize: string; isPityReward?: boolean; coinValue: number }[] = [];
       let batchHasPity = false;
       // Track remaining per prize
       const prizeRemainingCopy: Record<string, number> = {};
