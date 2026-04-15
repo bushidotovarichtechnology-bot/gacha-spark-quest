@@ -72,6 +72,18 @@ const Navbar = () => {
                 <Coins className="h-4 w-4 text-accent" />
                 <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
               </div>
+              {freeDraws > 0 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-3 py-1.5 animate-pulse">
+                  <Gamepad2 className="h-3.5 w-3.5 text-green-400" />
+                  <span className="text-xs font-bold text-green-400">{freeDraws}x Gratis</span>
+                </div>
+              )}
+              {activeDiscountPercent > 0 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1.5 animate-pulse">
+                  <Percent className="h-3.5 w-3.5 text-orange-400" />
+                  <span className="text-xs font-bold text-orange-400">-{activeDiscountPercent}%</span>
+                </div>
+              )}
               <Link
                 to="/topup"
                 className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110"
