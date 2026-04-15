@@ -73,6 +73,7 @@ const App = () => (
               <Route path="messages" element={<AdminMessages />} />
               <Route path="pity" element={<AdminPitySettings />} />
               <Route path="rewards" element={<AdminRewards />} />
+              <Route path="coin-packages" element={<AdminCoinPackages />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
