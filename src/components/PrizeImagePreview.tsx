@@ -154,6 +154,7 @@ const PrizeImagePreview = ({ image, onClose }: PrizeImagePreviewProps) => {
     <AnimatePresence>
       {image && (
         <motion.div
+          ref={overlayRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
