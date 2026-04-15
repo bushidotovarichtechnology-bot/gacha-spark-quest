@@ -33,6 +33,11 @@ interface GachaState {
   spendCoins: (amount: number) => boolean;
   pityThreshold: number;
   loading: boolean;
+  freeDraws: number;
+  activeDiscountPercent: number;
+  useFreeDraws: (count: number) => void;
+  clearDiscount: () => void;
+  refreshCoins: () => Promise<void>;
 }
 
 const PITY_THRESHOLD = 10;
