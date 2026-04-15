@@ -5,6 +5,7 @@ import { ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight, Maximize, Minimi
 interface PrizeImage {
   url: string;
   name: string;
+  description?: string;
 }
 
 interface PrizeImagePreviewProps {
@@ -229,9 +230,12 @@ const PrizeImagePreview = ({ image, onClose }: PrizeImagePreviewProps) => {
             </div>
           </motion.div>
 
-          {/* Label + dots */}
-          <div className="mt-3 text-center">
+          {/* Label + description + dots */}
+          <div className="mt-3 text-center max-w-lg mx-4">
             <p className="font-display text-sm font-semibold text-foreground">{current.name}</p>
+            {current.description && (
+              <p className="mt-1 text-xs text-muted-foreground whitespace-pre-line max-h-32 overflow-y-auto px-2">{current.description}</p>
+            )}
             {hasSlides && (
               <div className="mt-2 flex items-center justify-center gap-1.5">
                 {slides.map((_, i) => (

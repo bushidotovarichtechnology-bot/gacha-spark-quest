@@ -138,7 +138,7 @@ const CampaignDetail = () => {
   const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
-  const [previewImage, setPreviewImage] = useState<{ url: string; name: string; images?: { url: string; name: string }[]; index?: number } | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
@@ -162,7 +162,7 @@ const CampaignDetail = () => {
       ...tier,
       color: colorMap[tier.label] || "text-muted-foreground",
       icon: iconMap[tier.label] || Award,
-      prizes: (tier.tier_prizes || []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((p: any) => ({ id: p.id, name: p.name, total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1), image_url: p.image_url || "" })),
+      prizes: (tier.tier_prizes || []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((p: any) => ({ id: p.id, name: p.name, description: p.description || "", total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1), image_url: p.image_url || "" })),
     }));
 
   const totalRemaining = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.remaining, 0), 0);
@@ -388,10 +388,10 @@ const CampaignDetail = () => {
                           key={p.id}
                           className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs cursor-pointer transition-all hover:scale-105 ${p.remaining <= 0 ? "bg-destructive/20 opacity-60" : "bg-background/40 hover:bg-background/60"}`}
           onClick={() => {
-            const imagesInTier = tier.prizes.filter((pr: any) => pr.image_url).map((pr: any) => ({ url: pr.image_url, name: pr.name }));
+                          const imagesInTier = tier.prizes.filter((pr: any) => pr.image_url).map((pr: any) => ({ url: pr.image_url, name: pr.name, description: pr.description }));
             const idx = imagesInTier.findIndex((img: any) => img.url === p.image_url);
             if (imagesInTier.length > 0 && idx >= 0) {
-              setPreviewImage({ url: p.image_url, name: p.name, images: imagesInTier, index: idx });
+              setPreviewImage({ url: p.image_url, name: p.name, description: p.description, images: imagesInTier, index: idx });
             }
           }}
                         >
