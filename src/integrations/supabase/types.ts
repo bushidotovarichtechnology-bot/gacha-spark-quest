@@ -249,6 +249,86 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          benefit_type: string
+          benefit_value: number
+          coupon_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          benefit_type: string
+          benefit_value?: number
+          coupon_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          benefit_type?: string
+          benefit_value?: number
+          coupon_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          benefit_type: string
+          benefit_value: number
+          code: string
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number
+          max_uses_per_user: number
+          updated_at: string
+          used_count: number
+        }
+        Insert: {
+          benefit_type?: string
+          benefit_value?: number
+          code: string
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number
+          max_uses_per_user?: number
+          updated_at?: string
+          used_count?: number
+        }
+        Update: {
+          benefit_type?: string
+          benefit_value?: number
+          code?: string
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number
+          max_uses_per_user?: number
+          updated_at?: string
+          used_count?: number
+        }
+        Relationships: []
+      }
       draws: {
         Row: {
           campaign_id: string

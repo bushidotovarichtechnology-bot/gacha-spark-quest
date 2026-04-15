@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone } from "lucide-react";
+import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 const WA_NUMBER = "6282231283948";
@@ -17,6 +19,7 @@ const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan
 
 const Profile = () => {
   const { user } = useAuth();
+  const { addCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -37,6 +40,21 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [redeemingCoupon, setRedeemingCoupon] = useState(false);
+  const [redemptions, setRedemptions] = useState<any[]>([]);
+
+  const fetchRedemptions = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("coupon_redemptions")
+      .select("*, coupons:coupon_id(code, description)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setRedemptions(data || []);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -64,6 +82,7 @@ const Profile = () => {
       setLoadingProfile(false);
     };
     fetchProfile();
+    fetchRedemptions();
   }, [user]);
 
   const handleSaveProfile = async () => {
@@ -103,6 +122,33 @@ const Profile = () => {
     setSavingPassword(false);
   };
 
+  const handleRedeemCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setRedeemingCoupon(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-coupon", {
+        body: { code: couponCode.trim() },
+      });
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || "Gagal redeem kupon");
+      }
+      // Apply benefit
+      if (data.benefit_type === "bonus_coins") {
+        addCoins(data.benefit_value);
+      }
+      toast({
+        title: "Kupon Berhasil Digunakan! 🎉",
+        description: data.description + (data.coupon_description ? ` — ${data.coupon_description}` : ""),
+      });
+      setCouponCode("");
+      fetchRedemptions();
+    } catch (err: any) {
+      toast({ title: "Gagal", description: err.message, variant: "destructive" });
+    } finally {
+      setRedeemingCoupon(false);
+    }
+  };
+
   if (loadingProfile) {
     return (
       <div className="min-h-screen bg-background">
@@ -130,8 +176,9 @@ const Profile = () => {
 
         <div className="mx-auto max-w-lg">
           <Tabs defaultValue="address" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="address" className="gap-1 text-xs"><MapPin className="h-3.5 w-3.5" /> Alamat</TabsTrigger>
+              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Kupon</TabsTrigger>
               <TabsTrigger value="password" className="gap-1 text-xs"><Lock className="h-3.5 w-3.5" /> Password</TabsTrigger>
               <TabsTrigger value="help" className="gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" /> Bantuan</TabsTrigger>
             </TabsList>
@@ -185,7 +232,61 @@ const Profile = () => {
               </motion.div>
             </TabsContent>
 
-            {/* Password Tab */}
+            {/* Coupon Tab */}
+            <TabsContent value="coupon">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-display text-lg">
+                      <Ticket className="h-5 w-5 text-primary" /> Redeem Kupon
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Masukkan kode kupon"
+                        className="bg-secondary font-mono"
+                        maxLength={30}
+                      />
+                      <Button onClick={handleRedeemCoupon} disabled={redeemingCoupon || !couponCode.trim()}>
+                        {redeemingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                      </Button>
+                    </div>
+
+                    {/* Redemption History */}
+                    {redemptions.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">Riwayat Kupon</p>
+                        {redemptions.map((r: any) => {
+                          const benefitIcon = r.benefit_type === "bonus_coins" ? Coins : r.benefit_type === "free_gacha" ? Gamepad2 : Percent;
+                          const BIcon = benefitIcon;
+                          const benefitText = r.benefit_type === "bonus_coins"
+                            ? `+${r.benefit_value.toLocaleString()} Koin`
+                            : r.benefit_type === "free_gacha"
+                            ? `${r.benefit_value}x Gacha Gratis`
+                            : `Diskon ${r.benefit_value}%`;
+                          return (
+                            <div key={r.id} className="flex items-center gap-3 rounded-lg bg-secondary p-3">
+                              <BIcon className="h-4 w-4 text-accent shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground">{(r as any).coupons?.code || "—"}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                                </p>
+                              </div>
+                              <Badge variant="secondary" className="text-xs">{benefitText}</Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
             <TabsContent value="password">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <Card className="border-border/50">
