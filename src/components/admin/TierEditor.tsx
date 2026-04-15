@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Trash2, Plus, Upload, GripVertical } from "lucide-react";
+import { Save, Trash2, Plus, Upload, GripVertical, Coins } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -144,6 +144,7 @@ export function TierEditor({
   const [total, setTotal] = useState(tier.total);
   const [remaining, setRemaining] = useState(tier.remaining);
   const [weight, setWeight] = useState(tier.probability_weight);
+  const [bulkCoinValue, setBulkCoinValue] = useState("");
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
@@ -244,6 +245,38 @@ export function TierEditor({
           <label className="text-xs text-muted-foreground">Weight</label>
           <Input type="number" step="0.1" value={weight} onChange={(e) => setWeight(Number(e.target.value))} className="h-7 text-sm" />
         </div>
+      </div>
+
+      {/* Bulk coin value edit */}
+      <div className="flex items-center gap-2 mb-2">
+        <Coins className="h-4 w-4 text-accent shrink-0" />
+        <Input
+          type="number"
+          min={0}
+          value={bulkCoinValue}
+          onChange={(e) => setBulkCoinValue(e.target.value)}
+          placeholder="Nilai daur ulang untuk semua prize"
+          className="h-7 text-sm flex-1"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 px-2 text-xs whitespace-nowrap"
+          disabled={!bulkCoinValue}
+          onClick={async () => {
+            const val = Number(bulkCoinValue);
+            if (isNaN(val) || val < 0) return;
+            const updates = tier.tier_prizes.map((p) =>
+              supabase.from("tier_prizes").update({ coin_value: val } as any).eq("id", p.id)
+            );
+            await Promise.all(updates);
+            setBulkCoinValue("");
+            onRefresh();
+            toast({ title: "Berhasil", description: `Semua prize di tier ${label} diatur ke ${val} koin` });
+          }}
+        >
+          Terapkan Semua
+        </Button>
       </div>
 
       {/* Prizes with drag-and-drop */}

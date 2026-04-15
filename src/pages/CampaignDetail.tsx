@@ -445,6 +445,10 @@ const CampaignDetail = () => {
                             ) : (
                               <span className="text-[10px] text-muted-foreground">({p.remaining}/{p.total})</span>
                             )}
+                            <span className="flex items-center gap-0.5 text-[10px] text-accent/80">
+                              <Coins className="h-2.5 w-2.5" />
+                              {(p.coin_value > 0 ? p.coin_value : (coinValues[tier.label] || 15)).toLocaleString()}
+                            </span>
                           </div>
                         </div>
                       ))}
