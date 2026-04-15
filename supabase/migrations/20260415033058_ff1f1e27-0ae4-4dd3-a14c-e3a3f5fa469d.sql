@@ -1,0 +1,1 @@
+ALTER TABLE public.tier_prizes ADD COLUMN auto_refill boolean NOT NULL DEFAULT false;
