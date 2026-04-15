@@ -59,7 +59,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize, totalCoins, spendCoins, drawsSinceTierA } = useGacha();
+  const { addPrize, totalCoins, spendCoins, drawsSinceTierA, freeDraws, activeDiscountPercent, useFreeDraws, clearDiscount } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -177,16 +177,33 @@ const CampaignDetail = () => {
     }
     if (isDrawing || totalRemaining <= 0) return;
     const actualCount = Math.min(count, totalRemaining);
-    const totalCost = actualCount * campaign.price;
+
+    // Calculate cost considering free draws and discount
+    const freeUsed = Math.min(freeDraws, actualCount);
+    const paidCount = actualCount - freeUsed;
+    const pricePerDraw = activeDiscountPercent > 0
+      ? Math.round(campaign.price * (1 - activeDiscountPercent / 100))
+      : campaign.price;
+    const totalCost = paidCount * pricePerDraw;
 
     if (totalCoins < totalCost) {
       toast.error(t("insufficientCoins"));
       return;
     }
 
-    if (!spendCoins(totalCost)) {
+    if (totalCost > 0 && !spendCoins(totalCost)) {
       toast.error(t("insufficientCoins"));
       return;
+    }
+
+    // Consume free draws
+    if (freeUsed > 0) {
+      useFreeDraws(freeUsed);
+      toast.success(`Menggunakan ${freeUsed}x gacha gratis!`);
+    }
+    // Clear discount after use
+    if (activeDiscountPercent > 0 && paidCount > 0) {
+      clearDiscount();
     }
 
     setDrawCount(actualCount);
