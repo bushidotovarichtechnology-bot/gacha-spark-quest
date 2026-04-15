@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket, Gift, Camera } from "lucide-react";
+import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket, Gift, Camera, Percent, Gamepad2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import defaultAvatar from "@/assets/default-avatar.png";
 
 const Navbar = () => {
-  const { totalCoins } = useGacha();
+  const { totalCoins, freeDraws, activeDiscountPercent } = useGacha();
   const { t, locale, setLocale } = useI18n();
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -72,6 +72,18 @@ const Navbar = () => {
                 <Coins className="h-4 w-4 text-accent" />
                 <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
               </div>
+              {freeDraws > 0 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-3 py-1.5 animate-pulse">
+                  <Gamepad2 className="h-3.5 w-3.5 text-green-400" />
+                  <span className="text-xs font-bold text-green-400">{freeDraws}x Gratis</span>
+                </div>
+              )}
+              {activeDiscountPercent > 0 && (
+                <div className="flex items-center gap-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1.5 animate-pulse">
+                  <Percent className="h-3.5 w-3.5 text-orange-400" />
+                  <span className="text-xs font-bold text-orange-400">-{activeDiscountPercent}%</span>
+                </div>
+              )}
               <Link
                 to="/topup"
                 className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110"
@@ -178,6 +190,18 @@ const Navbar = () => {
                     <Coins className="h-4 w-4 text-accent" />
                     <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("gachaCoins")}</span>
                   </div>
+                  {freeDraws > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Gamepad2 className="h-4 w-4 text-green-400" />
+                      <span className="text-sm font-bold text-green-400">{freeDraws}x Gacha Gratis</span>
+                    </div>
+                  )}
+                  {activeDiscountPercent > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Percent className="h-4 w-4 text-orange-400" />
+                      <span className="text-sm font-bold text-orange-400">Diskon {activeDiscountPercent}% Aktif</span>
+                    </div>
+                  )}
                   <Link
                     to="/topup"
                     onClick={() => setIsOpen(false)}
