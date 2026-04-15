@@ -30,21 +30,45 @@ declare global {
   }
 }
 
-const coinPackages = [
-  { id: "starter", coins: 100, price: 15000, icon: Coins, popular: false },
-  { id: "value", coins: 500, price: 65000, icon: Zap, popular: true },
-  { id: "premium", coins: 1200, price: 130000, icon: Sparkles, popular: false },
-  { id: "whale", coins: 3000, price: 280000, icon: Crown, popular: false },
-];
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  Coins,
+  Zap,
+  Sparkles,
+  Crown,
+};
+
+type CoinPackage = {
+  id: string;
+  name: string;
+  coins: number;
+  price: number;
+  icon: string;
+  is_popular: boolean;
+};
 
 const TopUp = () => {
   const { addCoins } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedPackage, setSelectedPackage] = useState<typeof coinPackages[0] | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const [processing, setProcessing] = useState(false);
   const [midtransReady, setMidtransReady] = useState(false);
+  const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      const { data } = await supabase
+        .from("coin_packages")
+        .select("id, name, coins, price, icon, is_popular")
+        .eq("is_active", true)
+        .order("sort_order");
+      setCoinPackages((data as CoinPackage[]) || []);
+      setLoadingPackages(false);
+    };
+    fetchPackages();
+  }, []);
 
   useEffect(() => {
     const checkSnap = setInterval(() => {
@@ -73,7 +97,6 @@ const TopUp = () => {
         throw new Error(error?.message || "Failed to create payment");
       }
 
-      // Set client key dynamically
       if (data.client_key) {
         const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
         if (script) {
@@ -81,26 +104,24 @@ const TopUp = () => {
         }
       }
 
+      const pkg = selectedPackage;
       setSelectedPackage(null);
 
-      // Open Midtrans Snap popup
       window.snap.pay(data.token, {
-        onSuccess: (result: any) => {
-          addCoins(selectedPackage.coins);
+        onSuccess: () => {
+          addCoins(pkg.coins);
           toast({
             title: t("purchaseSuccess"),
-            description: t("purchaseSuccessDesc", {
-              coins: selectedPackage.coins.toLocaleString(),
-            }),
+            description: t("purchaseSuccessDesc", { coins: pkg.coins.toLocaleString() }),
           });
         },
-        onPending: (result: any) => {
+        onPending: () => {
           toast({
             title: "Pembayaran Pending",
             description: "Silakan selesaikan pembayaran Anda. Koin akan ditambahkan setelah pembayaran dikonfirmasi.",
           });
         },
-        onError: (result: any) => {
+        onError: () => {
           toast({
             title: "Pembayaran Gagal",
             description: "Terjadi kesalahan saat memproses pembayaran.",
@@ -145,45 +166,53 @@ const TopUp = () => {
           <p className="mt-2 text-muted-foreground">{t("topUpDesc")}</p>
         </div>
 
-        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {coinPackages.map((pkg, i) => (
-            <motion.div
-              key={pkg.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
-                pkg.popular
-                  ? "border-accent bg-accent/5 box-glow-gold"
-                  : "border-border bg-card hover:border-primary/50"
-              }`}
-              onClick={() => setSelectedPackage(pkg)}
-            >
-              {pkg.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground">
-                  {t("bestValue")}
-                </span>
-              )}
-              <pkg.icon
-                className={`mx-auto h-10 w-10 ${
-                  pkg.popular ? "text-accent" : "text-primary"
-                }`}
-              />
-              <div className="mt-4 font-display text-2xl font-bold text-foreground">
-                {pkg.coins.toLocaleString()}
-              </div>
-              <div className="text-sm text-muted-foreground">{t("gachaCoins")}</div>
-              <div className="mt-4 text-lg font-semibold text-foreground">
-                {formatRupiah(pkg.price)}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {formatRupiah(Math.round(pkg.price / pkg.coins))}/{t("perCoin")}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {loadingPackages ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {coinPackages.map((pkg, i) => {
+              const Icon = ICON_MAP[pkg.icon] || Coins;
+              return (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
+                    pkg.is_popular
+                      ? "border-accent bg-accent/5 box-glow-gold"
+                      : "border-border bg-card hover:border-primary/50"
+                  }`}
+                  onClick={() => setSelectedPackage(pkg)}
+                >
+                  {pkg.is_popular && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground">
+                      {t("bestValue")}
+                    </span>
+                  )}
+                  <Icon
+                    className={`mx-auto h-10 w-10 ${
+                      pkg.is_popular ? "text-accent" : "text-primary"
+                    }`}
+                  />
+                  <div className="mt-4 font-display text-2xl font-bold text-foreground">
+                    {pkg.coins.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">{t("gachaCoins")}</div>
+                  <div className="mt-4 text-lg font-semibold text-foreground">
+                    {formatRupiah(pkg.price)}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {formatRupiah(Math.round(pkg.price / pkg.coins))}/{t("perCoin")}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Payment methods info */}
         <div className="mx-auto mt-10 max-w-md text-center">
           <p className="text-xs text-muted-foreground">{t("paymentMethods")}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
@@ -201,7 +230,6 @@ const TopUp = () => {
         </div>
       </main>
 
-      {/* Confirm dialog */}
       <Dialog
         open={!!selectedPackage}
         onOpenChange={(open) => !open && setSelectedPackage(null)}

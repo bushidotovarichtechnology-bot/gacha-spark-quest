@@ -33,6 +33,7 @@ import AdminClaims from "./pages/admin/AdminClaims.tsx";
 import AdminMessages from "./pages/admin/AdminMessages.tsx";
 import AdminPitySettings from "./pages/admin/AdminPitySettings.tsx";
 import AdminRewards from "./pages/admin/AdminRewards.tsx";
+import AdminCoinPackages from "./pages/admin/AdminCoinPackages.tsx";
 import RedeemStore from "./pages/RedeemStore.tsx";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="messages" element={<AdminMessages />} />
               <Route path="pity" element={<AdminPitySettings />} />
               <Route path="rewards" element={<AdminRewards />} />
+              <Route path="coin-packages" element={<AdminCoinPackages />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

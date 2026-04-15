@@ -132,6 +132,45 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_packages: {
+        Row: {
+          coins: number
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          coins: number
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name: string
+          price: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string
