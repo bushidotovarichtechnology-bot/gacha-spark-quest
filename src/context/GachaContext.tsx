@@ -58,17 +58,8 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   const [drawsSinceTierA, setDrawsSinceTierA] = useState<number>(0);
   const [drawHistory, setDrawHistory] = useState<DrawHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Load data from DB when user logs in
-  useEffect(() => {
-    if (!user) {
-      setItems([]);
-      setTotalCoins(0);
-      setDrawsSinceTierA(0);
-      setDrawHistory([]);
-      setLoading(false);
-      return;
-    }
+  const [freeDraws, setFreeDraws] = useState<number>(0);
+  const [activeDiscountPercent, setActiveDiscountPercent] = useState<number>(0);
 
     const loadData = async () => {
       setLoading(true);
