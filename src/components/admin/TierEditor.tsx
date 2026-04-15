@@ -1,11 +1,28 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Trash2, Plus, Upload } from "lucide-react";
+import { Save, Trash2, Plus, Upload, GripVertical } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -18,6 +35,58 @@ const uploadImage = async (file: File, folder: string) => {
   if (error) throw error;
   return `${SUPABASE_URL}/storage/v1/object/public/campaign-images/${path}`;
 };
+
+function SortablePrizeRow({
+  p,
+  onRefresh,
+  onDeletePrize,
+  handlePrizeImageUpload,
+}: {
+  p: Tables<"tier_prizes">;
+  onRefresh: () => void;
+  onDeletePrize: (id: string) => void;
+  handlePrizeImageUpload: (prizeId: string, file: File) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 rounded bg-secondary/50 px-2 py-1">
+      <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground">
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-cover" />}
+      <span className={`text-xs flex-1 ${p.remaining <= 0 ? "line-through text-destructive/70" : ""}`}>
+        {p.name}
+        {p.remaining <= 0 && <span className="ml-1 rounded bg-destructive/20 px-1 py-px text-[10px] font-bold text-destructive">Habis</span>}
+      </span>
+      <div className="flex items-center gap-1">
+        <label className="text-[10px] text-muted-foreground">Rem</label>
+        <Input type="number" className="h-6 w-14 text-xs" value={p.remaining} onChange={async (e) => {
+          await supabase.from("tier_prizes").update({ remaining: Number(e.target.value) }).eq("id", p.id);
+          onRefresh();
+        }} />
+        <span className="text-[10px] text-muted-foreground">/</span>
+        <Input type="number" className="h-6 w-14 text-xs" value={p.total} onChange={async (e) => {
+          await supabase.from("tier_prizes").update({ total: Number(e.target.value) }).eq("id", p.id);
+          onRefresh();
+        }} />
+      </div>
+      <label className="flex h-6 w-6 cursor-pointer items-center justify-center rounded hover:bg-accent" title="Upload gambar hadiah">
+        <Upload className="h-3 w-3 text-muted-foreground" />
+        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handlePrizeImageUpload(p.id, file);
+        }} />
+      </label>
+      <ConfirmDelete title="Hapus Hadiah?" description={`Hadiah "${p.name}" akan dihapus dari tier ini.`} onConfirm={() => onDeletePrize(p.id)}>
+        <button className="text-destructive hover:text-destructive/80">
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </ConfirmDelete>
+    </div>
+  );
+}
 
 export function TierEditor({
   tier,
@@ -43,6 +112,14 @@ export function TierEditor({
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const sortedPrizes = [...tier.tier_prizes].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const prizeIds = sortedPrizes.map((p) => p.id);
 
   const save = () => {
     onUpdate({ label, name, total, remaining, probability_weight: weight, image_url: tierImageUrl });
@@ -70,6 +147,22 @@ export function TierEditor({
     } catch (err: any) {
       toast({ title: "Upload gagal", description: err.message, variant: "destructive" });
     }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = prizeIds.indexOf(active.id as string);
+    const newIndex = prizeIds.indexOf(over.id as string);
+    const reordered = arrayMove(sortedPrizes, oldIndex, newIndex);
+
+    // Update sort_order in DB
+    const updates = reordered.map((p, i) =>
+      supabase.from("tier_prizes").update({ sort_order: i }).eq("id", p.id)
+    );
+    await Promise.all(updates);
+    onRefresh();
   };
 
   const tierColors: Record<string, string> = { S: "border-accent/50", A: "border-primary/50", B: "border-neon-pink/50", C: "border-border" };
@@ -118,39 +211,22 @@ export function TierEditor({
         </div>
       </div>
 
-      {/* Prizes */}
+      {/* Prizes with drag-and-drop */}
       <div className="space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">Prizes:</p>
-        {tier.tier_prizes.map((p) => (
-          <div key={p.id} className="flex items-center gap-2 rounded bg-secondary/50 px-2 py-1">
-            {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-cover" />}
-            <span className="text-xs flex-1">{p.name}</span>
-            <div className="flex items-center gap-1">
-              <label className="text-[10px] text-muted-foreground">Rem</label>
-              <Input type="number" className="h-6 w-14 text-xs" value={p.remaining} onChange={async (e) => {
-                await supabase.from("tier_prizes").update({ remaining: Number(e.target.value) }).eq("id", p.id);
-                onRefresh();
-              }} />
-              <span className="text-[10px] text-muted-foreground">/</span>
-              <Input type="number" className="h-6 w-14 text-xs" value={p.total} onChange={async (e) => {
-                await supabase.from("tier_prizes").update({ total: Number(e.target.value) }).eq("id", p.id);
-                onRefresh();
-              }} />
-            </div>
-            <label className="flex h-6 w-6 cursor-pointer items-center justify-center rounded hover:bg-accent" title="Upload gambar hadiah">
-              <Upload className="h-3 w-3 text-muted-foreground" />
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handlePrizeImageUpload(p.id, file);
-              }} />
-            </label>
-            <ConfirmDelete title="Hapus Hadiah?" description={`Hadiah "${p.name}" akan dihapus dari tier ini.`} onConfirm={() => onDeletePrize(p.id)}>
-              <button className="text-destructive hover:text-destructive/80">
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </ConfirmDelete>
-          </div>
-        ))}
+        <p className="text-xs font-medium text-muted-foreground">Prizes (drag to reorder):</p>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={prizeIds} strategy={verticalListSortingStrategy}>
+            {sortedPrizes.map((p) => (
+              <SortablePrizeRow
+                key={p.id}
+                p={p}
+                onRefresh={onRefresh}
+                onDeletePrize={onDeletePrize}
+                handlePrizeImageUpload={handlePrizeImageUpload}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
         <div className="flex gap-1">
           <Input value={newPrize} onChange={(e) => setNewPrize(e.target.value)} placeholder="New prize name" className="h-7 text-xs flex-1"
             onKeyDown={(e) => { if (e.key === "Enter") { onAddPrize(newPrize, newPrizeTotal); setNewPrize(""); setNewPrizeTotal(1); } }} />
