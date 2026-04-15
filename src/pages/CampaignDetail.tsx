@@ -210,7 +210,7 @@ const CampaignDetail = () => {
     setIsDrawing(true);
 
     setTimeout(async () => {
-      const results: { tier: string; color: string; prize: string; isPityReward?: boolean }[] = [];
+      const results: { tier: string; color: string; prize: string; isPityReward?: boolean; coinValue: number }[] = [];
       let batchHasPity = false;
       // Track remaining per prize
       const prizeRemainingCopy: Record<string, number> = {};
@@ -281,16 +281,18 @@ const CampaignDetail = () => {
           prizeRemainingCopy[selectedPrize.id] = newRemaining;
         }
 
+        const prizeCoinValue = selectedPrize.coin_value > 0 ? selectedPrize.coin_value : (coinValues[selectedTier.label] || 15);
+
         addPrize({
           prize: selectedPrize.name,
           tier: selectedTier.label as "S" | "A" | "B" | "C",
           campaign: campaign.title,
           campaignId: campaign.id,
           image,
-          coinValue: coinValues[selectedTier.label] || 15,
+          coinValue: prizeCoinValue,
         });
 
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0 });
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
       }
 
       // Update remaining counts per prize in database
@@ -306,7 +308,7 @@ const CampaignDetail = () => {
           campaign_id: campaign.id,
           tier_label: r.tier,
           prize_name: r.prize,
-          coin_value: coinValues[r.tier] || 15,
+          coin_value: r.coinValue,
           is_pity: r.isPityReward,
         }).select("id").single()
       ) : [];

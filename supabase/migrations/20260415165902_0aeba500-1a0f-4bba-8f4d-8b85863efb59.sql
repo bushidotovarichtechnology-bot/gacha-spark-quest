@@ -1,0 +1,1 @@
+ALTER TABLE public.tier_prizes ADD COLUMN coin_value integer NOT NULL DEFAULT 0;
