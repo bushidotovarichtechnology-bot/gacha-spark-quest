@@ -1,16 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket, Gift } from "lucide-react";
+import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket, Gift, Camera } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import defaultAvatar from "@/assets/default-avatar.png";
 
 const Navbar = () => {
   const { totalCoins } = useGacha();
   const { t, locale, setLocale } = useI18n();
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (!user) { setAvatarUrl(""); return; }
+    const fetchAvatar = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setAvatarUrl(data?.avatar_url || "");
+    };
+    fetchAvatar();
+  }, [user]);
 
   const navLinks = [
     { to: "/", label: t("home"), icon: Home },
@@ -64,22 +82,34 @@ const Navbar = () => {
             </>
           )}
           {user ? (
-            <div className="flex items-center gap-2">
-              <Link
-                to="/profile"
-                className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <User className="h-3.5 w-3.5" />
-                Profil
-              </Link>
-              <button
-                onClick={signOut}
-                className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                {t("logout")}
-              </button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full transition-opacity hover:opacity-80 focus:outline-none">
+                  <Avatar className="h-8 w-8 border-2 border-primary/50">
+                    <AvatarImage src={avatarUrl || defaultAvatar} alt="Avatar" />
+                    <AvatarFallback>
+                      <img src={defaultAvatar} alt="Avatar" className="h-full w-full object-cover" />
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center gap-2">
+                    <User className="h-4 w-4" /> Profil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/profile?tab=avatar" className="flex items-center gap-2">
+                    <Camera className="h-4 w-4" /> Edit Foto Profil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 text-destructive">
+                  <LogOut className="h-4 w-4" /> {t("logout")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link
               to="/login"
@@ -117,6 +147,20 @@ const Navbar = () => {
             className="overflow-hidden border-b border-border/50 bg-background/95 backdrop-blur-xl md:hidden"
           >
             <div className="container mx-auto flex flex-col gap-4 py-4">
+              {user && (
+                <div className="flex items-center gap-3 pb-2 border-b border-border/50">
+                  <Avatar className="h-10 w-10 border-2 border-primary/50">
+                    <AvatarImage src={avatarUrl || defaultAvatar} alt="Avatar" />
+                    <AvatarFallback>
+                      <img src={defaultAvatar} alt="Avatar" className="h-full w-full object-cover" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{user.email}</p>
+                    <Link to="/profile" onClick={() => setIsOpen(false)} className="text-xs text-primary hover:underline">Lihat Profil</Link>
+                  </div>
+                </div>
+              )}
               {user && navLinks.map((link) => (
                 <Link
                   key={link.to}

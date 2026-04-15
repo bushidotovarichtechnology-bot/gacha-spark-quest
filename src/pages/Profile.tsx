@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent, Camera, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import defaultAvatar from "@/assets/default-avatar.png";
 
 const WA_NUMBER = "6282231283948";
 const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan Bushido Gacha.");
@@ -22,6 +24,10 @@ const Profile = () => {
   const { addCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const defaultTab = searchParams.get("tab") === "avatar" ? "avatar" : "address";
 
   // Address state
   const [profile, setProfile] = useState({
@@ -33,6 +39,8 @@ const Profile = () => {
     province: "",
     postal_code: "",
   });
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -61,7 +69,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, phone, recipient_name, address, city, province, postal_code")
+        .select("display_name, phone, recipient_name, address, city, province, postal_code, avatar_url")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -75,8 +83,8 @@ const Profile = () => {
           province: data.province || "",
           postal_code: data.postal_code || "",
         });
+        setAvatarUrl(data.avatar_url || "");
       } else {
-        // Create profile if not exists (for existing users before trigger)
         await supabase.from("profiles").insert({ user_id: user.id });
       }
       setLoadingProfile(false);
@@ -84,6 +92,52 @@ const Profile = () => {
     fetchProfile();
     fetchRedemptions();
   }, [user]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Error", description: "File harus berupa gambar", variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Error", description: "Ukuran file maksimal 2MB", variant: "destructive" });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `${user.id}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("campaign-images")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("campaign-images")
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl + `?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(publicUrl);
+      toast({ title: "Berhasil", description: "Foto profil berhasil diperbarui" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Gagal upload foto", variant: "destructive" });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -132,7 +186,6 @@ const Profile = () => {
       if (error || !data?.success) {
         throw new Error(data?.error || error?.message || "Gagal redeem kupon");
       }
-      // Apply benefit
       if (data.benefit_type === "bonus_coins") {
         addCoins(data.benefit_value);
       }
@@ -169,19 +222,72 @@ const Profile = () => {
           {t("backToCampaigns")}
         </Link>
 
-        <div className="mb-8 text-center">
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <div className="relative group">
+            <Avatar className="h-20 w-20 border-4 border-primary/50">
+              <AvatarImage src={avatarUrl || defaultAvatar} alt="Avatar" />
+              <AvatarFallback>
+                <img src={defaultAvatar} alt="Avatar" className="h-full w-full object-cover" />
+              </AvatarFallback>
+            </Avatar>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <Camera className="h-6 w-6 text-white" />
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          </div>
           <h1 className="font-display text-3xl font-bold tracking-wider text-foreground">Profil Saya</h1>
-          <p className="mt-2 text-muted-foreground">{user?.email}</p>
+          <p className="text-muted-foreground">{user?.email}</p>
         </div>
 
         <div className="mx-auto max-w-lg">
-          <Tabs defaultValue="address" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="avatar" className="gap-1 text-xs"><Camera className="h-3.5 w-3.5" /> Foto</TabsTrigger>
               <TabsTrigger value="address" className="gap-1 text-xs"><MapPin className="h-3.5 w-3.5" /> Alamat</TabsTrigger>
               <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Kupon</TabsTrigger>
               <TabsTrigger value="password" className="gap-1 text-xs"><Lock className="h-3.5 w-3.5" /> Password</TabsTrigger>
               <TabsTrigger value="help" className="gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" /> Bantuan</TabsTrigger>
             </TabsList>
+
+            {/* Avatar Tab */}
+            <TabsContent value="avatar">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-display text-lg">
+                      <Camera className="h-5 w-5 text-primary" /> Edit Foto Profil
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col items-center gap-6">
+                    <div className="relative group">
+                      <Avatar className="h-32 w-32 border-4 border-primary/50">
+                        <AvatarImage src={avatarUrl || defaultAvatar} alt="Avatar" />
+                        <AvatarFallback>
+                          <img src={defaultAvatar} alt="Avatar" className="h-full w-full object-cover" />
+                        </AvatarFallback>
+                      </Avatar>
+                      {uploadingAvatar && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60">
+                          <Loader2 className="h-8 w-8 animate-spin text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Format: JPG, PNG. Maksimal 2MB.</p>
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="w-full"
+                    >
+                      {uploadingAvatar ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                      Pilih Foto
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
 
             {/* Address Tab */}
             <TabsContent value="address">
@@ -254,8 +360,6 @@ const Profile = () => {
                         {redeemingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                       </Button>
                     </div>
-
-                    {/* Redemption History */}
                     {redemptions.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-muted-foreground">Riwayat Kupon</p>
@@ -313,7 +417,6 @@ const Profile = () => {
               </motion.div>
             </TabsContent>
 
-            {/* Help Tab */}
             <TabsContent value="help">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <Card className="border-border/50">
