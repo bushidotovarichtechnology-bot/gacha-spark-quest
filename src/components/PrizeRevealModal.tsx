@@ -149,12 +149,13 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
             /* ===== Single Prize View ===== */
             <motion.div
               key={currentIndex}
-              initial={{ scale: 0.5, opacity: 0, rotateY: 90 }}
+              initial={prize.tier === "S" ? { scale: 0.3, opacity: 0, rotateY: 180 } : { scale: 0.5, opacity: 0, rotateY: 90 }}
               animate={{ scale: 1, opacity: 1, rotateY: 0 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", damping: 15, stiffness: 200 }}
+              transition={prize.tier === "S" ? { type: "spring", damping: 12, stiffness: 150, duration: 0.6 } : { type: "spring", damping: 15, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
               className={`relative w-full max-w-sm overflow-hidden rounded-2xl border bg-card p-6 text-center ${
+                prize.tier === "S" ? "border-accent border-2 box-glow-gold" :
                 prize.isPityReward ? "border-accent box-glow-gold" : `border-border ${config.glow}`
               }`}
             >
