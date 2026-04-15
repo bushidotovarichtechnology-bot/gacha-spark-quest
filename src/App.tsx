@@ -35,6 +35,7 @@ import AdminPitySettings from "./pages/admin/AdminPitySettings.tsx";
 import AdminRewards from "./pages/admin/AdminRewards.tsx";
 import AdminCoinPackages from "./pages/admin/AdminCoinPackages.tsx";
 import RedeemStore from "./pages/RedeemStore.tsx";
+import GiftCoins from "./pages/GiftCoins.tsx";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/topup" element={<ProtectedRoute><TopUp /></ProtectedRoute>} />
             <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>} />
             <Route path="/redeem" element={<ProtectedRoute><RedeemStore /></ProtectedRoute>} />
+            <Route path="/gift" element={<ProtectedRoute><GiftCoins /></ProtectedRoute>} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/login" element={<Login />} />
