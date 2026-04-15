@@ -318,6 +318,14 @@ const Inventory = () => {
                     <div className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 font-display text-xs font-black ${meta.color}`}>
                       {item.tier}
                     </div>
+                    {selectMode && (
+                      <div className="absolute right-2 top-2">
+                        {isSelected
+                          ? <CheckSquare className="h-6 w-6 text-accent drop-shadow-md" />
+                          : <Square className="h-6 w-6 text-muted-foreground/60 drop-shadow-md" />
+                        }
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3">
