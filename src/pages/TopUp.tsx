@@ -207,12 +207,23 @@ const TopUp = () => {
           toast({ title: "Pembayaran Pending", description: "Status akan diperbarui otomatis. Silakan cek riwayat transaksi." });
           pollTransactionStatus(orderId, totalCoins);
         },
-        onError: () => {
+        onError: async (result: any) => {
+          await supabase
+            .from("transactions")
+            .update({ status: "deny", payment_type: result?.payment_type || null })
+            .eq("order_id", orderId);
           toast({ title: "Pembayaran Gagal", description: "Terjadi kesalahan saat memproses pembayaran.", variant: "destructive" });
         },
-        onClose: () => {
-          // Poll status in case user closed after paying
-          pollTransactionStatus(orderId, totalCoins);
+        onClose: async () => {
+          // Check current status first, only poll if still pending
+          const { data: txCheck } = await supabase
+            .from("transactions")
+            .select("status")
+            .eq("order_id", orderId)
+            .single();
+          if (txCheck?.status === "pending") {
+            pollTransactionStatus(orderId, totalCoins);
+          }
         },
       });
     } catch (err: any) {
