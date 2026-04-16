@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, MapPin, Truck, ChevronRight, X, Loader2, CheckCircle2, CreditCard, ChevronDown } from "lucide-react";
+import { Package, Truck, ChevronRight, X, Loader2, CheckCircle2, CreditCard, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,13 @@ import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { PROVINCES, getAvailableMethods, getShippingRate } from "@/lib/shippingRates";
+import {
+  fetchShippingZones,
+  getProvincesList,
+  getAvailableMethodsFromZones,
+  getShippingRateFromZones,
+  type ShippingZone,
+} from "@/lib/shippingRates";
 import type { InventoryItem } from "@/context/GachaContext";
 
 interface ClaimPrizeFormProps {
@@ -42,6 +48,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const [showProvinceList, setShowProvinceList] = useState(false);
   const [provinceSearch, setProvinceSearch] = useState("");
   const [payingShipping, setPayingShipping] = useState(false);
+  const [zones, setZones] = useState<ShippingZone[]>([]);
 
   const [form, setForm] = useState({
     recipientName: "",
@@ -53,6 +60,10 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     shippingMethod: "regular",
     notes: "",
   });
+
+  useEffect(() => {
+    fetchShippingZones().then(setZones);
+  }, []);
 
   useEffect(() => {
     if (!user) { setLoadingProfile(false); return; }
@@ -84,21 +95,18 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const canProceedStep1 = form.recipientName.trim() && form.phone.trim() && form.address.trim();
   const canProceedStep2 = form.city.trim() && form.province.trim() && form.postalCode.trim();
 
-  const availableMethods = useMemo(() => getAvailableMethods(form.province), [form.province]);
-  const shippingCost = useMemo(() => {
-    if (!form.province) return 0;
-    return getShippingRate(form.province, form.shippingMethod);
-  }, [form.province, form.shippingMethod]);
+  const provinces = useMemo(() => getProvincesList(zones), [zones]);
+  const availableMethods = useMemo(() => getAvailableMethodsFromZones(zones, form.province), [zones, form.province]);
+  const shippingCost = useMemo(() => getShippingRateFromZones(zones, form.province, form.shippingMethod), [zones, form.province, form.shippingMethod]);
 
-  // Reset shipping method if current is unavailable
   useEffect(() => {
-    const available = getAvailableMethods(form.province);
+    const available = getAvailableMethodsFromZones(zones, form.province);
     if (!available.find(m => m.id === form.shippingMethod)) {
       setForm(prev => ({ ...prev, shippingMethod: "regular" }));
     }
-  }, [form.province]);
+  }, [form.province, zones]);
 
-  const filteredProvinces = PROVINCES.filter(p => 
+  const filteredProvinces = provinces.filter(p =>
     p.toLowerCase().includes(provinceSearch.toLowerCase())
   );
 
@@ -127,7 +135,6 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       if (error) throw error;
 
       if (shippingCost > 0 && claimData) {
-        // Proceed to payment
         setStep(4);
         await handleShippingPayment(claimData.id);
       } else {
@@ -161,16 +168,9 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         if (script) script.setAttribute("data-client-key", data.client_key);
       }
 
-      const orderId = data.order_id;
-
       window.snap.pay(data.token, {
         onSuccess: async () => {
-          // Mark shipping as paid
-          await supabase
-            .from("prize_claims")
-            .update({ shipping_paid: true })
-            .eq("id", claimId);
-          
+          await supabase.from("prize_claims").update({ shipping_paid: true }).eq("id", claimId);
           setSuccess(true);
           toast.success("Pembayaran ongkir berhasil!", { description: "Hadiah akan segera diproses." });
           setTimeout(() => { onClaimed(item.id); onClose(); }, 2000);
@@ -185,7 +185,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
           setStep(3);
         },
         onClose: () => {
-          toast.info("Pembayaran dibatalkan", { description: "Klaim sudah tersimpan, bayar ongkir nanti di Riwayat Klaim." });
+          toast.info("Pembayaran dibatalkan", { description: "Klaim tersimpan, bayar ongkir nanti di Riwayat Klaim." });
           setStep(3);
         },
       });
@@ -199,11 +199,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
   if (success) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
-      >
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
         <div className="w-full max-w-md rounded-2xl border border-accent/30 bg-card p-8 text-center box-glow-gold">
           <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-green-500" />
           <h2 className="font-display text-xl font-bold text-foreground mb-2">{t("claimSubmitted")}</h2>
@@ -214,18 +211,10 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-background/80 backdrop-blur-sm p-0 sm:p-4"
-    >
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card"
-      >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-background/80 backdrop-blur-sm p-0 sm:p-4">
+      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card">
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 backdrop-blur-sm px-4 py-3 rounded-t-2xl">
           <div className="flex items-center gap-2">
@@ -245,13 +234,11 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             <p className="text-xs text-muted-foreground">{item.campaign} · {t(`tier${item.tier}Label`)}</p>
           </div>
           <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${
-            item.tier === "S" ? "bg-accent/20 text-accent" :
-            item.tier === "A" ? "bg-primary/20 text-primary" :
-            "bg-muted text-muted-foreground"
+            item.tier === "S" ? "bg-accent/20 text-accent" : item.tier === "A" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
           }`}>{item.tier}</span>
         </div>
 
-        {/* Steps indicator */}
+        {/* Steps */}
         <div className="flex items-center gap-2 px-4 py-3">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2 flex-1">
@@ -269,18 +256,18 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         <div className="px-4 pb-4">
           <AnimatePresence mode="wait">
             {step === 1 && (
-              <motion.div key="step1" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
+              <motion.div key="s1" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="recipientName">{t("recipientName")}</Label>
-                  <Input id="recipientName" value={form.recipientName} onChange={(e) => updateField("recipientName", e.target.value)} placeholder={t("recipientNamePh")} maxLength={100} />
+                  <Label>{t("recipientName")}</Label>
+                  <Input value={form.recipientName} onChange={(e) => updateField("recipientName", e.target.value)} placeholder={t("recipientNamePh")} maxLength={100} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">{t("phoneNumber")}</Label>
-                  <Input id="phone" type="tel" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="08xxxxxxxxxx" maxLength={20} />
+                  <Label>{t("phoneNumber")}</Label>
+                  <Input type="tel" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="08xxxxxxxxxx" maxLength={20} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="address">{t("fullAddress")}</Label>
-                  <Textarea id="address" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder={t("fullAddressPh")} maxLength={500} rows={3} />
+                  <Label>{t("fullAddress")}</Label>
+                  <Textarea value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder={t("fullAddressPh")} maxLength={500} rows={3} />
                 </div>
                 <Button onClick={() => setStep(2)} disabled={!canProceedStep1} className="w-full gap-2">
                   {t("nextStep")} <ChevronRight className="h-4 w-4" />
@@ -289,38 +276,24 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             )}
 
             {step === 2 && (
-              <motion.div key="step2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
+              <motion.div key="s2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="province">{t("province")}</Label>
+                  <Label>{t("province")}</Label>
                   <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowProvinceList(!showProvinceList)}
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <span className={form.province ? "text-foreground" : "text-muted-foreground"}>
-                        {form.province || t("provincePh")}
-                      </span>
+                    <button type="button" onClick={() => setShowProvinceList(!showProvinceList)}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <span className={form.province ? "text-foreground" : "text-muted-foreground"}>{form.province || t("provincePh")}</span>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     </button>
                     {showProvinceList && (
                       <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
                         <div className="sticky top-0 bg-card p-2 border-b border-border">
-                          <Input
-                            placeholder="Cari provinsi..."
-                            value={provinceSearch}
-                            onChange={(e) => setProvinceSearch(e.target.value)}
-                            className="h-8 text-xs"
-                            autoFocus
-                          />
+                          <Input placeholder="Cari provinsi..." value={provinceSearch} onChange={(e) => setProvinceSearch(e.target.value)} className="h-8 text-xs" autoFocus />
                         </div>
                         {filteredProvinces.map((p) => (
-                          <button
-                            key={p}
-                            type="button"
+                          <button key={p} type="button"
                             onClick={() => { updateField("province", p); setShowProvinceList(false); setProvinceSearch(""); }}
-                            className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${form.province === p ? "bg-primary/10 text-primary font-medium" : ""}`}
-                          >
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${form.province === p ? "bg-primary/10 text-primary font-medium" : ""}`}>
                             {p}
                           </button>
                         ))}
@@ -329,24 +302,22 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="city">{t("city")}</Label>
-                  <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder={t("cityPh")} maxLength={100} />
+                  <Label>{t("city")}</Label>
+                  <Input value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder={t("cityPh")} maxLength={100} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="postalCode">{t("postalCode")}</Label>
-                  <Input id="postalCode" value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} placeholder="xxxxx" maxLength={10} />
+                  <Label>{t("postalCode")}</Label>
+                  <Input value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} placeholder="xxxxx" maxLength={10} />
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1">{t("back")}</Button>
-                  <Button onClick={() => setStep(3)} disabled={!canProceedStep2} className="flex-1 gap-2">
-                    {t("nextStep")} <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  <Button onClick={() => setStep(3)} disabled={!canProceedStep2} className="flex-1 gap-2">{t("nextStep")} <ChevronRight className="h-4 w-4" /></Button>
                 </div>
               </motion.div>
             )}
 
             {step === 3 && (
-              <motion.div key="step3" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
+              <motion.div key="s3" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1.5"><Truck className="h-4 w-4" /> {t("shippingMethod")}</Label>
                   <RadioGroup value={form.shippingMethod} onValueChange={(v) => updateField("shippingMethod", v)} className="space-y-2">
@@ -359,23 +330,20 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                           <p className="text-sm font-semibold text-foreground">{m.label}</p>
                           <p className="text-xs text-muted-foreground">{m.eta}</p>
                         </div>
-                        <span className="text-xs font-bold text-accent">
-                          Rp {m.price.toLocaleString()}
-                        </span>
+                        <span className="text-xs font-bold text-accent">Rp {m.price.toLocaleString()}</span>
                       </label>
                     ))}
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes">{t("claimNotes")}</Label>
-                  <Textarea id="notes" value={form.notes} onChange={(e) => updateField("notes", e.target.value)} placeholder={t("claimNotesPh")} maxLength={500} rows={2} />
+                  <Label>{t("claimNotes")}</Label>
+                  <Textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} placeholder={t("claimNotesPh")} maxLength={500} rows={2} />
                 </div>
 
                 {/* Summary */}
                 <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("recipientName")}</span><span className="font-medium text-foreground">{form.recipientName}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("phoneNumber")}</span><span className="font-medium text-foreground">{form.phone}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("province")}</span><span className="font-medium text-foreground">{form.province}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("city")}</span><span className="font-medium text-foreground">{form.city}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("shippingMethod")}</span><span className="font-medium text-foreground">{availableMethods.find(m => m.id === form.shippingMethod)?.label}</span></div>
@@ -390,18 +358,14 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{t("back")}</Button>
                   <Button onClick={handleSubmit} disabled={submitting} className="flex-1 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-                    {submitting ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> {t("processing")}</>
-                    ) : (
-                      <><CreditCard className="h-4 w-4" /> Bayar Rp {shippingCost.toLocaleString()}</>
-                    )}
+                    {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("processing")}</> : <><CreditCard className="h-4 w-4" /> Bayar Rp {shippingCost.toLocaleString()}</>}
                   </Button>
                 </div>
               </motion.div>
             )}
 
             {step === 4 && (
-              <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-12 text-center space-y-4">
+              <motion.div key="s4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-12 text-center space-y-4">
                 <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">Memproses pembayaran ongkir...</p>
               </motion.div>

@@ -406,7 +406,9 @@ export type Database = {
           campaign_id: string
           city: string
           coin_value: number
+          courier_name: string | null
           created_at: string
+          delivered_at: string | null
           id: string
           image_url: string
           notes: string | null
@@ -415,12 +417,15 @@ export type Database = {
           prize_name: string
           province: string
           recipient_name: string
+          shipped_at: string | null
           shipping_cost: number
           shipping_method: string
           shipping_order_id: string | null
           shipping_paid: boolean
           status: string
           tier_label: string
+          tracking_number: string | null
+          tracking_url: string | null
           updated_at: string
           user_id: string
         }
@@ -429,7 +434,9 @@ export type Database = {
           campaign_id: string
           city: string
           coin_value?: number
+          courier_name?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           image_url?: string
           notes?: string | null
@@ -438,12 +445,15 @@ export type Database = {
           prize_name: string
           province: string
           recipient_name: string
+          shipped_at?: string | null
           shipping_cost?: number
           shipping_method?: string
           shipping_order_id?: string | null
           shipping_paid?: boolean
           status?: string
           tier_label: string
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -452,7 +462,9 @@ export type Database = {
           campaign_id?: string
           city?: string
           coin_value?: number
+          courier_name?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           image_url?: string
           notes?: string | null
@@ -461,12 +473,15 @@ export type Database = {
           prize_name?: string
           province?: string
           recipient_name?: string
+          shipped_at?: string | null
           shipping_cost?: number
           shipping_method?: string
           shipping_order_id?: string | null
           shipping_paid?: boolean
           status?: string
           tier_label?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -624,6 +639,54 @@ export type Database = {
           remaining?: number
           ticket_type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      shipping_zones: {
+        Row: {
+          created_at: string
+          express_eta: string
+          express_price: number
+          id: string
+          provinces: string[]
+          regular_eta: string
+          regular_price: number
+          same_day_available: boolean
+          same_day_eta: string
+          same_day_price: number
+          updated_at: string
+          zone_name: string
+          zone_number: number
+        }
+        Insert: {
+          created_at?: string
+          express_eta?: string
+          express_price?: number
+          id?: string
+          provinces?: string[]
+          regular_eta?: string
+          regular_price?: number
+          same_day_available?: boolean
+          same_day_eta?: string
+          same_day_price?: number
+          updated_at?: string
+          zone_name: string
+          zone_number: number
+        }
+        Update: {
+          created_at?: string
+          express_eta?: string
+          express_price?: number
+          id?: string
+          provinces?: string[]
+          regular_eta?: string
+          regular_price?: number
+          same_day_available?: boolean
+          same_day_eta?: string
+          same_day_price?: number
+          updated_at?: string
+          zone_name?: string
+          zone_number?: number
         }
         Relationships: []
       }
