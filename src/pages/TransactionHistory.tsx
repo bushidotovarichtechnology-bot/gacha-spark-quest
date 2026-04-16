@@ -45,27 +45,39 @@ const TransactionHistory = () => {
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
   const prevStatusRef = useRef<Record<string, string>>({});
 
+  const fetchTransactions = async () => {
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) {
+      const txs = data as unknown as Transaction[];
+      setTransactions(txs);
+      const statusMap: Record<string, string> = {};
+      txs.forEach((tx) => { statusMap[tx.id] = tx.status; });
+      prevStatusRef.current = statusMap;
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchTransactions();
+    refreshCoins?.();
+    toast.success("Data transaksi diperbarui");
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-    const fetchTx = async () => {
-      const { data } = await supabase
-        .from("transactions")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (data) {
-        const txs = data as unknown as Transaction[];
-        setTransactions(txs);
-        // Store initial statuses
-        const statusMap: Record<string, string> = {};
-        txs.forEach((tx) => { statusMap[tx.id] = tx.status; });
-        prevStatusRef.current = statusMap;
-      }
+    const load = async () => {
+      await fetchTransactions();
       setLoading(false);
     };
-    fetchTx();
+    load();
 
     // Subscribe to realtime changes
     const channel = supabase
@@ -201,6 +213,16 @@ const TransactionHistory = () => {
             Riwayat Transaksi
           </h1>
           <p className="mt-2 text-muted-foreground">Semua riwayat top-up koin kamu</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3 gap-2"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Memperbarui..." : "Refresh Status"}
+          </Button>
         </div>
 
         {/* Summary cards */}
