@@ -581,41 +581,16 @@ const CampaignDetail = () => {
 
       <AnimatePresence>
         {isDrawing && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-lg"
-          >
-            <div className="flex flex-col items-center gap-4">
-              {/* Dino unboxing video */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", damping: 12 }}
-                className="relative overflow-hidden rounded-2xl border-2 border-primary/50 box-glow-purple"
-                style={{ width: 280, height: 280 }}
-              >
-                <video
-                  src={dinoUnboxAsset.url}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-              </motion.div>
-
-              <motion.p
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="font-display text-sm tracking-widest text-muted-foreground"
-              >
-                {drawCount > 1 ? t("drawingMulti", { count: drawCount }) : t("drawing")}
-              </motion.p>
-            </div>
-          </motion.div>
+          <DinoUnboxAnimation
+            requiredTaps={drawCount > 1 ? 8 : 5}
+            drawCount={drawCount}
+            onComplete={() => {
+              setIsDrawing(false);
+              if (pendingDrawComplete) {
+                setShowResult(true);
+              }
+            }}
+          />
         )}
       </AnimatePresence>
 
