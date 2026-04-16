@@ -37,6 +37,7 @@ import AdminPitySettings from "./pages/admin/AdminPitySettings.tsx";
 import AdminRewards from "./pages/admin/AdminRewards.tsx";
 import AdminCoinPackages from "./pages/admin/AdminCoinPackages.tsx";
 import AdminCoupons from "./pages/admin/AdminCoupons.tsx";
+import AdminShipping from "./pages/admin/AdminShipping.tsx";
 import RedeemStore from "./pages/RedeemStore.tsx";
 import GiftCoins from "./pages/GiftCoins.tsx";
 import Profile from "./pages/Profile.tsx";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="rewards" element={<AdminRewards />} />
               <Route path="coin-packages" element={<AdminCoinPackages />} />
               <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="shipping" element={<AdminShipping />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
