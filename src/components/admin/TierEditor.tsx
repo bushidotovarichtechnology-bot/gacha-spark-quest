@@ -155,7 +155,7 @@ export function TierEditor({
   const prizeIds = sortedPrizes.map((p) => p.id);
 
   const save = () => {
-    onUpdate({ label, name, total, remaining, probability_weight: weight, image_url: tierImageUrl });
+    onUpdate({ label, name, image_url: tierImageUrl });
     onRefresh();
   };
 
