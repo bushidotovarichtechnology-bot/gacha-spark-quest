@@ -210,11 +210,12 @@ const CampaignDetail = () => {
 
     setDrawCount(actualCount);
     setIsDrawing(true);
+    setPendingDrawComplete(false);
 
-    setTimeout(async () => {
+    // Run draw calculation immediately (async for DB writes)
+    (async () => {
       const results: { tier: string; color: string; prize: string; isPityReward?: boolean; coinValue: number }[] = [];
       let batchHasPity = false;
-      // Track remaining per prize
       const prizeRemainingCopy: Record<string, number> = {};
       tiers.forEach((t) => {
         t.prizes.forEach((p: any) => { prizeRemainingCopy[p.id] = p.remaining; });
@@ -223,7 +224,6 @@ const CampaignDetail = () => {
       for (let i = 0; i < actualCount; i++) {
         let localPityCount = drawsSinceTierA;
 
-        // Build active tiers based on prizes that still have remaining
         const allActiveTiers = tiers
           .map((t) => {
             const activePrizes = t.prizes.filter((p: any) => (prizeRemainingCopy[p.id] ?? 0) > 0);
@@ -231,12 +231,11 @@ const CampaignDetail = () => {
           })
           .filter((t) => t.tierRemaining > 0);
 
-        // Grand Prize (Tier S) can only be obtained when it's the ONLY prize remaining
         const totalRemainingAll = allActiveTiers.reduce((s, t) => s + t.tierRemaining, 0);
         const tierSOnly = allActiveTiers.filter((t) => t.label === "S");
         const tierSRemaining = tierSOnly.reduce((s, t) => s + t.tierRemaining, 0);
         const activeTiers = (tierSRemaining > 0 && totalRemainingAll > tierSRemaining)
-          ? allActiveTiers.filter((t) => t.label !== "S") // Exclude S if other prizes still exist
+          ? allActiveTiers.filter((t) => t.label !== "S")
           : allActiveTiers;
 
         if (activeTiers.length === 0) break;
@@ -273,7 +272,6 @@ const CampaignDetail = () => {
           localPityCount++;
         }
 
-        // Pick a specific prize weighted by probability_weight
         const activePrizes = selectedTier.prizes;
         const totalPrizeWeight = activePrizes.reduce((a: number, p: any) => a + p.probability_weight, 0);
         let pr = Math.random() * totalPrizeWeight;
@@ -284,7 +282,6 @@ const CampaignDetail = () => {
         }
 
         const newRemaining = (prizeRemainingCopy[selectedPrize.id] ?? 0) - 1;
-        // Auto-refill: if remaining hits 0 and auto_refill is enabled, reset to total
         if (newRemaining <= 0 && selectedPrize.auto_refill) {
           prizeRemainingCopy[selectedPrize.id] = selectedPrize.total;
         } else {
@@ -305,7 +302,7 @@ const CampaignDetail = () => {
         results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
       }
 
-      // Update remaining counts per prize in database
+      // DB writes
       const prizeUpdates = Object.entries(prizeRemainingCopy).map(([prizeId, rem]) =>
         supabase.from("tier_prizes").update({ remaining: rem }).eq("id", prizeId)
       );
@@ -325,7 +322,6 @@ const CampaignDetail = () => {
 
       const drawResults = await Promise.all([...prizeUpdates, ...drawInserts]);
 
-      // Insert redeem tickets for each draw
       if (user) {
         const ticketInserts = results.map((r, idx) => {
           const drawResult = drawResults[Object.keys(prizeRemainingCopy).length + idx] as any;
@@ -342,7 +338,6 @@ const CampaignDetail = () => {
         });
         await Promise.all(ticketInserts);
 
-        // Show ticket notification
         const totalTickets = results.reduce((sum, r) => sum + (ticketValues[r.tier] || 1), 0);
         toast.success(`🎫 Kamu mendapat ${totalTickets} Bushido Tiket!`);
       }
@@ -350,11 +345,11 @@ const CampaignDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
 
+      // Store results but wait for dino animation completion
       setDrawnPrizes(results);
       setHasPityReward(batchHasPity);
-      setIsDrawing(false);
-      setShowResult(true);
-    }, 2400);
+      setPendingDrawComplete(true);
+    })();
   };
 
   return (
