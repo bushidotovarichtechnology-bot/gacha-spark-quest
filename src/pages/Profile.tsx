@@ -184,7 +184,7 @@ const Profile = () => {
         body: { code: couponCode.trim() },
       });
       if (error || !data?.success) {
-        throw new Error(data?.error || error?.message || "Gagal redeem kupon");
+        throw new Error(data?.error || error?.message || "Gagal menggunakan Bushido Kupon");
       }
       if (data.benefit_type === "bonus_coins") {
         addCoins(data.benefit_value);
@@ -192,7 +192,7 @@ const Profile = () => {
       // Refresh coins state to pick up free_draws / discount changes
       await refreshCoins();
       toast({
-        title: "Kupon Berhasil Digunakan! 🎉",
+        title: "Bushido Kupon Berhasil Digunakan! 🎉",
         description: data.description + (data.coupon_description ? ` — ${data.coupon_description}` : ""),
       });
       setCouponCode("");
@@ -249,7 +249,7 @@ const Profile = () => {
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="avatar" className="gap-1 text-xs"><Camera className="h-3.5 w-3.5" /> Foto</TabsTrigger>
               <TabsTrigger value="address" className="gap-1 text-xs"><MapPin className="h-3.5 w-3.5" /> Alamat</TabsTrigger>
-              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Kupon</TabsTrigger>
+              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Bushido Kupon</TabsTrigger>
               <TabsTrigger value="password" className="gap-1 text-xs"><Lock className="h-3.5 w-3.5" /> Password</TabsTrigger>
               <TabsTrigger value="help" className="gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" /> Bantuan</TabsTrigger>
             </TabsList>
@@ -346,7 +346,7 @@ const Profile = () => {
                 <Card className="border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-display text-lg">
-                      <Ticket className="h-5 w-5 text-primary" /> Redeem Kupon
+                      <Ticket className="h-5 w-5 text-primary" /> Bushido Kupon
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -354,7 +354,7 @@ const Profile = () => {
                       <Input
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder="Masukkan kode kupon"
+                        placeholder="Masukkan kode Bushido Kupon"
                         className="bg-secondary font-mono"
                         maxLength={30}
                       />
@@ -364,7 +364,7 @@ const Profile = () => {
                     </div>
                     {redemptions.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">Riwayat Kupon</p>
+                        <p className="text-xs font-medium text-muted-foreground">Riwayat Bushido Kupon</p>
                         {redemptions.map((r: any) => {
                           const benefitIcon = r.benefit_type === "bonus_coins" ? Coins : r.benefit_type === "free_gacha" ? Gamepad2 : Percent;
                           const BIcon = benefitIcon;

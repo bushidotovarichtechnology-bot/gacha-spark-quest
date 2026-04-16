@@ -108,7 +108,7 @@ const AdminCoupons = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Berhasil", description: editing ? "Kupon diperbarui" : "Kupon dibuat" });
+      toast({ title: "Berhasil", description: editing ? "Bushido Kupon diperbarui" : "Bushido Kupon dibuat" });
       setDialogOpen(false);
       fetchCoupons();
     }
@@ -116,7 +116,7 @@ const AdminCoupons = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus kupon ini?")) return;
+    if (!confirm("Hapus Bushido Kupon ini?")) return;
     await supabase.from("coupons").delete().eq("id", id);
     fetchCoupons();
   };
@@ -136,10 +136,10 @@ const AdminCoupons = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Kelola Kupon</h1>
-          <p className="text-sm text-muted-foreground">Buat dan atur kupon untuk user</p>
+          <h1 className="text-2xl font-bold text-foreground">Kelola Bushido Kupon</h1>
+          <p className="text-sm text-muted-foreground">Buat dan atur Bushido Kupon untuk user</p>
         </div>
-        <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Buat Kupon</Button>
+        <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Buat Bushido Kupon</Button>
       </div>
 
       <div className="rounded-lg border border-border">
@@ -156,7 +156,7 @@ const AdminCoupons = () => {
           </TableHeader>
           <TableBody>
             {coupons.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Belum ada kupon</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Belum ada Bushido Kupon</TableCell></TableRow>
             ) : coupons.map((c) => (
               <TableRow key={c.id}>
                 <TableCell>
@@ -196,11 +196,11 @@ const AdminCoupons = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Kupon" : "Buat Kupon Baru"}</DialogTitle>
+            <DialogTitle>{editing ? "Edit Bushido Kupon" : "Buat Bushido Kupon Baru"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Kode Kupon</Label>
+              <Label>Kode Bushido Kupon</Label>
               <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="BUSHIDO100" className="font-mono" maxLength={30} />
             </div>
             <div>
@@ -245,7 +245,7 @@ const AdminCoupons = () => {
             </div>
             <Button className="w-full" onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {editing ? "Simpan Perubahan" : "Buat Kupon"}
+              {editing ? "Simpan Perubahan" : "Buat Bushido Kupon"}
             </Button>
           </div>
         </DialogContent>

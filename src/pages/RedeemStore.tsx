@@ -100,11 +100,11 @@ const RedeemStore = () => {
       <Navbar />
       <div className="container mx-auto px-4 pt-24">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-foreground">Redeem Store</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground">Bushido Tiket Store</h1>
           <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/30 px-4 py-2">
             <Ticket className="h-5 w-5 text-primary" />
             <span className="text-lg font-bold text-primary">{ticketBalance}</span>
-            <span className="text-sm text-muted-foreground">tiket</span>
+            <span className="text-sm text-muted-foreground">Bushido Tiket</span>
           </div>
         </div>
 

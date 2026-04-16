@@ -7,7 +7,7 @@ const translations = {
     // Navbar
     home: "Home",
     myInventory: "My Inventory",
-    gachaCoins: "Gacha Coins",
+    bushidoCoins: "Bushido Coin",
 
     // Hero
     wayOfFortune: "⚔️ The Way of Fortune",
@@ -80,7 +80,7 @@ const translations = {
     recycledTitle: "Recycled \"{name}\"",
     recycledDesc: "+{value} Gacha Coins earned!",
     recycleConfirmTitle: "Recycle this prize?",
-    recycleConfirmDesc: "You will receive +{value} Gacha Coins. This action cannot be undone.",
+    recycleConfirmDesc: "You will receive +{value} Bushido Coin. This action cannot be undone.",
     yourCollection: "Your collection of prizes from Bushido Gacha draws.",
 
     // Draw History
@@ -222,7 +222,7 @@ const translations = {
     // Navbar
     home: "Beranda",
     myInventory: "Inventori Saya",
-    gachaCoins: "Koin Gacha",
+    bushidoCoins: "Bushido Coin",
 
     // Hero
     wayOfFortune: "⚔️ Jalan Keberuntungan",
@@ -295,7 +295,7 @@ const translations = {
     recycledTitle: "Didaur ulang \"{name}\"",
     recycledDesc: "+{value} Koin Gacha diperoleh!",
     recycleConfirmTitle: "Daur ulang hadiah ini?",
-    recycleConfirmDesc: "Kamu akan mendapat +{value} Koin Gacha. Tindakan ini tidak bisa dibatalkan.",
+    recycleConfirmDesc: "Kamu akan mendapat +{value} Bushido Coin. Tindakan ini tidak bisa dibatalkan.",
     yourCollection: "Koleksi hadiah dari tarikan Bushido Gacha kamu.",
 
     // Draw History
@@ -310,7 +310,7 @@ const translations = {
     pityReady: "🔥 Tarikan berikutnya dijamin Tingkat A atau lebih tinggi!",
 
     // Top Up
-    topUpCoins: "Isi Ulang Koin",
+    topUpCoins: "Isi Ulang Bushido Coin",
     topUpDesc: "Pilih paket koin untuk tarikan gacha kamu",
     bestValue: "TERBAIK",
     perCoin: "koin",
@@ -318,7 +318,7 @@ const translations = {
     confirmPurchase: "Konfirmasi Pembelian",
     confirmPurchaseDesc: "Periksa pesananmu sebelum melanjutkan",
     purchaseSuccess: "Pembelian Berhasil!",
-    purchaseSuccessDesc: "+{coins} Koin Gacha ditambahkan!",
+    purchaseSuccessDesc: "+{coins} Bushido Coin ditambahkan!",
     processing: "Memproses...",
     payNow: "Bayar Sekarang",
     simulationNote: "Ini adalah pembelian simulasi — tidak ada pembayaran sungguhan.",

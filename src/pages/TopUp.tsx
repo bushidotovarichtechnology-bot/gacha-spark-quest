@@ -261,7 +261,7 @@ const formatRupiah = (value: number) =>
             +{pkg.bonus_coins.toLocaleString()} bonus
           </div>
         )}
-        <div className="text-sm text-muted-foreground">{t("gachaCoins")}</div>
+        <div className="text-sm text-muted-foreground">{t("bushidoCoins")}</div>
 
         <div className="mt-4">
           {promo ? (
@@ -339,7 +339,7 @@ const formatRupiah = (value: number) =>
                       <Coins className="h-6 w-6 text-accent" />
                       <div>
                         <div className="font-display font-bold text-foreground">
-                          {selectedPackage.coins.toLocaleString()} {t("gachaCoins")}
+                          {selectedPackage.coins.toLocaleString()} {t("bushidoCoins")}
                         </div>
                         {selectedPackage.bonus_coins > 0 && (
                           <div className="text-xs text-accent flex items-center gap-1">
