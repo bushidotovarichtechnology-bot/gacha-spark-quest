@@ -141,9 +141,6 @@ export function TierEditor({
   const { toast } = useToast();
   const [label, setLabel] = useState(tier.label);
   const [name, setName] = useState(tier.name);
-  const [total, setTotal] = useState(tier.total);
-  const [remaining, setRemaining] = useState(tier.remaining);
-  const [weight, setWeight] = useState(tier.probability_weight);
   const [bulkCoinValue, setBulkCoinValue] = useState("");
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
@@ -158,7 +155,7 @@ export function TierEditor({
   const prizeIds = sortedPrizes.map((p) => p.id);
 
   const save = () => {
-    onUpdate({ label, name, total, remaining, probability_weight: weight, image_url: tierImageUrl });
+    onUpdate({ label, name, image_url: tierImageUrl });
     onRefresh();
   };
 
@@ -232,20 +229,7 @@ export function TierEditor({
         </label>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-2">
-        <div>
-          <label className="text-xs text-muted-foreground">Total</label>
-          <Input type="number" value={total} onChange={(e) => setTotal(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Remaining</label>
-          <Input type="number" value={remaining} onChange={(e) => setRemaining(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Weight</label>
-          <Input type="number" step="0.1" value={weight} onChange={(e) => setWeight(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-      </div>
+
 
       {/* Bulk coin value edit */}
       <div className="flex items-center gap-2 mb-2">
