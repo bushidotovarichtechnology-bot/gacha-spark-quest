@@ -163,7 +163,7 @@ const CampaignDetail = () => {
       ...tier,
       color: colorMap[tier.label] || "text-muted-foreground",
       icon: iconMap[tier.label] || Award,
-      prizes: (tier.tier_prizes || []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((p: any) => ({ id: p.id, name: p.name, description: p.description || "", total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1), image_url: p.image_url || "", auto_refill: p.auto_refill ?? false })),
+      prizes: (tier.tier_prizes || []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((p: any) => ({ id: p.id, name: p.name, description: p.description || "", total: p.total ?? 1, remaining: p.remaining ?? 1, probability_weight: Number(p.probability_weight ?? 1), image_url: p.image_url || "", auto_refill: p.auto_refill ?? false, coin_value: p.coin_value ?? 0 })),
     }));
 
   const totalRemaining = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.remaining, 0), 0);
