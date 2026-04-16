@@ -128,8 +128,14 @@ const TransactionHistory = () => {
       )
       .subscribe();
 
+    // Auto-refresh every 30 seconds
+    const autoRefreshInterval = setInterval(() => {
+      fetchTransactions();
+    }, 30000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(autoRefreshInterval);
     };
   }, [user, refreshCoins]);
 
