@@ -415,7 +415,10 @@ export type Database = {
           prize_name: string
           province: string
           recipient_name: string
+          shipping_cost: number
           shipping_method: string
+          shipping_order_id: string | null
+          shipping_paid: boolean
           status: string
           tier_label: string
           updated_at: string
@@ -435,7 +438,10 @@ export type Database = {
           prize_name: string
           province: string
           recipient_name: string
+          shipping_cost?: number
           shipping_method?: string
+          shipping_order_id?: string | null
+          shipping_paid?: boolean
           status?: string
           tier_label: string
           updated_at?: string
@@ -455,7 +461,10 @@ export type Database = {
           prize_name?: string
           province?: string
           recipient_name?: string
+          shipping_cost?: number
           shipping_method?: string
+          shipping_order_id?: string | null
+          shipping_paid?: boolean
           status?: string
           tier_label?: string
           updated_at?: string
