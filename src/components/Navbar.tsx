@@ -188,7 +188,7 @@ const Navbar = () => {
                 <>
                   <div className="flex items-center gap-2">
                     <Coins className="h-4 w-4 text-accent" />
-                    <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("gachaCoins")}</span>
+                    <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("bushidoCoins")}</span>
                   </div>
                   {freeDraws > 0 && (
                     <div className="flex items-center gap-1.5">
