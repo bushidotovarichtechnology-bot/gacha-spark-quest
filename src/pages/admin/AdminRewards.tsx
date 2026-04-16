@@ -137,7 +137,7 @@ const AdminRewards = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-bold flex items-center gap-2">
-          <Gift className="h-5 w-5 text-primary" /> Redeem Rewards
+          <Gift className="h-5 w-5 text-primary" /> Bushido Tiket Rewards
         </h1>
         <Button size="sm" onClick={() => { setShowAdd(true); setEditId(null); setForm(emptyForm); }}>
           <Plus className="mr-1.5 h-4 w-4" /> Tambah Hadiah

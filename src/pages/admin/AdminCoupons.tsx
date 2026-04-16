@@ -108,7 +108,7 @@ const AdminCoupons = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Berhasil", description: editing ? "Kupon diperbarui" : "Kupon dibuat" });
+      toast({ title: "Berhasil", description: editing ? "Bushido Kupon diperbarui" : "Bushido Kupon dibuat" });
       setDialogOpen(false);
       fetchCoupons();
     }
@@ -116,7 +116,7 @@ const AdminCoupons = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus kupon ini?")) return;
+    if (!confirm("Hapus Bushido Kupon ini?")) return;
     await supabase.from("coupons").delete().eq("id", id);
     fetchCoupons();
   };

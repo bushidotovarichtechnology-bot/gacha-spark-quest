@@ -192,7 +192,7 @@ const Profile = () => {
       // Refresh coins state to pick up free_draws / discount changes
       await refreshCoins();
       toast({
-        title: "Kupon Berhasil Digunakan! 🎉",
+        title: "Bushido Kupon Berhasil Digunakan! 🎉",
         description: data.description + (data.coupon_description ? ` — ${data.coupon_description}` : ""),
       });
       setCouponCode("");
