@@ -296,7 +296,7 @@ const CampaignDetail = () => {
           tier: selectedTier.label as "S" | "A" | "B" | "C",
           campaign: campaign.title,
           campaignId: campaign.id,
-          image,
+          image: selectedPrize.image_url || image,
           coinValue: prizeCoinValue,
         });
 
