@@ -40,7 +40,7 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
       transition={{ duration: 0.3 }}
     >
       <Link to={`/campaign/${id}`} className="group block">
-        <div className={`gradient-card overflow-hidden rounded-xl border transition-all duration-300 group-hover:border-primary/50 group-hover:box-glow-purple ${flash ? "border-accent/80 box-glow-gold" : "border-border/50"}`}>
+        <div className={`gradient-card overflow-hidden rounded-xl border transition-all duration-300 ${isSoldOut ? "border-border/30 opacity-60 grayscale" : flash ? "border-accent/80 box-glow-gold" : "border-border/50 group-hover:border-primary/50 group-hover:box-glow-purple"}`}>
           <div className="relative aspect-square overflow-hidden">
             <img
               src={image}
@@ -49,14 +49,16 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-            {hot && (
-              <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-destructive/90 px-2.5 py-1 text-xs font-bold text-destructive-foreground backdrop-blur-sm">
-                <Flame className="h-3 w-3" /> {t("hot")}
+            {isSoldOut && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                <span className="rounded-full bg-muted px-4 py-1.5 text-xs font-bold tracking-wide text-muted-foreground">
+                  SOLD OUT
+                </span>
               </div>
             )}
-            {isSoldOut && (
-              <div className="absolute right-3 top-3 rounded-full bg-muted/90 px-2.5 py-1 text-xs font-bold text-muted-foreground backdrop-blur-sm">
-                Sold Out
+            {!isSoldOut && hot && (
+              <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-destructive/90 px-2.5 py-1 text-xs font-bold text-destructive-foreground backdrop-blur-sm">
+                <Flame className="h-3 w-3" /> {t("hot")}
               </div>
             )}
             {isLow && (
