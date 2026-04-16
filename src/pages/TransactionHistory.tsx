@@ -213,6 +213,16 @@ const TransactionHistory = () => {
             Riwayat Transaksi
           </h1>
           <p className="mt-2 text-muted-foreground">Semua riwayat top-up koin kamu</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3 gap-2"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Memperbarui..." : "Refresh Status"}
+          </Button>
         </div>
 
         {/* Summary cards */}
