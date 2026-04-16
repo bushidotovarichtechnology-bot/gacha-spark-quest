@@ -52,75 +52,6 @@ const TIER_CONFIG = {
   },
 };
 
-// 8-bit pixel art as inline SVGs for instant loading
-const DINO_IDLE = () => (
-  <svg viewBox="0 0 32 32" className="w-full h-full" style={{ imageRendering: "pixelated" }}>
-    {/* Body */}
-    <rect x="10" y="14" width="12" height="10" fill="#4ade80" />
-    <rect x="8" y="16" width="2" height="6" fill="#4ade80" />
-    {/* Head */}
-    <rect x="16" y="6" width="10" height="10" fill="#4ade80" />
-    <rect x="26" y="8" width="4" height="4" fill="#4ade80" />
-    {/* Eye */}
-    <rect x="22" y="8" width="2" height="2" fill="#1a1a2e" />
-    {/* Mouth closed */}
-    <rect x="26" y="12" width="4" height="2" fill="#22c55e" />
-    {/* Arms */}
-    <rect x="22" y="16" width="2" height="4" fill="#22c55e" />
-    {/* Legs */}
-    <rect x="12" y="24" width="3" height="4" fill="#4ade80" />
-    <rect x="18" y="24" width="3" height="4" fill="#4ade80" />
-    {/* Feet */}
-    <rect x="11" y="28" width="5" height="2" fill="#22c55e" />
-    <rect x="17" y="28" width="5" height="2" fill="#22c55e" />
-    {/* Tail */}
-    <rect x="6" y="18" width="4" height="2" fill="#4ade80" />
-    <rect x="4" y="16" width="4" height="2" fill="#4ade80" />
-    {/* Spikes */}
-    <rect x="12" y="12" width="2" height="2" fill="#22c55e" />
-    <rect x="16" y="10" width="2" height="2" fill="#22c55e" />
-    <rect x="14" y="12" width="2" height="2" fill="#22c55e" />
-  </svg>
-);
-
-const DINO_BITE = () => (
-  <svg viewBox="0 0 32 32" className="w-full h-full" style={{ imageRendering: "pixelated" }}>
-    {/* Body */}
-    <rect x="10" y="14" width="12" height="10" fill="#4ade80" />
-    <rect x="8" y="16" width="2" height="6" fill="#4ade80" />
-    {/* Head - moved forward */}
-    <rect x="18" y="6" width="10" height="10" fill="#4ade80" />
-    <rect x="28" y="6" width="4" height="4" fill="#4ade80" />
-    {/* Eye - excited */}
-    <rect x="24" y="8" width="2" height="2" fill="#1a1a2e" />
-    <rect x="24" y="7" width="2" height="1" fill="#fff" />
-    {/* Mouth OPEN - top jaw */}
-    <rect x="28" y="10" width="4" height="2" fill="#4ade80" />
-    {/* Mouth OPEN - bottom jaw */}
-    <rect x="28" y="14" width="4" height="2" fill="#4ade80" />
-    {/* Teeth */}
-    <rect x="28" y="12" width="1" height="1" fill="#fff" />
-    <rect x="30" y="12" width="1" height="1" fill="#fff" />
-    <rect x="29" y="13" width="1" height="1" fill="#fff" />
-    <rect x="31" y="13" width="1" height="1" fill="#fff" />
-    {/* Arms reaching */}
-    <rect x="22" y="14" width="2" height="2" fill="#22c55e" />
-    <rect x="24" y="16" width="2" height="2" fill="#22c55e" />
-    {/* Legs */}
-    <rect x="12" y="24" width="3" height="4" fill="#4ade80" />
-    <rect x="18" y="24" width="3" height="4" fill="#4ade80" />
-    <rect x="11" y="28" width="5" height="2" fill="#22c55e" />
-    <rect x="17" y="28" width="5" height="2" fill="#22c55e" />
-    {/* Tail */}
-    <rect x="6" y="18" width="4" height="2" fill="#4ade80" />
-    <rect x="4" y="16" width="4" height="2" fill="#4ade80" />
-    {/* Spikes */}
-    <rect x="12" y="12" width="2" height="2" fill="#22c55e" />
-    <rect x="16" y="10" width="2" height="2" fill="#22c55e" />
-    <rect x="14" y="12" width="2" height="2" fill="#22c55e" />
-  </svg>
-);
-
 // 8-bit pixel art dino variants for different tiers
 const createDinoSVG = (colorMain: string, colorDark: string, isBiting: boolean) => {
   if (isBiting) {
@@ -297,10 +228,37 @@ const RareGlow = ({ isRare }: { isRare: boolean }) => {
   );
 };
 
+const TierBadge = ({ tier, isRare }: { tier: string; isRare: boolean }) => {
+  if (!isRare) return null;
+  
+  const tierEmojis: Record<string, string> = { S: "🏆", A: "⭐" };
+  const tierColors: Record<string, string> = { S: "#fbbf24", A: "#a78bfa" };
+  
+  return (
+    <motion.div
+      initial={{ scale: 0, rotate: -180 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 200, damping: 15 }}
+      className="absolute top-4 left-1/2 -translate-x-1/2 z-50"
+    >
+      <div
+        className="px-4 py-2 rounded-full font-bold text-white text-sm"
+        style={{ 
+          backgroundColor: tierColors[tier] || "#a78bfa",
+          boxShadow: `0 0 30px ${tierColors[tier] || "#a78bfa"}`,
+        }}
+      >
+        {tierEmojis[tier]} TIER {tier} DITEMUKAN!
+      </div>
+    </motion.div>
+  );
+};
+
 const DinoUnboxAnimation = ({
   requiredTaps = 5,
   onComplete,
   drawCount,
+  tier = "C",
 }: DinoUnboxAnimationProps) => {
   const [taps, setTaps] = useState(0);
   const [isBiting, setIsBiting] = useState(false);
@@ -309,25 +267,29 @@ const DinoUnboxAnimation = ({
   const [showFlash, setShowFlash] = useState(false);
   const [screenShake, setScreenShake] = useState(0);
 
+  const config = TIER_CONFIG[tier] || TIER_CONFIG.C;
   const progress = Math.min(taps / requiredTaps, 1);
   const damage = Math.min(Math.floor((taps / requiredTaps) * 5), 5);
 
   // Generate explosion particles on complete
   const explosionParticles = useMemo(() => {
     if (!completed) return [];
-    return Array.from({ length: 30 }, (_, i) => {
-      const angle = (i / 30) * Math.PI * 2;
-      const dist = 60 + Math.random() * 100;
+    return Array.from({ length: config.explosionCount }, (_, i) => {
+      const angle = (i / config.explosionCount) * Math.PI * 2;
+      // Rare tiers have wider explosion range
+      const dist = config.isRare 
+        ? 80 + Math.random() * 150 
+        : 60 + Math.random() * 100;
       return {
         id: i,
         x: Math.cos(angle) * dist,
         y: Math.sin(angle) * dist,
-        size: 4 + Math.random() * 8,
-        color: EXPLOSION_COLORS[Math.floor(Math.random() * EXPLOSION_COLORS.length)],
-        delay: Math.random() * 0.15,
+        size: config.isRare ? 6 + Math.random() * 10 : 4 + Math.random() * 8,
+        color: config.explosionColors[Math.floor(Math.random() * config.explosionColors.length)],
+        delay: Math.random() * (config.isRare ? 0.2 : 0.15),
       };
     });
-  }, [completed]);
+  }, [completed, config]);
 
   const handleTap = useCallback(() => {
     if (completed) return;
@@ -335,36 +297,39 @@ const DinoUnboxAnimation = ({
     setIsBiting(true);
     setTaps((prev) => prev + 1);
     
-    // Screen shake intensity increases with damage
-    const shakeAmount = 2 + damage * 1.5;
+    // Screen shake intensity increases with damage and tier rarity
+    const shakeAmount = (2 + damage * 1.5) * config.screenShakeMultiplier;
     setScreenShake(shakeAmount);
     setTimeout(() => setScreenShake(0), 150);
 
-    // Spawn particles with random colors
-    const newParticles = Array.from({ length: 4 + damage }, (_, i) => ({
+    // Spawn particles with tier-specific colors
+    const particleCount = config.isRare ? 6 + damage * 2 : 4 + damage;
+    const newParticles = Array.from({ length: particleCount }, (_, i) => ({
       id: Date.now() + i,
-      x: (Math.random() - 0.5) * (80 + damage * 20),
+      x: (Math.random() - 0.5) * (80 + damage * 20) * config.screenShakeMultiplier,
       y: (Math.random() - 0.5) * (60 + damage * 15) - 20,
-      color: EXPLOSION_COLORS[Math.floor(Math.random() * EXPLOSION_COLORS.length)],
+      color: config.explosionColors[Math.floor(Math.random() * config.explosionColors.length)],
     }));
     setParticles((prev) => [...prev, ...newParticles]);
 
     setTimeout(() => setIsBiting(false), 200);
     setTimeout(() => setParticles((prev) => prev.filter((p) => !newParticles.find((n) => n.id === p.id))), 600);
-  }, [completed, damage]);
+  }, [completed, damage, config]);
 
   useEffect(() => {
     if (taps >= requiredTaps && !completed) {
       setCompleted(true);
       setShowFlash(true);
-      setTimeout(() => setShowFlash(false), 400);
-      setTimeout(onComplete, 1000);
+      setTimeout(() => setShowFlash(false), config.isRare ? 600 : 400);
+      setTimeout(onComplete, config.isRare ? 1500 : 1000);
     }
-  }, [taps, requiredTaps, completed, onComplete]);
+  }, [taps, requiredTaps, completed, onComplete, config.isRare]);
 
   return (
     <>
-      {showFlash && <FlashOverlay />}
+      {showFlash && <FlashOverlay color={config.flashColor} />}
+      <RareGlow isRare={config.isRare} />
+      <TierBadge tier={tier} isRare={config.isRare} />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ 
@@ -385,7 +350,9 @@ const DinoUnboxAnimation = ({
             transition={completed ? { duration: 0.5 } : { duration: 1.2, repeat: Infinity }}
             className="font-display text-xs tracking-[0.2em] uppercase text-muted-foreground"
           >
-            {completed ? "💥 TERBUKA! 💥" : "👆 Tap untuk menggigit!"}
+            {completed 
+              ? (config.isRare ? "🎉 JACKPOT! 🎉" : "💥 TERBUKA! 💥") 
+              : "👆 Tap untuk menggigit!"}
           </motion.p>
 
           {/* Progress bar */}
@@ -416,27 +383,31 @@ const DinoUnboxAnimation = ({
               </div>
             )}
 
-            {/* Dino */}
+            {/* Dino with tier colors */}
             <motion.div
               className="absolute"
               style={{ width: 120, height: 120, left: 10, bottom: 10 }}
               animate={
                 completed
-                  ? { x: 0, y: [0, -15, 0], scale: [1, 1.1, 1] }
+                  ? { 
+                      x: 0, 
+                      y: config.isRare ? [0, -25, 0, -15, 0] : [0, -15, 0], 
+                      scale: config.isRare ? [1, 1.3, 1.1, 1.2, 1] : [1, 1.1, 1] 
+                    }
                   : isBiting
                   ? { x: 20 }
                   : { x: 0 }
               }
               transition={
                 completed
-                  ? { duration: 0.5, repeat: 1 }
+                  ? { duration: config.isRare ? 0.8 : 0.5, repeat: config.isRare ? 0 : 1 }
                   : { type: "spring", damping: 20, stiffness: 400 }
               }
             >
-              {isBiting || completed ? <DINO_BITE /> : <DINO_IDLE />}
+              {createDinoSVG(config.dinoColor.main, config.dinoColor.dark, isBiting || completed)}
             </motion.div>
 
-            {/* Gift Box */}
+            {/* Gift Box with tier colors */}
             <AnimatePresence>
               {!completed ? (
                 <motion.div
@@ -445,22 +416,26 @@ const DinoUnboxAnimation = ({
                   animate={isBiting ? { rotate: [-5, 5, 0], scale: [1, 0.95, 1] } : {}}
                   transition={{ duration: 0.2 }}
                   exit={{
-                    scale: [1, 1.4, 0],
+                    scale: config.isRare ? [1, 1.8, 0] : [1, 1.4, 0],
                     opacity: [1, 1, 0],
-                    rotate: [0, 15, -30],
+                    rotate: config.isRare ? [0, 30, -45] : [0, 15, -30],
                   }}
                 >
-                  <GiftBox damage={damage} />
+                  <GiftBox damage={damage} colors={config.giftBoxColor} />
                 </motion.div>
               ) : (
                 <motion.div
                   initial={{ scale: 0, rotate: 0 }}
-                  animate={{ scale: [0, 2, 1.2], rotate: [0, 20, -20, 0], opacity: [0, 1, 1] }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  animate={{ 
+                    scale: config.isRare ? [0, 3, 1.5] : [0, 2, 1.2], 
+                    rotate: config.isRare ? [0, 30, -30, 0] : [0, 20, -20, 0], 
+                    opacity: [0, 1, 1] 
+                  }}
+                  transition={{ duration: config.isRare ? 0.8 : 0.6, ease: "easeOut" }}
                   className="absolute flex items-center justify-center"
                   style={{ width: 100, height: 100, right: 20, bottom: 20 }}
                 >
-                  <span className="text-6xl">✨</span>
+                  <span className="text-6xl">{config.isRare ? "🏆" : "✨"}</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -471,8 +446,8 @@ const DinoUnboxAnimation = ({
                 className="absolute rounded-full border-2 border-accent/50"
                 style={{ right: 40, bottom: 40, width: 40, height: 40 }}
                 initial={{ scale: 0.5, opacity: 0.8 }}
-                animate={{ scale: 2.5, opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                animate={{ scale: config.isRare ? 4 : 2.5, opacity: 0 }}
+                transition={{ duration: config.isRare ? 0.4 : 0.3 }}
               />
             )}
           </div>
