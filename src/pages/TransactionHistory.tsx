@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2, ChevronRight, Timer } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,42 @@ const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
 const canRetry = (status: string) => ["expire", "cancel", "deny"].includes(status);
+
+const EXPIRY_HOURS = 24;
+
+const useCountdown = (createdAt: string) => {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const expiryTime = new Date(createdAt).getTime() + EXPIRY_HOURS * 60 * 60 * 1000;
+
+    const calc = () => {
+      const diff = expiryTime - Date.now();
+      if (diff <= 0) { setTimeLeft(""); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`);
+    };
+
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  return timeLeft;
+};
+
+const PendingCountdown = ({ createdAt }: { createdAt: string }) => {
+  const timeLeft = useCountdown(createdAt);
+  if (!timeLeft) return <span className="text-[10px] text-destructive font-medium">Waktu habis</span>;
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-yellow-500">
+      <Timer className="h-3 w-3" />
+      Sisa waktu: {timeLeft}
+    </span>
+  );
+};
 
 const TransactionHistory = () => {
   const { user } = useAuth();
@@ -307,6 +343,11 @@ const TransactionHistory = () => {
                             {tx.payment_type && ` · ${tx.payment_type}`}
                           </p>
                           <p className="mt-0.5 truncate text-[10px] text-muted-foreground/60">{tx.order_id}</p>
+                          {tx.status === "pending" && (
+                            <div className="mt-1">
+                              <PendingCountdown createdAt={tx.created_at} />
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <p className="font-display text-sm font-bold text-foreground">
