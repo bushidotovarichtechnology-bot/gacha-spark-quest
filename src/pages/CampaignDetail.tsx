@@ -584,6 +584,7 @@ const CampaignDetail = () => {
           <DinoUnboxAnimation
             requiredTaps={drawCount > 1 ? 8 : 5}
             drawCount={drawCount}
+            tier={drawnPrizes.length > 0 ? (drawnPrizes[0].tier as "S" | "A" | "B" | "C") : "C"}
             onComplete={() => {
               setIsDrawing(false);
               if (pendingDrawComplete) {
