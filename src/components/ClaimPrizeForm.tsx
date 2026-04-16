@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, MapPin, Truck, ChevronRight, X, Loader2, CheckCircle2 } from "lucide-react";
+import { Package, MapPin, Truck, ChevronRight, X, Loader2, CheckCircle2, CreditCard, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { PROVINCES, getAvailableMethods, getShippingRate } from "@/lib/shippingRates";
 import type { InventoryItem } from "@/context/GachaContext";
 
 interface ClaimPrizeFormProps {
@@ -18,19 +19,29 @@ interface ClaimPrizeFormProps {
   onClaimed: (itemId: string) => void;
 }
 
-const SHIPPING_METHODS = [
-  { id: "regular", labelEn: "Regular (5-7 days)", labelId: "Reguler (5-7 hari)", price: 0 },
-  { id: "express", labelEn: "Express (2-3 days)", labelId: "Express (2-3 hari)", price: 15000 },
-  { id: "same_day", labelEn: "Same Day", labelId: "Same Day", price: 30000 },
-];
+declare global {
+  interface Window {
+    snap: {
+      pay: (token: string, options: {
+        onSuccess?: (result: any) => void;
+        onPending?: (result: any) => void;
+        onError?: (result: any) => void;
+        onClose?: () => void;
+      }) => void;
+    };
+  }
+}
 
 const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const { t, locale } = useI18n();
   const { user } = useAuth();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [showProvinceList, setShowProvinceList] = useState(false);
+  const [provinceSearch, setProvinceSearch] = useState("");
+  const [payingShipping, setPayingShipping] = useState(false);
 
   const [form, setForm] = useState({
     recipientName: "",
@@ -43,7 +54,6 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     notes: "",
   });
 
-  // Auto-fill from profile
   useEffect(() => {
     if (!user) { setLoadingProfile(false); return; }
     supabase
@@ -74,11 +84,29 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const canProceedStep1 = form.recipientName.trim() && form.phone.trim() && form.address.trim();
   const canProceedStep2 = form.city.trim() && form.province.trim() && form.postalCode.trim();
 
+  const availableMethods = useMemo(() => getAvailableMethods(form.province), [form.province]);
+  const shippingCost = useMemo(() => {
+    if (!form.province) return 0;
+    return getShippingRate(form.province, form.shippingMethod);
+  }, [form.province, form.shippingMethod]);
+
+  // Reset shipping method if current is unavailable
+  useEffect(() => {
+    const available = getAvailableMethods(form.province);
+    if (!available.find(m => m.id === form.shippingMethod)) {
+      setForm(prev => ({ ...prev, shippingMethod: "regular" }));
+    }
+  }, [form.province]);
+
+  const filteredProvinces = PROVINCES.filter(p => 
+    p.toLowerCase().includes(provinceSearch.toLowerCase())
+  );
+
   const handleSubmit = async () => {
     if (!user) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("prize_claims").insert({
+      const { data: claimData, error } = await supabase.from("prize_claims").insert({
         user_id: user.id,
         prize_name: item.prize,
         tier_label: item.tier,
@@ -92,15 +120,21 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         province: form.province.trim(),
         postal_code: form.postalCode.trim(),
         shipping_method: form.shippingMethod,
+        shipping_cost: shippingCost,
         notes: form.notes.trim(),
-      });
+      }).select("id").single();
+
       if (error) throw error;
-      setSuccess(true);
-      toast.success(t("claimSubmitted"), { description: t("claimSubmittedDesc") });
-      setTimeout(() => {
-        onClaimed(item.id);
-        onClose();
-      }, 2000);
+
+      if (shippingCost > 0 && claimData) {
+        // Proceed to payment
+        setStep(4);
+        await handleShippingPayment(claimData.id);
+      } else {
+        setSuccess(true);
+        toast.success(t("claimSubmitted"), { description: t("claimSubmittedDesc") });
+        setTimeout(() => { onClaimed(item.id); onClose(); }, 2000);
+      }
     } catch (err: any) {
       toast.error(t("claimFailed"), { description: err.message });
     } finally {
@@ -108,7 +142,60 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     }
   };
 
-  const selectedShipping = SHIPPING_METHODS.find((m) => m.id === form.shippingMethod)!;
+  const handleShippingPayment = async (claimId: string) => {
+    setPayingShipping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-shipping-payment", {
+        body: {
+          claim_id: claimId,
+          shipping_cost: shippingCost,
+          shipping_method: form.shippingMethod,
+          prize_name: item.prize,
+        },
+      });
+
+      if (error || !data?.token) throw new Error(error?.message || "Failed to create shipping payment");
+
+      if (data.client_key) {
+        const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
+        if (script) script.setAttribute("data-client-key", data.client_key);
+      }
+
+      const orderId = data.order_id;
+
+      window.snap.pay(data.token, {
+        onSuccess: async () => {
+          // Mark shipping as paid
+          await supabase
+            .from("prize_claims")
+            .update({ shipping_paid: true })
+            .eq("id", claimId);
+          
+          setSuccess(true);
+          toast.success("Pembayaran ongkir berhasil!", { description: "Hadiah akan segera diproses." });
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 2000);
+        },
+        onPending: () => {
+          toast.info("Pembayaran pending", { description: "Selesaikan pembayaran untuk memproses pengiriman." });
+          setSuccess(true);
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 2000);
+        },
+        onError: () => {
+          toast.error("Pembayaran gagal", { description: "Silakan coba lagi." });
+          setStep(3);
+        },
+        onClose: () => {
+          toast.info("Pembayaran dibatalkan", { description: "Klaim sudah tersimpan, bayar ongkir nanti di Riwayat Klaim." });
+          setStep(3);
+        },
+      });
+    } catch (err: any) {
+      toast.error("Gagal membuat pembayaran ongkir", { description: err.message });
+      setStep(3);
+    } finally {
+      setPayingShipping(false);
+    }
+  };
 
   if (success) {
     return (
@@ -204,12 +291,46 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             {step === 2 && (
               <motion.div key="step2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city">{t("city")}</Label>
-                  <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder={t("cityPh")} maxLength={100} />
+                  <Label htmlFor="province">{t("province")}</Label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowProvinceList(!showProvinceList)}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <span className={form.province ? "text-foreground" : "text-muted-foreground"}>
+                        {form.province || t("provincePh")}
+                      </span>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    {showProvinceList && (
+                      <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
+                        <div className="sticky top-0 bg-card p-2 border-b border-border">
+                          <Input
+                            placeholder="Cari provinsi..."
+                            value={provinceSearch}
+                            onChange={(e) => setProvinceSearch(e.target.value)}
+                            className="h-8 text-xs"
+                            autoFocus
+                          />
+                        </div>
+                        {filteredProvinces.map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => { updateField("province", p); setShowProvinceList(false); setProvinceSearch(""); }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${form.province === p ? "bg-primary/10 text-primary font-medium" : ""}`}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="province">{t("province")}</Label>
-                  <Input id="province" value={form.province} onChange={(e) => updateField("province", e.target.value)} placeholder={t("provincePh")} maxLength={100} />
+                  <Label htmlFor="city">{t("city")}</Label>
+                  <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder={t("cityPh")} maxLength={100} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="postalCode">{t("postalCode")}</Label>
@@ -229,16 +350,17 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1.5"><Truck className="h-4 w-4" /> {t("shippingMethod")}</Label>
                   <RadioGroup value={form.shippingMethod} onValueChange={(v) => updateField("shippingMethod", v)} className="space-y-2">
-                    {SHIPPING_METHODS.map((m) => (
+                    {availableMethods.map((m) => (
                       <label key={m.id} className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
                         form.shippingMethod === m.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                       }`}>
                         <RadioGroupItem value={m.id} />
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-foreground">{locale === "id" ? m.labelId : m.labelEn}</p>
+                          <p className="text-sm font-semibold text-foreground">{m.label}</p>
+                          <p className="text-xs text-muted-foreground">{m.eta}</p>
                         </div>
                         <span className="text-xs font-bold text-accent">
-                          {m.price === 0 ? t("free") : `Rp ${m.price.toLocaleString()}`}
+                          Rp {m.price.toLocaleString()}
                         </span>
                       </label>
                     ))}
@@ -254,16 +376,34 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                 <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("recipientName")}</span><span className="font-medium text-foreground">{form.recipientName}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("phoneNumber")}</span><span className="font-medium text-foreground">{form.phone}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("city")}</span><span className="font-medium text-foreground">{form.city}, {form.province}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("shippingMethod")}</span><span className="font-medium text-foreground">{locale === "id" ? selectedShipping.labelId : selectedShipping.labelEn}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("province")}</span><span className="font-medium text-foreground">{form.province}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("city")}</span><span className="font-medium text-foreground">{form.city}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("shippingMethod")}</span><span className="font-medium text-foreground">{availableMethods.find(m => m.id === form.shippingMethod)?.label}</span></div>
+                  <div className="border-t border-border pt-1.5 mt-1.5">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground font-semibold">Ongkos Kirim</span>
+                      <span className="font-bold text-accent">Rp {shippingCost.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{t("back")}</Button>
                   <Button onClick={handleSubmit} disabled={submitting} className="flex-1 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-                    {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("processing")}</> : <><Package className="h-4 w-4" /> {t("submitClaim")}</>}
+                    {submitting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> {t("processing")}</>
+                    ) : (
+                      <><CreditCard className="h-4 w-4" /> Bayar Rp {shippingCost.toLocaleString()}</>
+                    )}
                   </Button>
                 </div>
+              </motion.div>
+            )}
+
+            {step === 4 && (
+              <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-12 text-center space-y-4">
+                <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Memproses pembayaran ongkir...</p>
               </motion.div>
             )}
           </AnimatePresence>
