@@ -318,6 +318,12 @@ const Inventory = () => {
                     <div className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 font-display text-xs font-black ${meta.color}`}>
                       {item.tier}
                     </div>
+                    {item.campaignId === "redeem-store" && (
+                      <div className="absolute left-2 top-11 flex items-center gap-1 rounded-md bg-primary/90 px-1.5 py-0.5">
+                        <Ticket className="h-3 w-3 text-primary-foreground" />
+                        <span className="text-[9px] font-bold text-primary-foreground">TIKET</span>
+                      </div>
+                    )}
                     {selectMode && (
                       <div className="absolute right-2 top-2">
                         {isSelected
