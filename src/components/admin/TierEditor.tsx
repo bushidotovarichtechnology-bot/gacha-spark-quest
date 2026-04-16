@@ -141,9 +141,6 @@ export function TierEditor({
   const { toast } = useToast();
   const [label, setLabel] = useState(tier.label);
   const [name, setName] = useState(tier.name);
-  const [total, setTotal] = useState(tier.total);
-  const [remaining, setRemaining] = useState(tier.remaining);
-  const [weight, setWeight] = useState(tier.probability_weight);
   const [bulkCoinValue, setBulkCoinValue] = useState("");
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
