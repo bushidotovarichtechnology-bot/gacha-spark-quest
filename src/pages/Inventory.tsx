@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, XCircle } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, XCircle, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -318,6 +318,12 @@ const Inventory = () => {
                     <div className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 font-display text-xs font-black ${meta.color}`}>
                       {item.tier}
                     </div>
+                    {item.campaignId === "redeem-store" && (
+                      <div className="absolute left-2 top-11 flex items-center gap-1 rounded-md bg-primary/90 px-1.5 py-0.5">
+                        <Ticket className="h-3 w-3 text-primary-foreground" />
+                        <span className="text-[9px] font-bold text-primary-foreground">TIKET</span>
+                      </div>
+                    )}
                     {selectMode && (
                       <div className="absolute right-2 top-2">
                         {isSelected
