@@ -8,7 +8,49 @@ interface DinoUnboxAnimationProps {
   onComplete: () => void;
   /** Draw count label */
   drawCount: number;
+  /** Tier of the prize (S/A/B/C) - affects animation intensity */
+  tier?: "S" | "A" | "B" | "C";
 }
+
+// Tier-based configuration
+const TIER_CONFIG = {
+  S: {
+    isRare: true,
+    explosionCount: 60,
+    explosionColors: ["#fbbf24", "#f59e0b", "#d97706", "#fcd34d", "#fff", "#f472b6", "#a78bfa"],
+    screenShakeMultiplier: 3,
+    flashColor: "#fbbf24",
+    giftBoxColor: { main: "#fbbf24", light: "#fcd34d", ribbon: "#dc2626" },
+    dinoColor: { main: "#fbbf24", dark: "#d97706" },
+  },
+  A: {
+    isRare: true,
+    explosionCount: 50,
+    explosionColors: ["#a78bfa", "#8b5cf6", "#7c3aed", "#c4b5fd", "#fff", "#f472b6", "#60a5fa"],
+    screenShakeMultiplier: 2.5,
+    flashColor: "#a78bfa",
+    giftBoxColor: { main: "#8b5cf6", light: "#a78bfa", ribbon: "#fbbf24" },
+    dinoColor: { main: "#8b5cf6", dark: "#7c3aed" },
+  },
+  B: {
+    isRare: false,
+    explosionCount: 35,
+    explosionColors: ["#f472b6", "#ec4899", "#db2777", "#fbcfe8", "#fff", "#a78bfa", "#60a5fa"],
+    screenShakeMultiplier: 1.5,
+    flashColor: "hsl(var(--accent))",
+    giftBoxColor: { main: "#ec4899", light: "#f472b6", ribbon: "#fbbf24" },
+    dinoColor: { main: "#4ade80", dark: "#22c55e" },
+  },
+  C: {
+    isRare: false,
+    explosionCount: 30,
+    explosionColors: ["#facc15", "#a855f7", "#f472b6", "#4ade80", "#38bdf8", "#fb923c", "#fff"],
+    screenShakeMultiplier: 1,
+    flashColor: "hsl(var(--accent))",
+    giftBoxColor: { main: "#a855f7", light: "#c084fc", ribbon: "#facc15" },
+    dinoColor: { main: "#4ade80", dark: "#22c55e" },
+  },
+};
 
 // 8-bit pixel art as inline SVGs for instant loading
 const DINO_IDLE = () => (
@@ -79,7 +121,79 @@ const DINO_BITE = () => (
   </svg>
 );
 
-const GiftBox = ({ damage }: { damage: number }) => {
+// 8-bit pixel art dino variants for different tiers
+const createDinoSVG = (colorMain: string, colorDark: string, isBiting: boolean) => {
+  if (isBiting) {
+    return (
+      <svg viewBox="0 0 32 32" className="w-full h-full" style={{ imageRendering: "pixelated" }}>
+        {/* Body */}
+        <rect x="10" y="14" width="12" height="10" fill={colorMain} />
+        <rect x="8" y="16" width="2" height="6" fill={colorMain} />
+        {/* Head - moved forward */}
+        <rect x="18" y="6" width="10" height="10" fill={colorMain} />
+        <rect x="28" y="6" width="4" height="4" fill={colorMain} />
+        {/* Eye - excited */}
+        <rect x="24" y="8" width="2" height="2" fill="#1a1a2e" />
+        <rect x="24" y="7" width="2" height="1" fill="#fff" />
+        {/* Mouth OPEN - top jaw */}
+        <rect x="28" y="10" width="4" height="2" fill={colorMain} />
+        {/* Mouth OPEN - bottom jaw */}
+        <rect x="28" y="14" width="4" height="2" fill={colorMain} />
+        {/* Teeth */}
+        <rect x="28" y="12" width="1" height="1" fill="#fff" />
+        <rect x="30" y="12" width="1" height="1" fill="#fff" />
+        <rect x="29" y="13" width="1" height="1" fill="#fff" />
+        <rect x="31" y="13" width="1" height="1" fill="#fff" />
+        {/* Arms reaching */}
+        <rect x="22" y="14" width="2" height="2" fill={colorDark} />
+        <rect x="24" y="16" width="2" height="2" fill={colorDark} />
+        {/* Legs */}
+        <rect x="12" y="24" width="3" height="4" fill={colorMain} />
+        <rect x="18" y="24" width="3" height="4" fill={colorMain} />
+        <rect x="11" y="28" width="5" height="2" fill={colorDark} />
+        <rect x="17" y="28" width="5" height="2" fill={colorDark} />
+        {/* Tail */}
+        <rect x="6" y="18" width="4" height="2" fill={colorMain} />
+        <rect x="4" y="16" width="4" height="2" fill={colorMain} />
+        {/* Spikes */}
+        <rect x="12" y="12" width="2" height="2" fill={colorDark} />
+        <rect x="16" y="10" width="2" height="2" fill={colorDark} />
+        <rect x="14" y="12" width="2" height="2" fill={colorDark} />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 32 32" className="w-full h-full" style={{ imageRendering: "pixelated" }}>
+      {/* Body */}
+      <rect x="10" y="14" width="12" height="10" fill={colorMain} />
+      <rect x="8" y="16" width="2" height="6" fill={colorMain} />
+      {/* Head */}
+      <rect x="16" y="6" width="10" height="10" fill={colorMain} />
+      <rect x="26" y="8" width="4" height="4" fill={colorMain} />
+      {/* Eye */}
+      <rect x="22" y="8" width="2" height="2" fill="#1a1a2e" />
+      {/* Mouth closed */}
+      <rect x="26" y="12" width="4" height="2" fill={colorDark} />
+      {/* Arms */}
+      <rect x="22" y="16" width="2" height="4" fill={colorDark} />
+      {/* Legs */}
+      <rect x="12" y="24" width="3" height="4" fill={colorMain} />
+      <rect x="18" y="24" width="3" height="4" fill={colorMain} />
+      {/* Feet */}
+      <rect x="11" y="28" width="5" height="2" fill={colorDark} />
+      <rect x="17" y="28" width="5" height="2" fill={colorDark} />
+      {/* Tail */}
+      <rect x="6" y="18" width="4" height="2" fill={colorMain} />
+      <rect x="4" y="16" width="4" height="2" fill={colorMain} />
+      {/* Spikes */}
+      <rect x="12" y="12" width="2" height="2" fill={colorDark} />
+      <rect x="16" y="10" width="2" height="2" fill={colorDark} />
+      <rect x="14" y="12" width="2" height="2" fill={colorDark} />
+    </svg>
+  );
+};
+
+const GiftBox = ({ damage, colors }: { damage: number; colors: { main: string; light: string; ribbon: string } }) => {
   const crackOpacity = Math.min(damage / 3, 1);
   const shakeIntensity = damage > 0 ? 2 : 0;
 
@@ -92,42 +206,42 @@ const GiftBox = ({ damage }: { damage: number }) => {
       transition={{ duration: 0.15 }}
     >
       {/* Box body */}
-      <rect x="4" y="12" width="20" height="14" fill="#a855f7" />
-      <rect x="6" y="12" width="16" height="14" fill="#c084fc" />
+      <rect x="4" y="12" width="20" height="14" fill={colors.main} />
+      <rect x="6" y="12" width="16" height="14" fill={colors.light} />
       {/* Box lid */}
-      <rect x="2" y="8" width="24" height="4" fill="#a855f7" />
-      <rect x="4" y="8" width="20" height="4" fill="#d8b4fe" />
+      <rect x="2" y="8" width="24" height="4" fill={colors.main} />
+      <rect x="4" y="8" width="20" height="4" fill={colors.light} />
       {/* Ribbon vertical */}
-      <rect x="12" y="8" width="4" height="18" fill="#facc15" />
+      <rect x="12" y="8" width="4" height="18" fill={colors.ribbon} />
       {/* Ribbon bow */}
-      <rect x="8" y="4" width="4" height="4" fill="#facc15" />
-      <rect x="16" y="4" width="4" height="4" fill="#facc15" />
-      <rect x="12" y="6" width="4" height="2" fill="#facc15" />
+      <rect x="8" y="4" width="4" height="4" fill={colors.ribbon} />
+      <rect x="16" y="4" width="4" height="4" fill={colors.ribbon} />
+      <rect x="12" y="6" width="4" height="2" fill={colors.ribbon} />
       {/* Cracks based on damage */}
       {damage >= 1 && (
         <>
-          <rect x="8" y="14" width="2" height="1" fill="#7c3aed" opacity={crackOpacity} />
-          <rect x="10" y="15" width="1" height="2" fill="#7c3aed" opacity={crackOpacity} />
+          <rect x="8" y="14" width="2" height="1" fill="#000" opacity={crackOpacity} />
+          <rect x="10" y="15" width="1" height="2" fill="#000" opacity={crackOpacity} />
         </>
       )}
       {damage >= 2 && (
         <>
-          <rect x="18" y="16" width="2" height="1" fill="#7c3aed" opacity={crackOpacity} />
-          <rect x="17" y="17" width="1" height="2" fill="#7c3aed" opacity={crackOpacity} />
-          <rect x="6" y="20" width="1" height="2" fill="#7c3aed" opacity={crackOpacity} />
+          <rect x="18" y="16" width="2" height="1" fill="#000" opacity={crackOpacity} />
+          <rect x="17" y="17" width="1" height="2" fill="#000" opacity={crackOpacity} />
+          <rect x="6" y="20" width="1" height="2" fill="#000" opacity={crackOpacity} />
         </>
       )}
       {damage >= 3 && (
         <>
-          <rect x="14" y="18" width="3" height="1" fill="#7c3aed" />
-          <rect x="7" y="10" width="2" height="1" fill="#7c3aed" />
-          <rect x="19" y="10" width="2" height="1" fill="#7c3aed" />
+          <rect x="14" y="18" width="3" height="1" fill="#000" />
+          <rect x="7" y="10" width="2" height="1" fill="#000" />
+          <rect x="19" y="10" width="2" height="1" fill="#000" />
         </>
       )}
       {damage >= 4 && (
         <>
-          <rect x="4" y="9" width="1" height="2" fill="#7c3aed" />
-          <rect x="23" y="9" width="1" height="2" fill="#7c3aed" />
+          <rect x="4" y="9" width="1" height="2" fill="#000" />
+          <rect x="23" y="9" width="1" height="2" fill="#000" />
           {/* Light rays */}
           <rect x="13" y="14" width="2" height="2" fill="#fef08a" opacity={0.8} />
         </>
@@ -146,10 +260,6 @@ const Particle = ({ delay, x, y, color }: { delay: number; x: number; y: number;
   />
 );
 
-const EXPLOSION_COLORS = [
-  "#facc15", "#a855f7", "#f472b6", "#4ade80", "#38bdf8", "#fb923c", "#fff",
-];
-
 const ExplosionParticle = ({ x, y, size, color, delay }: { x: number; y: number; size: number; color: string; delay: number }) => (
   <motion.div
     initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
@@ -160,15 +270,32 @@ const ExplosionParticle = ({ x, y, size, color, delay }: { x: number; y: number;
   />
 );
 
-const FlashOverlay = () => (
+const FlashOverlay = ({ color = "hsl(var(--accent))" }: { color?: string }) => (
   <motion.div
     initial={{ opacity: 0.9 }}
     animate={{ opacity: 0 }}
     transition={{ duration: 0.4 }}
     className="fixed inset-0 z-[60] pointer-events-none"
-    style={{ backgroundColor: "hsl(var(--accent))" }}
+    style={{ backgroundColor: color }}
   />
 );
+
+const RareGlow = ({ isRare }: { isRare: boolean }) => {
+  if (!isRare) return null;
+  return (
+    <motion.div
+      className="absolute inset-0 pointer-events-none"
+      animate={{
+        boxShadow: [
+          "inset 0 0 50px rgba(251, 191, 36, 0.2)",
+          "inset 0 0 100px rgba(251, 191, 36, 0.4)",
+          "inset 0 0 50px rgba(251, 191, 36, 0.2)",
+        ],
+      }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+    />
+  );
+};
 
 const DinoUnboxAnimation = ({
   requiredTaps = 5,
