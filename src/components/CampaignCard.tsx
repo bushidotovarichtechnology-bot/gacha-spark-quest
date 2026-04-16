@@ -54,6 +54,11 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
                 <Flame className="h-3 w-3" /> {t("hot")}
               </div>
             )}
+            {isSoldOut && (
+              <div className="absolute right-3 top-3 rounded-full bg-muted/90 px-2.5 py-1 text-xs font-bold text-muted-foreground backdrop-blur-sm">
+                Sold Out
+              </div>
+            )}
             {isLow && (
               <div className="absolute right-3 top-3 rounded-full bg-accent/90 px-2.5 py-1 text-xs font-bold text-accent-foreground backdrop-blur-sm animate-pulse-glow">
                 {t("almostGone")}
