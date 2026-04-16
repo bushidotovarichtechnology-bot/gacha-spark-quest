@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, Fragment } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trop
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
+import DinoUnboxAnimation from "@/components/DinoUnboxAnimation";
 import PrizeImagePreview from "@/components/PrizeImagePreview";
 import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
@@ -14,7 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
-import dinoUnboxAsset from "@/assets/dino-unbox.mp4.asset.json";
+
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
 import campaignWallet from "@/assets/campaign-wallet.jpg";
 import campaignFigurine from "@/assets/campaign-figurine.jpg";
@@ -139,6 +140,7 @@ const CampaignDetail = () => {
   const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
+  const [pendingDrawComplete, setPendingDrawComplete] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
@@ -208,11 +210,12 @@ const CampaignDetail = () => {
 
     setDrawCount(actualCount);
     setIsDrawing(true);
+    setPendingDrawComplete(false);
 
-    setTimeout(async () => {
+    // Run draw calculation immediately (async for DB writes)
+    (async () => {
       const results: { tier: string; color: string; prize: string; isPityReward?: boolean; coinValue: number }[] = [];
       let batchHasPity = false;
-      // Track remaining per prize
       const prizeRemainingCopy: Record<string, number> = {};
       tiers.forEach((t) => {
         t.prizes.forEach((p: any) => { prizeRemainingCopy[p.id] = p.remaining; });
@@ -221,7 +224,6 @@ const CampaignDetail = () => {
       for (let i = 0; i < actualCount; i++) {
         let localPityCount = drawsSinceTierA;
 
-        // Build active tiers based on prizes that still have remaining
         const allActiveTiers = tiers
           .map((t) => {
             const activePrizes = t.prizes.filter((p: any) => (prizeRemainingCopy[p.id] ?? 0) > 0);
@@ -229,12 +231,11 @@ const CampaignDetail = () => {
           })
           .filter((t) => t.tierRemaining > 0);
 
-        // Grand Prize (Tier S) can only be obtained when it's the ONLY prize remaining
         const totalRemainingAll = allActiveTiers.reduce((s, t) => s + t.tierRemaining, 0);
         const tierSOnly = allActiveTiers.filter((t) => t.label === "S");
         const tierSRemaining = tierSOnly.reduce((s, t) => s + t.tierRemaining, 0);
         const activeTiers = (tierSRemaining > 0 && totalRemainingAll > tierSRemaining)
-          ? allActiveTiers.filter((t) => t.label !== "S") // Exclude S if other prizes still exist
+          ? allActiveTiers.filter((t) => t.label !== "S")
           : allActiveTiers;
 
         if (activeTiers.length === 0) break;
@@ -271,7 +272,6 @@ const CampaignDetail = () => {
           localPityCount++;
         }
 
-        // Pick a specific prize weighted by probability_weight
         const activePrizes = selectedTier.prizes;
         const totalPrizeWeight = activePrizes.reduce((a: number, p: any) => a + p.probability_weight, 0);
         let pr = Math.random() * totalPrizeWeight;
@@ -282,7 +282,6 @@ const CampaignDetail = () => {
         }
 
         const newRemaining = (prizeRemainingCopy[selectedPrize.id] ?? 0) - 1;
-        // Auto-refill: if remaining hits 0 and auto_refill is enabled, reset to total
         if (newRemaining <= 0 && selectedPrize.auto_refill) {
           prizeRemainingCopy[selectedPrize.id] = selectedPrize.total;
         } else {
@@ -303,7 +302,7 @@ const CampaignDetail = () => {
         results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
       }
 
-      // Update remaining counts per prize in database
+      // DB writes
       const prizeUpdates = Object.entries(prizeRemainingCopy).map(([prizeId, rem]) =>
         supabase.from("tier_prizes").update({ remaining: rem }).eq("id", prizeId)
       );
@@ -323,7 +322,6 @@ const CampaignDetail = () => {
 
       const drawResults = await Promise.all([...prizeUpdates, ...drawInserts]);
 
-      // Insert redeem tickets for each draw
       if (user) {
         const ticketInserts = results.map((r, idx) => {
           const drawResult = drawResults[Object.keys(prizeRemainingCopy).length + idx] as any;
@@ -340,7 +338,6 @@ const CampaignDetail = () => {
         });
         await Promise.all(ticketInserts);
 
-        // Show ticket notification
         const totalTickets = results.reduce((sum, r) => sum + (ticketValues[r.tier] || 1), 0);
         toast.success(`🎫 Kamu mendapat ${totalTickets} Bushido Tiket!`);
       }
@@ -348,11 +345,11 @@ const CampaignDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
 
+      // Store results but wait for dino animation completion
       setDrawnPrizes(results);
       setHasPityReward(batchHasPity);
-      setIsDrawing(false);
-      setShowResult(true);
-    }, 2400);
+      setPendingDrawComplete(true);
+    })();
   };
 
   return (
@@ -584,41 +581,16 @@ const CampaignDetail = () => {
 
       <AnimatePresence>
         {isDrawing && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-lg"
-          >
-            <div className="flex flex-col items-center gap-4">
-              {/* Dino unboxing video */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", damping: 12 }}
-                className="relative overflow-hidden rounded-2xl border-2 border-primary/50 box-glow-purple"
-                style={{ width: 280, height: 280 }}
-              >
-                <video
-                  src={dinoUnboxAsset.url}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-              </motion.div>
-
-              <motion.p
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="font-display text-sm tracking-widest text-muted-foreground"
-              >
-                {drawCount > 1 ? t("drawingMulti", { count: drawCount }) : t("drawing")}
-              </motion.p>
-            </div>
-          </motion.div>
+          <DinoUnboxAnimation
+            requiredTaps={drawCount > 1 ? 8 : 5}
+            drawCount={drawCount}
+            onComplete={() => {
+              setIsDrawing(false);
+              if (pendingDrawComplete) {
+                setShowResult(true);
+              }
+            }}
+          />
         )}
       </AnimatePresence>
 
