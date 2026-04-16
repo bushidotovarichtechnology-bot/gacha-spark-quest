@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trophy } from "lucide-react";
+import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trophy, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
@@ -669,22 +669,31 @@ const CampaignDetail = () => {
                   )}
                 </div>
               </div>
-              <Button
-                variant="neon"
-                onClick={() => handleDraw(1)}
-                disabled={isDrawing || totalRemaining <= 0}
-                className="gap-1.5 px-5"
-              >
-                <Zap className="h-4 w-4" /> {t("draw1x")}
-              </Button>
-              <Button
-                variant="gold"
-                onClick={() => handleDraw(10)}
-                disabled={isDrawing || totalRemaining <= 0}
-                className="gap-1.5 px-5"
-              >
-                <Sparkles className="h-4 w-4" /> {t("draw10x")}
-              </Button>
+              {totalRemaining <= 0 ? (
+                <div className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border px-5 py-2.5 text-sm font-semibold text-muted-foreground">
+                  <Ban className="h-4 w-4" />
+                  Sold Out — Semua hadiah sudah habis
+                </div>
+              ) : (
+                <>
+                  <Button
+                    variant="neon"
+                    onClick={() => handleDraw(1)}
+                    disabled={isDrawing}
+                    className="gap-1.5 px-5"
+                  >
+                    <Zap className="h-4 w-4" /> {t("draw1x")}
+                  </Button>
+                  <Button
+                    variant="gold"
+                    onClick={() => handleDraw(10)}
+                    disabled={isDrawing}
+                    className="gap-1.5 px-5"
+                  >
+                    <Sparkles className="h-4 w-4" /> {t("draw10x")}
+                  </Button>
+                </>
+              )}
             </>
           )}
         </div>
