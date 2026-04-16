@@ -191,7 +191,12 @@ const TopUp = () => {
       };
 
       window.snap.pay(data.token, {
-        onSuccess: () => {
+        onSuccess: async (result: any) => {
+          // Update transaction status in DB
+          await supabase
+            .from("transactions")
+            .update({ status: "settlement", payment_type: result?.payment_type || null })
+            .eq("order_id", orderId);
           addCoins(totalCoins);
           toast({
             title: t("purchaseSuccess"),
