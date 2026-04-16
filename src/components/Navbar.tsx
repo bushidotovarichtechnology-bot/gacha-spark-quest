@@ -36,7 +36,7 @@ const Navbar = () => {
     { to: "/history", label: t("drawHistory"), icon: History },
     { to: "/claims", label: t("claimHistory"), icon: ClipboardList },
     { to: "/transactions", label: "Transaksi", icon: Receipt },
-    { to: "/redeem", label: "Redeem", icon: Ticket },
+    { to: "/redeem", label: "Bushido Tiket", icon: Ticket },
     { to: "/gift", label: "Gift Koin", icon: Gift },
   ];
 
