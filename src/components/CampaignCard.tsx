@@ -16,8 +16,9 @@ interface CampaignCardProps {
 
 const CampaignCard = ({ id, title, image, price, remaining, total, hot }: CampaignCardProps) => {
   const { t } = useI18n();
-  const percentage = (remaining / total) * 100;
-  const isLow = percentage < 30;
+  const percentage = total > 0 ? (remaining / total) * 100 : 0;
+  const isSoldOut = remaining <= 0;
+  const isLow = !isSoldOut && percentage < 30;
   const prevRemaining = useRef(remaining);
   const [flash, setFlash] = useState(false);
 
@@ -51,6 +52,11 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
             {hot && (
               <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-destructive/90 px-2.5 py-1 text-xs font-bold text-destructive-foreground backdrop-blur-sm">
                 <Flame className="h-3 w-3" /> {t("hot")}
+              </div>
+            )}
+            {isSoldOut && (
+              <div className="absolute right-3 top-3 rounded-full bg-muted/90 px-2.5 py-1 text-xs font-bold text-muted-foreground backdrop-blur-sm">
+                Sold Out
               </div>
             )}
             {isLow && (
