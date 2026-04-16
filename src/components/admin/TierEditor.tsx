@@ -229,20 +229,7 @@ export function TierEditor({
         </label>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-2">
-        <div>
-          <label className="text-xs text-muted-foreground">Total</label>
-          <Input type="number" value={total} onChange={(e) => setTotal(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Remaining</label>
-          <Input type="number" value={remaining} onChange={(e) => setRemaining(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Weight</label>
-          <Input type="number" step="0.1" value={weight} onChange={(e) => setWeight(Number(e.target.value))} className="h-7 text-sm" />
-        </div>
-      </div>
+
 
       {/* Bulk coin value edit */}
       <div className="flex items-center gap-2 mb-2">
