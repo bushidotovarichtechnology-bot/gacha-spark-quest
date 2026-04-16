@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User } from "lucide-react";
+import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User, ExternalLink, Copy } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
+import { toast } from "sonner";
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
   pending: { icon: Clock, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
@@ -28,6 +29,13 @@ interface Claim {
   province: string;
   postal_code: string;
   shipping_method: string;
+  shipping_cost: number;
+  shipping_paid: boolean;
+  tracking_number: string | null;
+  courier_name: string | null;
+  tracking_url: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -53,15 +61,45 @@ const ClaimHistory = () => {
       setLoading(false);
     };
     fetchClaims();
+
+    // Realtime subscription for live tracking updates
+    const channel = supabase
+      .channel("my-claims")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "prize_claims",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as Claim;
+          setClaims(prev => prev.map(c => c.id === updated.id ? updated : c));
+
+          // Show notification for status changes
+          if (updated.status === "shipped" && updated.tracking_number) {
+            toast.success("📦 Paket dikirim!", {
+              description: `${updated.prize_name} dikirim via ${updated.courier_name || "kurir"} - ${updated.tracking_number}`,
+            });
+          } else if (updated.status === "delivered") {
+            toast.success("✅ Paket sampai!", {
+              description: `${updated.prize_name} telah diterima.`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const statuses = ["all", "pending", "processing", "shipped", "delivered"];
   const filtered = filter === "all" ? claims : claims.filter((c) => c.status === filter);
 
-  const shippingLabels: Record<string, string> = {
-    regular: "Regular (3-5 days)",
-    express: "Express (1-2 days)",
-    same_day: "Same Day",
+  const copyTracking = (num: string) => {
+    navigator.clipboard.writeText(num);
+    toast.success("Nomor resi disalin!");
   };
 
   return (
@@ -160,6 +198,67 @@ const ClaimHistory = () => {
                           })}
                         </div>
 
+                        {/* Tracking Info */}
+                        {claim.tracking_number && (
+                          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                            <p className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1">
+                              <Truck className="h-3.5 w-3.5" /> Informasi Pengiriman
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Kurir</p>
+                                <p className="text-sm font-semibold">{claim.courier_name || "-"}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground">No. Resi</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-sm font-mono font-semibold">{claim.tracking_number}</p>
+                                  <button onClick={() => copyTracking(claim.tracking_number!)} className="text-muted-foreground hover:text-foreground">
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            {claim.shipped_at && (
+                              <p className="text-xs text-muted-foreground">
+                                Dikirim: {format(new Date(claim.shipped_at), "dd MMM yyyy, HH:mm")}
+                              </p>
+                            )}
+                            {claim.delivered_at && (
+                              <p className="text-xs text-green-400">
+                                Diterima: {format(new Date(claim.delivered_at), "dd MMM yyyy, HH:mm")}
+                              </p>
+                            )}
+                            {claim.tracking_url && (
+                              <a
+                                href={claim.tracking_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
+                              >
+                                <ExternalLink className="h-3 w-3" /> Lacak Paket
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Shipping cost */}
+                        {claim.shipping_cost > 0 && (
+                          <div className="flex items-center justify-between text-sm rounded-lg border border-border p-2.5">
+                            <span className="text-muted-foreground">Ongkos Kirim</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Rp {claim.shipping_cost.toLocaleString()}</span>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                claim.shipping_paid
+                                  ? "bg-green-400/10 text-green-400 border border-green-400/30"
+                                  : "bg-yellow-400/10 text-yellow-400 border border-yellow-400/30"
+                              }`}>
+                                {claim.shipping_paid ? "Lunas" : "Belum Bayar"}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-start gap-2">
                             <User className="h-4 w-4 text-muted-foreground mt-0.5" />
@@ -186,7 +285,7 @@ const ClaimHistory = () => {
                             <Truck className="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div>
                               <p className="text-muted-foreground text-xs">{t("shippingMethod")}</p>
-                              <p className="font-medium">{shippingLabels[claim.shipping_method] || claim.shipping_method}</p>
+                              <p className="font-medium capitalize">{claim.shipping_method}</p>
                             </div>
                           </div>
                         </div>
