@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, Truck, Clock, CheckCircle2, Loader2, Eye, X, MapPin, Phone, User, FileText } from "lucide-react";
+import { Package, Truck, Clock, CheckCircle2, Loader2, Eye, X, MapPin, Phone, User, FileText, Save, Hash, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -22,8 +24,15 @@ interface Claim {
   province: string;
   postal_code: string;
   shipping_method: string;
+  shipping_cost: number;
+  shipping_paid: boolean;
   status: string;
   notes: string;
+  tracking_number: string | null;
+  courier_name: string | null;
+  tracking_url: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,9 +44,14 @@ const STATUS_OPTIONS = [
   { value: "delivered", label: "Delivered", icon: CheckCircle2, color: "bg-green-500/10 text-green-500 border-green-500/30" },
 ];
 
+const COURIER_OPTIONS = [
+  "JNE", "J&T Express", "SiCepat", "AnterAja", "Ninja Express",
+  "POS Indonesia", "TIKI", "GoSend", "GrabExpress", "Lainnya",
+];
+
 const SHIPPING_LABELS: Record<string, string> = {
-  regular: "Regular (5-7 days)",
-  express: "Express (2-3 days)",
+  regular: "Regular",
+  express: "Express",
   same_day: "Same Day",
 };
 
@@ -47,6 +61,10 @@ const AdminClaims = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  // Tracking form state
+  const [trackingForm, setTrackingForm] = useState({ courier_name: "", tracking_number: "", tracking_url: "" });
+  const [savingTracking, setSavingTracking] = useState(false);
 
   const fetchClaims = async () => {
     const { data, error } = await supabase
@@ -59,24 +77,65 @@ const AdminClaims = () => {
 
   useEffect(() => { fetchClaims(); }, []);
 
+  // Populate tracking form when selecting a claim
+  useEffect(() => {
+    if (selectedClaim) {
+      setTrackingForm({
+        courier_name: selectedClaim.courier_name || "",
+        tracking_number: selectedClaim.tracking_number || "",
+        tracking_url: selectedClaim.tracking_url || "",
+      });
+    }
+  }, [selectedClaim]);
+
   const updateStatus = async (id: string, newStatus: string) => {
     setUpdatingId(id);
-    const { error } = await supabase
-      .from("prize_claims")
-      .update({ status: newStatus })
-      .eq("id", id);
+    const updateData: Record<string, any> = { status: newStatus };
+    if (newStatus === "delivered") updateData.delivered_at = new Date().toISOString();
+
+    const { error } = await supabase.from("prize_claims").update(updateData).eq("id", id);
     if (error) {
       toast.error("Failed to update status", { description: error.message });
     } else {
-      setClaims((prev) => prev.map((c) => c.id === id ? { ...c, status: newStatus } : c));
+      setClaims((prev) => prev.map((c) => c.id === id ? { ...c, ...updateData } : c));
       toast.success("Status updated", { description: `Claim set to ${newStatus}` });
-      if (selectedClaim?.id === id) setSelectedClaim((prev) => prev ? { ...prev, status: newStatus } : null);
+      if (selectedClaim?.id === id) setSelectedClaim((prev) => prev ? { ...prev, ...updateData } : null);
     }
     setUpdatingId(null);
   };
 
-  const filtered = filterStatus === "all" ? claims : claims.filter((c) => c.status === filterStatus);
+  const saveTracking = async () => {
+    if (!selectedClaim) return;
+    if (!trackingForm.tracking_number.trim()) {
+      toast.error("Nomor resi wajib diisi");
+      return;
+    }
+    if (!trackingForm.courier_name.trim()) {
+      toast.error("Kurir wajib dipilih");
+      return;
+    }
 
+    setSavingTracking(true);
+    const updateData: Record<string, any> = {
+      tracking_number: trackingForm.tracking_number.trim(),
+      courier_name: trackingForm.courier_name.trim(),
+      tracking_url: trackingForm.tracking_url.trim() || null,
+      status: "shipped",
+      shipped_at: selectedClaim.shipped_at || new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("prize_claims").update(updateData).eq("id", selectedClaim.id);
+    if (error) {
+      toast.error("Gagal menyimpan tracking", { description: error.message });
+    } else {
+      setClaims((prev) => prev.map((c) => c.id === selectedClaim.id ? { ...c, ...updateData } : c));
+      setSelectedClaim((prev) => prev ? { ...prev, ...updateData } : null);
+      toast.success("Tracking berhasil disimpan!", { description: `Resi: ${trackingForm.tracking_number}` });
+    }
+    setSavingTracking(false);
+  };
+
+  const filtered = filterStatus === "all" ? claims : claims.filter((c) => c.status === filterStatus);
   const statusMeta = (status: string) => STATUS_OPTIONS.find((s) => s.value === status) || STATUS_OPTIONS[0];
 
   const statusCounts = {
@@ -133,6 +192,7 @@ const AdminClaims = () => {
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Prize</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Recipient</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Shipping</th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Resi</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
                 <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Date</th>
                 <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Actions</th>
@@ -163,8 +223,21 @@ const AdminClaims = () => {
                       <p className="font-medium text-foreground">{claim.recipient_name}</p>
                       <p className="text-xs text-muted-foreground">{claim.city}, {claim.province}</p>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {SHIPPING_LABELS[claim.shipping_method] || claim.shipping_method}
+                    <td className="px-4 py-3">
+                      <p className="text-xs text-muted-foreground">{SHIPPING_LABELS[claim.shipping_method] || claim.shipping_method}</p>
+                      {claim.shipping_cost > 0 && (
+                        <p className="text-xs font-medium text-foreground">Rp {claim.shipping_cost.toLocaleString()}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {claim.tracking_number ? (
+                        <div>
+                          <p className="text-xs font-mono font-medium text-foreground">{claim.tracking_number}</p>
+                          <p className="text-[10px] text-muted-foreground">{claim.courier_name}</p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/50">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant="outline" className={`gap-1 ${sm.color}`}>
@@ -177,19 +250,11 @@ const AdminClaims = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <Select
-                          value={claim.status}
-                          onValueChange={(v) => updateStatus(claim.id, v)}
-                          disabled={updatingId === claim.id}
-                        >
-                          <SelectTrigger className="h-8 w-[130px] text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
+                        <Select value={claim.status} onValueChange={(v) => updateStatus(claim.id, v)} disabled={updatingId === claim.id}>
+                          <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {STATUS_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                                {opt.label}
-                              </SelectItem>
+                              <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -245,6 +310,64 @@ const AdminClaims = () => {
                 </Select>
               </div>
 
+              {/* Tracking input section */}
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <Hash className="h-3.5 w-3.5" /> Input Tracking / Resi
+                </h3>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Kurir</Label>
+                  <Select value={trackingForm.courier_name} onValueChange={(v) => setTrackingForm(p => ({ ...p, courier_name: v }))}>
+                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih kurir..." /></SelectTrigger>
+                    <SelectContent>
+                      {COURIER_OPTIONS.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Nomor Resi</Label>
+                  <Input
+                    value={trackingForm.tracking_number}
+                    onChange={(e) => setTrackingForm(p => ({ ...p, tracking_number: e.target.value }))}
+                    placeholder="Masukkan nomor resi..."
+                    className="h-9 text-sm font-mono"
+                    maxLength={50}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Link Tracking (opsional)</Label>
+                  <Input
+                    value={trackingForm.tracking_url}
+                    onChange={(e) => setTrackingForm(p => ({ ...p, tracking_url: e.target.value }))}
+                    placeholder="https://..."
+                    className="h-9 text-sm"
+                    maxLength={500}
+                  />
+                </div>
+
+                <Button onClick={saveTracking} disabled={savingTracking} className="w-full gap-2 h-9">
+                  {savingTracking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Simpan Resi & Set Shipped
+                </Button>
+
+                {selectedClaim.tracking_number && (
+                  <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2 space-y-1">
+                    <p>Resi aktif: <span className="font-mono font-semibold text-foreground">{selectedClaim.tracking_number}</span></p>
+                    <p>Kurir: <span className="font-semibold text-foreground">{selectedClaim.courier_name}</span></p>
+                    {selectedClaim.tracking_url && (
+                      <a href={selectedClaim.tracking_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                        <ExternalLink className="h-3 w-3" /> Buka link tracking
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Recipient info */}
               <div className="space-y-3 rounded-xl border border-border p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recipient</h3>
@@ -252,6 +375,12 @@ const AdminClaims = () => {
                 <div className="flex items-start gap-2"><Phone className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" /><span className="text-sm text-foreground">{selectedClaim.phone}</span></div>
                 <div className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" /><span className="text-sm text-foreground">{selectedClaim.address}, {selectedClaim.city}, {selectedClaim.province} {selectedClaim.postal_code}</span></div>
                 <div className="flex items-start gap-2"><Truck className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" /><span className="text-sm text-foreground">{SHIPPING_LABELS[selectedClaim.shipping_method] || selectedClaim.shipping_method}</span></div>
+                {selectedClaim.shipping_cost > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Ongkir:</span>
+                    <span className="font-semibold">Rp {selectedClaim.shipping_cost.toLocaleString()} {selectedClaim.shipping_paid ? "✅ Lunas" : "⏳ Belum Bayar"}</span>
+                  </div>
+                )}
                 {selectedClaim.notes && (
                   <div className="flex items-start gap-2"><FileText className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" /><span className="text-sm text-foreground">{selectedClaim.notes}</span></div>
                 )}
