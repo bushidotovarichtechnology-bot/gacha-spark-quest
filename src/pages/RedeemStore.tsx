@@ -78,6 +78,18 @@ const RedeemStore = () => {
         reward_name: reward.name,
         tickets_spent: reward.ticket_cost,
       });
+
+      // Add to user inventory
+      await supabase.from("user_inventory").insert({
+        user_id: user.id,
+        prize_name: reward.name,
+        tier_label: "A",
+        campaign_id: "redeem-store",
+        campaign_name: "Bushido Tiket Store",
+        image_url: reward.image_url || "",
+        coin_value: 0,
+        won_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       toast.success("🎉 Hadiah berhasil ditukar!");
