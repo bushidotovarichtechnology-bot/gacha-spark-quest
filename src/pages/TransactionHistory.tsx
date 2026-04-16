@@ -49,24 +49,35 @@ const TransactionHistory = () => {
   const [retrying, setRetrying] = useState<string | null>(null);
   const prevStatusRef = useRef<Record<string, string>>({});
 
+  const fetchTransactions = async () => {
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) {
+      const txs = data as unknown as Transaction[];
+      setTransactions(txs);
+      const statusMap: Record<string, string> = {};
+      txs.forEach((tx) => { statusMap[tx.id] = tx.status; });
+      prevStatusRef.current = statusMap;
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchTransactions();
+    refreshCoins?.();
+    toast.success("Data transaksi diperbarui");
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-    const fetchTx = async () => {
-      const { data } = await supabase
-        .from("transactions")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (data) {
-        const txs = data as unknown as Transaction[];
-        setTransactions(txs);
-        // Store initial statuses
-        const statusMap: Record<string, string> = {};
-        txs.forEach((tx) => { statusMap[tx.id] = tx.status; });
-        prevStatusRef.current = statusMap;
-      }
+    const load = async () => {
+      await fetchTransactions();
       setLoading(false);
     };
-    fetchTx();
+    load();
 
     // Subscribe to realtime changes
     const channel = supabase
