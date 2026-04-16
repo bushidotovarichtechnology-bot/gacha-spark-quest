@@ -342,7 +342,7 @@ const CampaignDetail = () => {
 
         // Show ticket notification
         const totalTickets = results.reduce((sum, r) => sum + (ticketValues[r.tier] || 1), 0);
-        toast.success(`🎫 Kamu mendapat ${totalTickets} tiket redeem!`);
+        toast.success(`🎫 Kamu mendapat ${totalTickets} Bushido Tiket!`);
       }
 
       queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });

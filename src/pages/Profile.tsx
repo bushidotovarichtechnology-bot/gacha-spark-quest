@@ -184,7 +184,7 @@ const Profile = () => {
         body: { code: couponCode.trim() },
       });
       if (error || !data?.success) {
-        throw new Error(data?.error || error?.message || "Gagal redeem kupon");
+        throw new Error(data?.error || error?.message || "Gagal menggunakan Bushido Kupon");
       }
       if (data.benefit_type === "bonus_coins") {
         addCoins(data.benefit_value);
