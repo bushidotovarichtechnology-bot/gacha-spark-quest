@@ -343,6 +343,11 @@ const TransactionHistory = () => {
                             {tx.payment_type && ` · ${tx.payment_type}`}
                           </p>
                           <p className="mt-0.5 truncate text-[10px] text-muted-foreground/60">{tx.order_id}</p>
+                          {tx.status === "pending" && (
+                            <div className="mt-1">
+                              <PendingCountdown createdAt={tx.created_at} />
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <p className="font-display text-sm font-bold text-foreground">
