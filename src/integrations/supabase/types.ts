@@ -843,6 +843,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_pending_transactions: { Args: never; Returns: number }
       get_admin_stats: { Args: never; Returns: Json }
       get_all_users_admin: {
         Args: never
