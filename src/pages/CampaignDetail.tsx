@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trop
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
+import DinoUnboxAnimation from "@/components/DinoUnboxAnimation";
 import PrizeImagePreview from "@/components/PrizeImagePreview";
 import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
