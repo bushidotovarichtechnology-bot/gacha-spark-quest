@@ -146,7 +146,7 @@ const Index = () => {
     queryFn: async () => {
       let query = supabase
         .from("campaigns")
-        .select("*, campaign_tiers(remaining, total)")
+        .select("*, campaign_tiers(id, remaining, total, label)")
         .eq("is_active", true)
         .order("created_at", { ascending: true });
 
@@ -157,10 +157,36 @@ const Index = () => {
       const { data: camps, error } = await query;
       if (error) throw error;
 
+      // Fetch actual prize counts from tier_prizes
+      const tierIds = (camps || []).flatMap((c) =>
+        (c.campaign_tiers || []).map((t: { id: string }) => t.id)
+      );
+
+      let prizeCounts: Record<string, { remaining: number; total: number }> = {};
+      if (tierIds.length > 0) {
+        const { data: prizes } = await supabase
+          .from("tier_prizes")
+          .select("tier_id, remaining, total")
+          .in("tier_id", tierIds);
+
+        (prizes || []).forEach((p) => {
+          if (!prizeCounts[p.tier_id]) prizeCounts[p.tier_id] = { remaining: 0, total: 0 };
+          prizeCounts[p.tier_id].remaining += p.remaining;
+          prizeCounts[p.tier_id].total += p.total;
+        });
+      }
+
       return (camps || []).map((c) => {
         const tiers = c.campaign_tiers || [];
-        const remaining = tiers.reduce((s: number, t: { remaining: number }) => s + t.remaining, 0);
-        const total = tiers.reduce((s: number, t: { total: number }) => s + t.total, 0);
+        let remaining = 0;
+        let total = 0;
+        tiers.forEach((t: { id: string }) => {
+          const pc = prizeCounts[t.id];
+          if (pc) {
+            remaining += pc.remaining;
+            total += pc.total;
+          }
+        });
         return {
           id: c.id,
           title: c.title,
