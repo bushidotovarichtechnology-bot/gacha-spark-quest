@@ -15,7 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
-import dinoUnboxAsset from "@/assets/dino-unbox.mp4.asset.json";
+
 import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
 import campaignWallet from "@/assets/campaign-wallet.jpg";
 import campaignFigurine from "@/assets/campaign-figurine.jpg";
