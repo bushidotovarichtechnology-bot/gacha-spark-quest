@@ -49,49 +49,37 @@ const RedeemStore = () => {
 
   const redeemMutation = useMutation({
     mutationFn: async (reward: any) => {
-      if (!user) throw new Error("Not authenticated");
-      if (ticketBalance < reward.ticket_cost) throw new Error("Tiket tidak cukup");
-
-      // Deduct tickets from oldest first
-      let toDeduct = reward.ticket_cost;
-      const { data: tickets } = await supabase
-        .from("redeem_tickets")
-        .select("*")
-        .eq("user_id", user.id)
-        .gt("remaining", 0)
-        .order("created_at", { ascending: true });
-
-      if (!tickets) throw new Error("Gagal mengambil data tiket");
-
-      for (const ticket of tickets) {
-        if (toDeduct <= 0) break;
-        const deduct = Math.min(toDeduct, ticket.remaining);
-        await supabase.from("redeem_tickets").update({ remaining: ticket.remaining - deduct }).eq("id", ticket.id);
-        toDeduct -= deduct;
+      if (!user) throw new Error("Belum login");
+      const { data, error } = await supabase.functions.invoke("redeem-reward", {
+        body: { reward_id: reward.id },
+      });
+      if (error) {
+        // Try to extract structured error from edge function response
+        const ctx: any = (error as any).context;
+        let code: string | undefined;
+        try {
+          const txt = await ctx?.text?.();
+          if (txt) code = JSON.parse(txt)?.error;
+        } catch { /* ignore */ }
+        const map: Record<string, string> = {
+          out_of_stock: "Stok hadiah habis",
+          insufficient_tickets: "Tiket tidak cukup",
+          reward_inactive: "Hadiah tidak aktif",
+          reward_not_found: "Hadiah tidak ditemukan",
+          unauthorized: "Sesi berakhir, silakan login ulang",
+        };
+        throw new Error(map[code ?? ""] ?? error.message ?? "Gagal menukar hadiah");
       }
-
-      // Decrease stock
-      await supabase.from("redeem_rewards").update({ stock: reward.stock - 1 }).eq("id", reward.id);
-
-      // Create claim
-      await supabase.from("redeem_claims").insert({
-        user_id: user.id,
-        reward_id: reward.id,
-        reward_name: reward.name,
-        tickets_spent: reward.ticket_cost,
-      });
-
-      // Add to user inventory
-      await supabase.from("user_inventory").insert({
-        user_id: user.id,
-        prize_name: reward.name,
-        tier_label: "A",
-        campaign_id: "redeem-store",
-        campaign_name: "Bushido Tiket Store",
-        image_url: reward.image_url || "",
-        coin_value: 0,
-        won_at: new Date().toISOString(),
-      });
+      if ((data as any)?.error) {
+        const map: Record<string, string> = {
+          out_of_stock: "Stok hadiah habis",
+          insufficient_tickets: "Tiket tidak cukup",
+          reward_inactive: "Hadiah tidak aktif",
+          reward_not_found: "Hadiah tidak ditemukan",
+        };
+        throw new Error(map[(data as any).error] ?? (data as any).error);
+      }
+      return data;
     },
     onSuccess: async () => {
       toast.success("🎉 Hadiah berhasil ditukar! Cek inventory kamu.");

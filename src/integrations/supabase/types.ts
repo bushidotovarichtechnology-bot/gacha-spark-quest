@@ -1073,6 +1073,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_reward: { Args: { _reward_id: string }; Returns: Json }
       secure_draw: {
         Args: { _campaign_id: string; _draw_count: number }
         Returns: Json
