@@ -38,6 +38,7 @@ import AdminRewards from "./pages/admin/AdminRewards.tsx";
 import AdminCoinPackages from "./pages/admin/AdminCoinPackages.tsx";
 import AdminCoupons from "./pages/admin/AdminCoupons.tsx";
 import AdminShipping from "./pages/admin/AdminShipping.tsx";
+import AdminGachaLogs from "./pages/admin/AdminGachaLogs.tsx";
 import RedeemStore from "./pages/RedeemStore.tsx";
 import GiftCoins from "./pages/GiftCoins.tsx";
 import Profile from "./pages/Profile.tsx";
