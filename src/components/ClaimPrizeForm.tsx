@@ -1,22 +1,16 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Truck, ChevronRight, X, Loader2, CheckCircle2, CreditCard, ChevronDown } from "lucide-react";
+import { Package, ChevronRight, X, Loader2, CheckCircle2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  fetchShippingZones,
-  getProvincesList,
-  getAvailableMethodsFromZones,
-  getShippingRateFromZones,
-  type ShippingZone,
-} from "@/lib/shippingRates";
+import BiteshipAreaPicker, { type BiteshipArea } from "@/components/BiteshipAreaPicker";
+import BiteshipRatePicker, { type BiteshipRate } from "@/components/BiteshipRatePicker";
 import type { InventoryItem } from "@/context/GachaContext";
 
 interface ClaimPrizeFormProps {
@@ -39,37 +33,31 @@ declare global {
 }
 
 const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { user } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [showProvinceList, setShowProvinceList] = useState(false);
-  const [provinceSearch, setProvinceSearch] = useState("");
   const [payingShipping, setPayingShipping] = useState(false);
-  const [zones, setZones] = useState<ShippingZone[]>([]);
 
   const [form, setForm] = useState({
     recipientName: "",
     phone: "",
     address: "",
-    city: "",
-    province: "",
-    postalCode: "",
-    shippingMethod: "regular",
     notes: "",
   });
 
-  useEffect(() => {
-    fetchShippingZones().then(setZones);
-  }, []);
+  const [area, setArea] = useState<BiteshipArea | null>(null);
+  const [rates, setRates] = useState<BiteshipRate[]>([]);
+  const [ratesLoading, setRatesLoading] = useState(false);
+  const [selectedRate, setSelectedRate] = useState<BiteshipRate | null>(null);
 
   useEffect(() => {
     if (!user) { setLoadingProfile(false); return; }
     supabase
       .from("profiles")
-      .select("recipient_name, phone, address, city, province, postal_code")
+      .select("recipient_name, phone, address")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -79,39 +67,51 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             recipientName: data.recipient_name || prev.recipientName,
             phone: data.phone || prev.phone,
             address: data.address || prev.address,
-            city: data.city || prev.city,
-            province: data.province || prev.province,
-            postalCode: data.postal_code || prev.postalCode,
           }));
         }
         setLoadingProfile(false);
       });
   }, [user]);
 
-  const updateField = (field: string, value: string) => {
+  const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
 
   const canProceedStep1 = form.recipientName.trim() && form.phone.trim() && form.address.trim();
-  const canProceedStep2 = form.city.trim() && form.province.trim() && form.postalCode.trim();
+  const canProceedStep2 = !!area;
 
-  const provinces = useMemo(() => getProvincesList(zones), [zones]);
-  const availableMethods = useMemo(() => getAvailableMethodsFromZones(zones, form.province), [zones, form.province]);
-  const shippingCost = useMemo(() => getShippingRateFromZones(zones, form.province, form.shippingMethod), [zones, form.province, form.shippingMethod]);
-
-  useEffect(() => {
-    const available = getAvailableMethodsFromZones(zones, form.province);
-    if (!available.find(m => m.id === form.shippingMethod)) {
-      setForm(prev => ({ ...prev, shippingMethod: "regular" }));
+  const fetchRates = async () => {
+    if (!area) return;
+    setRatesLoading(true);
+    setSelectedRate(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("biteship-rates", {
+        body: { destination_area_id: area.id, weight: 1000 },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "Gagal memuat tarif");
+      const list: BiteshipRate[] = data.pricing || [];
+      setRates(list);
+      if (list.length > 0) setSelectedRate(list[0]);
+    } catch (err: any) {
+      toast.error("Gagal memuat tarif kurir", { description: err.message });
+      setRates([]);
+    } finally {
+      setRatesLoading(false);
     }
-  }, [form.province, zones]);
+  };
 
-  const filteredProvinces = provinces.filter(p =>
-    p.toLowerCase().includes(provinceSearch.toLowerCase())
-  );
+  // auto-fetch rates when entering step 3 with area set
+  useEffect(() => {
+    if (step === 3 && area && rates.length === 0 && !ratesLoading) {
+      fetchRates();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, area]);
+
+  const shippingCost = selectedRate?.price ?? 0;
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || !area || !selectedRate) return;
     setSubmitting(true);
     try {
       const { data: claimData, error } = await supabase.from("prize_claims").insert({
@@ -124,10 +124,14 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         recipient_name: form.recipientName.trim(),
         phone: form.phone.trim(),
         address: form.address.trim(),
-        city: form.city.trim(),
-        province: form.province.trim(),
-        postal_code: form.postalCode.trim(),
-        shipping_method: form.shippingMethod,
+        city: area.administrative_division_level_2_name,
+        province: area.administrative_division_level_1_name,
+        postal_code: String(area.postal_code),
+        destination_area_id: area.id,
+        shipping_method: selectedRate.courier_service_code,
+        courier_company: selectedRate.courier_code,
+        courier_service: selectedRate.courier_service_name,
+        shipping_eta: selectedRate.duration,
         shipping_cost: shippingCost,
         notes: form.notes.trim(),
       }).select("id").single();
@@ -150,13 +154,14 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   };
 
   const handleShippingPayment = async (claimId: string) => {
+    if (!selectedRate) return;
     setPayingShipping(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-shipping-payment", {
         body: {
           claim_id: claimId,
           shipping_cost: shippingCost,
-          shipping_method: form.shippingMethod,
+          shipping_method: `${selectedRate.courier_name} ${selectedRate.courier_service_name}`,
           prize_name: item.prize,
         },
       });
@@ -277,38 +282,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
             {step === 2 && (
               <motion.div key="s2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>{t("province")}</Label>
-                  <div className="relative">
-                    <button type="button" onClick={() => setShowProvinceList(!showProvinceList)}
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                      <span className={form.province ? "text-foreground" : "text-muted-foreground"}>{form.province || t("provincePh")}</span>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                    {showProvinceList && (
-                      <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
-                        <div className="sticky top-0 bg-card p-2 border-b border-border">
-                          <Input placeholder="Cari provinsi..." value={provinceSearch} onChange={(e) => setProvinceSearch(e.target.value)} className="h-8 text-xs" autoFocus />
-                        </div>
-                        {filteredProvinces.map((p) => (
-                          <button key={p} type="button"
-                            onClick={() => { updateField("province", p); setShowProvinceList(false); setProvinceSearch(""); }}
-                            className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${form.province === p ? "bg-primary/10 text-primary font-medium" : ""}`}>
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("city")}</Label>
-                  <Input value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder={t("cityPh")} maxLength={100} />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("postalCode")}</Label>
-                  <Input value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} placeholder="xxxxx" maxLength={10} />
-                </div>
+                <BiteshipAreaPicker value={area} onChange={(a) => { setArea(a); setRates([]); setSelectedRate(null); }} />
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1">{t("back")}</Button>
                   <Button onClick={() => setStep(3)} disabled={!canProceedStep2} className="flex-1 gap-2">{t("nextStep")} <ChevronRight className="h-4 w-4" /></Button>
@@ -318,23 +292,14 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
             {step === 3 && (
               <motion.div key="s3" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-1.5"><Truck className="h-4 w-4" /> {t("shippingMethod")}</Label>
-                  <RadioGroup value={form.shippingMethod} onValueChange={(v) => updateField("shippingMethod", v)} className="space-y-2">
-                    {availableMethods.map((m) => (
-                      <label key={m.id} className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
-                        form.shippingMethod === m.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                      }`}>
-                        <RadioGroupItem value={m.id} />
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-foreground">{m.label}</p>
-                          <p className="text-xs text-muted-foreground">{m.eta}</p>
-                        </div>
-                        <span className="text-xs font-bold text-accent">Rp {m.price.toLocaleString()}</span>
-                      </label>
-                    ))}
-                  </RadioGroup>
-                </div>
+                <BiteshipRatePicker
+                  rates={rates}
+                  loading={ratesLoading}
+                  selected={selectedRate ? `${selectedRate.courier_code}:${selectedRate.courier_service_code}` : null}
+                  onSelect={setSelectedRate}
+                  onRefresh={fetchRates}
+                  hasArea={!!area}
+                />
 
                 <div className="space-y-2">
                   <Label>{t("claimNotes")}</Label>
@@ -344,21 +309,27 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                 {/* Summary */}
                 <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1.5 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("recipientName")}</span><span className="font-medium text-foreground">{form.recipientName}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("province")}</span><span className="font-medium text-foreground">{form.province}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("city")}</span><span className="font-medium text-foreground">{form.city}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("shippingMethod")}</span><span className="font-medium text-foreground">{availableMethods.find(m => m.id === form.shippingMethod)?.label}</span></div>
+                  {area && (
+                    <>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Area Tujuan</span><span className="font-medium text-foreground text-right truncate ml-2 max-w-[60%]">{area.administrative_division_level_3_name}, {area.administrative_division_level_2_name}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">{t("province")}</span><span className="font-medium text-foreground">{area.administrative_division_level_1_name}</span></div>
+                    </>
+                  )}
+                  {selectedRate && (
+                    <div className="flex justify-between"><span className="text-muted-foreground">Kurir</span><span className="font-medium text-foreground">{selectedRate.courier_name} · {selectedRate.courier_service_name}</span></div>
+                  )}
                   <div className="border-t border-border pt-1.5 mt-1.5">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground font-semibold">Ongkos Kirim</span>
-                      <span className="font-bold text-accent">Rp {shippingCost.toLocaleString()}</span>
+                      <span className="font-bold text-accent">Rp {shippingCost.toLocaleString("id-ID")}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(2)} className="flex-1">{t("back")}</Button>
-                  <Button onClick={handleSubmit} disabled={submitting} className="flex-1 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-                    {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("processing")}</> : <><CreditCard className="h-4 w-4" /> Bayar Rp {shippingCost.toLocaleString()}</>}
+                  <Button onClick={handleSubmit} disabled={submitting || !selectedRate} className="flex-1 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+                    {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("processing")}</> : <><CreditCard className="h-4 w-4" /> Bayar Rp {shippingCost.toLocaleString("id-ID")}</>}
                   </Button>
                 </div>
               </motion.div>
