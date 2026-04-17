@@ -7,7 +7,7 @@ import { useI18n } from "@/context/I18nContext";
 interface PrizeRevealModalProps {
   open: boolean;
   onClose: () => void;
-  prizes: { tier: string; color: string; prize: string; isPityReward?: boolean }[];
+  prizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
   drawCount: number;
   hasPityReward?: boolean;
 }
@@ -324,9 +324,19 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                 transition={{ delay: 0.2, type: "spring" }}
                 className="mx-auto mb-4"
               >
-                <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient}`}>
-                  <span className="text-4xl">{config.emoji}</span>
-                </div>
+                {prize.image ? (
+                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} p-0.5`}>
+                    <img
+                      src={prize.image}
+                      alt={prize.prize}
+                      className="h-full w-full rounded-xl object-cover bg-card"
+                    />
+                  </div>
+                ) : (
+                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient}`}>
+                    <span className="text-4xl">{config.emoji}</span>
+                  </div>
+                )}
               </motion.div>
 
               <motion.div
@@ -363,10 +373,11 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                   <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                     {sorted.map((p, i) => {
                       const c = tierConfig[p.tier] || tierConfig.C;
+                      const isActive = p === prize;
                       return (
                         <div
                           key={i}
-                          className={`flex h-6 w-6 items-center justify-center rounded text-[10px] font-black bg-gradient-to-br ${c.gradient} text-background ${i === currentIndex ? "ring-2 ring-foreground" : "opacity-60"}`}
+                          className={`flex h-6 w-6 items-center justify-center rounded text-[10px] font-black bg-gradient-to-br ${c.gradient} text-background ${isActive ? "ring-2 ring-foreground" : "opacity-60"}`}
                         >
                           {p.tier}
                         </div>
