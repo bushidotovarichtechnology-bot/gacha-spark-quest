@@ -64,6 +64,7 @@ const AdminClaims = () => {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPayment, setFilterPayment] = useState<"actionable" | "all" | "unpaid" | "failed">("actionable");
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
