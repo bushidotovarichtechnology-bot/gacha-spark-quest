@@ -56,6 +56,18 @@ const Profile = () => {
   const [redeemingCoupon, setRedeemingCoupon] = useState(false);
   const [redemptions, setRedemptions] = useState<any[]>([]);
 
+  // Indonesian provinces & cities for address dropdowns
+  const { provinces, loading: provincesLoading } = useProvinces();
+  const { cities, loading: citiesLoading } = useCitiesForProvince(profile.province);
+
+  // Reset city when province change makes current city invalid
+  useEffect(() => {
+    if (!profile.province || citiesLoading) return;
+    if (cities.length > 0 && profile.city && !cities.includes(profile.city)) {
+      setProfile((prev) => ({ ...prev, city: "" }));
+    }
+  }, [profile.province, cities, citiesLoading, profile.city]);
+
   const fetchRedemptions = async () => {
     if (!user) return;
     const { data } = await supabase
