@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
 
 const RedeemStore = () => {
