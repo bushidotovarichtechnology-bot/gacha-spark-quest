@@ -585,6 +585,8 @@ const CampaignDetail = () => {
             requiredTaps={drawCount > 1 ? 8 : 5}
             drawCount={drawCount}
             tier={drawnPrizes.length > 0 ? (drawnPrizes[0].tier as "S" | "A" | "B" | "C") : "C"}
+            prizeImage={drawnPrizes[0]?.image}
+            prizeName={drawnPrizes[0]?.prize}
             onComplete={() => {
               setIsDrawing(false);
               if (pendingDrawComplete) {
