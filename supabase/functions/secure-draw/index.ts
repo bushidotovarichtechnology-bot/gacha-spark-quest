@@ -28,13 +28,13 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: claims, error: claimErr } = await supabase.auth.getClaims(
+    const { data: userData, error: claimErr } = await supabase.auth.getUser(
       authHeader.replace("Bearer ", "")
     );
-    if (claimErr || !claims?.claims?.sub) {
+    if (claimErr || !userData?.user?.id) {
       return json(401, { error: "unauthorized" });
     }
-    const userId = claims.claims.sub as string;
+    const userId = userData.user.id;
 
     // Validate body
     let body: { campaign_id?: string; draw_count?: number };
