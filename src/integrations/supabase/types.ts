@@ -386,6 +386,45 @@ export type Database = {
         }
         Relationships: []
       }
+      gacha_logs: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          draw_count: number
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          result_summary: Json
+          status: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          draw_count?: number
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          result_summary?: Json
+          status?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          draw_count?: number
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          result_summary?: Json
+          status?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       pity_settings: {
         Row: {
           campaign_id: string
@@ -864,6 +903,8 @@ export type Database = {
           draws_since_tier_a: number
           free_draws: number
           id: string
+          last_draw_at: string | null
+          last_draw_ip: string | null
           updated_at: string
           user_id: string
         }
@@ -874,6 +915,8 @@ export type Database = {
           draws_since_tier_a?: number
           free_draws?: number
           id?: string
+          last_draw_at?: string | null
+          last_draw_ip?: string | null
           updated_at?: string
           user_id: string
         }
@@ -884,6 +927,8 @@ export type Database = {
           draws_since_tier_a?: number
           free_draws?: number
           id?: string
+          last_draw_at?: string | null
+          last_draw_ip?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1006,6 +1051,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      secure_draw: {
+        Args: { _campaign_id: string; _draw_count: number }
+        Returns: Json
       }
     }
     Enums: {
