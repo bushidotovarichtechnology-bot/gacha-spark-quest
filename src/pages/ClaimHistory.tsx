@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User, ExternalLink, Copy, RefreshCw, MapPinned } from "lucide-react";
+import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User, ExternalLink, Copy, RefreshCw, MapPinned, Loader2, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
+declare global {
+  interface Window { snap?: any; }
+}
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
   pending: { icon: Clock, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
