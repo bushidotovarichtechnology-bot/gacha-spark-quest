@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, Truck, Clock, CheckCircle2, Loader2, Eye, X, MapPin, Phone, User, FileText, Save, Hash, ExternalLink, Zap } from "lucide-react";
+import { Package, Truck, Clock, CheckCircle2, Loader2, Eye, X, MapPin, Phone, User, FileText, Save, Hash, ExternalLink, Zap, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,6 +70,7 @@ const AdminClaims = () => {
   const [trackingForm, setTrackingForm] = useState({ courier_name: "", tracking_number: "", tracking_url: "" });
   const [savingTracking, setSavingTracking] = useState(false);
   const [creatingBiteship, setCreatingBiteship] = useState(false);
+  const [cancellingBiteship, setCancellingBiteship] = useState(false);
 
   const createBiteshipOrder = async () => {
     if (!selectedClaim) return;
@@ -84,7 +85,6 @@ const AdminClaims = () => {
       toast.success("Order Biteship dibuat!", {
         description: data.waybill_id ? `AWB: ${data.waybill_id}` : `Order ID: ${data.order_id}`,
       });
-      // Refresh
       await fetchClaims();
       const { data: refreshed } = await supabase.from("prize_claims").select("*").eq("id", selectedClaim.id).maybeSingle();
       if (refreshed) setSelectedClaim(refreshed as Claim);
@@ -92,6 +92,29 @@ const AdminClaims = () => {
       toast.error("Gagal membuat order Biteship", { description: err?.message || "Unknown error" });
     } finally {
       setCreatingBiteship(false);
+    }
+  };
+
+  const cancelBiteshipOrder = async () => {
+    if (!selectedClaim) return;
+    const reason = window.prompt("Alasan pembatalan order Biteship?", "Cancelled by admin");
+    if (reason === null) return;
+    if (!window.confirm(`Yakin batalkan order Biteship ${selectedClaim.shipping_order_id}? Status akan kembali ke pending dan AWB dihapus.`)) return;
+    setCancellingBiteship(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("biteship-cancel-order", {
+        body: { claim_id: selectedClaim.id, reason },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Order Biteship dibatalkan");
+      await fetchClaims();
+      const { data: refreshed } = await supabase.from("prize_claims").select("*").eq("id", selectedClaim.id).maybeSingle();
+      if (refreshed) setSelectedClaim(refreshed as Claim);
+    } catch (err: any) {
+      toast.error("Gagal membatalkan order", { description: err?.message || "Unknown error" });
+    } finally {
+      setCancellingBiteship(false);
     }
   };
 
@@ -348,9 +371,20 @@ const AdminClaims = () => {
                   Generate AWB otomatis dari Biteship pakai data klaim & origin gudang. Status akan jadi <span className="font-semibold">shipped</span>.
                 </p>
                 {selectedClaim.shipping_order_id ? (
-                  <div className="text-xs bg-muted/50 rounded-lg p-2 space-y-1">
-                    <p>Order ID: <span className="font-mono font-semibold text-foreground">{selectedClaim.shipping_order_id}</span></p>
-                    {selectedClaim.tracking_number && <p>AWB: <span className="font-mono font-semibold text-foreground">{selectedClaim.tracking_number}</span></p>}
+                  <div className="space-y-2">
+                    <div className="text-xs bg-muted/50 rounded-lg p-2 space-y-1">
+                      <p>Order ID: <span className="font-mono font-semibold text-foreground">{selectedClaim.shipping_order_id}</span></p>
+                      {selectedClaim.tracking_number && <p>AWB: <span className="font-mono font-semibold text-foreground">{selectedClaim.tracking_number}</span></p>}
+                    </div>
+                    <Button
+                      onClick={cancelBiteshipOrder}
+                      disabled={cancellingBiteship}
+                      variant="destructive"
+                      className="w-full gap-2 h-9"
+                    >
+                      {cancellingBiteship ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                      Cancel Order Biteship
+                    </Button>
                   </div>
                 ) : (
                   <Button
