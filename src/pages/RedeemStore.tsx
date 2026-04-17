@@ -93,8 +93,9 @@ const RedeemStore = () => {
         won_at: new Date().toISOString(),
       });
     },
-    onSuccess: () => {
-      toast.success("🎉 Hadiah berhasil ditukar!");
+    onSuccess: async () => {
+      toast.success("🎉 Hadiah berhasil ditukar! Cek inventory kamu.");
+      await refreshInventory();
       queryClient.invalidateQueries({ queryKey: ["ticket-balance"] });
       queryClient.invalidateQueries({ queryKey: ["redeem-rewards"] });
       queryClient.invalidateQueries({ queryKey: ["redeem-claims"] });
