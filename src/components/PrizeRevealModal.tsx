@@ -111,9 +111,17 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                         rare ? "border-accent/30 bg-accent/5" : "border-border bg-secondary/30"
                       }`}
                     >
-                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${c.gradient} text-sm font-black text-background`}>
-                        {p.tier}
-                      </div>
+                      {p.image ? (
+                        <img
+                          src={p.image}
+                          alt={p.prize}
+                          className={`h-9 w-9 shrink-0 rounded-lg object-cover border bg-gradient-to-br ${c.gradient} p-0.5`}
+                        />
+                      ) : (
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${c.gradient} text-sm font-black text-background`}>
+                          {p.tier}
+                        </div>
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className={`truncate text-sm font-semibold ${rare ? "text-accent" : "text-foreground"}`}>
                           {p.prize}
