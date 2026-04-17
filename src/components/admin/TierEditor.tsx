@@ -84,6 +84,21 @@ function SortablePrizeRow({
         }} placeholder="0" title="Nilai daur ulang (koin)" />
       </div>
       <div className="flex items-center gap-1">
+        <label className="text-[10px] text-muted-foreground">Berat (g)</label>
+        <Input
+          type="number"
+          min={1}
+          className="h-6 w-16 text-xs"
+          value={(p as any).weight_grams ?? 1000}
+          onChange={async (e) => {
+            await supabase.from("tier_prizes").update({ weight_grams: Number(e.target.value) } as any).eq("id", p.id);
+            onRefresh();
+          }}
+          placeholder="1000"
+          title="Berat paket dalam gram untuk perhitungan ongkir Biteship"
+        />
+      </div>
+      <div className="flex items-center gap-1">
         <label className="text-[10px] text-muted-foreground">Rem</label>
         <Input type="number" className="h-6 w-14 text-xs" value={p.remaining} onChange={async (e) => {
           await supabase.from("tier_prizes").update({ remaining: Number(e.target.value) }).eq("id", p.id);

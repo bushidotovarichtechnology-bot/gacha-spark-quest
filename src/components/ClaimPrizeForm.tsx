@@ -84,8 +84,23 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     setRatesLoading(true);
     setSelectedRate(null);
     try {
+      // Resolve weight from tier_prizes by prize name + tier (best-effort)
+      let weight = 1000;
+      try {
+        const { data: prizeRow } = await supabase
+          .from("tier_prizes")
+          .select("weight_grams, campaign_tiers!inner(campaign_id, label)")
+          .eq("name", item.prize)
+          .eq("campaign_tiers.campaign_id", item.campaignId)
+          .eq("campaign_tiers.label", item.tier)
+          .maybeSingle();
+        if (prizeRow && (prizeRow as any).weight_grams) {
+          weight = Number((prizeRow as any).weight_grams) || 1000;
+        }
+      } catch { /* fallback to default 1000 */ }
+
       const { data, error } = await supabase.functions.invoke("biteship-rates", {
-        body: { destination_area_id: area.id, weight: 1000 },
+        body: { destination_area_id: area.id, weight },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "Gagal memuat tarif");
