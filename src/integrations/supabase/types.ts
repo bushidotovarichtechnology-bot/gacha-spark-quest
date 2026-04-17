@@ -425,6 +425,27 @@ export type Database = {
         }
         Relationships: []
       }
+      indonesian_cities: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          province: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          province: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          province?: string
+        }
+        Relationships: []
+      }
       pity_settings: {
         Row: {
           campaign_id: string
