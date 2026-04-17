@@ -373,10 +373,11 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                   <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                     {sorted.map((p, i) => {
                       const c = tierConfig[p.tier] || tierConfig.C;
+                      const isActive = p === prize;
                       return (
                         <div
                           key={i}
-                          className={`flex h-6 w-6 items-center justify-center rounded text-[10px] font-black bg-gradient-to-br ${c.gradient} text-background ${i === currentIndex ? "ring-2 ring-foreground" : "opacity-60"}`}
+                          className={`flex h-6 w-6 items-center justify-center rounded text-[10px] font-black bg-gradient-to-br ${c.gradient} text-background ${isActive ? "ring-2 ring-foreground" : "opacity-60"}`}
                         >
                           {p.tier}
                         </div>
