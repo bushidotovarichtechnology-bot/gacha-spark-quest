@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Save, Loader2, MapPin, Truck, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ShippingZone } from "@/lib/shippingRates";
+import LocationCombobox from "@/components/LocationCombobox";
+import { useProvinces } from "@/hooks/use-indonesian-locations";
 
 const AdminShipping = () => {
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [newProvince, setNewProvince] = useState<Record<string, string>>({});
+  const { provinces: allProvinces, loading: provincesLoading } = useProvinces();
 
   useEffect(() => {
     fetchZones();
@@ -134,14 +137,19 @@ const AdminShipping = () => {
                 ))}
               </div>
               <div className="flex gap-2">
-                <Input
-                  placeholder="Tambah provinsi..."
-                  value={newProvince[zone.id] || ""}
-                  onChange={(e) => setNewProvince(prev => ({ ...prev, [zone.id]: e.target.value }))}
-                  onKeyDown={(e) => e.key === "Enter" && addProvince(zone.id)}
-                  className="h-8 text-xs flex-1"
-                />
-                <Button size="sm" variant="outline" onClick={() => addProvince(zone.id)} className="h-8 gap-1 text-xs">
+                <div className="flex-1">
+                  <LocationCombobox
+                    value={newProvince[zone.id] || ""}
+                    onChange={(v) => setNewProvince(prev => ({ ...prev, [zone.id]: v }))}
+                    options={allProvinces.filter(p => !zones.some(z => z.provinces.includes(p)))}
+                    placeholder="Pilih provinsi untuk ditambah..."
+                    searchPlaceholder="Cari provinsi..."
+                    emptyText="Semua provinsi sudah digunakan."
+                    loading={provincesLoading}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <Button size="sm" variant="outline" onClick={() => addProvince(zone.id)} className="h-8 gap-1 text-xs" disabled={!newProvince[zone.id]}>
                   <Plus className="h-3 w-3" /> Tambah
                 </Button>
               </div>
