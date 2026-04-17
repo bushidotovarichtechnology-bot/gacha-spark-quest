@@ -60,7 +60,7 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
-  const { addPrize, totalCoins, spendCoins, drawsSinceTierA, freeDraws, activeDiscountPercent, useFreeDraws, clearDiscount } = useGacha();
+  const { totalCoins, drawsSinceTierA, freeDraws, activeDiscountPercent, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -171,7 +171,7 @@ const CampaignDetail = () => {
   const totalRemaining = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.remaining, 0), 0);
   const totalTickets = tiers.reduce((s, t) => s + t.prizes.reduce((ps: number, p: any) => ps + p.total, 0), 0);
 
-  const handleDraw = (count: number) => {
+  const handleDraw = async (count: number) => {
     if (!user) {
       toast.error("Silakan login terlebih dahulu untuk melakukan gacha!");
       navigate("/login");
@@ -180,176 +180,64 @@ const CampaignDetail = () => {
     if (isDrawing || totalRemaining <= 0) return;
     const actualCount = Math.min(count, totalRemaining);
 
-    // Calculate cost considering free draws and discount
-    const freeUsed = Math.min(freeDraws, actualCount);
-    const paidCount = actualCount - freeUsed;
-    const pricePerDraw = activeDiscountPercent > 0
-      ? Math.round(campaign.price * (1 - activeDiscountPercent / 100))
-      : campaign.price;
-    const totalCost = paidCount * pricePerDraw;
-
-    if (totalCoins < totalCost) {
-      toast.error(t("insufficientCoins"));
-      return;
-    }
-
-    if (totalCost > 0 && !spendCoins(totalCost)) {
-      toast.error(t("insufficientCoins"));
-      return;
-    }
-
-    // Consume free draws
-    if (freeUsed > 0) {
-      useFreeDraws(freeUsed);
-      toast.success(`Menggunakan ${freeUsed}x gacha gratis!`);
-    }
-    // Clear discount after use
-    if (activeDiscountPercent > 0 && paidCount > 0) {
-      clearDiscount();
-    }
-
+    // Optimistic UI lock — prevent double-click / spam BEFORE network call
     setDrawCount(actualCount);
     setIsDrawing(true);
     setPendingDrawComplete(false);
 
-    // Run draw calculation immediately (async for DB writes)
-    (async () => {
-      const results: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean; coinValue: number }[] = [];
-      let batchHasPity = false;
-      const prizeRemainingCopy: Record<string, number> = {};
-      tiers.forEach((t) => {
-        t.prizes.forEach((p: any) => { prizeRemainingCopy[p.id] = p.remaining; });
+    try {
+      const { data, error } = await supabase.functions.invoke("secure-draw", {
+        body: { campaign_id: campaignId, draw_count: actualCount },
       });
 
-      for (let i = 0; i < actualCount; i++) {
-        let localPityCount = drawsSinceTierA;
-
-        const allActiveTiers = tiers
-          .map((t) => {
-            const activePrizes = t.prizes.filter((p: any) => (prizeRemainingCopy[p.id] ?? 0) > 0);
-            return { ...t, prizes: activePrizes, tierRemaining: activePrizes.reduce((s: number, p: any) => s + (prizeRemainingCopy[p.id] ?? 0), 0) };
-          })
-          .filter((t) => t.tierRemaining > 0);
-
-        const totalRemainingAll = allActiveTiers.reduce((s, t) => s + t.tierRemaining, 0);
-        const tierSOnly = allActiveTiers.filter((t) => t.label === "S");
-        const tierSRemaining = tierSOnly.reduce((s, t) => s + t.tierRemaining, 0);
-        const activeTiers = (tierSRemaining > 0 && totalRemainingAll > tierSRemaining)
-          ? allActiveTiers.filter((t) => t.label !== "S")
-          : allActiveTiers;
-
-        if (activeTiers.length === 0) break;
-
-        let selectedTier;
-
-        const isPityDraw = pityEnabled && localPityCount >= pityThreshold - 1;
-        const tierOrder = ["S", "A", "B", "C"];
-        const guaranteedIdx = tierOrder.indexOf(pityGuaranteedTier);
-        const rareTiers = activeTiers.filter((t) => tierOrder.indexOf(t.label) <= guaranteedIdx);
-
-        if (isPityDraw && rareTiers.length > 0) {
-          batchHasPity = true;
-          const totalRareWeight = rareTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
-          let r = Math.random() * totalRareWeight;
-          selectedTier = rareTiers[rareTiers.length - 1];
-          for (const tier of rareTiers) {
-            r -= Number(tier.probability_weight);
-            if (r <= 0) { selectedTier = tier; break; }
-          }
-        } else {
-          const totalWeight = activeTiers.reduce((a, b) => a + Number(b.probability_weight), 0);
-          let r = Math.random() * totalWeight;
-          selectedTier = activeTiers[activeTiers.length - 1];
-          for (const tier of activeTiers) {
-            r -= Number(tier.probability_weight);
-            if (r <= 0) { selectedTier = tier; break; }
-          }
-        }
-
-        if (selectedTier.label === "S" || selectedTier.label === "A") {
-          localPityCount = 0;
-        } else {
-          localPityCount++;
-        }
-
-        const activePrizes = selectedTier.prizes;
-        const totalPrizeWeight = activePrizes.reduce((a: number, p: any) => a + p.probability_weight, 0);
-        let pr = Math.random() * totalPrizeWeight;
-        let selectedPrize = activePrizes[activePrizes.length - 1];
-        for (const p of activePrizes) {
-          pr -= p.probability_weight;
-          if (pr <= 0) { selectedPrize = p; break; }
-        }
-
-        const newRemaining = (prizeRemainingCopy[selectedPrize.id] ?? 0) - 1;
-        if (newRemaining <= 0 && selectedPrize.auto_refill) {
-          prizeRemainingCopy[selectedPrize.id] = selectedPrize.total;
-        } else {
-          prizeRemainingCopy[selectedPrize.id] = newRemaining;
-        }
-
-        const prizeCoinValue = selectedPrize.coin_value > 0 ? selectedPrize.coin_value : (coinValues[selectedTier.label] || 15);
-
-        addPrize({
-          prize: selectedPrize.name,
-          tier: selectedTier.label as "S" | "A" | "B" | "C",
-          campaign: campaign.title,
-          campaignId: campaign.id,
-          image: selectedPrize.image_url || image,
-          coinValue: prizeCoinValue,
-        });
-
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, image: selectedPrize.image_url || image, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
+      if (error || !data?.success) {
+        const code = (data as any)?.error || error?.message || "draw_failed";
+        const messages: Record<string, string> = {
+          rate_limited: "Terlalu cepat! Tunggu 2 detik sebelum gacha lagi.",
+          insufficient_coins: t("insufficientCoins"),
+          campaign_not_found: "Campaign tidak ditemukan.",
+          unauthorized: "Sesi Anda kedaluwarsa. Silakan login ulang.",
+          invalid_draw_count: "Jumlah draw tidak valid.",
+          invalid_params: "Permintaan tidak valid.",
+        };
+        toast.error(messages[code] || "Gacha gagal. Coba lagi.");
+        setIsDrawing(false);
+        return;
       }
 
-      // DB writes
-      const prizeUpdates = Object.entries(prizeRemainingCopy).map(([prizeId, rem]) =>
-        supabase.from("tier_prizes").update({ remaining: rem }).eq("id", prizeId)
+      const serverResults = (data.results as any[]) || [];
+      const results = serverResults.map((r) => ({
+        tier: r.tier,
+        color: colorMap[r.tier] || "text-muted-foreground",
+        prize: r.prize,
+        image: r.image || image,
+        isPityReward: !!r.isPityReward,
+        coinValue: r.coinValue,
+      }));
+
+      if (data.free_used > 0) {
+        toast.success(`Menggunakan ${data.free_used}x gacha gratis!`);
+      }
+      const totalTicketsAwarded = serverResults.reduce(
+        (s, r) => s + (r.ticketsAwarded || 0),
+        0
       );
-
-      const ticketValues: Record<string, number> = { S: 5, A: 3, B: 2, C: 1 };
-
-      const drawInserts = user ? results.map((r) =>
-        supabase.from("draws").insert({
-          user_id: user.id,
-          campaign_id: campaign.id,
-          tier_label: r.tier,
-          prize_name: r.prize,
-          coin_value: r.coinValue,
-          is_pity: r.isPityReward,
-        }).select("id").single()
-      ) : [];
-
-      const drawResults = await Promise.all([...prizeUpdates, ...drawInserts]);
-
-      if (user) {
-        const ticketInserts = results.map((r, idx) => {
-          const drawResult = drawResults[Object.keys(prizeRemainingCopy).length + idx] as any;
-          const drawId = drawResult?.data?.id;
-          const qty = ticketValues[r.tier] || 1;
-          return drawId ? supabase.from("redeem_tickets").insert({
-            user_id: user.id,
-            campaign_id: campaign.id,
-            draw_id: drawId,
-            ticket_type: "standard",
-            quantity: qty,
-            remaining: qty,
-          }) : Promise.resolve();
-        });
-        await Promise.all(ticketInserts);
-
-        const totalTickets = results.reduce((sum, r) => sum + (ticketValues[r.tier] || 1), 0);
-        toast.success(`🎫 Kamu mendapat ${totalTickets} Bushido Tiket!`);
+      if (totalTicketsAwarded > 0) {
+        toast.success(`🎫 Kamu mendapat ${totalTicketsAwarded} Bushido Tiket!`);
       }
 
+      await refreshCoins();
       queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
 
-      // Store results but wait for dino animation completion
       setDrawnPrizes(results);
-      setHasPityReward(batchHasPity);
+      setHasPityReward(!!data.has_pity_reward);
       setPendingDrawComplete(true);
-    })();
+    } catch (err) {
+      console.error("Draw error:", err);
+      toast.error("Terjadi kesalahan. Coba lagi.");
+      setIsDrawing(false);
+    }
   };
 
   return (
