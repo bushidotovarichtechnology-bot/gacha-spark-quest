@@ -49,6 +49,27 @@ const ClaimHistory = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [tracking, setTracking] = useState<Record<string, TrackingResult>>({});
+  const [trackingLoading, setTrackingLoading] = useState<Record<string, boolean>>({});
+
+  const refreshTracking = async (claim: Claim) => {
+    if (!claim.tracking_number || !claim.courier_name) {
+      toast.error("Belum ada nomor resi");
+      return;
+    }
+    setTrackingLoading(prev => ({ ...prev, [claim.id]: true }));
+    await new Promise(r => setTimeout(r, 700));
+    const result = generateMockTracking(
+      claim.tracking_number,
+      claim.courier_name,
+      claim.shipped_at,
+      claim.city,
+      claim.status === "delivered",
+    );
+    setTracking(prev => ({ ...prev, [claim.id]: result }));
+    setTrackingLoading(prev => ({ ...prev, [claim.id]: false }));
+    toast.success("Status pengiriman diperbarui");
+  };
 
   useEffect(() => {
     if (!user) return;
