@@ -185,6 +185,32 @@ const AdminClaims = () => {
         </div>
       </div>
 
+      {/* Payment-status filter — admin acts only on paid/free claims */}
+      <div className="mb-3 flex gap-2 flex-wrap items-center">
+        <span className="text-xs font-semibold text-muted-foreground mr-1">Pembayaran:</span>
+        {([
+          { id: "actionable", label: "Lunas / Gratis", count: paymentCounts.actionable },
+          { id: "unpaid", label: "Belum Bayar", count: paymentCounts.unpaid },
+          { id: "failed", label: "Gagal", count: paymentCounts.failed },
+          { id: "all", label: "Semua", count: paymentCounts.all },
+        ] as const).map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setFilterPayment(p.id)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+              filterPayment === p.id
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "bg-secondary text-muted-foreground hover:text-foreground border border-transparent"
+            }`}
+          >
+            {p.label}
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${filterPayment === p.id ? "bg-primary/20" : "bg-background/40"}`}>
+              {p.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* Status filter tabs */}
       <div className="mb-5 flex gap-2 flex-wrap">
         {(["all", "pending", "processing", "shipped", "delivered"] as const).map((s) => (
