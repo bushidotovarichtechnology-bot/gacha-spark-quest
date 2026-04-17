@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Trash2, Plus, Upload, GripVertical, Coins } from "lucide-react";
+import { Save, Trash2, Plus, Upload, GripVertical, Coins, Weight } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -157,6 +157,7 @@ export function TierEditor({
   const [label, setLabel] = useState(tier.label);
   const [name, setName] = useState(tier.name);
   const [bulkCoinValue, setBulkCoinValue] = useState("");
+  const [bulkWeight, setBulkWeight] = useState("");
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
@@ -272,6 +273,38 @@ export function TierEditor({
             setBulkCoinValue("");
             onRefresh();
             toast({ title: "Berhasil", description: `Semua prize di tier ${label} diatur ke ${val} koin` });
+          }}
+        >
+          Terapkan Semua
+        </Button>
+      </div>
+
+      {/* Bulk weight edit */}
+      <div className="flex items-center gap-2 mb-2">
+        <Weight className="h-4 w-4 text-primary shrink-0" />
+        <Input
+          type="number"
+          min={1}
+          value={bulkWeight}
+          onChange={(e) => setBulkWeight(e.target.value)}
+          placeholder="Berat (gram) untuk semua prize di tier ini"
+          className="h-7 text-sm flex-1"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 px-2 text-xs whitespace-nowrap"
+          disabled={!bulkWeight}
+          onClick={async () => {
+            const val = Number(bulkWeight);
+            if (isNaN(val) || val < 1) return;
+            const updates = tier.tier_prizes.map((p) =>
+              supabase.from("tier_prizes").update({ weight_grams: val } as any).eq("id", p.id)
+            );
+            await Promise.all(updates);
+            setBulkWeight("");
+            onRefresh();
+            toast({ title: "Berhasil", description: `Semua prize di tier ${label} diatur ke ${val}g` });
           }}
         >
           Terapkan Semua
