@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import BiteshipAreaPicker, { type BiteshipArea } from "@/components/BiteshipAreaPicker";
 
 interface BiteshipSettings {
   contact_name: string;
@@ -14,6 +15,7 @@ interface BiteshipSettings {
   address: string;
   postal_code: string;
   area_id: string;
+  origin_area: BiteshipArea | null;
   note: string;
   default_weight: number;
   couriers: string[];
@@ -25,6 +27,7 @@ const DEFAULT: BiteshipSettings = {
   address: "",
   postal_code: "",
   area_id: "",
+  origin_area: null,
   note: "",
   default_weight: 1000,
   couriers: ["jne", "jnt", "sicepat"],
@@ -75,6 +78,13 @@ const AdminBiteship = () => {
   };
 
   const handleSave = async () => {
+    if (!form.area_id) {
+      toast.error("Area asal wajib dipilih", {
+        description: "Pilih area gudang dari pencarian agar area_id tersimpan otomatis.",
+      });
+      return;
+    }
+
     if (form.couriers.length === 0) {
       toast.error("Pilih minimal 1 kurir aktif");
       return;
@@ -134,11 +144,24 @@ const AdminBiteship = () => {
               <Label className="flex items-center gap-2">
                 Area ID Biteship
                 <a href="https://biteship.com/id/docs/api/maps/retrieve_areas" target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
-                  cari area_id <ExternalLink className="h-3 w-3" />
+                  referensi API <ExternalLink className="h-3 w-3" />
                 </a>
               </Label>
-              <Input value={form.area_id} onChange={(e) => update("area_id", e.target.value)} placeholder="IDNP6IDNC150IDND874IDZ12950" />
+              <Input value={form.area_id} readOnly placeholder="Terisi otomatis setelah pilih area asal" className="bg-muted/30" />
             </div>
+          </div>
+          <div className="space-y-2">
+            <BiteshipAreaPicker
+              value={form.origin_area}
+              onChange={(area) => {
+                update("origin_area", area);
+                update("area_id", area?.id || "");
+                if (area?.postal_code) update("postal_code", String(area.postal_code));
+              }}
+            />
+            <p className="text-xs text-muted-foreground">
+              Gunakan pencarian area supaya <span className="font-medium text-foreground">area_id</span> origin tersimpan valid untuk hitung ongkir.
+            </p>
           </div>
           <div className="space-y-2">
             <Label>Catatan Pengirim (opsional)</Label>
