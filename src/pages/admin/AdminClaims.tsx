@@ -276,6 +276,23 @@ const AdminClaims = () => {
                       {claim.shipping_cost > 0 && (
                         <p className="text-xs font-medium text-foreground">Rp {claim.shipping_cost.toLocaleString()}</p>
                       )}
+                      <span className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${
+                        claim.payment_status === "paid"
+                          ? "bg-green-500/10 text-green-500 border-green-500/30"
+                          : claim.payment_status === "not_required"
+                            ? "bg-muted text-muted-foreground border-border"
+                            : claim.payment_status === "failed"
+                              ? "bg-red-500/10 text-red-500 border-red-500/30"
+                              : "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
+                      }`}>
+                        {claim.payment_status === "paid"
+                          ? "✓ Lunas"
+                          : claim.payment_status === "not_required"
+                            ? "Gratis"
+                            : claim.payment_status === "failed"
+                              ? "✗ Gagal"
+                              : "Belum Bayar"}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       {claim.tracking_number ? (
