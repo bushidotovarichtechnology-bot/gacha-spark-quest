@@ -137,7 +137,7 @@ const CampaignDetail = () => {
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
+  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
   const [pendingDrawComplete, setPendingDrawComplete] = useState(false);
