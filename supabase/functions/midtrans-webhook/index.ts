@@ -58,6 +58,54 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // === SHIPPING PAYMENTS (order_id starts with "SHIP-") ===
+    if (order_id.startsWith("SHIP-")) {
+      const { data: claim } = await supabase
+        .from("prize_claims")
+        .select("id, payment_status, shipping_paid")
+        .eq("shipping_order_id", order_id)
+        .maybeSingle();
+
+      if (!claim) {
+        console.error("Shipping claim not found for order:", order_id);
+        return new Response(JSON.stringify({ error: "Claim not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let newPaymentStatus = claim.payment_status;
+      let newShippingPaid = claim.shipping_paid;
+
+      if (status === "settlement") {
+        newPaymentStatus = "paid";
+        newShippingPaid = true;
+      } else if (status === "deny" || status === "cancel" || status === "expire" || status === "failure") {
+        newPaymentStatus = "failed";
+        newShippingPaid = false;
+      } else if (status === "pending") {
+        newPaymentStatus = "unpaid";
+        newShippingPaid = false;
+      }
+
+      if (newPaymentStatus !== claim.payment_status || newShippingPaid !== claim.shipping_paid) {
+        await supabase
+          .from("prize_claims")
+          .update({
+            payment_status: newPaymentStatus,
+            shipping_paid: newShippingPaid,
+          })
+          .eq("id", claim.id);
+        console.log(`Shipping claim ${claim.id} → payment_status=${newPaymentStatus}, shipping_paid=${newShippingPaid}`);
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // === COIN TOP-UP TRANSACTIONS ===
     const { data: tx } = await supabase
       .from("transactions")
       .select("*")
