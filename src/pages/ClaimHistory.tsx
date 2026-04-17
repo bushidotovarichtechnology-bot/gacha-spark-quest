@@ -308,15 +308,31 @@ const ClaimHistory = () => {
                         )}
 
                         {/* Payment status banner — claims only become 'active' once payment_status is paid or not_required */}
-                        {claim.shipping_cost > 0 && claim.payment_status !== "paid" && (
-                          <div className={`rounded-lg border p-2.5 text-xs ${
+                        {claim.shipping_cost > 0 && claim.payment_status !== "paid" && claim.payment_status !== "not_required" && (
+                          <div className={`rounded-lg border p-2.5 text-xs space-y-2 ${
                             claim.payment_status === "failed"
                               ? "border-red-400/30 bg-red-400/10 text-red-400"
                               : "border-yellow-400/30 bg-yellow-400/10 text-yellow-400"
                           }`}>
-                            {claim.payment_status === "failed"
-                              ? "Pembayaran ongkir gagal/dibatalkan. Klaim ini belum aktif — silakan ajukan klaim ulang."
-                              : "Menunggu pembayaran ongkir. Hadiah baru akan diproses admin setelah pembayaran terkonfirmasi."}
+                            <p>
+                              {claim.payment_status === "failed"
+                                ? "Pembayaran ongkir gagal/dibatalkan sebelumnya. Coba bayar ulang untuk mengaktifkan klaim ini."
+                                : "Menunggu pembayaran ongkir. Hadiah baru akan diproses admin setelah pembayaran terkonfirmasi."}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="gap-1.5 text-xs h-8"
+                              disabled={paying === claim.id}
+                              onClick={(e) => { e.stopPropagation(); handlePayNow(claim); }}
+                            >
+                              {paying === claim.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <CreditCard className="h-3.5 w-3.5" />
+                              )}
+                              Bayar Sekarang (Rp {claim.shipping_cost.toLocaleString()})
+                            </Button>
                           </div>
                         )}
 
