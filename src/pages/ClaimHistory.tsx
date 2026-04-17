@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User, ExternalLink, Copy, RefreshCw, MapPinned } from "lucide-react";
+import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User, ExternalLink, Copy, RefreshCw, MapPinned, Loader2, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
@@ -50,6 +51,7 @@ const ClaimHistory = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [paying, setPaying] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -103,6 +105,66 @@ const ClaimHistory = () => {
   const copyTracking = (num: string) => {
     navigator.clipboard.writeText(num);
     toast.success("Nomor resi disalin!");
+  };
+
+  const handlePayNow = async (claim: Claim) => {
+    setPaying(claim.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-shipping-payment", {
+        body: {
+          claim_id: claim.id,
+          shipping_cost: claim.shipping_cost,
+          shipping_method: claim.shipping_method,
+          prize_name: claim.prize_name,
+        },
+      });
+
+      if (error || !data?.token) throw new Error(error?.message || "Gagal membuat pembayaran");
+
+      if (data.client_key) {
+        const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
+        if (script) script.setAttribute("data-client-key", data.client_key);
+      }
+
+      if ((window as any).snap) {
+        (window as any).snap.pay(data.token, {
+          onSuccess: () => {
+            toast.success("Pembayaran ongkir berhasil! 🎉", {
+              description: "Klaim hadiah kamu akan segera diproses admin.",
+            });
+          },
+          onPending: () => {
+            toast("Menunggu pembayaran", {
+              description: "Silakan selesaikan pembayaran ongkir.",
+            });
+          },
+          onError: () => {
+            toast.error("Pembayaran gagal", {
+              description: "Terjadi kesalahan saat memproses pembayaran.",
+            });
+          },
+          onClose: () => {
+            // Refresh claims
+            supabase
+              .from("prize_claims")
+              .select("*")
+              .eq("user_id", user!.id)
+              .order("created_at", { ascending: false })
+              .then(({ data: refreshed }) => {
+                if (refreshed) setClaims(refreshed as Claim[]);
+              });
+          },
+        });
+      } else {
+        toast.error("Payment gateway belum siap", {
+          description: "Silakan refresh halaman dan coba lagi.",
+        });
+      }
+    } catch (err: any) {
+      toast.error("Gagal", { description: err.message || "Tidak dapat memproses pembayaran." });
+    } finally {
+      setPaying(null);
+    }
   };
 
   return (
@@ -246,15 +308,31 @@ const ClaimHistory = () => {
                         )}
 
                         {/* Payment status banner — claims only become 'active' once payment_status is paid or not_required */}
-                        {claim.shipping_cost > 0 && claim.payment_status !== "paid" && (
-                          <div className={`rounded-lg border p-2.5 text-xs ${
+                        {claim.shipping_cost > 0 && claim.payment_status !== "paid" && claim.payment_status !== "not_required" && (
+                          <div className={`rounded-lg border p-2.5 text-xs space-y-2 ${
                             claim.payment_status === "failed"
                               ? "border-red-400/30 bg-red-400/10 text-red-400"
                               : "border-yellow-400/30 bg-yellow-400/10 text-yellow-400"
                           }`}>
-                            {claim.payment_status === "failed"
-                              ? "Pembayaran ongkir gagal/dibatalkan. Klaim ini belum aktif — silakan ajukan klaim ulang."
-                              : "Menunggu pembayaran ongkir. Hadiah baru akan diproses admin setelah pembayaran terkonfirmasi."}
+                            <p>
+                              {claim.payment_status === "failed"
+                                ? "Pembayaran ongkir gagal/dibatalkan sebelumnya. Coba bayar ulang untuk mengaktifkan klaim ini."
+                                : "Menunggu pembayaran ongkir. Hadiah baru akan diproses admin setelah pembayaran terkonfirmasi."}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="gap-1.5 text-xs h-8"
+                              disabled={paying === claim.id}
+                              onClick={(e) => { e.stopPropagation(); handlePayNow(claim); }}
+                            >
+                              {paying === claim.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <CreditCard className="h-3.5 w-3.5" />
+                              )}
+                              Bayar Sekarang (Rp {claim.shipping_cost.toLocaleString()})
+                            </Button>
                           </div>
                         )}
 
