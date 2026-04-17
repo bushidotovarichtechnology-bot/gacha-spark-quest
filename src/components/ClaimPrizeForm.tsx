@@ -16,6 +16,7 @@ import {
   getAvailableMethodsFromZones,
   type ShippingZone,
 } from "@/lib/shippingRates";
+import { useCitiesForProvince } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
 
 interface ClaimPrizeFormProps {
