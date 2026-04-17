@@ -7,7 +7,7 @@ import { useI18n } from "@/context/I18nContext";
 interface PrizeRevealModalProps {
   open: boolean;
   onClose: () => void;
-  prizes: { tier: string; color: string; prize: string; isPityReward?: boolean }[];
+  prizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
   drawCount: number;
   hasPityReward?: boolean;
 }
