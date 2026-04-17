@@ -153,7 +153,7 @@ const TopUp = () => {
 
       const pollTransactionStatus = async (oid: string, coinsAmount: number) => {
         let attempts = 0;
-        const maxAttempts = 30;
+        const maxAttempts = 40; // ~2 menit
         const interval = setInterval(async () => {
           attempts++;
           const { data: txData } = await supabase
@@ -165,25 +165,16 @@ const TopUp = () => {
           if (txData && txData.status !== "pending") {
             clearInterval(interval);
             if (txData.status === "settlement") {
-              // Refresh coins from DB
-              const { data: coinData } = await supabase
-                .from("user_coins")
-                .select("balance")
-                .eq("user_id", user!.id)
-                .single();
-              if (coinData) {
-                addCoins(coinData.balance - (coinData.balance - coinsAmount) + coinsAmount - coinsAmount);
-                // Force refresh by reloading coins context
-                window.dispatchEvent(new Event("coins-updated"));
-              }
+              // Backend webhook sudah credit koin — refresh saldo dari DB
+              window.dispatchEvent(new Event("coins-updated"));
               toast({
                 title: t("purchaseSuccess"),
                 description: t("purchaseSuccessDesc", { coins: coinsAmount.toLocaleString() }),
               });
             } else if (txData.status === "deny" || txData.status === "cancel") {
-              toast({ title: "Pembayaran Gagal", description: "Pembayaran ditolak atau dibatalkan.", variant: "destructive" });
+              toast({ title: "Pembayaran Gagal", description: "Pembayaran ditolak atau dibatalkan. Koin tidak ditambahkan.", variant: "destructive" });
             } else if (txData.status === "expire") {
-              toast({ title: "Pembayaran Kedaluwarsa", description: "Waktu pembayaran telah habis.", variant: "destructive" });
+              toast({ title: "Pembayaran Kedaluwarsa", description: "Waktu pembayaran telah habis. Koin tidak ditambahkan.", variant: "destructive" });
             }
           }
           if (attempts >= maxAttempts) clearInterval(interval);
@@ -191,39 +182,25 @@ const TopUp = () => {
       };
 
       window.snap.pay(data.token, {
-        onSuccess: async (result: any) => {
-          // Update transaction status in DB
-          await supabase
-            .from("transactions")
-            .update({ status: "settlement", payment_type: result?.payment_type || null })
-            .eq("order_id", orderId);
-          addCoins(totalCoins);
+        onSuccess: () => {
+          // JANGAN credit koin dari sini — tunggu konfirmasi webhook Midtrans (signature-verified).
           toast({
-            title: t("purchaseSuccess"),
-            description: t("purchaseSuccessDesc", { coins: totalCoins.toLocaleString() }),
+            title: "Pembayaran terkirim",
+            description: "Koin akan masuk otomatis setelah pembayaran terkonfirmasi sistem.",
           });
+          pollTransactionStatus(orderId, totalCoins);
         },
         onPending: () => {
           toast({ title: "Pembayaran Pending", description: "Status akan diperbarui otomatis. Silakan cek riwayat transaksi." });
           pollTransactionStatus(orderId, totalCoins);
         },
-        onError: async (result: any) => {
-          await supabase
-            .from("transactions")
-            .update({ status: "deny", payment_type: result?.payment_type || null })
-            .eq("order_id", orderId);
-          toast({ title: "Pembayaran Gagal", description: "Terjadi kesalahan saat memproses pembayaran.", variant: "destructive" });
+        onError: () => {
+          // JANGAN tulis status ke DB dari klien — webhook akan handle.
+          toast({ title: "Pembayaran Gagal", description: "Terjadi kesalahan saat memproses pembayaran. Koin tidak ditambahkan.", variant: "destructive" });
         },
-        onClose: async () => {
-          // Check current status first, only poll if still pending
-          const { data: txCheck } = await supabase
-            .from("transactions")
-            .select("status")
-            .eq("order_id", orderId)
-            .single();
-          if (txCheck?.status === "pending") {
-            pollTransactionStatus(orderId, totalCoins);
-          }
+        onClose: () => {
+          // User menutup popup — cek status dan poll bila masih pending.
+          pollTransactionStatus(orderId, totalCoins);
         },
       });
     } catch (err: any) {
