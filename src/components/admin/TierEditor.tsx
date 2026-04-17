@@ -95,7 +95,7 @@ function SortablePrizeRow({
             onRefresh();
           }}
           placeholder="1000"
-          title="Berat paket dalam gram untuk perhitungan ongkir Biteship"
+          title="Berat paket dalam gram (referensi internal)"
         />
       </div>
       <div className="flex items-center gap-1">

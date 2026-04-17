@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, Truck, Clock, CheckCircle2, Loader2, Eye, X, MapPin, Phone, User, FileText, Save, Hash, ExternalLink, Zap, XCircle } from "lucide-react";
+import { Package, Truck, Clock, CheckCircle2, Loader2, Eye, X, MapPin, Phone, User, FileText, Save, Hash, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,54 +69,6 @@ const AdminClaims = () => {
   // Tracking form state
   const [trackingForm, setTrackingForm] = useState({ courier_name: "", tracking_number: "", tracking_url: "" });
   const [savingTracking, setSavingTracking] = useState(false);
-  const [creatingBiteship, setCreatingBiteship] = useState(false);
-  const [cancellingBiteship, setCancellingBiteship] = useState(false);
-
-  const createBiteshipOrder = async () => {
-    if (!selectedClaim) return;
-    setCreatingBiteship(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("biteship-create-order", {
-        body: { claim_id: selectedClaim.id },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      toast.success("Order Biteship dibuat!", {
-        description: data.waybill_id ? `AWB: ${data.waybill_id}` : `Order ID: ${data.order_id}`,
-      });
-      await fetchClaims();
-      const { data: refreshed } = await supabase.from("prize_claims").select("*").eq("id", selectedClaim.id).maybeSingle();
-      if (refreshed) setSelectedClaim(refreshed as Claim);
-    } catch (err: any) {
-      toast.error("Gagal membuat order Biteship", { description: err?.message || "Unknown error" });
-    } finally {
-      setCreatingBiteship(false);
-    }
-  };
-
-  const cancelBiteshipOrder = async () => {
-    if (!selectedClaim) return;
-    const reason = window.prompt("Alasan pembatalan order Biteship?", "Cancelled by admin");
-    if (reason === null) return;
-    if (!window.confirm(`Yakin batalkan order Biteship ${selectedClaim.shipping_order_id}? Status akan kembali ke pending dan AWB dihapus.`)) return;
-    setCancellingBiteship(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("biteship-cancel-order", {
-        body: { claim_id: selectedClaim.id, reason },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success("Order Biteship dibatalkan");
-      await fetchClaims();
-      const { data: refreshed } = await supabase.from("prize_claims").select("*").eq("id", selectedClaim.id).maybeSingle();
-      if (refreshed) setSelectedClaim(refreshed as Claim);
-    } catch (err: any) {
-      toast.error("Gagal membatalkan order", { description: err?.message || "Unknown error" });
-    } finally {
-      setCancellingBiteship(false);
-    }
-  };
 
   const fetchClaims = async () => {
     const { data, error } = await supabase
@@ -360,48 +312,6 @@ const AdminClaims = () => {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              {/* Biteship auto-create order */}
-              <div className="rounded-xl border border-accent/40 bg-accent/5 p-4 space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-accent-foreground flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5" /> Buat Order Biteship Otomatis
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Generate AWB otomatis dari Biteship pakai data klaim & origin gudang. Status akan jadi <span className="font-semibold">shipped</span>.
-                </p>
-                {selectedClaim.shipping_order_id ? (
-                  <div className="space-y-2">
-                    <div className="text-xs bg-muted/50 rounded-lg p-2 space-y-1">
-                      <p>Order ID: <span className="font-mono font-semibold text-foreground">{selectedClaim.shipping_order_id}</span></p>
-                      {selectedClaim.tracking_number && <p>AWB: <span className="font-mono font-semibold text-foreground">{selectedClaim.tracking_number}</span></p>}
-                    </div>
-                    <Button
-                      onClick={cancelBiteshipOrder}
-                      disabled={cancellingBiteship}
-                      variant="destructive"
-                      className="w-full gap-2 h-9"
-                    >
-                      {cancellingBiteship ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                      Cancel Order Biteship
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={createBiteshipOrder}
-                    disabled={creatingBiteship || !selectedClaim.destination_area_id || !selectedClaim.courier_company}
-                    className="w-full gap-2 h-9"
-                    variant="default"
-                  >
-                    {creatingBiteship ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                    Buat Order Biteship
-                  </Button>
-                )}
-                {(!selectedClaim.destination_area_id || !selectedClaim.courier_company) && !selectedClaim.shipping_order_id && (
-                  <p className="text-[11px] text-destructive">
-                    Klaim ini belum punya destination_area_id atau courier dari Biteship. Tidak bisa auto-create — input manual di bawah.
-                  </p>
-                )}
               </div>
 
               {/* Tracking input section */}
