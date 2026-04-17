@@ -26,6 +26,7 @@ interface Claim {
   shipping_method: string;
   shipping_cost: number;
   shipping_paid: boolean;
+  payment_status: string;
   status: string;
   notes: string;
   tracking_number: string | null;
@@ -63,6 +64,7 @@ const AdminClaims = () => {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPayment, setFilterPayment] = useState<"actionable" | "all" | "unpaid" | "failed">("actionable");
   const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -139,15 +141,31 @@ const AdminClaims = () => {
     setSavingTracking(false);
   };
 
-  const filtered = filterStatus === "all" ? claims : claims.filter((c) => c.status === filterStatus);
+  // Apply payment filter first — by default admin only sees actionable claims
+  // (payment confirmed via webhook, or no payment required for free shipping).
+  const paymentFiltered = claims.filter((c) => {
+    if (filterPayment === "all") return true;
+    if (filterPayment === "actionable") return c.payment_status === "paid" || c.payment_status === "not_required";
+    if (filterPayment === "unpaid") return c.payment_status === "unpaid";
+    if (filterPayment === "failed") return c.payment_status === "failed";
+    return true;
+  });
+  const filtered = filterStatus === "all" ? paymentFiltered : paymentFiltered.filter((c) => c.status === filterStatus);
   const statusMeta = (status: string) => STATUS_OPTIONS.find((s) => s.value === status) || STATUS_OPTIONS[0];
 
   const statusCounts = {
+    all: paymentFiltered.length,
+    pending: paymentFiltered.filter((c) => c.status === "pending").length,
+    processing: paymentFiltered.filter((c) => c.status === "processing").length,
+    shipped: paymentFiltered.filter((c) => c.status === "shipped").length,
+    delivered: paymentFiltered.filter((c) => c.status === "delivered").length,
+  };
+
+  const paymentCounts = {
+    actionable: claims.filter((c) => c.payment_status === "paid" || c.payment_status === "not_required").length,
+    unpaid: claims.filter((c) => c.payment_status === "unpaid").length,
+    failed: claims.filter((c) => c.payment_status === "failed").length,
     all: claims.length,
-    pending: claims.filter((c) => c.status === "pending").length,
-    processing: claims.filter((c) => c.status === "processing").length,
-    shipped: claims.filter((c) => c.status === "shipped").length,
-    delivered: claims.filter((c) => c.status === "delivered").length,
   };
 
   if (loading) {
@@ -165,6 +183,32 @@ const AdminClaims = () => {
           <h1 className="font-display text-2xl font-bold text-foreground">Prize Claims</h1>
           <p className="text-sm text-muted-foreground">{claims.length} total claims</p>
         </div>
+      </div>
+
+      {/* Payment-status filter — admin acts only on paid/free claims */}
+      <div className="mb-3 flex gap-2 flex-wrap items-center">
+        <span className="text-xs font-semibold text-muted-foreground mr-1">Pembayaran:</span>
+        {([
+          { id: "actionable", label: "Lunas / Gratis", count: paymentCounts.actionable },
+          { id: "unpaid", label: "Belum Bayar", count: paymentCounts.unpaid },
+          { id: "failed", label: "Gagal", count: paymentCounts.failed },
+          { id: "all", label: "Semua", count: paymentCounts.all },
+        ] as const).map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setFilterPayment(p.id)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+              filterPayment === p.id
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "bg-secondary text-muted-foreground hover:text-foreground border border-transparent"
+            }`}
+          >
+            {p.label}
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${filterPayment === p.id ? "bg-primary/20" : "bg-background/40"}`}>
+              {p.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Status filter tabs */}
@@ -232,6 +276,23 @@ const AdminClaims = () => {
                       {claim.shipping_cost > 0 && (
                         <p className="text-xs font-medium text-foreground">Rp {claim.shipping_cost.toLocaleString()}</p>
                       )}
+                      <span className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${
+                        claim.payment_status === "paid"
+                          ? "bg-green-500/10 text-green-500 border-green-500/30"
+                          : claim.payment_status === "not_required"
+                            ? "bg-muted text-muted-foreground border-border"
+                            : claim.payment_status === "failed"
+                              ? "bg-red-500/10 text-red-500 border-red-500/30"
+                              : "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
+                      }`}>
+                        {claim.payment_status === "paid"
+                          ? "✓ Lunas"
+                          : claim.payment_status === "not_required"
+                            ? "Gratis"
+                            : claim.payment_status === "failed"
+                              ? "✗ Gagal"
+                              : "Belum Bayar"}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       {claim.tracking_number ? (

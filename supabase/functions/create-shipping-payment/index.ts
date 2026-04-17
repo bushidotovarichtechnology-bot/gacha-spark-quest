@@ -99,6 +99,8 @@ Deno.serve(async (req) => {
       .update({
         shipping_cost,
         shipping_order_id: orderId,
+        payment_status: "unpaid",
+        shipping_paid: false,
       })
       .eq("id", claim_id)
       .eq("user_id", user.id);

@@ -499,6 +499,7 @@ export type Database = {
           id: string
           image_url: string
           notes: string | null
+          payment_status: string
           phone: string
           postal_code: string
           prize_name: string
@@ -531,6 +532,7 @@ export type Database = {
           id?: string
           image_url?: string
           notes?: string | null
+          payment_status?: string
           phone: string
           postal_code: string
           prize_name: string
@@ -563,6 +565,7 @@ export type Database = {
           id?: string
           image_url?: string
           notes?: string | null
+          payment_status?: string
           phone?: string
           postal_code?: string
           prize_name?: string

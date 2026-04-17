@@ -32,6 +32,7 @@ interface Claim {
   shipping_method: string;
   shipping_cost: number;
   shipping_paid: boolean;
+  payment_status: string;
   tracking_number: string | null;
   courier_name: string | null;
   tracking_url: string | null;
@@ -244,18 +245,37 @@ const ClaimHistory = () => {
                           </div>
                         )}
 
+                        {/* Payment status banner — claims only become 'active' once payment_status is paid or not_required */}
+                        {claim.shipping_cost > 0 && claim.payment_status !== "paid" && (
+                          <div className={`rounded-lg border p-2.5 text-xs ${
+                            claim.payment_status === "failed"
+                              ? "border-red-400/30 bg-red-400/10 text-red-400"
+                              : "border-yellow-400/30 bg-yellow-400/10 text-yellow-400"
+                          }`}>
+                            {claim.payment_status === "failed"
+                              ? "Pembayaran ongkir gagal/dibatalkan. Klaim ini belum aktif — silakan ajukan klaim ulang."
+                              : "Menunggu pembayaran ongkir. Hadiah baru akan diproses admin setelah pembayaran terkonfirmasi."}
+                          </div>
+                        )}
+
                         {/* Shipping cost */}
                         {claim.shipping_cost > 0 && (
                           <div className="flex items-center justify-between text-sm rounded-lg border border-border p-2.5">
                             <span className="text-muted-foreground">Ongkos Kirim</span>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">Rp {claim.shipping_cost.toLocaleString()}</span>
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                claim.shipping_paid
-                                  ? "bg-green-400/10 text-green-400 border border-green-400/30"
-                                  : "bg-yellow-400/10 text-yellow-400 border border-yellow-400/30"
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                                claim.payment_status === "paid"
+                                  ? "bg-green-400/10 text-green-400 border-green-400/30"
+                                  : claim.payment_status === "failed"
+                                    ? "bg-red-400/10 text-red-400 border-red-400/30"
+                                    : "bg-yellow-400/10 text-yellow-400 border-yellow-400/30"
                               }`}>
-                                {claim.shipping_paid ? "Lunas" : "Belum Bayar"}
+                                {claim.payment_status === "paid"
+                                  ? "Lunas"
+                                  : claim.payment_status === "failed"
+                                    ? "Gagal"
+                                    : "Belum Bayar"}
                               </span>
                             </div>
                           </div>

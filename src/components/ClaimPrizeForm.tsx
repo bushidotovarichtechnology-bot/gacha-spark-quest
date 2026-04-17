@@ -131,6 +131,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         shipping_eta: selectedMethod.eta,
         shipping_cost: shippingCost,
         notes: form.notes.trim(),
+        payment_status: shippingCost > 0 ? "unpaid" : "not_required",
       }).select("id").single();
 
       if (error) throw error;
@@ -139,6 +140,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         setStep(4);
         await handleShippingPayment(claimData.id);
       } else {
+        // Free shipping → claim is immediately valid
         setSuccess(true);
         toast.success(t("claimSubmitted"), { description: t("claimSubmittedDesc") });
         setTimeout(() => { onClaimed(item.id); onClose(); }, 2000);
@@ -171,23 +173,32 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       }
 
       window.snap.pay(data.token, {
-        onSuccess: async () => {
-          await supabase.from("prize_claims").update({ shipping_paid: true }).eq("id", claimId);
+        // NOTE: Do NOT mark shipping_paid=true here. Only the Midtrans webhook
+        // (with verified signature) is allowed to confirm payment & flip the
+        // claim's payment_status to 'paid'. This prevents users from forging
+        // a successful claim by manipulating the client.
+        onSuccess: () => {
           setSuccess(true);
-          toast.success("Pembayaran ongkir berhasil!", { description: "Hadiah akan segera diproses." });
-          setTimeout(() => { onClaimed(item.id); onClose(); }, 2000);
+          toast.success("Pembayaran terkirim!", {
+            description: "Klaim akan diproses setelah pembayaran dikonfirmasi sistem.",
+          });
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 2500);
         },
         onPending: () => {
-          toast.info("Pembayaran pending", { description: "Selesaikan pembayaran untuk memproses pengiriman." });
+          toast.info("Pembayaran pending", {
+            description: "Selesaikan pembayaran agar klaim diproses.",
+          });
           setSuccess(true);
-          setTimeout(() => { onClaimed(item.id); onClose(); }, 2000);
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 2500);
         },
         onError: () => {
-          toast.error("Pembayaran gagal", { description: "Silakan coba lagi." });
+          toast.error("Pembayaran gagal", { description: "Silakan coba lagi dari Riwayat Klaim." });
           setStep(3);
         },
         onClose: () => {
-          toast.info("Pembayaran dibatalkan", { description: "Klaim tersimpan, bayar ongkir nanti di Riwayat Klaim." });
+          toast.info("Pembayaran dibatalkan", {
+            description: "Klaim belum aktif sampai ongkir dibayar. Lanjutkan dari Riwayat Klaim.",
+          });
           setStep(3);
         },
       });
