@@ -263,6 +263,8 @@ const DinoUnboxAnimation = ({
   onComplete,
   drawCount,
   tier = "C",
+  prizeImage,
+  prizeName,
 }: DinoUnboxAnimationProps) => {
   const [taps, setTaps] = useState(0);
   const [isBiting, setIsBiting] = useState(false);
