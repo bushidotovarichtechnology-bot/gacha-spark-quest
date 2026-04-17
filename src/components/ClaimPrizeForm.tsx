@@ -292,16 +292,39 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             {step === 2 && (
               <motion.div key="s2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>{t("city")}</Label>
-                  <Input value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder={t("cityPh")} maxLength={100} />
-                </div>
-                <div className="space-y-2">
                   <Label>{t("province")}</Label>
                   <Select value={form.province} onValueChange={(v) => updateField("province", v)}>
                     <SelectTrigger><SelectValue placeholder={zonesLoading ? "Memuat..." : "Pilih provinsi..."} /></SelectTrigger>
                     <SelectContent>
                       {provinces.map((p) => (
                         <SelectItem key={p} value={p}>{p}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("city")}</Label>
+                  <Select
+                    value={form.city}
+                    onValueChange={(v) => updateField("city", v)}
+                    disabled={!form.province || citiesLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          !form.province
+                            ? "Pilih provinsi dulu"
+                            : citiesLoading
+                              ? "Memuat..."
+                              : cities.length === 0
+                                ? "Tidak ada kota tersedia"
+                                : "Pilih kota..."
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {cities.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
