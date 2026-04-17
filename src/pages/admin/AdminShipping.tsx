@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Save, Loader2, MapPin, Truck, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ShippingZone } from "@/lib/shippingRates";
+import LocationCombobox from "@/components/LocationCombobox";
+import { useProvinces } from "@/hooks/use-indonesian-locations";
 
 const AdminShipping = () => {
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [newProvince, setNewProvince] = useState<Record<string, string>>({});
+  const { provinces: allProvinces, loading: provincesLoading } = useProvinces();
 
   useEffect(() => {
     fetchZones();
