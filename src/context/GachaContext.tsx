@@ -77,6 +77,27 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
+  const refreshInventory = useCallback(async () => {
+    if (!user) return;
+    const { data: invData } = await supabase
+      .from("user_inventory")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("won_at", { ascending: false });
+    if (invData) {
+      setItems(invData.map((r) => ({
+        id: r.id,
+        prize: r.prize_name,
+        tier: r.tier_label as "S" | "A" | "B" | "C",
+        campaign: r.campaign_name,
+        campaignId: r.campaign_id,
+        image: r.image_url,
+        coinValue: r.coin_value,
+        wonAt: r.won_at,
+      })));
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       setItems([]);
