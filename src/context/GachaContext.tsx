@@ -38,6 +38,7 @@ interface GachaState {
   useFreeDraws: (count: number) => void;
   clearDiscount: () => void;
   refreshCoins: () => Promise<void>;
+  refreshInventory: () => Promise<void>;
 }
 
 const PITY_THRESHOLD = 10;
