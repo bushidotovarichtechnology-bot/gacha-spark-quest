@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Trash2, Plus, Upload, GripVertical, Coins } from "lucide-react";
+import { Save, Trash2, Plus, Upload, GripVertical, Coins, Weight } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -157,6 +157,7 @@ export function TierEditor({
   const [label, setLabel] = useState(tier.label);
   const [name, setName] = useState(tier.name);
   const [bulkCoinValue, setBulkCoinValue] = useState("");
+  const [bulkWeight, setBulkWeight] = useState("");
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
