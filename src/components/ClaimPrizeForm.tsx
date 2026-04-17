@@ -16,6 +16,7 @@ import {
   getAvailableMethodsFromZones,
   type ShippingZone,
 } from "@/lib/shippingRates";
+import { useCitiesForProvince } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
 
 interface ClaimPrizeFormProps {
@@ -47,8 +48,6 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [zonesLoading, setZonesLoading] = useState(true);
-  const [cities, setCities] = useState<string[]>([]);
-  const [citiesLoading, setCitiesLoading] = useState(false);
 
   const [form, setForm] = useState({
     recipientName: "",
@@ -87,26 +86,15 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       });
   }, [user]);
 
-  // Fetch cities when province changes
+  const { cities, loading: citiesLoading } = useCitiesForProvince(form.province);
+
+  // Reset city when province change makes it invalid
   useEffect(() => {
-    if (!form.province) {
-      setCities([]);
-      return;
+    if (!form.province) return;
+    if (!citiesLoading && cities.length > 0 && form.city && !cities.includes(form.city)) {
+      setForm((prev) => ({ ...prev, city: "" }));
     }
-    setCitiesLoading(true);
-    supabase
-      .from("indonesian_cities")
-      .select("city")
-      .eq("province", form.province)
-      .order("city")
-      .then(({ data }) => {
-        const list = (data || []).map((r: any) => r.city as string);
-        setCities(list);
-        setCitiesLoading(false);
-        // Reset city if it's not in the new province's list
-        setForm((prev) => (prev.city && !list.includes(prev.city) ? { ...prev, city: "" } : prev));
-      });
-  }, [form.province]);
+  }, [form.province, cities, citiesLoading, form.city]);
 
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
