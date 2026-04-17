@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
-import type { TrackingResult, ManifestEntry } from "@/lib/mockTracking";
+
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
   pending: { icon: Clock, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
