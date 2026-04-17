@@ -42,6 +42,7 @@ import AdminGachaLogs from "./pages/admin/AdminGachaLogs.tsx";
 import RedeemStore from "./pages/RedeemStore.tsx";
 import GiftCoins from "./pages/GiftCoins.tsx";
 import Profile from "./pages/Profile.tsx";
+import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <GlobalTransactionWatcher />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/campaign/:id" element={<CampaignDetail />} />
