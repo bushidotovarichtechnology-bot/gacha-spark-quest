@@ -137,7 +137,7 @@ const CampaignDetail = () => {
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; isPityReward?: boolean }[]>([]);
+  const [drawnPrizes, setDrawnPrizes] = useState<{ tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[]>([]);
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
   const [pendingDrawComplete, setPendingDrawComplete] = useState(false);
@@ -214,7 +214,7 @@ const CampaignDetail = () => {
 
     // Run draw calculation immediately (async for DB writes)
     (async () => {
-      const results: { tier: string; color: string; prize: string; isPityReward?: boolean; coinValue: number }[] = [];
+      const results: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean; coinValue: number }[] = [];
       let batchHasPity = false;
       const prizeRemainingCopy: Record<string, number> = {};
       tiers.forEach((t) => {
@@ -299,7 +299,7 @@ const CampaignDetail = () => {
           coinValue: prizeCoinValue,
         });
 
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, image: selectedPrize.image_url || image, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
       }
 
       // DB writes
@@ -585,6 +585,8 @@ const CampaignDetail = () => {
             requiredTaps={drawCount > 1 ? 8 : 5}
             drawCount={drawCount}
             tier={drawnPrizes.length > 0 ? (drawnPrizes[0].tier as "S" | "A" | "B" | "C") : "C"}
+            prizeImage={drawnPrizes[0]?.image}
+            prizeName={drawnPrizes[0]?.prize}
             onComplete={() => {
               setIsDrawing(false);
               if (pendingDrawComplete) {
