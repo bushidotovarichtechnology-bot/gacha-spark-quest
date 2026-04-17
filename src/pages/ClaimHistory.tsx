@@ -51,6 +51,7 @@ const ClaimHistory = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [paying, setPaying] = useState<string | null>(null);
 
 
   useEffect(() => {
