@@ -371,9 +371,20 @@ const AdminClaims = () => {
                   Generate AWB otomatis dari Biteship pakai data klaim & origin gudang. Status akan jadi <span className="font-semibold">shipped</span>.
                 </p>
                 {selectedClaim.shipping_order_id ? (
-                  <div className="text-xs bg-muted/50 rounded-lg p-2 space-y-1">
-                    <p>Order ID: <span className="font-mono font-semibold text-foreground">{selectedClaim.shipping_order_id}</span></p>
-                    {selectedClaim.tracking_number && <p>AWB: <span className="font-mono font-semibold text-foreground">{selectedClaim.tracking_number}</span></p>}
+                  <div className="space-y-2">
+                    <div className="text-xs bg-muted/50 rounded-lg p-2 space-y-1">
+                      <p>Order ID: <span className="font-mono font-semibold text-foreground">{selectedClaim.shipping_order_id}</span></p>
+                      {selectedClaim.tracking_number && <p>AWB: <span className="font-mono font-semibold text-foreground">{selectedClaim.tracking_number}</span></p>}
+                    </div>
+                    <Button
+                      onClick={cancelBiteshipOrder}
+                      disabled={cancellingBiteship}
+                      variant="destructive"
+                      className="w-full gap-2 h-9"
+                    >
+                      {cancellingBiteship ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                      Cancel Order Biteship
+                    </Button>
                   </div>
                 ) : (
                   <Button
