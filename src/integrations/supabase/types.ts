@@ -430,9 +430,12 @@ export type Database = {
           campaign_id: string
           city: string
           coin_value: number
+          courier_company: string | null
           courier_name: string | null
+          courier_service: string | null
           created_at: string
           delivered_at: string | null
+          destination_area_id: string | null
           id: string
           image_url: string
           notes: string | null
@@ -443,6 +446,7 @@ export type Database = {
           recipient_name: string
           shipped_at: string | null
           shipping_cost: number
+          shipping_eta: string | null
           shipping_method: string
           shipping_order_id: string | null
           shipping_paid: boolean
@@ -458,9 +462,12 @@ export type Database = {
           campaign_id: string
           city: string
           coin_value?: number
+          courier_company?: string | null
           courier_name?: string | null
+          courier_service?: string | null
           created_at?: string
           delivered_at?: string | null
+          destination_area_id?: string | null
           id?: string
           image_url?: string
           notes?: string | null
@@ -471,6 +478,7 @@ export type Database = {
           recipient_name: string
           shipped_at?: string | null
           shipping_cost?: number
+          shipping_eta?: string | null
           shipping_method?: string
           shipping_order_id?: string | null
           shipping_paid?: boolean
@@ -486,9 +494,12 @@ export type Database = {
           campaign_id?: string
           city?: string
           coin_value?: number
+          courier_company?: string | null
           courier_name?: string | null
+          courier_service?: string | null
           created_at?: string
           delivered_at?: string | null
+          destination_area_id?: string | null
           id?: string
           image_url?: string
           notes?: string | null
@@ -499,6 +510,7 @@ export type Database = {
           recipient_name?: string
           shipped_at?: string | null
           shipping_cost?: number
+          shipping_eta?: string | null
           shipping_method?: string
           shipping_order_id?: string | null
           shipping_paid?: boolean
