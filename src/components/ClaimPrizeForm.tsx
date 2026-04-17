@@ -87,6 +87,27 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       });
   }, [user]);
 
+  // Fetch cities when province changes
+  useEffect(() => {
+    if (!form.province) {
+      setCities([]);
+      return;
+    }
+    setCitiesLoading(true);
+    supabase
+      .from("indonesian_cities")
+      .select("city")
+      .eq("province", form.province)
+      .order("city")
+      .then(({ data }) => {
+        const list = (data || []).map((r: any) => r.city as string);
+        setCities(list);
+        setCitiesLoading(false);
+        // Reset city if it's not in the new province's list
+        setForm((prev) => (prev.city && !list.includes(prev.city) ? { ...prev, city: "" } : prev));
+      });
+  }, [form.province]);
+
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
