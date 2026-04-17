@@ -137,14 +137,19 @@ const AdminShipping = () => {
                 ))}
               </div>
               <div className="flex gap-2">
-                <Input
-                  placeholder="Tambah provinsi..."
-                  value={newProvince[zone.id] || ""}
-                  onChange={(e) => setNewProvince(prev => ({ ...prev, [zone.id]: e.target.value }))}
-                  onKeyDown={(e) => e.key === "Enter" && addProvince(zone.id)}
-                  className="h-8 text-xs flex-1"
-                />
-                <Button size="sm" variant="outline" onClick={() => addProvince(zone.id)} className="h-8 gap-1 text-xs">
+                <div className="flex-1">
+                  <LocationCombobox
+                    value={newProvince[zone.id] || ""}
+                    onChange={(v) => setNewProvince(prev => ({ ...prev, [zone.id]: v }))}
+                    options={allProvinces.filter(p => !zones.some(z => z.provinces.includes(p)))}
+                    placeholder="Pilih provinsi untuk ditambah..."
+                    searchPlaceholder="Cari provinsi..."
+                    emptyText="Semua provinsi sudah digunakan."
+                    loading={provincesLoading}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <Button size="sm" variant="outline" onClick={() => addProvince(zone.id)} className="h-8 gap-1 text-xs" disabled={!newProvince[zone.id]}>
                   <Plus className="h-3 w-3" /> Tambah
                 </Button>
               </div>
