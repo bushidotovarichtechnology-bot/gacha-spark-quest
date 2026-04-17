@@ -772,6 +772,7 @@ export type Database = {
           sort_order: number
           tier_id: string
           total: number
+          weight_grams: number
         }
         Insert: {
           auto_refill?: boolean
@@ -786,6 +787,7 @@ export type Database = {
           sort_order?: number
           tier_id: string
           total?: number
+          weight_grams?: number
         }
         Update: {
           auto_refill?: boolean
@@ -800,6 +802,7 @@ export type Database = {
           sort_order?: number
           tier_id?: string
           total?: number
+          weight_grams?: number
         }
         Relationships: [
           {

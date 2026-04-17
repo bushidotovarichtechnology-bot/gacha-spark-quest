@@ -1,0 +1,1 @@
+ALTER TABLE public.tier_prizes ADD COLUMN IF NOT EXISTS weight_grams integer NOT NULL DEFAULT 1000;
