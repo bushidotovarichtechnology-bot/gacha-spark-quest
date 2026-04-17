@@ -1024,6 +1024,7 @@ export type Database = {
     }
     Functions: {
       expire_pending_transactions: { Args: never; Returns: number }
+      expire_unpaid_claims: { Args: never; Returns: number }
       get_admin_stats: { Args: never; Returns: Json }
       get_all_users_admin: {
         Args: never
