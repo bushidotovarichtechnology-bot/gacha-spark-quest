@@ -38,6 +38,7 @@ interface GachaState {
   useFreeDraws: (count: number) => void;
   clearDiscount: () => void;
   refreshCoins: () => Promise<void>;
+  refreshInventory: () => Promise<void>;
 }
 
 const PITY_THRESHOLD = 10;
@@ -73,6 +74,27 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
       setDrawsSinceTierA(coinsData.draws_since_tier_a);
       setFreeDraws((coinsData as any).free_draws ?? 0);
       setActiveDiscountPercent((coinsData as any).active_discount_percent ?? 0);
+    }
+  }, [user]);
+
+  const refreshInventory = useCallback(async () => {
+    if (!user) return;
+    const { data: invData } = await supabase
+      .from("user_inventory")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("won_at", { ascending: false });
+    if (invData) {
+      setItems(invData.map((r) => ({
+        id: r.id,
+        prize: r.prize_name,
+        tier: r.tier_label as "S" | "A" | "B" | "C",
+        campaign: r.campaign_name,
+        campaignId: r.campaign_id,
+        image: r.image_url,
+        coinValue: r.coin_value,
+        wonAt: r.won_at,
+      })));
     }
   }, [user]);
 
@@ -230,7 +252,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GachaContext.Provider value={{
       items, totalCoins, drawsSinceTierA, drawHistory, addPrize, recycleItem, addCoins, spendCoins,
-      pityThreshold: PITY_THRESHOLD, loading, freeDraws, activeDiscountPercent, useFreeDraws, clearDiscount, refreshCoins,
+      pityThreshold: PITY_THRESHOLD, loading, freeDraws, activeDiscountPercent, useFreeDraws, clearDiscount, refreshCoins, refreshInventory,
     }}>
       {children}
     </GachaContext.Provider>

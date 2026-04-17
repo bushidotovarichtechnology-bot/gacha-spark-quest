@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
 
 const RedeemStore = () => {
   const { user } = useAuth();
+  const { refreshInventory } = useGacha();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"store" | "history">("store");
 
@@ -91,8 +93,9 @@ const RedeemStore = () => {
         won_at: new Date().toISOString(),
       });
     },
-    onSuccess: () => {
-      toast.success("🎉 Hadiah berhasil ditukar!");
+    onSuccess: async () => {
+      toast.success("🎉 Hadiah berhasil ditukar! Cek inventory kamu.");
+      await refreshInventory();
       queryClient.invalidateQueries({ queryKey: ["ticket-balance"] });
       queryClient.invalidateQueries({ queryKey: ["redeem-rewards"] });
       queryClient.invalidateQueries({ queryKey: ["redeem-claims"] });
