@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
-import { generateMockTracking, type TrackingResult } from "@/lib/mockTracking";
+import type { TrackingResult, ManifestEntry } from "@/lib/mockTracking";
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
   pending: { icon: Clock, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
@@ -58,17 +58,48 @@ const ClaimHistory = () => {
       return;
     }
     setTrackingLoading(prev => ({ ...prev, [claim.id]: true }));
-    await new Promise(r => setTimeout(r, 700));
-    const result = generateMockTracking(
-      claim.tracking_number,
-      claim.courier_name,
-      claim.shipped_at,
-      claim.city,
-      claim.status === "delivered",
-    );
-    setTracking(prev => ({ ...prev, [claim.id]: result }));
-    setTrackingLoading(prev => ({ ...prev, [claim.id]: false }));
-    toast.success("Status pengiriman diperbarui");
+    try {
+      const { data, error } = await supabase.functions.invoke("track-biteship", {
+        body: {
+          waybill_id: claim.tracking_number,
+          courier_code: claim.courier_name,
+        },
+      });
+      if (error) throw new Error(error.message || "Gagal memuat tracking");
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "Gagal memuat tracking");
+
+      // Map Biteship response -> TrackingResult
+      const history: any[] = data.history || [];
+      const manifest: ManifestEntry[] = history
+        .map((h) => ({
+          date: h.updated_at || h.created_at || new Date().toISOString(),
+          city: h.location || h.service_type || "",
+          description: h.note || h.status || "",
+        }))
+        .reverse();
+
+      const statusRaw: string = (data.status || "").toLowerCase();
+      let status: TrackingResult["status"] = "in_transit";
+      if (statusRaw.includes("deliver")) status = "delivered";
+      else if (statusRaw.includes("pending") || statusRaw.includes("confirm")) status = "pending";
+      else if (statusRaw.includes("pickup") || statusRaw.includes("process") || statusRaw.includes("allocat")) status = "on_process";
+
+      const result: TrackingResult = {
+        waybill: data.waybill_id || claim.tracking_number,
+        courier: (data.courier?.company || claim.courier_name).toString().toUpperCase(),
+        status,
+        origin: data.origin?.location_name || data.origin?.address || "—",
+        destination: data.destination?.location_name || claim.city,
+        receiver: data.destination?.receiver_name,
+        manifest,
+      };
+      setTracking(prev => ({ ...prev, [claim.id]: result }));
+      toast.success("Status pengiriman diperbarui");
+    } catch (err: any) {
+      toast.error("Gagal memuat tracking", { description: err.message });
+    } finally {
+      setTrackingLoading(prev => ({ ...prev, [claim.id]: false }));
+    }
   };
 
   useEffect(() => {
