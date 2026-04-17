@@ -112,7 +112,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const weight = Number(settings.default_weight) || 1000;
+    // Resolve per-prize weight (fallback to default settings weight or 1000g)
+    let weight = Number(settings.default_weight) || 1000;
+    try {
+      const { data: prizeRow } = await supabase
+        .from("tier_prizes")
+        .select("weight_grams, campaign_tiers!inner(campaign_id, label)")
+        .eq("name", claim.prize_name)
+        .eq("campaign_tiers.campaign_id", claim.campaign_id)
+        .eq("campaign_tiers.label", claim.tier_label)
+        .maybeSingle();
+      if (prizeRow && (prizeRow as any).weight_grams) {
+        weight = Number((prizeRow as any).weight_grams) || weight;
+      }
+    } catch { /* fallback */ }
 
     const payload = {
       shipper_contact_name: settings.contact_name,
