@@ -331,15 +331,48 @@ const Profile = () => {
                       <label className="mb-1 block text-xs font-medium text-muted-foreground">Alamat Lengkap</label>
                       <Input value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} placeholder="Jl. ..." className="bg-secondary" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Kota</label>
-                        <Input value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} placeholder="Kota" className="bg-secondary" />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Provinsi</label>
-                        <Input value={profile.province} onChange={(e) => setProfile({ ...profile, province: e.target.value })} placeholder="Provinsi" className="bg-secondary" />
-                      </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Provinsi</label>
+                      <Select
+                        value={profile.province}
+                        onValueChange={(v) => setProfile({ ...profile, province: v })}
+                      >
+                        <SelectTrigger className="bg-secondary">
+                          <SelectValue placeholder={provincesLoading ? "Memuat..." : "Pilih provinsi..."} />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {provinces.map((p) => (
+                            <SelectItem key={p} value={p}>{p}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Kota</label>
+                      <Select
+                        value={profile.city}
+                        onValueChange={(v) => setProfile({ ...profile, city: v })}
+                        disabled={!profile.province || citiesLoading}
+                      >
+                        <SelectTrigger className="bg-secondary">
+                          <SelectValue
+                            placeholder={
+                              !profile.province
+                                ? "Pilih provinsi dulu"
+                                : citiesLoading
+                                  ? "Memuat..."
+                                  : cities.length === 0
+                                    ? "Tidak ada kota"
+                                    : "Pilih kota..."
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {cities.map((c) => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-muted-foreground">Kode Pos</label>
