@@ -10,6 +10,10 @@ interface DinoUnboxAnimationProps {
   drawCount: number;
   /** Tier of the prize (S/A/B/C) - affects animation intensity */
   tier?: "S" | "A" | "B" | "C";
+  /** Image URL of the actual prize won (shown when box opens) */
+  prizeImage?: string;
+  /** Name of the prize (alt text + caption) */
+  prizeName?: string;
 }
 
 // Tier-based configuration
