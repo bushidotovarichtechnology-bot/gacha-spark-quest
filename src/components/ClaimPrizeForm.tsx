@@ -281,41 +281,34 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
               <motion.div key="s2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} className="space-y-4">
                 <div className="space-y-2">
                   <Label>{t("province")}</Label>
-                  <Select value={form.province} onValueChange={(v) => updateField("province", v)}>
-                    <SelectTrigger><SelectValue placeholder={zonesLoading ? "Memuat..." : "Pilih provinsi..."} /></SelectTrigger>
-                    <SelectContent>
-                      {provinces.map((p) => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <LocationCombobox
+                    value={form.province}
+                    onChange={(v) => updateField("province", v)}
+                    options={provinces}
+                    placeholder="Pilih provinsi..."
+                    searchPlaceholder="Cari provinsi..."
+                    emptyText="Provinsi tidak ditemukan."
+                    loading={zonesLoading}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>{t("city")}</Label>
-                  <Select
+                  <LocationCombobox
                     value={form.city}
-                    onValueChange={(v) => updateField("city", v)}
-                    disabled={!form.province || citiesLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          !form.province
-                            ? "Pilih provinsi dulu"
-                            : citiesLoading
-                              ? "Memuat..."
-                              : cities.length === 0
-                                ? "Tidak ada kota tersedia"
-                                : "Pilih kota..."
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {cities.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(v) => updateField("city", v)}
+                    options={cities}
+                    placeholder={
+                      !form.province
+                        ? "Pilih provinsi dulu"
+                        : cities.length === 0
+                          ? "Tidak ada kota tersedia"
+                          : "Pilih kota..."
+                    }
+                    searchPlaceholder="Cari kota..."
+                    emptyText="Kota tidak ditemukan."
+                    disabled={!form.province}
+                    loading={citiesLoading}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>{t("postalCode")}</Label>
