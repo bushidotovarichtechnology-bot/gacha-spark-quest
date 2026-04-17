@@ -141,15 +141,31 @@ const AdminClaims = () => {
     setSavingTracking(false);
   };
 
-  const filtered = filterStatus === "all" ? claims : claims.filter((c) => c.status === filterStatus);
+  // Apply payment filter first — by default admin only sees actionable claims
+  // (payment confirmed via webhook, or no payment required for free shipping).
+  const paymentFiltered = claims.filter((c) => {
+    if (filterPayment === "all") return true;
+    if (filterPayment === "actionable") return c.payment_status === "paid" || c.payment_status === "not_required";
+    if (filterPayment === "unpaid") return c.payment_status === "unpaid";
+    if (filterPayment === "failed") return c.payment_status === "failed";
+    return true;
+  });
+  const filtered = filterStatus === "all" ? paymentFiltered : paymentFiltered.filter((c) => c.status === filterStatus);
   const statusMeta = (status: string) => STATUS_OPTIONS.find((s) => s.value === status) || STATUS_OPTIONS[0];
 
   const statusCounts = {
+    all: paymentFiltered.length,
+    pending: paymentFiltered.filter((c) => c.status === "pending").length,
+    processing: paymentFiltered.filter((c) => c.status === "processing").length,
+    shipped: paymentFiltered.filter((c) => c.status === "shipped").length,
+    delivered: paymentFiltered.filter((c) => c.status === "delivered").length,
+  };
+
+  const paymentCounts = {
+    actionable: claims.filter((c) => c.payment_status === "paid" || c.payment_status === "not_required").length,
+    unpaid: claims.filter((c) => c.payment_status === "unpaid").length,
+    failed: claims.filter((c) => c.payment_status === "failed").length,
     all: claims.length,
-    pending: claims.filter((c) => c.status === "pending").length,
-    processing: claims.filter((c) => c.status === "processing").length,
-    shipped: claims.filter((c) => c.status === "shipped").length,
-    delivered: claims.filter((c) => c.status === "delivered").length,
   };
 
   if (loading) {
