@@ -299,7 +299,7 @@ const CampaignDetail = () => {
           coinValue: prizeCoinValue,
         });
 
-        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
+        results.push({ tier: selectedTier.label, color: selectedTier.color, prize: selectedPrize.name, image: selectedPrize.image_url || image, isPityReward: isPityDraw && rareTiers.length > 0, coinValue: prizeCoinValue });
       }
 
       // DB writes
