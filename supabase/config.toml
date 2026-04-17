@@ -1,1 +1,7 @@
 project_id = "eeyivrgpdbigxpgtujjy"
+
+[functions.secure-draw]
+verify_jwt = true
+
+[functions.midtrans-webhook]
+verify_jwt = false
