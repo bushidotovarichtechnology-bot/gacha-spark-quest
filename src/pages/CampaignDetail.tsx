@@ -214,7 +214,7 @@ const CampaignDetail = () => {
 
     // Run draw calculation immediately (async for DB writes)
     (async () => {
-      const results: { tier: string; color: string; prize: string; isPityReward?: boolean; coinValue: number }[] = [];
+      const results: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean; coinValue: number }[] = [];
       let batchHasPity = false;
       const prizeRemainingCopy: Record<string, number> = {};
       tiers.forEach((t) => {
