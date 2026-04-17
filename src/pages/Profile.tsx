@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import LocationCombobox from "@/components/LocationCombobox";
 import { useToast } from "@/hooks/use-toast";
 import { useProvinces, useCitiesForProvince } from "@/hooks/use-indonesian-locations";
 import defaultAvatar from "@/assets/default-avatar.png";
@@ -333,46 +333,34 @@ const Profile = () => {
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-muted-foreground">Provinsi</label>
-                      <Select
+                      <LocationCombobox
                         value={profile.province}
-                        onValueChange={(v) => setProfile({ ...profile, province: v })}
-                      >
-                        <SelectTrigger className="bg-secondary">
-                          <SelectValue placeholder={provincesLoading ? "Memuat..." : "Pilih provinsi..."} />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-72">
-                          {provinces.map((p) => (
-                            <SelectItem key={p} value={p}>{p}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onChange={(v) => setProfile({ ...profile, province: v })}
+                        options={provinces}
+                        placeholder="Pilih provinsi..."
+                        searchPlaceholder="Cari provinsi..."
+                        emptyText="Provinsi tidak ditemukan."
+                        loading={provincesLoading}
+                      />
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-muted-foreground">Kota</label>
-                      <Select
+                      <LocationCombobox
                         value={profile.city}
-                        onValueChange={(v) => setProfile({ ...profile, city: v })}
-                        disabled={!profile.province || citiesLoading}
-                      >
-                        <SelectTrigger className="bg-secondary">
-                          <SelectValue
-                            placeholder={
-                              !profile.province
-                                ? "Pilih provinsi dulu"
-                                : citiesLoading
-                                  ? "Memuat..."
-                                  : cities.length === 0
-                                    ? "Tidak ada kota"
-                                    : "Pilih kota..."
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-72">
-                          {cities.map((c) => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onChange={(v) => setProfile({ ...profile, city: v })}
+                        options={cities}
+                        placeholder={
+                          !profile.province
+                            ? "Pilih provinsi dulu"
+                            : cities.length === 0
+                              ? "Tidak ada kota"
+                              : "Pilih kota..."
+                        }
+                        searchPlaceholder="Cari kota..."
+                        emptyText="Kota tidak ditemukan."
+                        disabled={!profile.province}
+                        loading={citiesLoading}
+                      />
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-muted-foreground">Kode Pos</label>
