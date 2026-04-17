@@ -47,6 +47,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [zonesLoading, setZonesLoading] = useState(true);
+  const [cities, setCities] = useState<string[]>([]);
+  const [citiesLoading, setCitiesLoading] = useState(false);
 
   const [form, setForm] = useState({
     recipientName: "",
