@@ -26,6 +26,7 @@ interface Claim {
   shipping_method: string;
   shipping_cost: number;
   shipping_paid: boolean;
+  payment_status: string;
   status: string;
   notes: string;
   tracking_number: string | null;
