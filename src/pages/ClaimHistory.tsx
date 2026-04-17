@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User, ExternalLink, Copy } from "lucide-react";
+import { Package, Clock, Truck, CheckCircle, AlertCircle, MapPin, Phone, User, ExternalLink, Copy, RefreshCw, MapPinned } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
+import { generateMockTracking, type TrackingResult } from "@/lib/mockTracking";
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
   pending: { icon: Clock, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
@@ -48,6 +49,27 @@ const ClaimHistory = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [tracking, setTracking] = useState<Record<string, TrackingResult>>({});
+  const [trackingLoading, setTrackingLoading] = useState<Record<string, boolean>>({});
+
+  const refreshTracking = async (claim: Claim) => {
+    if (!claim.tracking_number || !claim.courier_name) {
+      toast.error("Belum ada nomor resi");
+      return;
+    }
+    setTrackingLoading(prev => ({ ...prev, [claim.id]: true }));
+    await new Promise(r => setTimeout(r, 700));
+    const result = generateMockTracking(
+      claim.tracking_number,
+      claim.courier_name,
+      claim.shipped_at,
+      claim.city,
+      claim.status === "delivered",
+    );
+    setTracking(prev => ({ ...prev, [claim.id]: result }));
+    setTrackingLoading(prev => ({ ...prev, [claim.id]: false }));
+    toast.success("Status pengiriman diperbarui");
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -238,6 +260,57 @@ const ClaimHistory = () => {
                               >
                                 <ExternalLink className="h-3 w-3" /> Lacak Paket
                               </a>
+                            )}
+
+                            {/* Refresh + Timeline */}
+                            <div className="pt-2 border-t border-primary/20">
+                              <button
+                                onClick={() => refreshTracking(claim)}
+                                disabled={trackingLoading[claim.id]}
+                                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:brightness-110 disabled:opacity-60 transition-all"
+                              >
+                                <RefreshCw className={`h-3.5 w-3.5 ${trackingLoading[claim.id] ? "animate-spin" : ""}`} />
+                                {tracking[claim.id] ? "Refresh Status" : "Cek Status Paket"}
+                              </button>
+                              <p className="text-[10px] text-muted-foreground mt-1">Data simulasi · integrasi API kurir menyusul</p>
+                            </div>
+
+                            {tracking[claim.id] && (
+                              <div className="mt-2 rounded-lg bg-background/50 border border-border p-2.5 space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-muted-foreground">Rute</span>
+                                  <span className="font-semibold">
+                                    {tracking[claim.id].origin} → {tracking[claim.id].destination}
+                                  </span>
+                                </div>
+                                {tracking[claim.id].receiver && (
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="text-muted-foreground">Diterima oleh</span>
+                                    <span className="font-semibold text-green-400">{tracking[claim.id].receiver}</span>
+                                  </div>
+                                )}
+                                <div className="relative pl-5 space-y-2.5 mt-2">
+                                  <div className="absolute left-[7px] top-1.5 bottom-1.5 w-px bg-border" />
+                                  {tracking[claim.id].manifest.map((m, idx) => (
+                                    <div key={idx} className="relative">
+                                      <div className={`absolute -left-[18px] top-1 h-3 w-3 rounded-full border-2 ${
+                                        idx === 0 ? "bg-primary border-primary" : "bg-background border-border"
+                                      }`} />
+                                      <div className="flex items-start gap-2">
+                                        <MapPinned className={`h-3 w-3 mt-0.5 flex-shrink-0 ${idx === 0 ? "text-primary" : "text-muted-foreground"}`} />
+                                        <div className="flex-1 min-w-0">
+                                          <p className={`text-xs font-medium ${idx === 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                                            {m.description}
+                                          </p>
+                                          <p className="text-[10px] text-muted-foreground/70">
+                                            {format(new Date(m.date), "dd MMM yyyy, HH:mm")} · {m.city}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             )}
                           </div>
                         )}
