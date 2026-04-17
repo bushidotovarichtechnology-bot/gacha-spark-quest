@@ -431,17 +431,58 @@ const DinoUnboxAnimation = ({
                 </motion.div>
               ) : (
                 <motion.div
-                  initial={{ scale: 0, rotate: 0 }}
-                  animate={{ 
-                    scale: config.isRare ? [0, 3, 1.5] : [0, 2, 1.2], 
-                    rotate: config.isRare ? [0, 30, -30, 0] : [0, 20, -20, 0], 
-                    opacity: [0, 1, 1] 
+                  initial={{ scale: 0, rotate: 0, opacity: 0 }}
+                  animate={{
+                    scale: config.isRare ? [0, 1.6, 1.2] : [0, 1.4, 1.1],
+                    rotate: config.isRare ? [0, 15, -15, 0] : [0, 10, -10, 0],
+                    opacity: [0, 1, 1],
                   }}
                   transition={{ duration: config.isRare ? 0.8 : 0.6, ease: "easeOut" }}
-                  className="absolute flex items-center justify-center"
-                  style={{ width: 100, height: 100, right: 20, bottom: 20 }}
+                  className="absolute flex flex-col items-center justify-center gap-1"
+                  style={{ width: 130, height: 130, right: 5, bottom: 5 }}
                 >
-                  <span className="text-6xl">{config.isRare ? "🏆" : "✨"}</span>
+                  {/* Glow halo behind prize */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: [0, 0.8, 0.5], scale: [0.5, 1.4, 1.2] }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    style={{
+                      background: `radial-gradient(circle, ${config.flashColor}66 0%, transparent 70%)`,
+                      filter: "blur(8px)",
+                    }}
+                  />
+                  {prizeImage ? (
+                    <div
+                      className="relative rounded-xl overflow-hidden border-2 bg-card"
+                      style={{
+                        width: 110,
+                        height: 110,
+                        borderColor: config.giftBoxColor.main,
+                        boxShadow: `0 0 30px ${config.flashColor}, 0 0 60px ${config.flashColor}80`,
+                      }}
+                    >
+                      <img
+                        src={prizeImage}
+                        alt={prizeName || "Prize"}
+                        className="w-full h-full object-cover"
+                        style={{ imageRendering: "auto" }}
+                        loading="eager"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-6xl">{config.isRare ? "🏆" : "✨"}</span>
+                  )}
+                  {prizeName && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, duration: 0.3 }}
+                      className="relative text-[10px] font-display font-bold tracking-wider text-center text-foreground bg-background/80 px-2 py-0.5 rounded-md max-w-[120px] truncate"
+                    >
+                      {prizeName}
+                    </motion.p>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
