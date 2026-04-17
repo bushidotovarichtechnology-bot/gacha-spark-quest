@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 const RedeemStore = () => {
   const { user } = useAuth();
+  const { refreshInventory } = useGacha();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"store" | "history">("store");
 
