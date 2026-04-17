@@ -2,24 +2,48 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// SHA-512(order_id + status_code + gross_amount + ServerKey) — Midtrans signature spec
+async function sha512Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-512", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const body = await req.json();
-    const { order_id, transaction_status, payment_type, fraud_status } = body;
+    const {
+      order_id,
+      status_code,
+      gross_amount,
+      signature_key,
+      transaction_status,
+      payment_type,
+      fraud_status,
+    } = body;
 
     console.log("Webhook received:", { order_id, transaction_status, payment_type, fraud_status });
 
-    if (!order_id || !transaction_status) {
+    if (!order_id || !transaction_status || !signature_key || !status_code || !gross_amount) {
       return new Response(JSON.stringify({ error: "Invalid payload" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // === SIGNATURE VERIFICATION ===
+    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY")!;
+    const expected = await sha512Hex(`${order_id}${status_code}${gross_amount}${serverKey}`);
+    if (expected !== signature_key) {
+      console.error("Invalid Midtrans signature for order:", order_id);
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -34,7 +58,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get transaction
     const { data: tx } = await supabase
       .from("transactions")
       .select("*")
@@ -49,7 +72,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update transaction status
     await supabase
       .from("transactions")
       .update({ status, payment_type: payment_type || null })
@@ -57,7 +79,7 @@ Deno.serve(async (req) => {
 
     console.log(`Transaction ${order_id} updated to status: ${status} (was: ${tx.status})`);
 
-    // If settlement and not already credited, add coins to user
+    // Only credit coins on settlement and only once
     if (status === "settlement" && tx.status !== "settlement") {
       const { data: userCoins } = await supabase
         .from("user_coins")
@@ -73,7 +95,6 @@ Deno.serve(async (req) => {
           .eq("user_id", tx.user_id);
         console.log(`Credited ${tx.coins} coins to user ${tx.user_id}. New balance: ${newBalance}`);
       } else {
-        // Create user_coins row if it doesn't exist
         await supabase
           .from("user_coins")
           .insert({ user_id: tx.user_id, balance: tx.coins });
