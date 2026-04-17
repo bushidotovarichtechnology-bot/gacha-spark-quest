@@ -324,9 +324,19 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                 transition={{ delay: 0.2, type: "spring" }}
                 className="mx-auto mb-4"
               >
-                <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient}`}>
-                  <span className="text-4xl">{config.emoji}</span>
-                </div>
+                {prize.image ? (
+                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} p-0.5`}>
+                    <img
+                      src={prize.image}
+                      alt={prize.prize}
+                      className="h-full w-full rounded-xl object-cover bg-card"
+                    />
+                  </div>
+                ) : (
+                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient}`}>
+                    <span className="text-4xl">{config.emoji}</span>
+                  </div>
+                )}
               </motion.div>
 
               <motion.div
