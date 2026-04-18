@@ -231,7 +231,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="py-16">
+      <section id="featured-campaigns" className="scroll-mt-20 py-16">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0 }}
