@@ -234,9 +234,14 @@ const formatRupiah = (value: number) =>
         onClick={() => onSelect(pkg)}
       >
         {/* Badges */}
-        {pkg.is_popular && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground">
-            {t("bestValue")}
+        {isBestValue && (
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground whitespace-nowrap">
+            BEST VALUE
+          </span>
+        )}
+        {pkg.is_popular && !isBestValue && (
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground whitespace-nowrap">
+            POPULER
           </span>
         )}
         {promo && (
