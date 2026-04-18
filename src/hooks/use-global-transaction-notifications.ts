@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
@@ -17,27 +16,31 @@ import { useGacha } from "@/context/GachaContext";
 export const useGlobalTransactionNotifications = () => {
   const { user } = useAuth();
   const { refreshCoins } = useGacha();
-  // Track previous status per row id so we only notify on actual transitions.
   const prevTxStatus = useRef<Record<string, string>>({});
   const prevClaimPayment = useRef<Record<string, string>>({});
+  const ignoredPendingOrders = useRef<Record<string, true>>({});
 
   useEffect(() => {
     if (!user) {
       prevTxStatus.current = {};
       prevClaimPayment.current = {};
+      ignoredPendingOrders.current = {};
       return;
     }
 
-    // Seed initial state so we don't fire toasts on first hydration.
     let cancelled = false;
     (async () => {
       const [{ data: txs }, { data: claims }] = await Promise.all([
-        supabase.from("transactions").select("id,status").eq("user_id", user.id),
+        supabase.from("transactions").select("id,status,order_id").eq("user_id", user.id),
         supabase.from("prize_claims").select("id,payment_status").eq("user_id", user.id),
       ]);
       if (cancelled) return;
-      txs?.forEach((t) => { prevTxStatus.current[t.id] = t.status; });
-      claims?.forEach((c) => { prevClaimPayment.current[c.id] = c.payment_status; });
+      txs?.forEach((t) => {
+        prevTxStatus.current[t.id] = t.status;
+      });
+      claims?.forEach((c) => {
+        prevClaimPayment.current[c.id] = c.payment_status;
+      });
     })();
 
     const channel = supabase
@@ -57,13 +60,19 @@ export const useGlobalTransactionNotifications = () => {
 
           if (prev === row.status) return;
 
+          if (row.status !== "pending") {
+            delete ignoredPendingOrders.current[row.order_id];
+          }
+
           if (row.status === "settlement" && prev !== "settlement") {
             toast.success("Pembayaran Berhasil! 🎉", {
               description: `+${row.coins?.toLocaleString()} koin telah masuk ke saldo kamu.`,
               duration: 8000,
               action: {
                 label: "Lihat",
-                onClick: () => { window.location.href = `/transactions/${row.id}`; },
+                onClick: () => {
+                  window.location.href = `/transactions/${row.id}`;
+                },
               },
             });
             refreshCoins?.();
@@ -83,7 +92,7 @@ export const useGlobalTransactionNotifications = () => {
               duration: 6000,
             });
           }
-        },
+        }
       )
       .on(
         "postgres_changes",
@@ -111,30 +120,33 @@ export const useGlobalTransactionNotifications = () => {
               duration: 8000,
             });
           }
-        },
+        }
       )
       .subscribe();
 
-    // Polling fallback: every 20s, check Midtrans status for any pending transactions
-    // (in case Midtrans webhook is not configured or fails to reach our server).
     const pollPending = async () => {
       const { data: pending } = await supabase
         .from("transactions")
-        .select("order_id, status")
+        .select("order_id,status")
         .eq("user_id", user.id)
         .eq("status", "pending");
+
       if (!pending || pending.length === 0) return;
+
       for (const tx of pending) {
-        try {
-          await supabase.functions.invoke("check-midtrans-status", {
-            body: { order_id: tx.order_id },
-          });
-        } catch (e) {
-          // ignore individual failures; will retry next tick
+        if (ignoredPendingOrders.current[tx.order_id]) continue;
+
+        const { data, error } = await supabase.functions.invoke("check-midtrans-status", {
+          body: { order_id: tx.order_id },
+        });
+
+        if (error) continue;
+        if (data?.retriable === false) {
+          ignoredPendingOrders.current[tx.order_id] = true;
         }
       }
     };
-    // First poll after 5s, then every 20s
+
     const firstPoll = setTimeout(pollPending, 5000);
     const pollInterval = setInterval(pollPending, 20000);
 
