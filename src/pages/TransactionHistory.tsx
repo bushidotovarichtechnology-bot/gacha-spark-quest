@@ -272,6 +272,7 @@ const TransactionHistory = () => {
   };
 
 
+  const totalSpent = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.amount, 0);
   const totalCoins = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.coins, 0);
 
   return (
