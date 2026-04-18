@@ -51,7 +51,14 @@ const HeroSection = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, type: "spring" }}
           >
-            <Button variant="gold" size="lg" className="gap-2 px-8 py-6 text-base">
+            <Button
+              variant="gold"
+              size="lg"
+              className="gap-2 px-8 py-6 text-base"
+              onClick={() => {
+                document.getElementById("featured-campaigns")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
               <Sparkles className="h-5 w-5" />
               {t("testYourLuck")}
             </Button>
