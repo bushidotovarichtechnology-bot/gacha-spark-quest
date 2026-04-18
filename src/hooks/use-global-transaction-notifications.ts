@@ -115,8 +115,33 @@ export const useGlobalTransactionNotifications = () => {
       )
       .subscribe();
 
+    // Polling fallback: every 20s, check Midtrans status for any pending transactions
+    // (in case Midtrans webhook is not configured or fails to reach our server).
+    const pollPending = async () => {
+      const { data: pending } = await supabase
+        .from("transactions")
+        .select("order_id, status")
+        .eq("user_id", user.id)
+        .eq("status", "pending");
+      if (!pending || pending.length === 0) return;
+      for (const tx of pending) {
+        try {
+          await supabase.functions.invoke("check-midtrans-status", {
+            body: { order_id: tx.order_id },
+          });
+        } catch (e) {
+          // ignore individual failures; will retry next tick
+        }
+      }
+    };
+    // First poll after 5s, then every 20s
+    const firstPoll = setTimeout(pollPending, 5000);
+    const pollInterval = setInterval(pollPending, 20000);
+
     return () => {
       cancelled = true;
+      clearTimeout(firstPoll);
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [user, refreshCoins]);

@@ -1,0 +1,1 @@
+UPDATE public.user_coins SET balance = balance + 3000, updated_at = now() WHERE user_id = 'f32bc9ff-188c-4fa5-ba92-08af7f2eebf2';
