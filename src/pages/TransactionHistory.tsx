@@ -37,6 +37,7 @@ const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
 const canRetry = (status: string) => ["expire", "cancel", "deny"].includes(status);
+const canContinue = (status: string) => status === "pending";
 
 const EXPIRY_HOURS = 24;
 
@@ -83,6 +84,7 @@ const TransactionHistory = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [continuing, setContinuing] = useState<string | null>(null);
   const prevStatusRef = useRef<Record<string, string>>({});
 
   const fetchTransactions = async () => {
@@ -235,6 +237,41 @@ const TransactionHistory = () => {
     }
   };
 
+  const handleContinue = async (tx: Transaction) => {
+    if (!tx.snap_token) {
+      // No token saved → fall back to creating a new transaction
+      handleRetry(tx);
+      return;
+    }
+    setContinuing(tx.id);
+    try {
+      if (!window.snap) {
+        toast.error("Payment gateway belum siap", { description: "Silakan refresh halaman dan coba lagi." });
+        return;
+      }
+      window.snap.pay(tx.snap_token, {
+        onSuccess: () => {
+          toast.success("Pembayaran terkirim", { description: "Koin akan masuk otomatis setelah konfirmasi sistem." });
+          fetchTransactions();
+        },
+        onPending: () => {
+          toast("Menunggu Pembayaran", { description: "Selesaikan pembayaran Anda." });
+        },
+        onError: () => {
+          toast.error("Pembayaran Gagal", { description: "Terjadi kesalahan saat memproses pembayaran." });
+        },
+        onClose: () => {
+          fetchTransactions();
+        },
+      });
+    } catch (err: any) {
+      toast.error("Gagal", { description: err.message || "Tidak dapat membuka pembayaran." });
+    } finally {
+      setContinuing(null);
+    }
+  };
+
+
   const totalSpent = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.amount, 0);
   const totalCoins = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.coins, 0);
 
@@ -311,6 +348,7 @@ const TransactionHistory = () => {
               const StatusIcon = cfg.icon;
               const date = new Date(tx.created_at);
               const showRetry = canRetry(tx.status);
+              const showContinue = canContinue(tx.status);
 
               return (
                 <motion.div
@@ -356,22 +394,40 @@ const TransactionHistory = () => {
                           <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                         </div>
                       </div>
-                      {showRetry && (
-                        <div className="mt-3 flex justify-end">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1.5 text-xs"
-                            disabled={retrying === tx.id}
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRetry(tx); }}
-                          >
-                            {retrying === tx.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <RefreshCw className="h-3.5 w-3.5" />
-                            )}
-                            Bayar Ulang
-                          </Button>
+                      {(showRetry || showContinue) && (
+                        <div className="mt-3 flex justify-end gap-2">
+                          {showContinue && (
+                            <Button
+                              size="sm"
+                              variant="gold"
+                              className="gap-1.5 text-xs"
+                              disabled={continuing === tx.id}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleContinue(tx); }}
+                            >
+                              {continuing === tx.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Coins className="h-3.5 w-3.5" />
+                              )}
+                              Lanjutkan Bayar
+                            </Button>
+                          )}
+                          {showRetry && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-xs"
+                              disabled={retrying === tx.id}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRetry(tx); }}
+                            >
+                              {retrying === tx.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-3.5 w-3.5" />
+                              )}
+                              Bayar Ulang
+                            </Button>
+                          )}
                         </div>
                       )}
                     </CardContent>
