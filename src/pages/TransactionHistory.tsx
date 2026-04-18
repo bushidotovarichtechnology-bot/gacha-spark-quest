@@ -37,6 +37,7 @@ const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
 const canRetry = (status: string) => ["expire", "cancel", "deny"].includes(status);
+const canContinue = (status: string) => status === "pending";
 
 const EXPIRY_HOURS = 24;
 
