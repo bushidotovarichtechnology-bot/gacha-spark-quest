@@ -84,6 +84,7 @@ const TransactionHistory = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [continuing, setContinuing] = useState<string | null>(null);
   const prevStatusRef = useRef<Record<string, string>>({});
 
   const fetchTransactions = async () => {
