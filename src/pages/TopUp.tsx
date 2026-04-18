@@ -214,7 +214,9 @@ const TopUp = () => {
 const formatRupiah = (value: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
+  const maxPrice = coinPackages.length ? Math.max(...coinPackages.map((p) => p.price)) : 0;
   const CoinPackageCard = ({ pkg, index, onSelect }: { pkg: CoinPackage; index: number; onSelect: (pkg: CoinPackage) => void }) => {
+    const isBestValue = pkg.price === maxPrice && coinPackages.length > 1;
     const Icon = ICON_MAP[pkg.icon] || Coins;
     const promo = isPromoActive(pkg);
     const finalPrice = getDiscountedPrice(pkg);
@@ -232,9 +234,14 @@ const formatRupiah = (value: number) =>
         onClick={() => onSelect(pkg)}
       >
         {/* Badges */}
-        {pkg.is_popular && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground">
-            {t("bestValue")}
+        {isBestValue && (
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground whitespace-nowrap">
+            BEST VALUE
+          </span>
+        )}
+        {pkg.is_popular && !isBestValue && (
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground whitespace-nowrap">
+            POPULER
           </span>
         )}
         {promo && (
