@@ -214,9 +214,9 @@ const TopUp = () => {
 const formatRupiah = (value: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
-  const maxPrice = packages.length ? Math.max(...packages.map((p) => p.price)) : 0;
+  const maxPrice = coinPackages.length ? Math.max(...coinPackages.map((p) => p.price)) : 0;
   const CoinPackageCard = ({ pkg, index, onSelect }: { pkg: CoinPackage; index: number; onSelect: (pkg: CoinPackage) => void }) => {
-    const isBestValue = pkg.price === maxPrice && packages.length > 1;
+    const isBestValue = pkg.price === maxPrice && coinPackages.length > 1;
     const Icon = ICON_MAP[pkg.icon] || Coins;
     const promo = isPromoActive(pkg);
     const finalPrice = getDiscountedPrice(pkg);
