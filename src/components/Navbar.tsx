@@ -111,11 +111,6 @@ const Navbar = () => {
                     <User className="h-4 w-4" /> Profil
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/profile?tab=avatar" className="flex items-center gap-2">
-                    <Camera className="h-4 w-4" /> Edit Foto Profil
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 text-destructive">
                   <LogOut className="h-4 w-4" /> {t("logout")}
