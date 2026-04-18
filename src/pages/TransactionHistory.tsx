@@ -394,22 +394,40 @@ const TransactionHistory = () => {
                           <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                         </div>
                       </div>
-                      {showRetry && (
-                        <div className="mt-3 flex justify-end">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1.5 text-xs"
-                            disabled={retrying === tx.id}
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRetry(tx); }}
-                          >
-                            {retrying === tx.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <RefreshCw className="h-3.5 w-3.5" />
-                            )}
-                            Bayar Ulang
-                          </Button>
+                      {(showRetry || showContinue) && (
+                        <div className="mt-3 flex justify-end gap-2">
+                          {showContinue && (
+                            <Button
+                              size="sm"
+                              variant="gold"
+                              className="gap-1.5 text-xs"
+                              disabled={continuing === tx.id}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleContinue(tx); }}
+                            >
+                              {continuing === tx.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Coins className="h-3.5 w-3.5" />
+                              )}
+                              Lanjutkan Bayar
+                            </Button>
+                          )}
+                          {showRetry && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-xs"
+                              disabled={retrying === tx.id}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRetry(tx); }}
+                            >
+                              {retrying === tx.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-3.5 w-3.5" />
+                              )}
+                              Bayar Ulang
+                            </Button>
+                          )}
                         </div>
                       )}
                     </CardContent>
