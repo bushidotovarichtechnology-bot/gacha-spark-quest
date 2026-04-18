@@ -237,7 +237,41 @@ const TransactionHistory = () => {
     }
   };
 
-  const totalSpent = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.amount, 0);
+  const handleContinue = async (tx: Transaction) => {
+    if (!tx.snap_token) {
+      // No token saved → fall back to creating a new transaction
+      handleRetry(tx);
+      return;
+    }
+    setContinuing(tx.id);
+    try {
+      if (!window.snap) {
+        toast.error("Payment gateway belum siap", { description: "Silakan refresh halaman dan coba lagi." });
+        return;
+      }
+      window.snap.pay(tx.snap_token, {
+        onSuccess: () => {
+          toast.success("Pembayaran terkirim", { description: "Koin akan masuk otomatis setelah konfirmasi sistem." });
+          fetchTransactions();
+        },
+        onPending: () => {
+          toast("Menunggu Pembayaran", { description: "Selesaikan pembayaran Anda." });
+        },
+        onError: () => {
+          toast.error("Pembayaran Gagal", { description: "Terjadi kesalahan saat memproses pembayaran." });
+        },
+        onClose: () => {
+          fetchTransactions();
+        },
+      });
+    } catch (err: any) {
+      toast.error("Gagal", { description: err.message || "Tidak dapat membuka pembayaran." });
+    } finally {
+      setContinuing(null);
+    }
+  };
+
+
   const totalCoins = transactions.filter((t) => t.status === "settlement").reduce((s, t) => s + t.coins, 0);
 
   return (
