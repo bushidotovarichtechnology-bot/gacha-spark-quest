@@ -348,6 +348,7 @@ const TransactionHistory = () => {
               const StatusIcon = cfg.icon;
               const date = new Date(tx.created_at);
               const showRetry = canRetry(tx.status);
+              const showContinue = canContinue(tx.status);
 
               return (
                 <motion.div
