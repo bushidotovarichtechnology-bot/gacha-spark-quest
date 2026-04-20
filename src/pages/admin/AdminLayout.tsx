@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star, Gift, Coins, Ticket, Truck, ScrollText, Ban, CreditCard } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star, Gift, Coins, Ticket, Truck, ScrollText, Ban, CreditCard, Zap, FlaskConical } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -23,6 +25,35 @@ const navItems = [
 const AdminLayout = () => {
   const { signOut } = useAuth();
   const location = useLocation();
+  const [midtransMode, setMidtransMode] = useState<"sandbox" | "production" | null>(null);
+
+  useEffect(() => {
+    const fetchMode = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "midtrans_mode")
+        .maybeSingle();
+      const m = (data?.value as { mode?: string } | null)?.mode;
+      setMidtransMode(m === "production" ? "production" : "sandbox");
+    };
+    fetchMode();
+
+    const channel = supabase
+      .channel("admin-midtrans-mode")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings", filter: "key=eq.midtrans_mode" },
+        () => fetchMode(),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const isProd = midtransMode === "production";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -68,8 +99,28 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="ml-56 flex-1 p-6">
-        <Outlet />
+      <main className="ml-56 flex-1">
+        {/* Header bar */}
+        <header className="sticky top-0 z-30 flex h-12 items-center justify-end gap-3 border-b border-border/50 bg-background/80 px-6 backdrop-blur-xl">
+          {midtransMode && (
+            <Link
+              to="/admin/payment-settings"
+              title="Klik untuk mengubah mode Midtrans"
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                isProd
+                  ? "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                  : "border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15 dark:text-amber-400"
+              }`}
+            >
+              {isProd ? <Zap className="h-3 w-3" /> : <FlaskConical className="h-3 w-3" />}
+              Midtrans: {isProd ? "PRODUCTION" : "SANDBOX"}
+              <span className={`ml-1 inline-block h-1.5 w-1.5 rounded-full ${isProd ? "bg-destructive animate-pulse" : "bg-amber-500"}`} />
+            </Link>
+          )}
+        </header>
+        <div className="p-6">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
