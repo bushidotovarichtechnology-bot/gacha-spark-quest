@@ -314,7 +314,7 @@ const Inventory = () => {
                       alt={item.prize}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-cover opacity-60 transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-contain opacity-60 transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
                     <div className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 font-display text-xs font-black ${meta.color}`}>

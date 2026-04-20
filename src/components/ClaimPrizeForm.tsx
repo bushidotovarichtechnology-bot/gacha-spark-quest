@@ -243,7 +243,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
         {/* Prize summary */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3 bg-muted/30">
-          <img src={item.image} alt={item.prize} className="h-12 w-12 rounded-lg object-cover" />
+          <img src={item.image} alt={item.prize} className="h-12 w-12 rounded-lg object-contain bg-secondary/40" />
           <div className="flex-1 min-w-0">
             <p className="font-display text-sm font-semibold text-foreground truncate">{item.prize}</p>
             <p className="text-xs text-muted-foreground">{item.campaign} · {t(`tier${item.tier}Label`)}</p>

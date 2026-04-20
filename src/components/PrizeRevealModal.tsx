@@ -194,7 +194,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                         <img
                           src={p.image}
                           alt={p.prize}
-                          className={`h-9 w-9 shrink-0 rounded-lg object-cover border bg-gradient-to-br ${c.gradient} p-0.5`}
+                          className={`h-9 w-9 shrink-0 rounded-lg object-contain border bg-gradient-to-br ${c.gradient} p-0.5`}
                         />
                       ) : (
                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${c.gradient} text-sm font-black text-background`}>
@@ -425,7 +425,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                     <img
                       src={prize.image}
                       alt={prize.prize}
-                      className="h-full w-full rounded-xl object-cover bg-card"
+                      className="h-full w-full rounded-xl object-contain bg-card"
                     />
                   </div>
                 ) : (
