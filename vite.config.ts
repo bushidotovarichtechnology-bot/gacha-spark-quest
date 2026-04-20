@@ -49,7 +49,6 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-slot",
             "@radix-ui/react-switch",
           ],
-          "icons": ["lucide-react"],
           "date": ["date-fns"],
         },
       },
