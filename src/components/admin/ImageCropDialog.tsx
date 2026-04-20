@@ -25,7 +25,7 @@ interface ImageCropDialogProps {
   title?: string;
 }
 
-async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string): Promise<Blob> {
+async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string, quality = 0.9): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -46,9 +46,14 @@ async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string): P
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error("Gagal membuat gambar"));
-    }, mimeType, 0.9);
+    }, mimeType, quality);
   });
 }
+
+// Output WebP @ 0.85 untuk hemat storage tanpa perubahan visual yang terlihat
+const OUTPUT_MIME = "image/webp";
+const OUTPUT_QUALITY = 0.85;
+const OUTPUT_EXT = "webp";
 
 export function ImageCropDialog({
   file,
@@ -90,11 +95,9 @@ export function ImageCropDialog({
     if (!imageSrc || !croppedArea || !file) return;
     setSaving(true);
     try {
-      const mime = file.type || "image/jpeg";
-      const blob = await getCroppedBlob(imageSrc, croppedArea, mime);
-      const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+      const blob = await getCroppedBlob(imageSrc, croppedArea, OUTPUT_MIME, OUTPUT_QUALITY);
       const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
-      const cropped = new File([blob], `${baseName}-${aspectKey.replace(":", "x")}.${ext}`, { type: mime });
+      const cropped = new File([blob], `${baseName}-${aspectKey.replace(":", "x")}.${OUTPUT_EXT}`, { type: OUTPUT_MIME });
       await onCropped(blob, cropped);
       onOpenChange(false);
     } finally {
