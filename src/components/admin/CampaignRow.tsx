@@ -64,7 +64,7 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="h-7 text-sm" />
               <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" className="h-7 text-xs" />
               <div className="flex items-center gap-1.5">
-                <NumberInput value={price} onValueChange={setPrice} className="h-7 text-xs w-24" placeholder="Koin" />
+                <NumberInput value={price} onValueChange={setPrice} suffix="koin" className="h-7 text-xs w-28" placeholder="Harga" />
                 <Select value={subcategoryId || "none"} onValueChange={(v) => setSubcategoryId(v === "none" ? "" : v)}>
                   <SelectTrigger className="h-7 text-xs w-40">
                     <SelectValue placeholder="Kategori" />

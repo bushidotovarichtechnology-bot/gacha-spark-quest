@@ -45,11 +45,11 @@ export const PackageForm = ({ open, onOpenChange, editing, form, setForm, saving
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Jumlah Koin</Label>
-            <NumberInput value={form.coins} onValueChange={(val) => setForm({ ...form, coins: val })} />
+            <NumberInput value={form.coins} suffix="koin" onValueChange={(val) => setForm({ ...form, coins: val })} />
           </div>
           <div>
             <Label>Harga (IDR)</Label>
-            <NumberInput value={form.price} onValueChange={(val) => setForm({ ...form, price: val })} />
+            <NumberInput value={form.price} prefix="Rp" onValueChange={(val) => setForm({ ...form, price: val })} />
           </div>
         </div>
         <div>

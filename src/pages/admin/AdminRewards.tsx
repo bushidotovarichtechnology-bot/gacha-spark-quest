@@ -271,7 +271,7 @@ const AdminRewards = () => {
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Jumlah Tiket untuk Ditukarkan</Label>
-              <NumberInput min={1} placeholder="10" value={form.ticket_cost} onValueChange={(val) => setForm({ ...form, ticket_cost: val })} />
+              <NumberInput min={1} suffix="tiket" placeholder="10" value={form.ticket_cost} onValueChange={(val) => setForm({ ...form, ticket_cost: val })} />
             </div>
 
             <div className="space-y-1.5">
@@ -289,7 +289,7 @@ const AdminRewards = () => {
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Stok Tersedia</Label>
-              <NumberInput min={0} placeholder="0" value={form.stock} onValueChange={(val) => setForm({ ...form, stock: val })} />
+              <NumberInput min={0} suffix="pcs" placeholder="0" value={form.stock} onValueChange={(val) => setForm({ ...form, stock: val })} />
             </div>
 
             <div className="flex items-end gap-2 pb-1">

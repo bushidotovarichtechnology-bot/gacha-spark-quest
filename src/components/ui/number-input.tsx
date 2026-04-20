@@ -1,34 +1,34 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 /**
  * NumberInput
  * Displays a number with Indonesian thousand separators (e.g. 1.000.000)
- * while emitting a raw numeric value via onValueChange (or via onChange with e.target.value as the raw number string).
- *
- * Use this for price/coin/quantity fields in admin where readability matters.
- * Does not support decimals (integer only).
+ * while emitting a raw numeric value via onValueChange.
+ * Optional prefix (e.g. "Rp") and suffix (e.g. "koin") rendered as adornments inside the field.
  */
 export interface NumberInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type" | "prefix"> {
   value: number | string | null | undefined;
   onValueChange?: (value: number) => void;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   min?: number;
   max?: number;
+  prefix?: string;
+  suffix?: string;
 }
 
 const formatID = (n: number) => new Intl.NumberFormat("id-ID").format(n);
 
 const parseRaw = (str: string): number => {
-  // Keep digits only
   const digits = str.replace(/\D/g, "");
   if (!digits) return 0;
   return parseInt(digits, 10) || 0;
 };
 
 export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ value, onValueChange, onChange, min = 0, max, className, ...props }, ref) => {
+  ({ value, onValueChange, onChange, min = 0, max, className, prefix, suffix, ...props }, ref) => {
     const numericValue = typeof value === "number" ? value : parseRaw(String(value ?? ""));
     const display = numericValue === 0 && (value === "" || value === null || value === undefined)
       ? ""
@@ -42,7 +42,6 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       onValueChange?.(raw);
 
       if (onChange) {
-        // Provide a synthetic event with the raw numeric string as value
         const synthetic = {
           ...e,
           target: { ...e.target, value: String(raw) },
@@ -52,16 +51,51 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
       }
     };
 
+    // Approximate adornment widths (ch units scale with font-size)
+    const prefixPad = prefix ? `${prefix.length + 1.5}ch` : undefined;
+    const suffixPad = suffix ? `${suffix.length + 1.5}ch` : undefined;
+
+    if (!prefix && !suffix) {
+      return (
+        <Input
+          ref={ref}
+          type="text"
+          inputMode="numeric"
+          value={display}
+          onChange={handleChange}
+          className={className}
+          {...props}
+        />
+      );
+    }
+
     return (
-      <Input
-        ref={ref}
-        type="text"
-        inputMode="numeric"
-        value={display}
-        onChange={handleChange}
-        className={className}
-        {...props}
-      />
+      <div className="relative w-full">
+        {prefix && (
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-muted-foreground select-none">
+            {prefix}
+          </span>
+        )}
+        <Input
+          ref={ref}
+          type="text"
+          inputMode="numeric"
+          value={display}
+          onChange={handleChange}
+          className={cn(className)}
+          style={{
+            paddingLeft: prefixPad,
+            paddingRight: suffixPad,
+            ...(props.style ?? {}),
+          }}
+          {...props}
+        />
+        {suffix && (
+          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-muted-foreground select-none">
+            {suffix}
+          </span>
+        )}
+      </div>
     );
   }
 );

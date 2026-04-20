@@ -268,7 +268,7 @@ const AdminCampaigns = () => {
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">Max 5MB, format JPG/PNG/WebP</p>
             </div>
-            <NumberInput placeholder="Harga (koin)" value={newCampaign.price} onValueChange={(val) => setNewCampaign({ ...newCampaign, price: val })} />
+            <NumberInput placeholder="Harga" suffix="koin" value={newCampaign.price} onValueChange={(val) => setNewCampaign({ ...newCampaign, price: val })} />
           </div>
           <div>
             <label className="mb-1 block text-xs text-muted-foreground">Subkategori (opsional)</label>

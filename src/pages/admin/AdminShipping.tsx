@@ -164,6 +164,7 @@ const AdminShipping = () => {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Harga (Rp)</Label>
                   <NumberInput
+                    prefix="Rp"
                     value={zone.regular_price}
                     onValueChange={(val) => updateZone(zone.id, "regular_price", val)}
                     className="h-8 text-sm"
@@ -185,6 +186,7 @@ const AdminShipping = () => {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Harga (Rp)</Label>
                   <NumberInput
+                    prefix="Rp"
                     value={zone.express_price}
                     onValueChange={(val) => updateZone(zone.id, "express_price", val)}
                     className="h-8 text-sm"
@@ -214,6 +216,7 @@ const AdminShipping = () => {
                     <div className="space-y-1.5">
                       <Label className="text-xs">Harga (Rp)</Label>
                       <NumberInput
+                        prefix="Rp"
                         value={zone.same_day_price}
                         onValueChange={(val) => updateZone(zone.id, "same_day_price", val)}
                         className="h-8 text-sm"

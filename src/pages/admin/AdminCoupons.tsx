@@ -222,7 +222,7 @@ const AdminCoupons = () => {
               </div>
               <div>
                 <Label>Nilai Benefit</Label>
-                <NumberInput min={0} value={form.benefit_value} onValueChange={(val) => setForm({ ...form, benefit_value: val })} />
+                <NumberInput min={0} suffix={form.benefit_type === "discount_percent" ? "%" : form.benefit_type === "bonus_coins" ? "koin" : ""} value={form.benefit_value} onValueChange={(val) => setForm({ ...form, benefit_value: val })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
