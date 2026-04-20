@@ -148,6 +148,7 @@ const Index = () => {
         .from("campaigns")
         .select("*, campaign_tiers(id, remaining, total, label)")
         .eq("is_active", true)
+        .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
 
       if (selectedSubcategoryId) {
