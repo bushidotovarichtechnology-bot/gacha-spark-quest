@@ -249,7 +249,7 @@ const formatRupiah = (value: number) =>
           </span>
         )}
         {promo && (
-          <span className="absolute -top-3 right-2 rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold text-white flex items-center gap-1">
+          <span className="absolute -top-3 right-2 rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-white flex items-center gap-1">
             <Percent className="h-3 w-3" /> {pkg.discount_percent}%
           </span>
         )}
@@ -283,7 +283,7 @@ const formatRupiah = (value: number) =>
 
         {/* Countdown Timer */}
         {promo && countdown && (
-          <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-green-500/10 px-2 py-1 text-xs font-medium text-green-400">
+          <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400">
             <Clock className="h-3 w-3" />
             {countdown}
           </div>
