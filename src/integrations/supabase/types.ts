@@ -140,6 +140,7 @@ export type Database = {
           created_at: string
           icon: string
           id: string
+          image_url: string
           name: string
           sort_order: number
         }
@@ -147,6 +148,7 @@ export type Database = {
           created_at?: string
           icon?: string
           id?: string
+          image_url?: string
           name: string
           sort_order?: number
         }
@@ -154,6 +156,7 @@ export type Database = {
           created_at?: string
           icon?: string
           id?: string
+          image_url?: string
           name?: string
           sort_order?: number
         }
@@ -800,6 +803,7 @@ export type Database = {
           category_id: string
           created_at: string
           id: string
+          image_url: string
           name: string
           sort_order: number
         }
@@ -807,6 +811,7 @@ export type Database = {
           category_id: string
           created_at?: string
           id?: string
+          image_url?: string
           name: string
           sort_order?: number
         }
@@ -814,6 +819,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           id?: string
+          image_url?: string
           name?: string
           sort_order?: number
         }
