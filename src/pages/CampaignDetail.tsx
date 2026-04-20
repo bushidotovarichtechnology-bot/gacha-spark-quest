@@ -55,6 +55,21 @@ const tierGlowMap: Record<string, string> = {
   "text-muted-foreground": "",
 };
 
+// Banner gradients per tier — kitakuji-inspired chevron banner
+const tierBannerMap: Record<string, string> = {
+  S: "from-amber-300 via-yellow-400 to-orange-500", // Gold
+  A: "from-fuchsia-500 via-purple-500 to-indigo-500", // Purple
+  B: "from-pink-400 via-rose-400 to-red-400", // Pink
+  C: "from-slate-400 via-slate-500 to-slate-600", // Silver
+};
+
+const tierLabelMap: Record<string, string> = {
+  S: "Grand Prize",
+  A: "Gold",
+  B: "Silver",
+  C: "Bronze",
+};
+
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
 const CampaignDetail = () => {
@@ -281,81 +296,129 @@ const CampaignDetail = () => {
         <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.2em] text-accent">
           {t("prizePool")}
         </h2>
-        <div className="space-y-3">
+        <div className="space-y-6">
           {tiers.map((tier, i) => {
             const tierRemaining = tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
             const tierTotal = tier.prizes.reduce((s: number, p: any) => s + p.total, 0);
             const pct = tierTotal > 0 ? (tierRemaining / tierTotal) * 100 : 0;
+            const bannerGradient = tierBannerMap[tier.label] || tierBannerMap.C;
+            const tierLabel = tierLabelMap[tier.label] || tier.name;
+            const isGrand = tier.label === "S";
+            const TierIcon = tier.icon;
             return (
               <motion.div
                 key={tier.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={`overflow-hidden rounded-xl border p-4 ${tierBgMap[tier.color]} ${tierGlowMap[tier.color]}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className="space-y-3"
               >
-                <div className="flex items-start gap-3">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background/50 font-display text-lg font-black ${tier.color}`}>
-                    {tier.label}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center justify-between">
-                      <h3 className={`font-display text-sm font-semibold ${tier.color}`}>
-                        {tier.name}
-                      </h3>
-                      <span className={`text-xs font-semibold ${tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0) <= 2 ? "text-destructive animate-pulse-glow" : "text-muted-foreground"}`}>
-                        {tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0)}/{tier.prizes.reduce((s: number, p: any) => s + p.total, 0)} {t("left")}
+                {/* Kitakuji-style chevron banner */}
+                <div className="relative">
+                  <div
+                    className={`relative flex h-10 items-center bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${isGrand ? "animate-pulse-glow" : ""}`}
+                    style={{
+                      clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)",
+                    }}
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm ring-2 ring-white/40">
+                      <TierIcon className="h-3.5 w-3.5 text-white drop-shadow" />
+                    </div>
+                    <span className="ml-2 font-display text-sm font-black uppercase tracking-wider text-white drop-shadow-md">
+                      {tier.label} · {tierLabel}
+                    </span>
+                    <span className="ml-3 hidden text-xs font-bold text-white/90 drop-shadow sm:inline">
+                      {tier.name}
+                    </span>
+                    <div className="ml-auto flex items-center gap-2">
+                      <span className={`rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-bold text-white ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
+                        {tierRemaining}/{tierTotal}
                       </span>
                     </div>
-                    <div className="mb-2 flex flex-wrap gap-2">
-                      {tier.prizes.map((p: any) => (
-                        <div
-                          key={p.id}
-                          className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs cursor-pointer transition-all hover:scale-105 ${p.remaining <= 0 ? "bg-destructive/20 opacity-60" : "bg-background/40 hover:bg-background/60"}`}
-          onClick={() => {
+                  </div>
+                  {/* Decorative shine line */}
+                  <div className="pointer-events-none absolute inset-x-0 top-1 h-px bg-white/40" style={{ clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)" }} />
+                </div>
+
+                {/* Progress bar */}
+                <div className="h-1 overflow-hidden rounded-full bg-secondary/60">
+                  <motion.div
+                    className={`h-full rounded-full bg-gradient-to-r ${bannerGradient}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 1, ease: "easeOut", delay: i * 0.15 }}
+                  />
+                </div>
+
+                {/* Prize cards grid */}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {tier.prizes.map((p: any) => {
+                    const isOut = p.remaining <= 0;
+                    const coinVal = p.coin_value > 0 ? p.coin_value : (coinValues[tier.label] || 15);
+                    return (
+                      <motion.div
+                        key={p.id}
+                        whileHover={{ scale: isOut ? 1 : 1.02 }}
+                        className={`group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-xl border p-3 transition-all ${
+                          isOut
+                            ? "border-destructive/30 bg-destructive/5 opacity-60"
+                            : `${tierBgMap[tier.color]} hover:shadow-lg`
+                        }`}
+                        onClick={() => {
                           const imagesInTier = tier.prizes.filter((pr: any) => pr.image_url).map((pr: any) => ({ url: pr.image_url, name: pr.name, description: pr.description }));
-            const idx = imagesInTier.findIndex((img: any) => img.url === p.image_url);
-            if (imagesInTier.length > 0 && idx >= 0) {
-              setPreviewImage({ url: p.image_url, name: p.name, description: p.description, images: imagesInTier, index: idx });
-            }
-          }}
+                          const idx = imagesInTier.findIndex((img: any) => img.url === p.image_url);
+                          if (imagesInTier.length > 0 && idx >= 0) {
+                            setPreviewImage({ url: p.image_url, name: p.name, description: p.description, images: imagesInTier, index: idx });
+                          }
+                        }}
+                      >
+                        {/* Tier corner ribbon */}
+                        <div
+                          className={`absolute right-0 top-0 bg-gradient-to-br ${bannerGradient} px-2 py-0.5 text-[9px] font-black text-white shadow-md`}
+                          style={{ clipPath: "polygon(12px 0, 100% 0, 100% 100%, 0 100%)" }}
                         >
-                          {p.image_url ? (
-                            <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded-md object-cover ring-1 ring-border/50" />
-                          ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                              <Gift className="h-3.5 w-3.5" />
-                            </div>
+                          {tier.label}
+                        </div>
+
+                        {p.image_url ? (
+                          <div className="relative shrink-0">
+                            <img src={p.image_url} alt={p.name} className={`h-16 w-16 rounded-lg object-cover ring-2 ring-border/50 transition-transform group-hover:scale-110 ${isOut ? "grayscale" : ""}`} />
+                            {isOut && (
+                              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/70">
+                                <Ban className="h-5 w-5 text-destructive" />
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <Gift className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1 pr-6">
+                          <p className={`truncate text-sm font-semibold ${isOut ? "text-destructive/70 line-through" : "text-foreground"}`}>
+                            {p.name}
+                          </p>
+                          {p.description && (
+                            <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{p.description}</p>
                           )}
-                          <div className="flex flex-col">
-                            <span className={`font-medium leading-tight ${p.remaining <= 0 ? "line-through text-destructive/70" : "text-foreground/80"}`}>
-                              {p.name}
-                            </span>
-                            {p.description && (
-                              <span className="text-[10px] text-muted-foreground/70 leading-tight line-clamp-2">{p.description}</span>
-                            )}
-                            {p.remaining <= 0 ? (
-                              <span className="rounded bg-destructive/30 px-1 py-px text-[10px] font-bold text-destructive w-fit">Habis</span>
-                            ) : (
-                              <span className="text-[10px] text-muted-foreground">({p.remaining}/{p.total})</span>
-                            )}
-                            <span className="flex items-center gap-0.5 text-[10px] text-accent/80">
+                          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                            <span className="flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">
                               <Coins className="h-2.5 w-2.5" />
-                              {(p.coin_value > 0 ? p.coin_value : (coinValues[tier.label] || 15)).toLocaleString()}
+                              {coinVal.toLocaleString()}
                             </span>
+                            {!isOut ? (
+                              <span className="text-[10px] font-medium text-muted-foreground">
+                                Stok: <span className="text-foreground">{p.remaining}/{p.total}</span>
+                              </span>
+                            ) : (
+                              <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">HABIS</span>
+                            )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-background/30">
-                      <motion.div
-                        className={`h-full rounded-full ${tier.color === "text-accent" ? "bg-accent" : tier.color === "text-neon-purple" ? "bg-primary" : tier.color === "text-neon-pink" ? "bg-neon-pink" : "bg-muted-foreground"}`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 1, ease: "easeOut", delay: i * 0.15 }}
-                      />
-                    </div>
-                  </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
             );
