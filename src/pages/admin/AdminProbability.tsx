@@ -277,7 +277,10 @@ const AdminProbability = () => {
                     Total: {fmt(sum)}%
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button size="sm" variant="outline" onClick={() => handlePresetClick(c.id)} className="gap-1" title="S 1% · A 9% · B 30% · C 60%">
+                    <RotateCcw className="h-3.5 w-3.5" /> Preset default
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => autoFillRemainder(c.id)} className="gap-1" disabled={sum >= 100}>
                     <Wand2 className="h-3.5 w-3.5" /> Auto-isi sisa
                   </Button>
