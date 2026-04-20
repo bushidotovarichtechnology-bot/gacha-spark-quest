@@ -156,7 +156,25 @@ const Profile = () => {
     }
   };
 
-  const handleSaveProfile = async () => {
+  const handleSelectPreset = async (preset: { id: string; src: string; label: string }) => {
+    if (!user) return;
+    setSelectingPreset(preset.id);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: preset.src })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      setAvatarUrl(preset.src);
+      toast({ title: "Berhasil", description: `Avatar diubah ke Dino ${preset.label}` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Gagal memilih avatar", variant: "destructive" });
+    } finally {
+      setSelectingPreset(null);
+    }
+  };
+
+
     if (!user) return;
     setSavingProfile(true);
     const { error } = await supabase
