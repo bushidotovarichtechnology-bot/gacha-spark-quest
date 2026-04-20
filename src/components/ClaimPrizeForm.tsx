@@ -18,6 +18,7 @@ import {
 } from "@/lib/shippingRates";
 import { useCitiesForProvince } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
+import { loadMidtransSnap } from "@/lib/midtransSnap";
 
 interface ClaimPrizeFormProps {
   item: InventoryItem;
@@ -167,6 +168,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
       if (error || !data?.token) throw new Error(error?.message || "Failed to create shipping payment");
 
+      await loadMidtransSnap();
       if (data.client_key) {
         const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
         if (script) script.setAttribute("data-client-key", data.client_key);

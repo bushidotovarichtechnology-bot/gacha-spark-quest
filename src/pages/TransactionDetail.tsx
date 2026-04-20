@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { loadMidtransSnap } from "@/lib/midtransSnap";
 
 interface Transaction {
   id: string;
@@ -147,6 +148,7 @@ const TransactionDetail = () => {
       });
       if (error || !data?.token) throw new Error(error?.message || "Gagal membuat transaksi baru");
 
+      await loadMidtransSnap();
       if (data.client_key) {
         const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
         if (script) script.setAttribute("data-client-key", data.client_key);

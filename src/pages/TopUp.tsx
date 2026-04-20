@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { loadMidtransSnap } from "@/lib/midtransSnap";
 
 declare global {
   interface Window {
@@ -120,10 +121,11 @@ const TopUp = () => {
   }, []);
 
   useEffect(() => {
-    const checkSnap = setInterval(() => {
-      if (window.snap) { setMidtransReady(true); clearInterval(checkSnap); }
-    }, 500);
-    return () => clearInterval(checkSnap);
+    let cancelled = false;
+    loadMidtransSnap()
+      .then(() => { if (!cancelled) setMidtransReady(true); })
+      .catch(() => { /* user can retry on click */ });
+    return () => { cancelled = true; };
   }, []);
 
   const handlePurchase = async () => {
@@ -143,6 +145,7 @@ const TopUp = () => {
 
       if (error || !data?.token) throw new Error(error?.message || "Failed to create payment");
 
+      await loadMidtransSnap();
       if (data.client_key) {
         const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
         if (script) script.setAttribute("data-client-key", data.client_key);
