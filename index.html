@@ -3,29 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://eeyivrgpdbigxpgtujjy.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://eeyivrgpdbigxpgtujjy.supabase.co" />
-    <link rel="preload" as="image" href="/src/assets/hero-gacha.jpg" fetchpriority="high" />
-    <!-- TODO: Set the document title to the name of your application -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload LCP hero image (stable path in /public) -->
+    <link rel="preload" as="image" href="/hero-gacha.jpg" fetchpriority="high" />
+
+    <!-- Google Fonts: load non-blocking (preload + media-swap fallback) -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+      />
+    </noscript>
+
     <title>Bushido Gacha</title>
     <meta name="description" content="Mainkan keberuntunganmu di BushidoGacha.com! Dapatkan hadiah gadget dan elektronik kantor berkualitas dari, PS5, NINTENDO SWITCH 2, IPHONE 17 PRO">
     <meta name="author" content="PT. BUSHIDO TOVARICH TECHNOLOGY" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    
-    
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/dY6AwmkFmlRRiJD2BZmVPEqLuqM2/social-images/social-1776672907909-Gemini_Generated_Image_1kqrhc1kqrhc1kqr.webp">
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/dY6AwmkFmlRRiJD2BZmVPEqLuqM2/social-images/social-1776672907909-Gemini_Generated_Image_1kqrhc1kqrhc1kqr.webp">
-  
-  <meta property="og:title" content="Bushido Gacha">
-  <meta name="twitter:title" content="Bushido Gacha">
-  <meta property="og:description" content="Mainkan keberuntunganmu di BushidoGacha.com! Dapatkan hadiah gadget dan elektronik kantor berkualitas dari, PS5, NINTENDO SWITCH 2, IPHONE 17 PRO">
-  <meta name="twitter:description" content="Mainkan keberuntunganmu di BushidoGacha.com! Dapatkan hadiah gadget dan elektronik kantor berkualitas dari, PS5, NINTENDO SWITCH 2, IPHONE 17 PRO">
-</head>
+
+    <meta property="og:title" content="Bushido Gacha">
+    <meta name="twitter:title" content="Bushido Gacha">
+    <meta property="og:description" content="Mainkan keberuntunganmu di BushidoGacha.com! Dapatkan hadiah gadget dan elektronik kantor berkualitas dari, PS5, NINTENDO SWITCH 2, IPHONE 17 PRO">
+    <meta name="twitter:description" content="Mainkan keberuntunganmu di BushidoGacha.com! Dapatkan hadiah gadget dan elektronik kantor berkualitas dari, PS5, NINTENDO SWITCH 2, IPHONE 17 PRO">
+  </head>
 
   <body>
     <div id="root"></div>
