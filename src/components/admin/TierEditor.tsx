@@ -168,6 +168,10 @@ export function TierEditor({
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
+  const tierCrop = useImageCrop(
+    { defaultAspect: "1:1", title: "Crop gambar tier" },
+    async (cropped) => handleTierImageUpload(cropped),
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -261,15 +265,17 @@ export function TierEditor({
 
       {/* Tier image */}
       <div className="flex items-center gap-2 mb-2">
-        {tierImageUrl && <img src={tierImageUrl} alt={name} className="h-12 w-12 rounded-lg object-cover" />}
+        {tierImageUrl && <img src={tierImageUrl} alt={name} className="h-12 w-12 rounded-lg object-contain bg-secondary/40" />}
         <label className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs hover:bg-accent">
           <Upload className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-muted-foreground">{tierImageUrl ? "Ganti gambar tier" : "Upload gambar tier"}</span>
           <input type="file" accept="image/*" className="hidden" onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleTierImageUpload(file);
+            if (file) tierCrop.pickFile(file);
+            e.target.value = "";
           }} />
         </label>
+        {tierCrop.dialog}
       </div>
 
 
