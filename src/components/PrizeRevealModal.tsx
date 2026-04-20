@@ -1,8 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Star, Gift, Award, X, ChevronLeft, ChevronRight, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
+import { supabase } from "@/integrations/supabase/client";
+
+// Cache audio data URLs across modal re-opens
+const sfxCache: Record<string, string> = {};
+
+const playTierSfx = async (tier: string) => {
+  if (tier !== "S" && tier !== "A") return;
+  try {
+    let dataUrl = sfxCache[tier];
+    if (!dataUrl) {
+      const { data, error } = await supabase.functions.invoke("generate-tier-sfx", {
+        body: { tier },
+      });
+      if (error || !data?.audioContent) return;
+      dataUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+      sfxCache[tier] = dataUrl;
+    }
+    const audio = new Audio(dataUrl);
+    audio.volume = 0.7;
+    await audio.play().catch(() => {});
+  } catch (e) {
+    console.warn("Failed to play tier SFX", e);
+  }
+};
 
 interface PrizeRevealModalProps {
   open: boolean;
@@ -25,6 +49,22 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
+  const lastPlayedRef = useRef<string | null>(null);
+
+  const safePrize = prizes[currentIndex] || prizes[0];
+
+  // Play SFX when a new rare tier prize is shown (single view only)
+  useEffect(() => {
+    if (!open || showSummary || !safePrize) {
+      lastPlayedRef.current = null;
+      return;
+    }
+    const key = `${currentIndex}-${safePrize.tier}`;
+    if ((safePrize.tier === "S" || safePrize.tier === "A") && lastPlayedRef.current !== key) {
+      lastPlayedRef.current = key;
+      playTierSfx(safePrize.tier);
+    }
+  }, [open, showSummary, currentIndex, safePrize]);
 
   if (!prizes.length) return null;
 
