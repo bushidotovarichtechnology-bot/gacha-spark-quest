@@ -46,9 +46,12 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary box-glow-purple">
-            <Coins className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img
+            src="/favicon.png"
+            alt="Bushido Gacha"
+            className="h-9 w-9 rounded-lg object-contain"
+            style={{ imageRendering: "pixelated" }}
+          />
           <span className="font-display text-lg font-bold tracking-wider text-foreground">
             BUSHIDO<span className="text-accent"> GACHA</span>
           </span>
