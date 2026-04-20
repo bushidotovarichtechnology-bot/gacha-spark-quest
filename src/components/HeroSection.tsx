@@ -16,6 +16,9 @@ const HeroSection = () => {
           alt="Bushido Gacha"
           width={1280}
           height={720}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           className="h-full w-full object-cover opacity-30"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
