@@ -16,7 +16,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import LocationCombobox from "@/components/LocationCombobox";
 import { useToast } from "@/hooks/use-toast";
 import { useProvinces, useCitiesForProvince } from "@/hooks/use-indonesian-locations";
-import defaultAvatar from "@/assets/default-avatar.png";
+import defaultAvatar from "@/assets/default-avatar.webp";
 import { AVATAR_PRESETS } from "@/lib/avatarPresets";
 import { cn } from "@/lib/utils";
 

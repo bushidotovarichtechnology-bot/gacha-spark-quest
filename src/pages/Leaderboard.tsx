@@ -9,7 +9,7 @@ import { useI18n } from "@/context/I18nContext";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import defaultAvatar from "@/assets/default-avatar.png";
+import defaultAvatar from "@/assets/default-avatar.webp";
 
 interface Winner {
   draw_id: string;

@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import defaultAvatar from "@/assets/default-avatar.png";
+import defaultAvatar from "@/assets/default-avatar.webp";
 
 const Navbar = () => {
   const { totalCoins, freeDraws, activeDiscountPercent } = useGacha();
@@ -47,8 +47,10 @@ const Navbar = () => {
       <div className="container mx-auto flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img
-            src="/favicon.png"
+            src="/favicon.webp"
             alt="Bushido Gacha"
+            width={36}
+            height={36}
             className="h-9 w-9 rounded-lg object-contain"
             style={{ imageRendering: "pixelated" }}
           />
