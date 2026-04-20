@@ -304,6 +304,7 @@ const CampaignDetail = () => {
             const bannerGradient = tierBannerMap[tier.label] || tierBannerMap.C;
             const tierLabel = tierLabelMap[tier.label] || tier.name;
             const isGrand = tier.label === "S";
+            const isRare = tier.label === "A";
             const TierIcon = tier.icon;
             return (
               <motion.div
@@ -316,7 +317,7 @@ const CampaignDetail = () => {
                 {/* Kitakuji-style chevron banner */}
                 <div className="relative">
                   <div
-                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${isGrand ? "shadow-[0_0_25px_rgba(251,191,36,0.6)]" : ""}`}
+                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${isGrand ? "shadow-[0_0_25px_rgba(251,191,36,0.6)]" : isRare ? "shadow-[0_0_15px_rgba(168,85,247,0.45)]" : ""}`}
                     style={{
                       clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)",
                     }}
@@ -334,6 +335,19 @@ const CampaignDetail = () => {
                         />
                         <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-shine-sweep bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
                       </>
+                    )}
+
+                    {/* Tier A: subtle shimmer only — no sweeping shine */}
+                    {isRare && (
+                      <div
+                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-30"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.35) 50%, transparent 65%)",
+                          backgroundSize: "200% 100%",
+                          animationDuration: "5s",
+                        }}
+                      />
                     )}
 
                     <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm ring-2 ring-white/40 ${isGrand ? "animate-pulse-glow" : ""}`}>
@@ -364,6 +378,15 @@ const CampaignDetail = () => {
                       <Sparkles className="absolute left-[78%] top-4 h-2 w-2 animate-sparkle-twinkle text-amber-200 drop-shadow-[0_0_4px_rgba(252,211,77,0.9)]" style={{ animationDelay: "1.6s" }} />
                       <Star className="absolute left-[42%] top-6 h-2 w-2 animate-sparkle-float fill-yellow-200 text-yellow-200" style={{ animationDelay: "0.3s" }} />
                       <Star className="absolute left-[68%] top-7 h-1.5 w-1.5 animate-sparkle-float fill-amber-100 text-amber-100" style={{ animationDelay: "1.4s" }} />
+                    </div>
+                  )}
+
+                  {/* Tier A: subtle sparkle — fewer, smaller, dimmer (purple) */}
+                  {isRare && (
+                    <div className="pointer-events-none absolute inset-0 overflow-visible">
+                      <Sparkles className="absolute left-[15%] top-1.5 h-2 w-2 animate-sparkle-twinkle text-purple-200/80 drop-shadow-[0_0_3px_rgba(216,180,254,0.7)]" style={{ animationDelay: "0.4s", animationDuration: "3s" }} />
+                      <Sparkles className="absolute left-[60%] top-5 h-2 w-2 animate-sparkle-twinkle text-fuchsia-200/80 drop-shadow-[0_0_3px_rgba(240,171,252,0.7)]" style={{ animationDelay: "1.5s", animationDuration: "3s" }} />
+                      <Sparkles className="absolute left-[82%] top-1 h-1.5 w-1.5 animate-sparkle-twinkle text-purple-100/70 drop-shadow-[0_0_2px_rgba(233,213,255,0.6)]" style={{ animationDelay: "2.2s", animationDuration: "3s" }} />
                     </div>
                   )}
                 </div>
