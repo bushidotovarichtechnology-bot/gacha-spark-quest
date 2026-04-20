@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
@@ -56,31 +55,23 @@ const GrandPrizePreview = () => {
   return (
     <section className="border-t border-border/50 py-12">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mb-6 text-center"
-        >
+        <div className="mb-6 text-center animate-fade-in">
           <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
             Hall of Fame
           </p>
           <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
             Pemenang Grand Prize
           </h2>
-        </motion.div>
+        </div>
 
         <div className="mx-auto max-w-lg space-y-2">
           {winners.map((w, i) => (
-            <motion.div
+            <div
               key={w.draw_id}
-              initial={{ opacity: 0, x: -15 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className={`flex items-center gap-3 rounded-xl border p-3 ${
+              className={`flex items-center gap-3 rounded-xl border p-3 animate-fade-in ${
                 i === 0 ? "border-accent/40 bg-accent/5" : "border-border/50 bg-card"
               }`}
+              style={{ animationDelay: `${i * 80}ms` }}
             >
               <span className="text-lg font-black w-7 text-center">
                 {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
@@ -98,7 +89,7 @@ const GrandPrizePreview = () => {
                   {w.campaign_title} · {formatDistanceToNow(new Date(w.won_at), { addSuffix: true, locale: idLocale })}
                 </p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
