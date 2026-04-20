@@ -190,6 +190,23 @@ const AdminCampaigns = () => {
     if (expandedId) fetchTiers(expandedId);
   };
 
+  const tierSortable = useSortableList();
+
+  const handleTierDragEnd = async (event: DragEndEvent, campaignId: string) => {
+    const reordered = tierSortable.reorder(tiers, event);
+    if (!reordered) return;
+    setTiers(reordered);
+    const updates = reordered.map((t, idx) =>
+      supabase.from("campaign_tiers").update({ sort_order: idx }).eq("id", t.id)
+    );
+    const results = await Promise.all(updates);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      toast({ title: "Gagal menyimpan urutan tier", description: failed.error.message, variant: "destructive" });
+      fetchTiers(campaignId);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
