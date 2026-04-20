@@ -47,8 +47,10 @@ const Navbar = () => {
       <div className="container mx-auto flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img
-            src="/favicon.png"
+            src="/favicon.webp"
             alt="Bushido Gacha"
+            width={36}
+            height={36}
             className="h-9 w-9 rounded-lg object-contain"
             style={{ imageRendering: "pixelated" }}
           />

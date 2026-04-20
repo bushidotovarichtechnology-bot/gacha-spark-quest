@@ -42,17 +42,27 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
       <Link to={`/campaign/${id}`} className="group block">
         <div className={`gradient-card overflow-hidden rounded-xl border transition-all duration-300 ${isSoldOut ? "border-border/30 opacity-60 grayscale" : flash ? "border-accent/80 box-glow-gold" : "border-border/50 group-hover:border-primary/50 group-hover:box-glow-purple"}`}>
           <div className="relative aspect-square overflow-hidden">
-            <img
-              src={
-                image.includes("/storage/v1/object/public/")
-                  ? `${image.replace("/object/public/", "/render/image/public/")}?width=500&quality=80`
-                  : image
-              }
-              alt={title}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
+            {(() => {
+              const isSupabase = image.includes("/storage/v1/object/public/");
+              const base = isSupabase ? image.replace("/object/public/", "/render/image/public/") : image;
+              const src = isSupabase ? `${base}?width=420&quality=75` : image;
+              const srcSet = isSupabase
+                ? `${base}?width=420&quality=75 420w, ${base}?width=840&quality=70 840w`
+                : undefined;
+              return (
+                <img
+                  src={src}
+                  srcSet={srcSet}
+                  sizes="(max-width: 768px) 50vw, 420px"
+                  alt={title}
+                  width={420}
+                  height={420}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              );
+            })()}
             <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
             {isSoldOut && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[2px]">
