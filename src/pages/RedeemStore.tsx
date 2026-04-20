@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Ticket, Gift, ShoppingBag, History } from "lucide-react";
+import { Ticket, Gift, ShoppingBag, History, Coins, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
@@ -103,12 +104,55 @@ const RedeemStore = () => {
     <div className="min-h-screen pb-20">
       <Navbar />
       <div className="container mx-auto px-4 pt-24">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-foreground">Bushido Tiket Store</h1>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold text-foreground">Bushido Tiket Store</h1>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Apa itu Bushido Tiket?"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
+                  <p className="mb-1 font-semibold text-foreground">Tiket vs Koin</p>
+                  <p className="text-muted-foreground">
+                    <span className="font-semibold text-primary">Bushido Tiket</span> didapat dari setiap tarikan gacha, hanya bisa ditukar di store ini.
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    <span className="font-semibold text-accent">Bushido Koin</span> adalah mata uang utama untuk membeli tarikan gacha.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/30 px-4 py-2">
             <Ticket className="h-5 w-5 text-primary" />
             <span className="text-lg font-bold text-primary">{ticketBalance}</span>
             <span className="text-sm text-muted-foreground">Bushido Tiket</span>
+          </div>
+        </div>
+
+        {/* Penjelasan singkat Tiket vs Koin */}
+        <div className="mb-6 rounded-xl border border-border/60 bg-secondary/30 p-3">
+          <div className="flex items-start gap-3 text-xs sm:text-sm">
+            <div className="flex flex-1 items-start gap-2">
+              <Ticket className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p className="text-muted-foreground">
+                <span className="font-semibold text-primary">Bushido Tiket</span> — diperoleh otomatis dari setiap tarikan gacha. Tukar di sini untuk hadiah eksklusif.
+              </p>
+            </div>
+            <div className="hidden h-8 w-px bg-border sm:block" />
+            <div className="flex flex-1 items-start gap-2">
+              <Coins className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+              <p className="text-muted-foreground">
+                <span className="font-semibold text-accent">Bushido Koin</span> — mata uang utama untuk melakukan tarikan gacha di setiap campaign.
+              </p>
+            </div>
           </div>
         </div>
 
