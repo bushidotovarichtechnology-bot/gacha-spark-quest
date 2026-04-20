@@ -25,6 +25,8 @@ interface ImageCropDialogProps {
   title?: string;
 }
 
+const MAX_OUTPUT_DIMENSION = 1600;
+
 async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string, quality = 0.9): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -34,13 +36,22 @@ async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string, qu
     img.src = imageSrc;
   });
 
+  // Auto-resize: skala turun bila sisi terpanjang > MAX_OUTPUT_DIMENSION
+  const longest = Math.max(area.width, area.height);
+  const scale = longest > MAX_OUTPUT_DIMENSION ? MAX_OUTPUT_DIMENSION / longest : 1;
+  const outW = Math.round(area.width * scale);
+  const outH = Math.round(area.height * scale);
+
   const canvas = document.createElement("canvas");
-  canvas.width = area.width;
-  canvas.height = area.height;
+  canvas.width = outW;
+  canvas.height = outH;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas tidak tersedia");
 
-  ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height);
+  // Kualitas resampling lebih baik saat downscaling
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, outW, outH);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
