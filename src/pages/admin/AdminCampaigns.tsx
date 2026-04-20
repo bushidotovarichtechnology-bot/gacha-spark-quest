@@ -357,6 +357,7 @@ const AdminCampaigns = () => {
           </div>
         </SortableContext>
       </DndContext>
+      {newCampaignCrop.dialog}
     </div>
   );
 };
