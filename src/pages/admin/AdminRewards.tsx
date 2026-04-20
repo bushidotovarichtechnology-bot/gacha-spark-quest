@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Gift, Plus, Pencil, Trash2, Save, X, Upload, Image } from "lucide-react";
+import { Gift, Plus, Pencil, Trash2, Save, X, Upload, Image as ImageIcon, GripVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useSortableList } from "@/hooks/use-sortable-list";
 
 interface RewardForm {
   name: string;
@@ -22,20 +26,83 @@ interface RewardForm {
 
 const emptyForm: RewardForm = { name: "", description: "", image_url: "", ticket_cost: 10, ticket_type: "standard", stock: 0, is_active: true };
 
+interface Reward {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  ticket_cost: number;
+  ticket_type: string;
+  stock: number;
+  is_active: boolean;
+  sort_order: number;
+}
+
+interface SortableRewardRowProps {
+  reward: Reward;
+  index: number;
+  onEdit: (r: Reward) => void;
+  onDelete: (id: string) => void;
+}
+
+const SortableRewardRow = ({ reward: r, index, onEdit, onDelete }: SortableRewardRowProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: r.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none p-1 text-muted-foreground/60 hover:text-muted-foreground active:cursor-grabbing"
+          aria-label="Drag"
+          type="button"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <span className="font-mono text-xs text-muted-foreground w-6 text-center">{index + 1}</span>
+        {r.image_url ? (
+          <img src={r.image_url} alt={r.name} className="h-12 w-12 rounded-lg border border-border object-cover" />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted">
+            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <span className="text-sm font-semibold">{r.name}</span>
+          {r.description && <p className="text-xs text-muted-foreground truncate">{r.description}</p>}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+            <span>🎫 {r.ticket_cost} tiket ({r.ticket_type})</span>
+            <span>📦 Stok: {r.stock}</span>
+            <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Aktif" : "Nonaktif"}</Badge>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-1 shrink-0">
+        <Button size="icon" variant="ghost" onClick={() => onEdit(r)}><Pencil className="h-4 w-4" /></Button>
+        <Button size="icon" variant="ghost" onClick={() => onDelete(r.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+      </div>
+    </div>
+  );
+};
+
 const AdminRewards = () => {
   const queryClient = useQueryClient();
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<RewardForm>(emptyForm);
   const [showAdd, setShowAdd] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { sensors, collisionDetection, reorder } = useSortableList();
 
-  const { data: rewards = [], isLoading } = useQuery({
+  const { data: rewards = [], isLoading } = useQuery<Reward[]>({
     queryKey: ["admin-rewards"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("redeem_rewards").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("redeem_rewards").select("*").order("sort_order").order("created_at");
       if (error) throw error;
-      return data;
+      return (data as Reward[]) || [];
     },
   });
 
@@ -51,30 +118,16 @@ const AdminRewards = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("File harus berupa gambar");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran file maksimal 5MB");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { toast.error("File harus berupa gambar"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Ukuran file maksimal 5MB"); return; }
 
     setUploading(true);
     try {
       const ext = file.name.split(".").pop();
       const fileName = `reward-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("reward-images")
-        .upload(fileName, file, { upsert: true });
-
+      const { error: uploadError } = await supabase.storage.from("reward-images").upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("reward-images")
-        .getPublicUrl(fileName);
-
+      const { data: urlData } = supabase.storage.from("reward-images").getPublicUrl(fileName);
       setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
       toast.success("Gambar berhasil diupload");
     } catch (err: any) {
@@ -91,7 +144,8 @@ const AdminRewards = () => {
         const { error } = await supabase.from("redeem_rewards").update(form).eq("id", editId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("redeem_rewards").insert(form);
+        const nextOrder = rewards.length > 0 ? Math.max(...rewards.map(r => r.sort_order || 0)) + 1 : 1;
+        const { error } = await supabase.from("redeem_rewards").insert({ ...form, sort_order: nextOrder });
         if (error) throw error;
       }
     },
@@ -127,21 +181,48 @@ const AdminRewards = () => {
     },
   });
 
-  const startEdit = (reward: any) => {
+  const startEdit = (reward: Reward) => {
     setEditId(reward.id);
     setForm({ name: reward.name, description: reward.description, image_url: reward.image_url, ticket_cost: reward.ticket_cost, ticket_type: reward.ticket_type, stock: reward.stock, is_active: reward.is_active });
     setShowAdd(true);
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const reordered = reorder(rewards, event);
+    if (!reordered) return;
+    // Optimistic update
+    queryClient.setQueryData(["admin-rewards"], reordered);
+    setReordering(true);
+    try {
+      const updates = reordered.map((r, i) => supabase.from("redeem_rewards").update({ sort_order: i + 1 }).eq("id", r.id));
+      await Promise.all(updates);
+      toast.success("Urutan hadiah diperbarui");
+      queryClient.invalidateQueries({ queryKey: ["admin-rewards"] });
+    } catch (err: any) {
+      toast.error("Gagal: " + err.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-rewards"] });
+    } finally {
+      setReordering(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-bold flex items-center gap-2">
-          <Gift className="h-5 w-5 text-primary" /> Bushido Tiket Rewards
-        </h1>
-        <Button size="sm" onClick={() => { setShowAdd(true); setEditId(null); setForm(emptyForm); }}>
-          <Plus className="mr-1.5 h-4 w-4" /> Tambah Hadiah
-        </Button>
+        <div>
+          <h1 className="font-display text-xl font-bold flex items-center gap-2">
+            <Gift className="h-5 w-5 text-primary" /> Bushido Tiket Rewards
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Drag <GripVertical className="inline h-3 w-3" /> untuk mengubah urutan tampilan.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {reordering && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          <Button size="sm" onClick={() => { setShowAdd(true); setEditId(null); setForm(emptyForm); }}>
+            <Plus className="mr-1.5 h-4 w-4" /> Tambah Hadiah
+          </Button>
+        </div>
       </div>
 
       {showAdd && (
@@ -166,29 +247,12 @@ const AdminRewards = () => {
                   <img src={form.image_url} alt="Preview" className="h-16 w-16 rounded-lg border border-border object-cover" />
                 )}
                 <div className="flex flex-1 gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                     <Upload className="mr-1.5 h-4 w-4" />
                     {uploading ? "Mengupload..." : "Upload Gambar"}
                   </Button>
-                  <Input
-                    placeholder="Atau masukkan URL gambar"
-                    value={form.image_url}
-                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                    className="flex-1"
-                  />
+                  <Input placeholder="Atau masukkan URL gambar" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="flex-1" />
                 </div>
               </div>
             </div>
@@ -240,36 +304,23 @@ const AdminRewards = () => {
         </TabsList>
 
         <TabsContent value="rewards">
-          <div className="space-y-2">
-            {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-            {rewards.length === 0 && !isLoading && <p className="text-sm text-muted-foreground">Belum ada hadiah. Klik "Tambah Hadiah" untuk menambahkan.</p>}
-            {rewards.map((r) => (
-              <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
-                <div className="flex items-center gap-3">
-                  {r.image_url ? (
-                    <img src={r.image_url} alt={r.name} className="h-12 w-12 rounded-lg border border-border object-cover" />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted">
-                      <Image className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-sm font-semibold">{r.name}</span>
-                    {r.description && <p className="text-xs text-muted-foreground">{r.description}</p>}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      <span>🎫 {r.ticket_cost} tiket ({r.ticket_type})</span>
-                      <span>📦 Stok: {r.stock}</span>
-                      <Badge variant={r.is_active ? "default" : "secondary"}>{r.is_active ? "Aktif" : "Nonaktif"}</Badge>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => startEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(r.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                </div>
+          {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+          {rewards.length === 0 && !isLoading && <p className="text-sm text-muted-foreground">Belum ada hadiah. Klik "Tambah Hadiah" untuk menambahkan.</p>}
+          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragEnd={handleDragEnd}>
+            <SortableContext items={rewards.map(r => r.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {rewards.map((r, idx) => (
+                  <SortableRewardRow
+                    key={r.id}
+                    reward={r}
+                    index={idx}
+                    onEdit={startEdit}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </TabsContent>
 
         <TabsContent value="claims">

@@ -1,12 +1,15 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, GripVertical, icons } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronRight, GripVertical, icons, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useSortableList } from "@/hooks/use-sortable-list";
 
 const ICON_OPTIONS = [
   "", "Smartphone", "Laptop", "Gamepad2", "Watch", "Headphones", "Camera",
@@ -36,6 +39,93 @@ const IconPreview = ({ name }: { name: string }) => {
   return <LucideIcon className="h-4 w-4" />;
 };
 
+const IconSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+  <Select value={value || "_none"} onValueChange={(v) => onChange(v === "_none" ? "" : v)}>
+    <SelectTrigger className="h-8 w-[140px] text-xs">
+      <SelectValue>
+        <span className="flex items-center gap-1.5">
+          <IconPreview name={value} />
+          {value || "Pilih ikon"}
+        </span>
+      </SelectValue>
+    </SelectTrigger>
+    <SelectContent className="max-h-[240px]">
+      <SelectItem value="_none">Tanpa ikon</SelectItem>
+      {ICON_OPTIONS.filter(Boolean).map((name) => (
+        <SelectItem key={name} value={name}>
+          <span className="flex items-center gap-2">
+            <IconPreview name={name} /> {name}
+          </span>
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+);
+
+interface SortableCategoryProps {
+  cat: Category;
+  index: number;
+  children: (handle: React.ReactNode) => React.ReactNode;
+}
+
+const SortableCategory = ({ cat, index, children }: SortableCategoryProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  const handle = (
+    <div className="flex items-center gap-1 shrink-0">
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none p-1 text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing"
+        aria-label="Drag"
+        type="button"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <span className="font-mono text-xs text-muted-foreground w-5 text-center">{index + 1}</span>
+    </div>
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(handle)}
+    </div>
+  );
+};
+
+interface SortableSubProps {
+  sub: Subcategory;
+  index: number;
+  children: (handle: React.ReactNode) => React.ReactNode;
+}
+
+const SortableSub = ({ sub, index, children }: SortableSubProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: sub.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  const handle = (
+    <div className="flex items-center gap-1 shrink-0">
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none p-0.5 text-muted-foreground/40 hover:text-muted-foreground active:cursor-grabbing"
+        aria-label="Drag"
+        type="button"
+      >
+        <GripVertical className="h-3 w-3" />
+      </button>
+      <span className="font-mono text-[10px] text-muted-foreground/60 w-4 text-center">{index + 1}</span>
+    </div>
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(handle)}
+    </div>
+  );
+};
+
 const AdminCategories = () => {
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -49,12 +139,10 @@ const AdminCategories = () => {
   const [editingCatIcon, setEditingCatIcon] = useState("");
   const [editingSub, setEditingSub] = useState<string | null>(null);
   const [editingSubName, setEditingSubName] = useState("");
+  const [reordering, setReordering] = useState(false);
 
-  // Drag state
-  const [dragCatId, setDragCatId] = useState<string | null>(null);
-  const [dragOverCatId, setDragOverCatId] = useState<string | null>(null);
-  const [dragSubId, setDragSubId] = useState<string | null>(null);
-  const [dragOverSubId, setDragOverSubId] = useState<string | null>(null);
+  const catCtx = useSortableList();
+  const subCtx = useSortableList();
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("sort_order");
@@ -75,7 +163,8 @@ const AdminCategories = () => {
 
   const createCategory = async () => {
     if (!newCatName.trim()) return;
-    const { error } = await supabase.from("categories").insert({ name: newCatName.trim(), sort_order: categories.length, icon: newCatIcon });
+    const nextOrder = categories.length > 0 ? Math.max(...categories.map(c => c.sort_order || 0)) + 1 : 1;
+    const { error } = await supabase.from("categories").insert({ name: newCatName.trim(), sort_order: nextOrder, icon: newCatIcon });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Kategori ditambahkan!" }); setNewCatName(""); setNewCatIcon(""); fetchCategories(); }
   };
@@ -95,7 +184,8 @@ const AdminCategories = () => {
 
   const createSubcategory = async (catId: string) => {
     if (!newSubName.trim()) return;
-    const { error } = await supabase.from("subcategories").insert({ category_id: catId, name: newSubName.trim(), sort_order: subcategories.length });
+    const nextOrder = subcategories.length > 0 ? Math.max(...subcategories.map(s => s.sort_order || 0)) + 1 : 1;
+    const { error } = await supabase.from("subcategories").insert({ category_id: catId, name: newSubName.trim(), sort_order: nextOrder });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Subkategori ditambahkan!" }); setNewSubName(""); fetchSubcategories(catId); }
   };
@@ -113,76 +203,59 @@ const AdminCategories = () => {
     else { toast({ title: "Subkategori dihapus" }); if (expandedCat) fetchSubcategories(expandedCat); }
   };
 
-  // --- Drag & Drop: Categories ---
-  const handleCatDrop = async () => {
-    if (!dragCatId || !dragOverCatId || dragCatId === dragOverCatId) {
-      setDragCatId(null);
-      setDragOverCatId(null);
-      return;
-    }
-    const fromIdx = categories.findIndex((c) => c.id === dragCatId);
-    const toIdx = categories.findIndex((c) => c.id === dragOverCatId);
-    const reordered = [...categories];
-    const [moved] = reordered.splice(fromIdx, 1);
-    reordered.splice(toIdx, 0, moved);
+  const persistCatOrder = async (ordered: Category[]) => {
+    const updates = ordered.map((c, i) => supabase.from("categories").update({ sort_order: i + 1 }).eq("id", c.id));
+    await Promise.all(updates);
+  };
 
+  const persistSubOrder = async (ordered: Subcategory[]) => {
+    const updates = ordered.map((s, i) => supabase.from("subcategories").update({ sort_order: i + 1 }).eq("id", s.id));
+    await Promise.all(updates);
+  };
+
+  const handleCatDragEnd = async (event: DragEndEvent) => {
+    const reordered = catCtx.reorder(categories, event);
+    if (!reordered) return;
     setCategories(reordered);
-    setDragCatId(null);
-    setDragOverCatId(null);
-
-    const updates = reordered.map((c, i) => supabase.from("categories").update({ sort_order: i }).eq("id", c.id));
-    await Promise.all(updates);
-    toast({ title: "Urutan kategori diperbarui!" });
-  };
-
-  // --- Drag & Drop: Subcategories ---
-  const handleSubDrop = async () => {
-    if (!dragSubId || !dragOverSubId || dragSubId === dragOverSubId) {
-      setDragSubId(null);
-      setDragOverSubId(null);
-      return;
+    setReordering(true);
+    try {
+      await persistCatOrder(reordered);
+      toast({ title: "Urutan kategori diperbarui" });
+    } catch (err: any) {
+      toast({ title: "Gagal", description: err.message, variant: "destructive" });
+      fetchCategories();
+    } finally {
+      setReordering(false);
     }
-    const fromIdx = subcategories.findIndex((s) => s.id === dragSubId);
-    const toIdx = subcategories.findIndex((s) => s.id === dragOverSubId);
-    const reordered = [...subcategories];
-    const [moved] = reordered.splice(fromIdx, 1);
-    reordered.splice(toIdx, 0, moved);
-
-    setSubcategories(reordered);
-    setDragSubId(null);
-    setDragOverSubId(null);
-
-    const updates = reordered.map((s, i) => supabase.from("subcategories").update({ sort_order: i }).eq("id", s.id));
-    await Promise.all(updates);
-    toast({ title: "Urutan subkategori diperbarui!" });
   };
 
-  const IconSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <Select value={value || "_none"} onValueChange={(v) => onChange(v === "_none" ? "" : v)}>
-      <SelectTrigger className="h-8 w-[140px] text-xs">
-        <SelectValue>
-          <span className="flex items-center gap-1.5">
-            <IconPreview name={value} />
-            {value || "Pilih ikon"}
-          </span>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent className="max-h-[240px]">
-        <SelectItem value="_none">Tanpa ikon</SelectItem>
-        {ICON_OPTIONS.filter(Boolean).map((name) => (
-          <SelectItem key={name} value={name}>
-            <span className="flex items-center gap-2">
-              <IconPreview name={name} /> {name}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
+  const handleSubDragEnd = async (event: DragEndEvent) => {
+    const reordered = subCtx.reorder(subcategories, event);
+    if (!reordered) return;
+    setSubcategories(reordered);
+    setReordering(true);
+    try {
+      await persistSubOrder(reordered);
+      toast({ title: "Urutan subkategori diperbarui" });
+    } catch (err: any) {
+      toast({ title: "Gagal", description: err.message, variant: "destructive" });
+      if (expandedCat) fetchSubcategories(expandedCat);
+    } finally {
+      setReordering(false);
+    }
+  };
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl font-bold tracking-wider">Category Management</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-wider">Category Management</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Drag <GripVertical className="inline h-3 w-3" /> untuk mengubah urutan. Penomoran otomatis.
+          </p>
+        </div>
+        {reordering && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+      </div>
 
       <Card className="mb-6 border-border/50">
         <CardHeader><CardTitle className="text-sm">Tambah Kategori Baru</CardTitle></CardHeader>
@@ -195,92 +268,84 @@ const AdminCategories = () => {
         </CardContent>
       </Card>
 
-      <div className="space-y-2">
-        {categories.map((cat) => (
-          <Card
-            key={cat.id}
-            className={cn(
-              "border-border/50 transition-all",
-              dragOverCatId === cat.id && dragCatId !== cat.id && "border-primary/50 bg-primary/5"
-            )}
-            draggable
-            onDragStart={() => setDragCatId(cat.id)}
-            onDragOver={(e) => { e.preventDefault(); setDragOverCatId(cat.id); }}
-            onDragLeave={() => setDragOverCatId(null)}
-            onDrop={(e) => { e.preventDefault(); handleCatDrop(); }}
-            onDragEnd={() => { setDragCatId(null); setDragOverCatId(null); }}
-          >
-            <div className="flex items-center gap-1 p-3">
-              <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing" />
+      <DndContext sensors={catCtx.sensors} collisionDetection={catCtx.collisionDetection} onDragEnd={handleCatDragEnd}>
+        <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-2">
+            {categories.map((cat, catIdx) => (
+              <SortableCategory key={cat.id} cat={cat} index={catIdx}>
+                {(handle) => (
+                  <Card className="border-border/50">
+                    <div className="flex items-center gap-1 p-3">
+                      {handle}
 
-              <button onClick={() => toggleExpand(cat.id)} className="shrink-0 text-muted-foreground hover:text-foreground">
-                {expandedCat === cat.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </button>
+                      <button onClick={() => toggleExpand(cat.id)} className="shrink-0 text-muted-foreground hover:text-foreground">
+                        {expandedCat === cat.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
 
-              {editingCat === cat.id ? (
-                <div className="flex flex-1 items-center gap-2">
-                  <Input value={editingCatName} onChange={(e) => setEditingCatName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && updateCategory(cat.id)} className="h-8 text-sm" />
-                  <IconSelect value={editingCatIcon} onChange={setEditingCatIcon} />
-                  <Button size="sm" variant="ghost" onClick={() => updateCategory(cat.id)}><Check className="h-3.5 w-3.5" /></Button>
-                  <Button size="sm" variant="ghost" onClick={() => setEditingCat(null)}><X className="h-3.5 w-3.5" /></Button>
-                </div>
-              ) : (
-                <>
-                  <span className="flex flex-1 items-center gap-2 text-sm font-medium">
-                    <IconPreview name={cat.icon} />
-                    {cat.name}
-                  </span>
-                  <Button size="sm" variant="ghost" onClick={() => { setEditingCat(cat.id); setEditingCatName(cat.name); setEditingCatIcon(cat.icon); }}><Edit2 className="h-3.5 w-3.5" /></Button>
-                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteCategory(cat.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                </>
-              )}
-            </div>
-
-            {expandedCat === cat.id && (
-              <CardContent className="border-t border-border/50 pt-3 pb-3">
-                <div className="flex gap-2 mb-3">
-                  <Input placeholder="Nama subkategori (misal: Laptop)" value={newSubName} onChange={(e) => setNewSubName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && createSubcategory(cat.id)} className="h-8 text-sm" />
-                  <Button size="sm" variant="outline" onClick={() => createSubcategory(cat.id)} className="gap-1 shrink-0"><Plus className="h-3 w-3" /> Tambah</Button>
-                </div>
-                <div className="space-y-1">
-                  {subcategories.map((sub) => (
-                    <div
-                      key={sub.id}
-                      draggable
-                      onDragStart={(e) => { e.stopPropagation(); setDragSubId(sub.id); }}
-                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverSubId(sub.id); }}
-                      onDragLeave={() => setDragOverSubId(null)}
-                      onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleSubDrop(); }}
-                      onDragEnd={() => { setDragSubId(null); setDragOverSubId(null); }}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50",
-                        dragOverSubId === sub.id && dragSubId !== sub.id && "bg-primary/10"
-                      )}
-                    >
-                      <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-muted-foreground/40 hover:text-muted-foreground active:cursor-grabbing" />
-                      {editingSub === sub.id ? (
+                      {editingCat === cat.id ? (
                         <div className="flex flex-1 items-center gap-2">
-                          <Input value={editingSubName} onChange={(e) => setEditingSubName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && updateSubcategory(sub.id)} className="h-7 text-xs" />
-                          <Button size="sm" variant="ghost" onClick={() => updateSubcategory(sub.id)}><Check className="h-3 w-3" /></Button>
-                          <Button size="sm" variant="ghost" onClick={() => setEditingSub(null)}><X className="h-3 w-3" /></Button>
+                          <Input value={editingCatName} onChange={(e) => setEditingCatName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && updateCategory(cat.id)} className="h-8 text-sm" />
+                          <IconSelect value={editingCatIcon} onChange={setEditingCatIcon} />
+                          <Button size="sm" variant="ghost" onClick={() => updateCategory(cat.id)}><Check className="h-3.5 w-3.5" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingCat(null)}><X className="h-3.5 w-3.5" /></Button>
                         </div>
                       ) : (
                         <>
-                          <span className="flex-1 text-xs text-muted-foreground">↳ {sub.name}</span>
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditingSub(sub.id); setEditingSubName(sub.name); }}><Edit2 className="h-3 w-3" /></Button>
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive hover:text-destructive" onClick={() => deleteSubcategory(sub.id)}><Trash2 className="h-3 w-3" /></Button>
+                          <span className="flex flex-1 items-center gap-2 text-sm font-medium">
+                            <IconPreview name={cat.icon} />
+                            {cat.name}
+                          </span>
+                          <Button size="sm" variant="ghost" onClick={() => { setEditingCat(cat.id); setEditingCatName(cat.name); setEditingCatIcon(cat.icon); }}><Edit2 className="h-3.5 w-3.5" /></Button>
+                          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteCategory(cat.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </>
                       )}
                     </div>
-                  ))}
-                  {subcategories.length === 0 && <p className="text-xs text-muted-foreground pl-3">Belum ada subkategori.</p>}
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        ))}
-        {categories.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Belum ada kategori. Tambahkan di atas.</p>}
-      </div>
+
+                    {expandedCat === cat.id && (
+                      <CardContent className="border-t border-border/50 pt-3 pb-3">
+                        <div className="flex gap-2 mb-3">
+                          <Input placeholder="Nama subkategori (misal: Laptop)" value={newSubName} onChange={(e) => setNewSubName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && createSubcategory(cat.id)} className="h-8 text-sm" />
+                          <Button size="sm" variant="outline" onClick={() => createSubcategory(cat.id)} className="gap-1 shrink-0"><Plus className="h-3 w-3" /> Tambah</Button>
+                        </div>
+                        <DndContext sensors={subCtx.sensors} collisionDetection={subCtx.collisionDetection} onDragEnd={handleSubDragEnd}>
+                          <SortableContext items={subcategories.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                            <div className="space-y-1">
+                              {subcategories.map((sub, subIdx) => (
+                                <SortableSub key={sub.id} sub={sub} index={subIdx}>
+                                  {(subHandle) => (
+                                    <div className="flex items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50">
+                                      {subHandle}
+                                      {editingSub === sub.id ? (
+                                        <div className="flex flex-1 items-center gap-2">
+                                          <Input value={editingSubName} onChange={(e) => setEditingSubName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && updateSubcategory(sub.id)} className="h-7 text-xs" />
+                                          <Button size="sm" variant="ghost" onClick={() => updateSubcategory(sub.id)}><Check className="h-3 w-3" /></Button>
+                                          <Button size="sm" variant="ghost" onClick={() => setEditingSub(null)}><X className="h-3 w-3" /></Button>
+                                        </div>
+                                      ) : (
+                                        <>
+                                          <span className="flex-1 text-xs text-muted-foreground">↳ {sub.name}</span>
+                                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditingSub(sub.id); setEditingSubName(sub.name); }}><Edit2 className="h-3 w-3" /></Button>
+                                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive hover:text-destructive" onClick={() => deleteSubcategory(sub.id)}><Trash2 className="h-3 w-3" /></Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+                                </SortableSub>
+                              ))}
+                              {subcategories.length === 0 && <p className="text-xs text-muted-foreground pl-3">Belum ada subkategori.</p>}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
+                      </CardContent>
+                    )}
+                  </Card>
+                )}
+              </SortableCategory>
+            ))}
+            {categories.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Belum ada kategori. Tambahkan di atas.</p>}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 };
