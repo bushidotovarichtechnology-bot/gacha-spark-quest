@@ -291,6 +291,14 @@ const AdminProbability = () => {
                     );
                   })}
                 </div>
+
+                <FairnessAudit
+                  campaignId={c.id}
+                  targetByTier={cTiers.reduce<Record<string, number>>((acc, t) => {
+                    acc[t.label] = (acc[t.label] ?? 0) + (totals[c.id]?.perTier[t.id] ?? 0);
+                    return acc;
+                  }, {})}
+                />
               </CardContent>
             </Card>
           );
