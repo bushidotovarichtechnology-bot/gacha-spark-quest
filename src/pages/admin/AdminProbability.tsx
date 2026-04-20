@@ -371,6 +371,34 @@ const AdminProbability = () => {
           );
         })}
       </div>
+
+      <AlertDialog open={presetTarget !== null} onOpenChange={(o) => !o && setPresetTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terapkan preset default?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini akan <strong>menimpa semua nilai %</strong> yang sudah Anda atur untuk campaign ini dengan distribusi default:
+              <span className="mt-2 block font-mono text-xs">
+                S 1% · A 9% · B 30% · C 60%
+              </span>
+              <span className="mt-2 block text-xs text-muted-foreground">
+                Persentase tier akan dibagi merata ke semua hadiah dalam tier. Perubahan belum disimpan sampai Anda klik <strong>Simpan</strong>.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (presetTarget) applyDefaultPreset(presetTarget);
+                setPresetTarget(null);
+              }}
+            >
+              Ya, timpa nilai
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
