@@ -36,24 +36,38 @@ const AdminPaymentSettings = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    const { data: existing } = await supabase
-      .from("app_settings")
-      .select("id")
-      .eq("key", "midtrans_mode")
-      .maybeSingle();
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id ?? null;
 
-    const payload = { key: "midtrans_mode", value: { mode } };
-    const { error } = existing
-      ? await supabase.from("app_settings").update(payload).eq("id", existing.id)
-      : await supabase.from("app_settings").insert(payload);
+      const { data: existing, error: selErr } = await supabase
+        .from("app_settings")
+        .select("id")
+        .eq("key", "midtrans_mode")
+        .maybeSingle();
+      if (selErr) throw selErr;
 
-    setSaving(false);
-    if (error) {
-      toast.error("Gagal menyimpan: " + error.message);
-      return;
+      if (existing) {
+        const { error } = await supabase
+          .from("app_settings")
+          .update({ value: { mode }, updated_at: new Date().toISOString(), updated_by: uid })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("app_settings")
+          .insert({ key: "midtrans_mode", value: { mode }, updated_by: uid });
+        if (error) throw error;
+      }
+
+      setInitialMode(mode);
+      toast.success(`Mode Midtrans diubah ke ${mode.toUpperCase()}`);
+    } catch (e: any) {
+      console.error("Save midtrans mode error:", e);
+      toast.error("Gagal menyimpan: " + (e?.message || "unknown error"));
+    } finally {
+      setSaving(false);
     }
-    setInitialMode(mode);
-    toast.success(`Mode Midtrans diubah ke ${mode.toUpperCase()}`);
   };
 
   const dirty = mode !== initialMode;
