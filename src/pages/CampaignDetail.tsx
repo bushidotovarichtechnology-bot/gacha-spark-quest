@@ -55,6 +55,21 @@ const tierGlowMap: Record<string, string> = {
   "text-muted-foreground": "",
 };
 
+// Banner gradients per tier — kitakuji-inspired chevron banner
+const tierBannerMap: Record<string, string> = {
+  S: "from-amber-300 via-yellow-400 to-orange-500", // Gold
+  A: "from-fuchsia-500 via-purple-500 to-indigo-500", // Purple
+  B: "from-pink-400 via-rose-400 to-red-400", // Pink
+  C: "from-slate-400 via-slate-500 to-slate-600", // Silver
+};
+
+const tierLabelMap: Record<string, string> = {
+  S: "Grand Prize",
+  A: "Gold",
+  B: "Silver",
+  C: "Bronze",
+};
+
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
 const CampaignDetail = () => {
