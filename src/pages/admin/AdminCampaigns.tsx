@@ -13,6 +13,7 @@ import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortableList } from "@/hooks/use-sortable-list";
+import { useImageCrop } from "@/hooks/use-image-crop";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -73,6 +74,23 @@ const AdminCampaigns = () => {
   const [newCampaign, setNewCampaign] = useState({ id: "", title: "", description: "", image_url: "", price: 5, subcategory_id: "" });
   const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryOption[]>([]);
   const { sensors, collisionDetection, reorder } = useSortableList();
+
+  const newCampaignCrop = useImageCrop(
+    { defaultAspect: "1:1", title: "Crop gambar campaign baru" },
+    async (cropped) => {
+      if (!newCampaign.id) {
+        toast({ title: "Set Campaign ID dulu", variant: "destructive" });
+        return;
+      }
+      try {
+        const url = await uploadCampaignImage(cropped, newCampaign.id);
+        setNewCampaign((prev) => ({ ...prev, image_url: url }));
+        toast({ title: "Image uploaded!" });
+      } catch (err: any) {
+        toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      }
+    },
+  );
 
   const fetchSubcategoryOptions = async () => {
     const { data: cats } = await supabase.from("categories").select("id, name").order("sort_order");
@@ -234,14 +252,16 @@ const AdminCampaigns = () => {
                 <Input placeholder="Image URL" value={newCampaign.image_url} onChange={(e) => setNewCampaign({ ...newCampaign, image_url: e.target.value })} className="flex-1" />
                 <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-input bg-background hover:bg-accent">
                   <Upload className="h-4 w-4 text-muted-foreground" />
-                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (!file || !newCampaign.id) { toast({ title: "Set Campaign ID first", variant: "destructive" }); return; }
-                    try {
-                      const url = await uploadCampaignImage(file, newCampaign.id);
-                      setNewCampaign({ ...newCampaign, image_url: url });
-                      toast({ title: "Image uploaded!" });
-                    } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
+                    if (!file) return;
+                    if (!newCampaign.id) {
+                      toast({ title: "Set Campaign ID dulu", variant: "destructive" });
+                      e.target.value = "";
+                      return;
+                    }
+                    newCampaignCrop.pickFile(file);
+                    e.target.value = "";
                   }} />
                 </label>
               </div>
@@ -264,7 +284,7 @@ const AdminCampaigns = () => {
           </div>
           {newCampaign.image_url && (
             <div className="flex items-center gap-2">
-              <img src={newCampaign.image_url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
+              <img src={newCampaign.image_url} alt="Preview" className="h-16 w-16 rounded-lg object-contain bg-secondary/40" />
               <span className="text-xs text-muted-foreground truncate flex-1">{newCampaign.image_url}</span>
             </div>
           )}
@@ -337,6 +357,7 @@ const AdminCampaigns = () => {
           </div>
         </SortableContext>
       </DndContext>
+      {newCampaignCrop.dialog}
     </div>
   );
 };

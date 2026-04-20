@@ -5,6 +5,7 @@ import { Save, Trash2, Plus, Upload, GripVertical, Coins, Weight } from "lucide-
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useImageCrop } from "@/hooks/use-image-crop";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   DndContext,
@@ -49,13 +50,17 @@ function SortablePrizeRow({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const { pickFile, dialog } = useImageCrop(
+    { defaultAspect: "1:1", title: `Crop gambar hadiah: ${p.name}` },
+    async (cropped) => handlePrizeImageUpload(p.id, cropped),
+  );
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-2 rounded bg-secondary/50 px-2 py-1">
       <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground">
         <GripVertical className="h-3.5 w-3.5" />
       </button>
-      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-cover" />}
+      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-contain bg-secondary/40" />}
       <div className="flex-1 space-y-1">
         <Input
           className="h-6 text-xs"
@@ -126,9 +131,11 @@ function SortablePrizeRow({
         <Upload className="h-3 w-3 text-muted-foreground" />
         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handlePrizeImageUpload(p.id, file);
+          if (file) pickFile(file);
+          e.target.value = "";
         }} />
       </label>
+      {dialog}
       <ConfirmDelete title="Hapus Hadiah?" description={`Hadiah "${p.name}" akan dihapus dari tier ini.`} onConfirm={() => onDeletePrize(p.id)}>
         <button className="text-destructive hover:text-destructive/80">
           <Trash2 className="h-3 w-3" />
@@ -161,6 +168,10 @@ export function TierEditor({
   const [newPrize, setNewPrize] = useState("");
   const [newPrizeTotal, setNewPrizeTotal] = useState(1);
   const [tierImageUrl, setTierImageUrl] = useState(tier.image_url);
+  const tierCrop = useImageCrop(
+    { defaultAspect: "1:1", title: "Crop gambar tier" },
+    async (cropped) => handleTierImageUpload(cropped),
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -254,15 +265,17 @@ export function TierEditor({
 
       {/* Tier image */}
       <div className="flex items-center gap-2 mb-2">
-        {tierImageUrl && <img src={tierImageUrl} alt={name} className="h-12 w-12 rounded-lg object-cover" />}
+        {tierImageUrl && <img src={tierImageUrl} alt={name} className="h-12 w-12 rounded-lg object-contain bg-secondary/40" />}
         <label className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs hover:bg-accent">
           <Upload className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-muted-foreground">{tierImageUrl ? "Ganti gambar tier" : "Upload gambar tier"}</span>
           <input type="file" accept="image/*" className="hidden" onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleTierImageUpload(file);
+            if (file) tierCrop.pickFile(file);
+            e.target.value = "";
           }} />
         </label>
+        {tierCrop.dialog}
       </div>
 
 

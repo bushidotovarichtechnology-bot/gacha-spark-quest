@@ -10,6 +10,7 @@ import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortableList } from "@/hooks/use-sortable-list";
+import { useImageCrop } from "@/hooks/use-image-crop";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -87,11 +88,7 @@ const ImageUpload = ({ value, onChange, folder, size = "md" }: ImageUploadProps)
   const { toast } = useToast();
   const dim = size === "sm" ? "h-9 w-9" : "h-12 w-12";
 
-  const handleFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast({ title: "File harus gambar", variant: "destructive" });
-      return;
-    }
+  const doUpload = async (file: File) => {
     setUploading(true);
     try {
       const url = await uploadImage(file, folder);
@@ -102,6 +99,19 @@ const ImageUpload = ({ value, onChange, folder, size = "md" }: ImageUploadProps)
     } finally {
       setUploading(false);
     }
+  };
+
+  const { pickFile, dialog } = useImageCrop(
+    { defaultAspect: "1:1", title: "Crop gambar kategori" },
+    doUpload,
+  );
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "File harus gambar", variant: "destructive" });
+      return;
+    }
+    pickFile(file);
   };
 
   return (
@@ -123,7 +133,7 @@ const ImageUpload = ({ value, onChange, folder, size = "md" }: ImageUploadProps)
         {uploading ? (
           <Loader2 className="absolute inset-0 m-auto h-4 w-4 animate-spin text-muted-foreground" />
         ) : value ? (
-          <img src={value} alt="" className="h-full w-full object-cover" />
+          <img src={value} alt="" className="h-full w-full object-contain bg-secondary/40" />
         ) : (
           <ImagePlus className="absolute inset-0 m-auto h-4 w-4 text-muted-foreground" />
         )}
@@ -139,6 +149,7 @@ const ImageUpload = ({ value, onChange, folder, size = "md" }: ImageUploadProps)
           <ImageOff className="h-3.5 w-3.5" />
         </button>
       )}
+      {dialog}
     </div>
   );
 };
