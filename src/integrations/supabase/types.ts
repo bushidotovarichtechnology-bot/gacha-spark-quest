@@ -929,10 +929,13 @@ export type Database = {
         Row: {
           active_discount_percent: number
           balance: number
+          ban_reason: string
+          banned_at: string | null
           created_at: string
           draws_since_tier_a: number
           free_draws: number
           id: string
+          is_banned: boolean
           last_draw_at: string | null
           last_draw_ip: string | null
           updated_at: string
@@ -941,10 +944,13 @@ export type Database = {
         Insert: {
           active_discount_percent?: number
           balance?: number
+          ban_reason?: string
+          banned_at?: string | null
           created_at?: string
           draws_since_tier_a?: number
           free_draws?: number
           id?: string
+          is_banned?: boolean
           last_draw_at?: string | null
           last_draw_ip?: string | null
           updated_at?: string
@@ -953,10 +959,13 @@ export type Database = {
         Update: {
           active_discount_percent?: number
           balance?: number
+          ban_reason?: string
+          banned_at?: string | null
           created_at?: string
           draws_since_tier_a?: number
           free_draws?: number
           id?: string
+          is_banned?: boolean
           last_draw_at?: string | null
           last_draw_ip?: string | null
           updated_at?: string
@@ -1029,8 +1038,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_banned_users: {
+        Args: never
+        Returns: {
+          ban_reason: string
+          banned_at: string
+          email: string
+          user_id: string
+        }[]
+      }
+      admin_set_user_banned: {
+        Args: { _banned: boolean; _reason?: string; _user_id: string }
+        Returns: Json
+      }
       expire_pending_transactions: { Args: never; Returns: number }
       expire_unpaid_claims: { Args: never; Returns: number }
+      find_user_id_by_email: { Args: { _email: string }; Returns: string }
       get_admin_stats: { Args: never; Returns: Json }
       get_all_users_admin: {
         Args: never
