@@ -347,7 +347,7 @@ const AdminCategories = () => {
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wider">Category Management</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Drag <GripVertical className="inline h-3 w-3" /> untuk mengubah urutan. Klik kotak gambar untuk upload ilustrasi kategori/subkategori.
+            Drag <GripVertical className="inline h-3 w-3" /> untuk mengubah urutan. Klik kotak gambar untuk upload ilustrasi kategori/subkategori. <span className="text-muted-foreground/80">(Max 5MB, format JPG/PNG/WebP)</span>
           </p>
         </div>
         {reordering && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}

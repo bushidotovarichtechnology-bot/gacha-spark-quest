@@ -250,7 +250,7 @@ const AdminCampaigns = () => {
               <label className="mb-1 block text-xs text-muted-foreground">Image (upload or URL)</label>
               <div className="flex gap-2">
                 <Input placeholder="Image URL" value={newCampaign.image_url} onChange={(e) => setNewCampaign({ ...newCampaign, image_url: e.target.value })} className="flex-1" />
-                <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-input bg-background hover:bg-accent">
+                <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-input bg-background hover:bg-accent" title="Upload gambar (Max 5MB · JPG/PNG/WebP)">
                   <Upload className="h-4 w-4 text-muted-foreground" />
                   <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -265,6 +265,7 @@ const AdminCampaigns = () => {
                   }} />
                 </label>
               </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">Max 5MB, format JPG/PNG/WebP</p>
             </div>
             <Input type="number" placeholder="Price" value={newCampaign.price} onChange={(e) => setNewCampaign({ ...newCampaign, price: Number(e.target.value) })} />
           </div>

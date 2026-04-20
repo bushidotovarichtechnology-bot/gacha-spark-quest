@@ -265,6 +265,7 @@ const AdminRewards = () => {
                   <Input placeholder="Atau masukkan URL gambar" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="flex-1" />
                 </div>
               </div>
+              <p className="text-[11px] text-muted-foreground">Max 5MB, format JPG/PNG/WebP</p>
             </div>
 
             <div className="space-y-1.5">
