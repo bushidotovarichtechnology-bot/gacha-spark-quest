@@ -94,6 +94,7 @@ export type Database = {
           is_active: boolean
           is_hot: boolean
           price: number
+          sort_order: number
           subcategory_id: string | null
           title: string
           updated_at: string
@@ -106,6 +107,7 @@ export type Database = {
           is_active?: boolean
           is_hot?: boolean
           price?: number
+          sort_order?: number
           subcategory_id?: string | null
           title: string
           updated_at?: string
@@ -118,6 +120,7 @@ export type Database = {
           is_active?: boolean
           is_hot?: boolean
           price?: number
+          sort_order?: number
           subcategory_id?: string | null
           title?: string
           updated_at?: string
@@ -677,6 +680,7 @@ export type Database = {
           image_url: string
           is_active: boolean
           name: string
+          sort_order: number
           stock: number
           ticket_cost: number
           ticket_type: string
@@ -689,6 +693,7 @@ export type Database = {
           image_url?: string
           is_active?: boolean
           name: string
+          sort_order?: number
           stock?: number
           ticket_cost?: number
           ticket_type?: string
@@ -701,6 +706,7 @@ export type Database = {
           image_url?: string
           is_active?: boolean
           name?: string
+          sort_order?: number
           stock?: number
           ticket_cost?: number
           ticket_type?: string
