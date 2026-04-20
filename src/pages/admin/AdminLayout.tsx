@@ -5,6 +5,7 @@ import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, Folder
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/banned-users", label: "Banned Users", icon: Ban },
   { to: "/admin/campaigns", label: "Campaigns", icon: Package },
   { to: "/admin/categories", label: "Categories", icon: FolderTree },
   { to: "/admin/claims", label: "Prize Claims", icon: PackageCheck },
