@@ -19,6 +19,20 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const fmt = (n: number) => n.toFixed(2);
 const TIER_RANK: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 };
 
+// "1 dari N" untuk persen 0..100. Mengembalikan string ringkas: "1 dari 2.000", "1 dari 1,2 jt".
+const oneInN = (pct: number): string => {
+  if (!Number.isFinite(pct) || pct <= 0) return "—";
+  if (pct >= 100) return "1 dari 1";
+  const n = 100 / pct;
+  const fmtID = (v: number, digits = 0) =>
+    new Intl.NumberFormat("id-ID", { maximumFractionDigits: digits }).format(v);
+  if (n >= 1_000_000) return `1 dari ${fmtID(n / 1_000_000, 1)} jt`;
+  if (n >= 10_000) return `1 dari ${fmtID(Math.round(n / 100) * 100)}`;
+  if (n >= 100) return `1 dari ${fmtID(Math.round(n))}`;
+  if (n >= 10) return `1 dari ${fmtID(n, 1)}`;
+  return `1 dari ${fmtID(n, 2)}`;
+};
+
 const tierColorMap: Record<string, string> = {
   S: "bg-accent/10 text-accent border-accent/30",
   A: "bg-primary/10 text-primary border-primary/30",
@@ -224,14 +238,19 @@ const AdminProbability = () => {
                               />
                             </div>
                           </div>
-                          <span className="text-sm font-semibold whitespace-nowrap">{fmt(tierTotal)}%</span>
+                          <div className="flex flex-col items-end whitespace-nowrap">
+                            <span className="text-sm font-semibold">{fmt(tierTotal)}%</span>
+                            <span className="text-[10px] font-mono text-current/70 tabular-nums">{oneInN(tierTotal)}</span>
+                          </div>
                         </div>
 
                         {tier.tier_prizes.length === 0 ? (
                           <p className="text-xs text-muted-foreground italic pl-11">Belum ada hadiah di tier ini.</p>
                         ) : (
                           <div className="space-y-1.5 pl-11">
-                            {tier.tier_prizes.map((prize) => (
+                            {tier.tier_prizes.map((prize) => {
+                              const pVal = prizePct[prize.id] ?? 0;
+                              return (
                               <div key={prize.id} className="flex items-center gap-2 rounded-md bg-background/40 px-3 py-2">
                                 {prize.image_url ? (
                                   <img
@@ -244,6 +263,9 @@ const AdminProbability = () => {
                                   <div className="h-7 w-7 rounded bg-secondary shrink-0" />
                                 )}
                                 <span className="text-xs flex-1 truncate text-foreground">{prize.name}</span>
+                                <span className="hidden sm:inline text-[10px] font-mono text-muted-foreground tabular-nums whitespace-nowrap w-24 text-right">
+                                  {oneInN(pVal)}
+                                </span>
                                 <div className="relative">
                                   <Input
                                     type="number"
@@ -251,7 +273,7 @@ const AdminProbability = () => {
                                     min={0}
                                     max={100}
                                     inputMode="decimal"
-                                    value={prizePct[prize.id] ?? 0}
+                                    value={pVal}
                                     onChange={(e) => setOne(prize.id, e.target.value)}
                                     className="h-8 w-24 text-sm text-right pr-7"
                                   />
@@ -260,7 +282,8 @@ const AdminProbability = () => {
                                   </span>
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
