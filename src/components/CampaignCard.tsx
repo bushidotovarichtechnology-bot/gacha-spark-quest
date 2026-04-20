@@ -43,9 +43,14 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
         <div className={`gradient-card overflow-hidden rounded-xl border transition-all duration-300 ${isSoldOut ? "border-border/30 opacity-60 grayscale" : flash ? "border-accent/80 box-glow-gold" : "border-border/50 group-hover:border-primary/50 group-hover:box-glow-purple"}`}>
           <div className="relative aspect-square overflow-hidden">
             <img
-              src={image}
+              src={
+                image.includes("/storage/v1/object/public/")
+                  ? `${image.replace("/object/public/", "/render/image/public/")}?width=500&quality=80`
+                  : image
+              }
               alt={title}
               loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
