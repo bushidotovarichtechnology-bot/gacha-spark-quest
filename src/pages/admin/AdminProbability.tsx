@@ -58,6 +58,7 @@ const AdminProbability = () => {
   // % per prize (basis 0..100), sumber kebenaran tunggal di UI
   const [prizePct, setPrizePct] = useState<Record<string, number>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [presetTarget, setPresetTarget] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
