@@ -321,6 +321,44 @@ const Profile = () => {
                       {uploadingAvatar ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                       Pilih Foto
                     </Button>
+
+                    <div className="w-full pt-4 border-t border-border/50">
+                      <p className="mb-3 text-sm font-medium text-foreground">Atau pilih avatar Dino</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {AVATAR_PRESETS.map((preset) => {
+                          const isActive = avatarUrl === preset.src;
+                          const isLoading = selectingPreset === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => handleSelectPreset(preset)}
+                              disabled={!!selectingPreset}
+                              className={cn(
+                                "relative flex flex-col items-center gap-1 rounded-lg border-2 p-2 transition-all hover:bg-secondary disabled:opacity-50",
+                                isActive ? "border-primary bg-secondary" : "border-border"
+                              )}
+                            >
+                              <Avatar className="h-14 w-14">
+                                <AvatarImage src={preset.src} alt={`Dino ${preset.label}`} />
+                                <AvatarFallback>{preset.label[0]}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs text-muted-foreground">{preset.label}</span>
+                              {isLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
+                                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                                </div>
+                              )}
+                              {isActive && !isLoading && (
+                                <div className="absolute right-1 top-1 rounded-full bg-primary p-0.5">
+                                  <Check className="h-3 w-3 text-primary-foreground" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
