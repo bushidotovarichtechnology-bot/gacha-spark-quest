@@ -21,8 +21,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Coins, Zap, Sparkles, Crown, Loader2, CalendarIcon, Percent, Gift } from "lucide-react";
+import { Plus, Pencil, Trash2, Coins, Zap, Sparkles, Crown, Loader2, CalendarIcon, Percent, Gift, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const ICON_OPTIONS = [
   { value: "Coins", label: "Coins", icon: Coins },
@@ -54,12 +71,104 @@ const emptyForm = {
   icon: "Coins",
   is_popular: false,
   is_active: true,
-  sort_order: 0,
   discount_percent: 0,
   discount_start: null as string | null,
   discount_end: null as string | null,
   bonus_coins: 0,
   bonus_label: "",
+};
+
+const formatRupiah = (v: number) =>
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(v);
+
+const getIcon = (name: string) => ICON_OPTIONS.find((i) => i.value === name)?.icon || Coins;
+
+const isPromoActive = (pkg: CoinPackage) => {
+  if (!pkg.discount_percent) return false;
+  const now = new Date();
+  if (pkg.discount_start && new Date(pkg.discount_start) > now) return false;
+  if (pkg.discount_end && new Date(pkg.discount_end) < now) return false;
+  return true;
+};
+
+interface SortableRowProps {
+  pkg: CoinPackage;
+  index: number;
+  onEdit: (pkg: CoinPackage) => void;
+  onDelete: (id: string) => void;
+}
+
+const SortableRow = ({ pkg, index, onEdit, onDelete }: SortableRowProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pkg.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  const Icon = getIcon(pkg.icon);
+  const promoActive = isPromoActive(pkg);
+
+  return (
+    <tr ref={setNodeRef} style={style} className="border-b border-border/50 last:border-0 bg-card">
+      <td className="px-2 py-3 w-10">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </td>
+      <td className="px-3 py-3 font-mono text-muted-foreground w-12">{index + 1}</td>
+      <td className="px-3 py-3">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-primary" />
+          {pkg.name}
+        </div>
+      </td>
+      <td className="px-3 py-3">{pkg.coins.toLocaleString()}</td>
+      <td className="px-3 py-3">
+        {promoActive ? (
+          <div>
+            <span className="text-muted-foreground line-through text-xs">{formatRupiah(pkg.price)}</span>
+            <br />
+            <span className="text-primary font-medium">
+              {formatRupiah(Math.round(pkg.price * (1 - pkg.discount_percent / 100)))}
+            </span>
+          </div>
+        ) : formatRupiah(pkg.price)}
+      </td>
+      <td className="px-3 py-3">
+        {pkg.discount_percent > 0 ? (
+          <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", promoActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+            {pkg.discount_percent}% {promoActive ? "🔥" : "(expired)"}
+          </span>
+        ) : "—"}
+      </td>
+      <td className="px-3 py-3">
+        {pkg.bonus_coins > 0 ? (
+          <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-medium text-accent">
+            +{pkg.bonus_coins} {pkg.bonus_label && `(${pkg.bonus_label})`}
+          </span>
+        ) : "—"}
+      </td>
+      <td className="px-3 py-3">
+        <div className="flex gap-1">
+          {pkg.is_popular && <span className="text-xs">⭐</span>}
+          {pkg.is_active ? <span className="text-xs text-primary">Aktif</span> : <span className="text-xs text-muted-foreground">Nonaktif</span>}
+        </div>
+      </td>
+      <td className="px-3 py-3 text-right space-x-1">
+        <Button variant="ghost" size="icon" onClick={() => onEdit(pkg)}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onDelete(pkg.id)}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </td>
+    </tr>
+  );
 };
 
 const AdminCoinPackages = () => {
@@ -70,6 +179,12 @@ const AdminCoinPackages = () => {
   const [editing, setEditing] = useState<CoinPackage | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [reordering, setReordering] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const fetchPackages = async () => {
     const { data } = await supabase
@@ -97,7 +212,6 @@ const AdminCoinPackages = () => {
       icon: pkg.icon,
       is_popular: pkg.is_popular,
       is_active: pkg.is_active,
-      sort_order: pkg.sort_order,
       discount_percent: pkg.discount_percent,
       discount_start: pkg.discount_start,
       discount_end: pkg.discount_end,
@@ -116,7 +230,9 @@ const AdminCoinPackages = () => {
         if (error) throw error;
         toast({ title: "Paket berhasil diperbarui" });
       } else {
-        const { error } = await supabase.from("coin_packages").insert(form);
+        // auto-assign sort_order = max + 1
+        const nextOrder = packages.length > 0 ? Math.max(...packages.map(p => p.sort_order)) + 1 : 1;
+        const { error } = await supabase.from("coin_packages").insert({ ...form, sort_order: nextOrder });
         if (error) throw error;
         toast({ title: "Paket berhasil ditambahkan" });
       }
@@ -136,21 +252,39 @@ const AdminCoinPackages = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Paket dihapus" });
+      // Re-normalize sort_order after delete
+      const remaining = packages.filter(p => p.id !== id);
+      await persistOrder(remaining);
       fetchPackages();
     }
   };
 
-  const formatRupiah = (v: number) =>
-    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(v);
+  const persistOrder = async (ordered: CoinPackage[]) => {
+    const updates = ordered.map((pkg, idx) =>
+      supabase.from("coin_packages").update({ sort_order: idx + 1 }).eq("id", pkg.id)
+    );
+    await Promise.all(updates);
+  };
 
-  const getIcon = (name: string) => ICON_OPTIONS.find((i) => i.value === name)?.icon || Coins;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-  const isPromoActive = (pkg: CoinPackage) => {
-    if (!pkg.discount_percent) return false;
-    const now = new Date();
-    if (pkg.discount_start && new Date(pkg.discount_start) > now) return false;
-    if (pkg.discount_end && new Date(pkg.discount_end) < now) return false;
-    return true;
+    const oldIndex = packages.findIndex(p => p.id === active.id);
+    const newIndex = packages.findIndex(p => p.id === over.id);
+    const reordered = arrayMove(packages, oldIndex, newIndex).map((p, idx) => ({ ...p, sort_order: idx + 1 }));
+
+    setPackages(reordered);
+    setReordering(true);
+    try {
+      await persistOrder(reordered);
+      toast({ title: "Urutan diperbarui" });
+    } catch (err: any) {
+      toast({ title: "Gagal menyimpan urutan", description: err.message, variant: "destructive" });
+      fetchPackages();
+    } finally {
+      setReordering(false);
+    }
   };
 
   if (loading) {
@@ -160,16 +294,25 @@ const AdminCoinPackages = () => {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Coin Packages</h1>
-        <Button onClick={openCreate} size="sm">
-          <Plus className="mr-1 h-4 w-4" /> Tambah Paket
-        </Button>
+        <div>
+          <h1 className="font-display text-2xl font-bold">Coin Packages</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Drag <GripVertical className="inline h-3 w-3" /> untuk mengubah urutan. Penomoran otomatis.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {reordering && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          <Button onClick={openCreate} size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Tambah Paket
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-lg border border-border overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/50">
+              <th className="px-2 py-3 w-10"></th>
               <th className="px-3 py-3 text-left font-medium">#</th>
               <th className="px-3 py-3 text-left font-medium">Nama</th>
               <th className="px-3 py-3 text-left font-medium">Koin</th>
@@ -180,66 +323,18 @@ const AdminCoinPackages = () => {
               <th className="px-3 py-3 text-right font-medium">Aksi</th>
             </tr>
           </thead>
-          <tbody>
-            {packages.map((pkg) => {
-              const Icon = getIcon(pkg.icon);
-              const promoActive = isPromoActive(pkg);
-              return (
-                <tr key={pkg.id} className="border-b border-border/50 last:border-0">
-                  <td className="px-3 py-3">{pkg.sort_order}</td>
-                  <td className="px-3 py-3">
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-primary" />
-                      {pkg.name}
-                    </div>
-                  </td>
-                  <td className="px-3 py-3">{pkg.coins.toLocaleString()}</td>
-                  <td className="px-3 py-3">
-                    {promoActive ? (
-                      <div>
-                        <span className="text-muted-foreground line-through text-xs">{formatRupiah(pkg.price)}</span>
-                        <br />
-                        <span className="text-green-500 font-medium">
-                          {formatRupiah(Math.round(pkg.price * (1 - pkg.discount_percent / 100)))}
-                        </span>
-                      </div>
-                    ) : formatRupiah(pkg.price)}
-                  </td>
-                  <td className="px-3 py-3">
-                    {pkg.discount_percent > 0 ? (
-                      <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", promoActive ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground")}>
-                        {pkg.discount_percent}% {promoActive ? "🔥" : "(expired)"}
-                      </span>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-3">
-                    {pkg.bonus_coins > 0 ? (
-                      <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-medium text-accent">
-                        +{pkg.bonus_coins} {pkg.bonus_label && `(${pkg.bonus_label})`}
-                      </span>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="flex gap-1">
-                      {pkg.is_popular && <span className="text-xs">⭐</span>}
-                      {pkg.is_active ? <span className="text-xs text-green-400">Aktif</span> : <span className="text-xs text-muted-foreground">Nonaktif</span>}
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-right space-x-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(pkg)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(pkg.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
-            {packages.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Belum ada paket</td></tr>
-            )}
-          </tbody>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={packages.map(p => p.id)} strategy={verticalListSortingStrategy}>
+              <tbody>
+                {packages.map((pkg, idx) => (
+                  <SortableRow key={pkg.id} pkg={pkg} index={idx} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+                {packages.length === 0 && (
+                  <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Belum ada paket</td></tr>
+                )}
+              </tbody>
+            </SortableContext>
+          </DndContext>
         </table>
       </div>
 
@@ -264,28 +359,25 @@ const AdminCoinPackages = () => {
                 <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Icon</Label>
-                <Select value={form.icon} onValueChange={(v) => setForm({ ...form, icon: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ICON_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Sort Order</Label>
-                <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
-              </div>
+            <div>
+              <Label>Icon</Label>
+              <Select value={form.icon} onValueChange={(v) => setForm({ ...form, icon: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ICON_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Urutan diatur otomatis. Gunakan drag &amp; drop di tabel untuk mengubah posisi.
+              </p>
             </div>
 
             {/* Promo / Discount */}
             <div className="rounded-lg border border-border p-3 space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <Percent className="h-4 w-4 text-green-400" />
+                <Percent className="h-4 w-4 text-primary" />
                 Promo / Diskon
               </div>
               <div>
@@ -340,7 +432,7 @@ const AdminCoinPackages = () => {
               </div>
               {form.discount_percent > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Harga setelah diskon: <span className="font-medium text-green-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(Math.round(form.price * (1 - form.discount_percent / 100)))}</span>
+                  Harga setelah diskon: <span className="font-medium text-primary">{formatRupiah(Math.round(form.price * (1 - form.discount_percent / 100)))}</span>
                 </p>
               )}
             </div>
