@@ -5,9 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Wand2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Save, Wand2, AlertTriangle, CheckCircle2, RotateCcw } from "lucide-react";
 import { supabaseImg } from "@/lib/imageTransform";
 import { FairnessAudit } from "@/components/admin/FairnessAudit";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
