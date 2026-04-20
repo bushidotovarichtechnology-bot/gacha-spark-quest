@@ -220,7 +220,7 @@ const ClaimHistory = () => {
                       className="w-full flex items-center gap-4 p-4 text-left hover:bg-secondary/30 transition-colors"
                     >
                       {claim.image_url ? (
-                        <img src={supabaseImg(claim.image_url, 112)} alt="" loading="lazy" decoding="async" className="h-14 w-14 rounded-lg object-contain bg-secondary/40 flex-shrink-0" />
+                        <img src={supabaseImg(claim.image_url, 112)} alt="" loading="lazy" decoding="async" className="h-14 w-14 rounded-lg object-contain bg-secondary/40 p-1 flex-shrink-0" />
                       ) : (
                         <div className="h-14 w-14 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
                           <Package className="h-6 w-6 text-muted-foreground" />

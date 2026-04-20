@@ -64,7 +64,7 @@ const SortableRewardRow = ({ reward: r, index, onEdit, onDelete }: SortableRewar
         </button>
         <span className="font-mono text-xs text-muted-foreground w-6 text-center">{index + 1}</span>
         {r.image_url ? (
-          <img src={r.image_url} alt={r.name} className="h-12 w-12 rounded-lg border border-border object-contain bg-secondary/40" />
+          <img src={r.image_url} alt={r.name} className="h-12 w-12 rounded-lg border border-border object-contain bg-secondary/40 p-1" />
         ) : (
           <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted">
             <ImageIcon className="h-5 w-5 text-muted-foreground" />

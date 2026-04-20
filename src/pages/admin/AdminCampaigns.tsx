@@ -284,7 +284,7 @@ const AdminCampaigns = () => {
           </div>
           {newCampaign.image_url && (
             <div className="flex items-center gap-2">
-              <img src={newCampaign.image_url} alt="Preview" className="h-16 w-16 rounded-lg object-contain bg-secondary/40" />
+              <img src={newCampaign.image_url} alt="Preview" className="h-16 w-16 rounded-lg object-contain bg-secondary/40 p-1.5" />
               <span className="text-xs text-muted-foreground truncate flex-1">{newCampaign.image_url}</span>
             </div>
           )}
