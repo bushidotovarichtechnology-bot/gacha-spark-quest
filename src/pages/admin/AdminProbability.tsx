@@ -5,9 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Wand2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Save, Wand2, AlertTriangle, CheckCircle2, RotateCcw } from "lucide-react";
 import { supabaseImg } from "@/lib/imageTransform";
 import { FairnessAudit } from "@/components/admin/FairnessAudit";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -48,6 +58,7 @@ const AdminProbability = () => {
   // % per prize (basis 0..100), sumber kebenaran tunggal di UI
   const [prizePct, setPrizePct] = useState<Record<string, number>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [presetTarget, setPresetTarget] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -141,6 +152,59 @@ const AdminProbability = () => {
     toast({ title: `Sisa ${fmt(remaining)}% dialokasikan`, description: `Ke tier ${target.label} (${prizes.length} hadiah)` });
   };
 
+  // Preset distribusi default: S=1%, A=9%, B=30%, C=60%
+  const applyDefaultPreset = (campaignId: string) => {
+    const tiers = tiersByCampaign[campaignId] || [];
+    const TIER_PRESET: Record<string, number> = { S: 1, A: 9, B: 30, C: 60 };
+    const next: Record<string, number> = { ...prizePct };
+    let applied = 0;
+    const skipped: string[] = [];
+
+    tiers.forEach((tier) => {
+      const tierPct = TIER_PRESET[tier.label];
+      if (tierPct === undefined) {
+        tier.tier_prizes.forEach((p) => { next[p.id] = 0; });
+        return;
+      }
+      const prizes = tier.tier_prizes;
+      if (prizes.length === 0) { skipped.push(tier.label); return; }
+      const per = round2(tierPct / prizes.length);
+      let acc = 0;
+      prizes.forEach((p, i) => {
+        const v = i === prizes.length - 1 ? round2(tierPct - acc) : per;
+        next[p.id] = v;
+        acc = round2(acc + per);
+      });
+      applied++;
+    });
+
+    if (applied === 0) {
+      toast({ title: "Tidak bisa terapkan preset", description: "Tier S/A/B/C belum punya hadiah.", variant: "destructive" });
+      return;
+    }
+    setPrizePct(next);
+    toast({
+      title: "Preset default diterapkan",
+      description: skipped.length > 0
+        ? `S 1% · A 9% · B 30% · C 60%. Tier kosong: ${skipped.join(", ")}`
+        : "S 1% · A 9% · B 30% · C 60%. Klik Simpan untuk persist.",
+    });
+  };
+
+  // Cek apakah ada nilai % yang sudah diisi (>0) → perlu konfirmasi
+  const hasExistingValues = (campaignId: string): boolean => {
+    const tiers = tiersByCampaign[campaignId] || [];
+    return tiers.some((t) => t.tier_prizes.some((p) => (prizePct[p.id] ?? 0) > 0));
+  };
+
+  const handlePresetClick = (campaignId: string) => {
+    if (hasExistingValues(campaignId)) {
+      setPresetTarget(campaignId);
+    } else {
+      applyDefaultPreset(campaignId);
+    }
+  };
+
   const saveCampaign = async (campaignId: string) => {
     const tiers = tiersByCampaign[campaignId] || [];
     const sum = totals[campaignId]?.total ?? 0;
@@ -213,7 +277,10 @@ const AdminProbability = () => {
                     Total: {fmt(sum)}%
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button size="sm" variant="outline" onClick={() => handlePresetClick(c.id)} className="gap-1" title="S 1% · A 9% · B 30% · C 60%">
+                    <RotateCcw className="h-3.5 w-3.5" /> Preset default
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => autoFillRemainder(c.id)} className="gap-1" disabled={sum >= 100}>
                     <Wand2 className="h-3.5 w-3.5" /> Auto-isi sisa
                   </Button>
@@ -304,6 +371,34 @@ const AdminProbability = () => {
           );
         })}
       </div>
+
+      <AlertDialog open={presetTarget !== null} onOpenChange={(o) => !o && setPresetTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terapkan preset default?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini akan <strong>menimpa semua nilai %</strong> yang sudah Anda atur untuk campaign ini dengan distribusi default:
+              <span className="mt-2 block font-mono text-xs">
+                S 1% · A 9% · B 30% · C 60%
+              </span>
+              <span className="mt-2 block text-xs text-muted-foreground">
+                Persentase tier akan dibagi merata ke semua hadiah dalam tier. Perubahan belum disimpan sampai Anda klik <strong>Simpan</strong>.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (presetTarget) applyDefaultPreset(presetTarget);
+                setPresetTarget(null);
+              }}
+            >
+              Ya, timpa nilai
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
