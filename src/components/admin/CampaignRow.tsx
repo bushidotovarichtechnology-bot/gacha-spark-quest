@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, ChevronDown, ChevronUp, Image, Pencil, Check, X } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
@@ -63,7 +64,7 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="h-7 text-sm" />
               <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" className="h-7 text-xs" />
               <div className="flex items-center gap-1.5">
-                <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="h-7 text-xs w-20" placeholder="Koin" />
+                <NumberInput value={price} onValueChange={setPrice} className="h-7 text-xs w-24" placeholder="Koin" />
                 <Select value={subcategoryId || "none"} onValueChange={(v) => setSubcategoryId(v === "none" ? "" : v)}>
                   <SelectTrigger className="h-7 text-xs w-40">
                     <SelectValue placeholder="Kategori" />
