@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { supabaseImg } from "@/lib/imageTransform";
 
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
