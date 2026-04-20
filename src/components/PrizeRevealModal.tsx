@@ -156,9 +156,18 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6"
             >
-              <button onClick={handleClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
+                <button
+                  onClick={toggleMute}
+                  aria-label={muted ? "Unmute sound effects" : "Mute sound effects"}
+                  className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+                <button onClick={handleClose} aria-label="Close" className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
               <p className="mb-1 text-center font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 {t("drawResult", { count: drawCount })}
@@ -237,9 +246,18 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                 prize.isPityReward ? "border-accent box-glow-gold" : `border-border ${config.glow}`
               }`}
             >
-              <button onClick={handleClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground z-10">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
+                <button
+                  onClick={toggleMute}
+                  aria-label={muted ? "Unmute sound effects" : "Mute sound effects"}
+                  className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+                <button onClick={handleClose} aria-label="Close" className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
               {/* Pity reward special effect */}
               {prize.isPityReward && (
