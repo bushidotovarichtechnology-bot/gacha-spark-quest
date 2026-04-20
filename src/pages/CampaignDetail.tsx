@@ -304,6 +304,7 @@ const CampaignDetail = () => {
             const bannerGradient = tierBannerMap[tier.label] || tierBannerMap.C;
             const tierLabel = tierLabelMap[tier.label] || tier.name;
             const isGrand = tier.label === "S";
+            const isRare = tier.label === "A";
             const TierIcon = tier.icon;
             return (
               <motion.div
