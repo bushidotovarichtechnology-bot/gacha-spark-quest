@@ -230,7 +230,7 @@ const formatRupiah = (value: number) =>
         transition={{ delay: index * 0.1 }}
         className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
           isBestValue 
-            ? "border-accent bg-accent/5 box-glow-gold animate-pulse-glow ring-2 ring-accent/50" 
+            ? "border-accent bg-accent/5 box-glow-gold animate-pulse-glow ring-2 ring-accent/50 shadow-[0_0_30px_rgba(250,204,21,0.3)]" 
             : pkg.is_popular 
               ? "border-accent bg-accent/5 box-glow-gold" 
               : "border-border bg-card hover:border-primary/50"
