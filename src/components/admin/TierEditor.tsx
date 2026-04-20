@@ -84,16 +84,17 @@ function SortablePrizeRow({
       </div>
       <div className="flex items-center gap-1">
         <label className="text-[10px] text-muted-foreground">Koin</label>
-        <NumberInput className="h-6 w-20 text-xs" value={(p as any).coin_value ?? 0} onValueChange={async (val) => {
+        <NumberInput className="h-6 w-24 text-xs" suffix="koin" value={(p as any).coin_value ?? 0} onValueChange={async (val) => {
           await supabase.from("tier_prizes").update({ coin_value: val } as any).eq("id", p.id);
           onRefresh();
         }} placeholder="0" title="Nilai daur ulang (koin)" />
       </div>
       <div className="flex items-center gap-1">
-        <label className="text-[10px] text-muted-foreground">Berat (g)</label>
+        <label className="text-[10px] text-muted-foreground">Berat</label>
         <NumberInput
           min={1}
-          className="h-6 w-20 text-xs"
+          className="h-6 w-24 text-xs"
+          suffix="g"
           value={(p as any).weight_grams ?? 1000}
           onValueChange={async (val) => {
             await supabase.from("tier_prizes").update({ weight_grams: val } as any).eq("id", p.id);
@@ -286,6 +287,7 @@ export function TierEditor({
         <Coins className="h-4 w-4 text-accent shrink-0" />
         <NumberInput
           min={0}
+          suffix="koin"
           value={bulkCoinValue ? Number(bulkCoinValue) : ""}
           onValueChange={(val) => setBulkCoinValue(val ? String(val) : "")}
           placeholder="Nilai daur ulang untuk semua prize"
@@ -317,6 +319,7 @@ export function TierEditor({
         <Weight className="h-4 w-4 text-primary shrink-0" />
         <NumberInput
           min={1}
+          suffix="g"
           value={bulkWeight ? Number(bulkWeight) : ""}
           onValueChange={(val) => setBulkWeight(val ? String(val) : "")}
           placeholder="Berat (gram) untuk semua prize di tier ini"
