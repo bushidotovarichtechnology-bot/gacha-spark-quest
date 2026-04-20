@@ -286,20 +286,28 @@ const AdminCampaigns = () => {
                             <Plus className="h-3 w-3" /> Add Tier
                           </Button>
                         </div>
-                        <div className="space-y-4">
-                          {tiers.map((tier) => (
-                            <TierEditor
-                              key={tier.id}
-                              tier={tier}
-                              onUpdate={(u) => updateTier(tier.id, u)}
-                              onDelete={() => deleteTier(tier.id, c.id)}
-                              onAddPrize={(name, total) => addPrize(tier.id, name, total)}
-                              onDeletePrize={deletePrize}
-                              onRefresh={() => fetchTiers(c.id)}
-                            />
-                          ))}
-                          {tiers.length === 0 && <p className="text-sm text-muted-foreground">No tiers yet. Add one to get started.</p>}
-                        </div>
+                        <DndContext
+                          sensors={tierSortable.sensors}
+                          collisionDetection={tierSortable.collisionDetection}
+                          onDragEnd={(e) => handleTierDragEnd(e, c.id)}
+                        >
+                          <SortableContext items={tiers.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                            <div className="space-y-4">
+                              {tiers.map((tier) => (
+                                <TierEditor
+                                  key={tier.id}
+                                  tier={tier}
+                                  onUpdate={(u) => updateTier(tier.id, u)}
+                                  onDelete={() => deleteTier(tier.id, c.id)}
+                                  onAddPrize={(name, total) => addPrize(tier.id, name, total)}
+                                  onDeletePrize={deletePrize}
+                                  onRefresh={() => fetchTiers(c.id)}
+                                />
+                              ))}
+                              {tiers.length === 0 && <p className="text-sm text-muted-foreground">No tiers yet. Add one to get started.</p>}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
                       </CardContent>
                     )}
                   </CampaignRow>
