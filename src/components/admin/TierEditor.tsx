@@ -5,6 +5,7 @@ import { Save, Trash2, Plus, Upload, GripVertical, Coins, Weight } from "lucide-
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useImageCrop } from "@/hooks/use-image-crop";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   DndContext,
@@ -49,6 +50,10 @@ function SortablePrizeRow({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const { pickFile, dialog } = useImageCrop(
+    { defaultAspect: "1:1", title: `Crop gambar hadiah: ${p.name}` },
+    async (cropped) => handlePrizeImageUpload(p.id, cropped),
+  );
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-2 rounded bg-secondary/50 px-2 py-1">
@@ -126,9 +131,11 @@ function SortablePrizeRow({
         <Upload className="h-3 w-3 text-muted-foreground" />
         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handlePrizeImageUpload(p.id, file);
+          if (file) pickFile(file);
+          e.target.value = "";
         }} />
       </label>
+      {dialog}
       <ConfirmDelete title="Hapus Hadiah?" description={`Hadiah "${p.name}" akan dihapus dari tier ini.`} onConfirm={() => onDeletePrize(p.id)}>
         <button className="text-destructive hover:text-destructive/80">
           <Trash2 className="h-3 w-3" />
