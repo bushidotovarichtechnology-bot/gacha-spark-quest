@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Wand2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { supabaseImg } from "@/lib/imageTransform";
+import { FairnessAudit } from "@/components/admin/FairnessAudit";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
