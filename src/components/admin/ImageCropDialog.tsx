@@ -46,9 +46,14 @@ async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string): P
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error("Gagal membuat gambar"));
-    }, mimeType, 0.9);
+    }, mimeType, quality);
   });
 }
+
+// Output WebP @ 0.85 untuk hemat storage tanpa perubahan visual yang terlihat
+const OUTPUT_MIME = "image/webp";
+const OUTPUT_QUALITY = 0.85;
+const OUTPUT_EXT = "webp";
 
 export function ImageCropDialog({
   file,
