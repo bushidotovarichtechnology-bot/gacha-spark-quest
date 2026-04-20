@@ -74,6 +74,30 @@
   .box-glow-gold {
     box-shadow: 0 0 20px hsl(45 100% 55% / 0.3), 0 0 40px hsl(45 100% 55% / 0.1);
   }
+  .box-glow-gold-strong {
+    box-shadow: 
+      0 0 20px hsl(45 100% 55% / 0.6),
+      0 0 40px hsl(45 100% 55% / 0.4),
+      0 0 60px hsl(45 100% 55% / 0.2),
+      inset 0 0 20px hsl(45 100% 55% / 0.1);
+    animation: pulse-glow-gold 2s ease-in-out infinite;
+  }
+  .box-glow-purple-strong {
+    box-shadow: 
+      0 0 20px hsl(270 80% 60% / 0.6),
+      0 0 40px hsl(270 80% 60% / 0.4),
+      0 0 60px hsl(270 80% 60% / 0.2),
+      inset 0 0 20px hsl(270 80% 60% / 0.1);
+    animation: pulse-glow-purple 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow-gold {
+    0%, 100% { box-shadow: 0 0 20px hsl(45 100% 55% / 0.6), 0 0 40px hsl(45 100% 55% / 0.4), 0 0 60px hsl(45 100% 55% / 0.2), inset 0 0 20px hsl(45 100% 55% / 0.1); }
+    50% { box-shadow: 0 0 30px hsl(45 100% 55% / 0.8), 0 0 60px hsl(45 100% 55% / 0.6), 0 0 90px hsl(45 100% 55% / 0.4), inset 0 0 30px hsl(45 100% 55% / 0.2); }
+  }
+  @keyframes pulse-glow-purple {
+    0%, 100% { box-shadow: 0 0 20px hsl(270 80% 60% / 0.6), 0 0 40px hsl(270 80% 60% / 0.4), 0 0 60px hsl(270 80% 60% / 0.2), inset 0 0 20px hsl(270 80% 60% / 0.1); }
+    50% { box-shadow: 0 0 30px hsl(270 80% 60% / 0.8), 0 0 60px hsl(270 80% 60% / 0.6), 0 0 90px hsl(270 80% 60% / 0.4), inset 0 0 30px hsl(270 80% 60% / 0.2); }
+  }
   .gradient-hero {
     background: radial-gradient(ellipse at 50% 0%, hsl(270 60% 20% / 0.8) 0%, hsl(270 30% 6%) 70%);
   }
