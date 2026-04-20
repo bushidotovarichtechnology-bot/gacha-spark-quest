@@ -245,7 +245,9 @@ const AdminProbability = () => {
                           <p className="text-xs text-muted-foreground italic pl-11">Belum ada hadiah di tier ini.</p>
                         ) : (
                           <div className="space-y-1.5 pl-11">
-                            {tier.tier_prizes.map((prize) => (
+                            {tier.tier_prizes.map((prize) => {
+                              const pVal = prizePct[prize.id] ?? 0;
+                              return (
                               <div key={prize.id} className="flex items-center gap-2 rounded-md bg-background/40 px-3 py-2">
                                 {prize.image_url ? (
                                   <img
@@ -258,6 +260,9 @@ const AdminProbability = () => {
                                   <div className="h-7 w-7 rounded bg-secondary shrink-0" />
                                 )}
                                 <span className="text-xs flex-1 truncate text-foreground">{prize.name}</span>
+                                <span className="hidden sm:inline text-[10px] font-mono text-muted-foreground tabular-nums whitespace-nowrap w-24 text-right">
+                                  {oneInN(pVal)}
+                                </span>
                                 <div className="relative">
                                   <Input
                                     type="number"
@@ -265,7 +270,7 @@ const AdminProbability = () => {
                                     min={0}
                                     max={100}
                                     inputMode="decimal"
-                                    value={prizePct[prize.id] ?? 0}
+                                    value={pVal}
                                     onChange={(e) => setOne(prize.id, e.target.value)}
                                     className="h-8 w-24 text-sm text-right pr-7"
                                   />
@@ -274,7 +279,8 @@ const AdminProbability = () => {
                                   </span>
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
