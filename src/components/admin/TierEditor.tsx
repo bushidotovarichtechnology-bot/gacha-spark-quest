@@ -60,7 +60,7 @@ function SortablePrizeRow({
       <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground">
         <GripVertical className="h-3.5 w-3.5" />
       </button>
-      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-contain bg-secondary/40" />}
+      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-contain bg-secondary/40 p-0.5" />}
       <div className="flex-1 space-y-1">
         <Input
           className="h-6 text-xs"
@@ -265,7 +265,7 @@ export function TierEditor({
 
       {/* Tier image */}
       <div className="flex items-center gap-2 mb-2">
-        {tierImageUrl && <img src={tierImageUrl} alt={name} className="h-12 w-12 rounded-lg object-contain bg-secondary/40" />}
+        {tierImageUrl && <img src={tierImageUrl} alt={name} className="h-12 w-12 rounded-lg object-contain bg-secondary/40 p-1" />}
         <label className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs hover:bg-accent">
           <Upload className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-muted-foreground">{tierImageUrl ? "Ganti gambar tier" : "Upload gambar tier"}</span>
