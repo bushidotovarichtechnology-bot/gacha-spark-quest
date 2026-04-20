@@ -283,7 +283,7 @@ const formatRupiah = (value: number) =>
 
         {/* Countdown Timer */}
         {promo && countdown && (
-          <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400">
+          <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
             <Clock className="h-3 w-3" />
             {countdown}
           </div>
