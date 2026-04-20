@@ -239,7 +239,7 @@ const formatRupiah = (value: number) =>
       >
         {/* Badges */}
         {isBestValue && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-3 py-0.5 text-xs font-bold text-black whitespace-nowrap shadow-lg animate-pulse">
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground whitespace-nowrap shadow-lg animate-pulse">
             ⭐ BEST VALUE
           </span>
         )}
@@ -249,7 +249,7 @@ const formatRupiah = (value: number) =>
           </span>
         )}
         {promo && (
-          <span className="absolute -top-3 right-2 rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-white flex items-center gap-1">
+          <span className="absolute -top-3 right-2 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground flex items-center gap-1">
             <Percent className="h-3 w-3" /> {pkg.discount_percent}%
           </span>
         )}
@@ -271,10 +271,10 @@ const formatRupiah = (value: number) =>
           {promo ? (
             <>
               <div className="text-xs text-muted-foreground line-through">{formatRupiah(pkg.price)}</div>
-              <div className="text-lg font-semibold text-green-400">{formatRupiah(finalPrice)}</div>
+              <div className="text-lg font-semibold text-primary">{formatRupiah(finalPrice)}</div>
             </>
           ) : (
-            <div className="text-lg font-semibold text-foreground">{formatRupiah(pkg.price)}</div>
+            <div className="text-lg font-semibold text-foreground">{formatRupiah(finalPrice)}</div>
           )}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
