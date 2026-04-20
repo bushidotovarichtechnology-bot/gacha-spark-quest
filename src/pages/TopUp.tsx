@@ -229,14 +229,18 @@ const formatRupiah = (value: number) =>
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
         className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
-          pkg.is_popular ? "border-accent bg-accent/5 box-glow-gold" : "border-border bg-card hover:border-primary/50"
+          isBestValue 
+            ? "border-accent bg-accent/5 box-glow-gold animate-pulse-glow ring-2 ring-accent/50 shadow-[0_0_30px_rgba(250,204,21,0.3)]" 
+            : pkg.is_popular 
+              ? "border-accent bg-accent/5 box-glow-gold" 
+              : "border-border bg-card hover:border-primary/50"
         }`}
         onClick={() => onSelect(pkg)}
       >
         {/* Badges */}
         {isBestValue && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground whitespace-nowrap">
-            BEST VALUE
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground whitespace-nowrap shadow-lg animate-pulse">
+            ⭐ BEST VALUE
           </span>
         )}
         {pkg.is_popular && !isBestValue && (
@@ -245,7 +249,7 @@ const formatRupiah = (value: number) =>
           </span>
         )}
         {promo && (
-          <span className="absolute -top-3 right-2 rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold text-white flex items-center gap-1">
+          <span className="absolute -top-3 right-2 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground flex items-center gap-1">
             <Percent className="h-3 w-3" /> {pkg.discount_percent}%
           </span>
         )}
@@ -267,10 +271,10 @@ const formatRupiah = (value: number) =>
           {promo ? (
             <>
               <div className="text-xs text-muted-foreground line-through">{formatRupiah(pkg.price)}</div>
-              <div className="text-lg font-semibold text-green-400">{formatRupiah(finalPrice)}</div>
+              <div className="text-lg font-semibold text-primary">{formatRupiah(finalPrice)}</div>
             </>
           ) : (
-            <div className="text-lg font-semibold text-foreground">{formatRupiah(pkg.price)}</div>
+            <div className="text-lg font-semibold text-foreground">{formatRupiah(finalPrice)}</div>
           )}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
@@ -279,7 +283,7 @@ const formatRupiah = (value: number) =>
 
         {/* Countdown Timer */}
         {promo && countdown && (
-          <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-green-500/10 px-2 py-1 text-xs font-medium text-green-400">
+          <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
             <Clock className="h-3 w-3" />
             {countdown}
           </div>
