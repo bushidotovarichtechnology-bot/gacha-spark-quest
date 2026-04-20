@@ -1044,6 +1044,8 @@ export type Database = {
           ban_reason: string
           banned_at: string
           email: string
+          last_draw_at: string
+          total_draws: number
           user_id: string
         }[]
       }

@@ -14,6 +14,8 @@ interface BannedUser {
   email: string;
   ban_reason: string;
   banned_at: string | null;
+  total_draws: number;
+  last_draw_at: string | null;
 }
 
 const AdminBannedUsers = () => {
@@ -97,6 +99,8 @@ const AdminBannedUsers = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Alasan</TableHead>
                 <TableHead>Tanggal Banned</TableHead>
+                <TableHead className="text-right">Total Draws</TableHead>
+                <TableHead>Last Draw</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -109,6 +113,12 @@ const AdminBannedUsers = () => {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {u.banned_at ? format(new Date(u.banned_at), "dd MMM yyyy, HH:mm") : "-"}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {u.total_draws.toLocaleString("id-ID")}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {u.last_draw_at ? format(new Date(u.last_draw_at), "dd MMM yyyy, HH:mm") : <span className="italic">Belum pernah</span>}
                   </TableCell>
                   <TableCell className="text-right">
                     <ConfirmDelete
