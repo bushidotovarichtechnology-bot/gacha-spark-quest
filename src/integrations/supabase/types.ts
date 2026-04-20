@@ -1100,6 +1100,14 @@ export type Database = {
           draw_count: number
         }[]
       }
+      get_tier_distribution: {
+        Args: { _campaign_id: string; _limit?: number }
+        Returns: {
+          draw_count: number
+          tier_label: string
+          total_draws: number
+        }[]
+      }
       get_user_ticket_balance: {
         Args: { _user_id: string }
         Returns: {
