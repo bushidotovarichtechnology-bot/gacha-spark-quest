@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, icons } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabaseImg } from "@/lib/imageTransform";
 
 interface Category {
   id: string;
@@ -87,7 +88,7 @@ const CategoryMenu = ({ selectedSubcategoryId, onSelect }: CategoryMenuProps) =>
               )}
             >
               {cat.image_url ? (
-                <img src={cat.image_url} alt={cat.name} className="h-6 w-6 rounded-full object-cover ring-1 ring-border/40" />
+                <img src={supabaseImg(cat.image_url, 48)} alt={cat.name} loading="lazy" decoding="async" className="h-6 w-6 rounded-full object-cover ring-1 ring-border/40" />
               ) : (
                 <DynamicIcon name={cat.icon} className="ml-2 h-3.5 w-3.5" />
               )}
@@ -109,7 +110,7 @@ const CategoryMenu = ({ selectedSubcategoryId, onSelect }: CategoryMenuProps) =>
                     )}
                   >
                     {sub.image_url && (
-                      <img src={sub.image_url} alt={sub.name} className="h-6 w-6 shrink-0 rounded object-cover ring-1 ring-border/40" />
+                      <img src={supabaseImg(sub.image_url, 48)} alt={sub.name} loading="lazy" decoding="async" className="h-6 w-6 shrink-0 rounded object-cover ring-1 ring-border/40" />
                     )}
                     <span>{sub.name}</span>
                   </button>

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseImg } from "@/lib/imageTransform";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 
@@ -262,7 +263,7 @@ const CampaignDetail = () => {
 
       {/* Hero banner */}
       <div className="relative h-56 overflow-hidden pt-16 sm:h-72">
-        <img src={image} alt={campaign.title} className="h-full w-full object-cover" />
+        <img src={supabaseImg(image, 1280, 75)} alt={campaign.title} loading="eager" fetchPriority="high" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="container mx-auto">
@@ -433,7 +434,7 @@ const CampaignDetail = () => {
 
                         {p.image_url ? (
                           <div className="relative shrink-0">
-                            <img src={p.image_url} alt={p.name} className={`h-16 w-16 rounded-lg object-cover ring-2 ring-border/50 transition-transform group-hover:scale-110 ${isOut ? "grayscale" : ""}`} />
+                            <img src={supabaseImg(p.image_url, 128)} alt={p.name} loading="lazy" decoding="async" className={`h-16 w-16 rounded-lg object-cover ring-2 ring-border/50 transition-transform group-hover:scale-110 ${isOut ? "grayscale" : ""}`} />
                             {isOut && (
                               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/70">
                                 <Ban className="h-5 w-5 text-destructive" />

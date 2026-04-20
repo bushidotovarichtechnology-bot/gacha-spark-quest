@@ -135,7 +135,7 @@ const RedeemStore = () => {
                 className="rounded-xl border border-border bg-card p-4"
               >
                 {reward.image_url && (
-                  <img src={reward.image_url} alt={reward.name} className="mb-3 h-40 w-full rounded-lg object-cover" />
+                  <img src={supabaseImg(reward.image_url, 500)} alt={reward.name} loading="lazy" decoding="async" className="mb-3 h-40 w-full rounded-lg object-cover" />
                 )}
                 <h3 className="font-display text-base font-bold text-foreground">{reward.name}</h3>
                 <p className="mb-3 text-xs text-muted-foreground line-clamp-2">{reward.description}</p>
