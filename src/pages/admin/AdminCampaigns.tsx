@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Upload, GripVertical, Loader2 } from "lucide-react";
 import { CampaignRow } from "@/components/admin/CampaignRow";
@@ -267,7 +268,7 @@ const AdminCampaigns = () => {
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">Max 5MB, format JPG/PNG/WebP</p>
             </div>
-            <Input type="number" placeholder="Price" value={newCampaign.price} onChange={(e) => setNewCampaign({ ...newCampaign, price: Number(e.target.value) })} />
+            <NumberInput placeholder="Harga (koin)" value={newCampaign.price} onValueChange={(val) => setNewCampaign({ ...newCampaign, price: val })} />
           </div>
           <div>
             <label className="mb-1 block text-xs text-muted-foreground">Subkategori (opsional)</label>

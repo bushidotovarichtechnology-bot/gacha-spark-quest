@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -44,11 +45,11 @@ export const PackageForm = ({ open, onOpenChange, editing, form, setForm, saving
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Jumlah Koin</Label>
-            <Input type="number" value={form.coins} onChange={(e) => setForm({ ...form, coins: Number(e.target.value) })} />
+            <NumberInput value={form.coins} onValueChange={(val) => setForm({ ...form, coins: val })} />
           </div>
           <div>
             <Label>Harga (IDR)</Label>
-            <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+            <NumberInput value={form.price} onValueChange={(val) => setForm({ ...form, price: val })} />
           </div>
         </div>
         <div>

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Gift, Plus, Pencil, Trash2, Save, X, Upload, Image as ImageIcon, GripVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -270,7 +271,7 @@ const AdminRewards = () => {
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Jumlah Tiket untuk Ditukarkan</Label>
-              <Input type="number" min={1} placeholder="10" value={form.ticket_cost} onChange={(e) => setForm({ ...form, ticket_cost: Number(e.target.value) })} />
+              <NumberInput min={1} placeholder="10" value={form.ticket_cost} onValueChange={(val) => setForm({ ...form, ticket_cost: val })} />
             </div>
 
             <div className="space-y-1.5">
@@ -288,7 +289,7 @@ const AdminRewards = () => {
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Stok Tersedia</Label>
-              <Input type="number" min={0} placeholder="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} />
+              <NumberInput min={0} placeholder="0" value={form.stock} onValueChange={(val) => setForm({ ...form, stock: val })} />
             </div>
 
             <div className="flex items-end gap-2 pb-1">

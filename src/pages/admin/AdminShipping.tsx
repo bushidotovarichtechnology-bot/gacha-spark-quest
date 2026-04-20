@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Save, Loader2, MapPin, Truck, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -162,10 +163,9 @@ const AdminShipping = () => {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reguler</p>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Harga (Rp)</Label>
-                  <Input
-                    type="number"
+                  <NumberInput
                     value={zone.regular_price}
-                    onChange={(e) => updateZone(zone.id, "regular_price", parseInt(e.target.value) || 0)}
+                    onValueChange={(val) => updateZone(zone.id, "regular_price", val)}
                     className="h-8 text-sm"
                   />
                 </div>
@@ -184,10 +184,9 @@ const AdminShipping = () => {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Express</p>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Harga (Rp)</Label>
-                  <Input
-                    type="number"
+                  <NumberInput
                     value={zone.express_price}
-                    onChange={(e) => updateZone(zone.id, "express_price", parseInt(e.target.value) || 0)}
+                    onValueChange={(val) => updateZone(zone.id, "express_price", val)}
                     className="h-8 text-sm"
                   />
                 </div>
@@ -214,10 +213,9 @@ const AdminShipping = () => {
                   <>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Harga (Rp)</Label>
-                      <Input
-                        type="number"
+                      <NumberInput
                         value={zone.same_day_price}
-                        onChange={(e) => updateZone(zone.id, "same_day_price", parseInt(e.target.value) || 0)}
+                        onValueChange={(val) => updateZone(zone.id, "same_day_price", val)}
                         className="h-8 text-sm"
                       />
                     </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Save, Trash2, Plus, Upload, GripVertical, Coins, Weight } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,20 +84,19 @@ function SortablePrizeRow({
       </div>
       <div className="flex items-center gap-1">
         <label className="text-[10px] text-muted-foreground">Koin</label>
-        <Input type="number" className="h-6 w-16 text-xs" value={(p as any).coin_value ?? 0} onChange={async (e) => {
-          await supabase.from("tier_prizes").update({ coin_value: Number(e.target.value) } as any).eq("id", p.id);
+        <NumberInput className="h-6 w-20 text-xs" value={(p as any).coin_value ?? 0} onValueChange={async (val) => {
+          await supabase.from("tier_prizes").update({ coin_value: val } as any).eq("id", p.id);
           onRefresh();
         }} placeholder="0" title="Nilai daur ulang (koin)" />
       </div>
       <div className="flex items-center gap-1">
         <label className="text-[10px] text-muted-foreground">Berat (g)</label>
-        <Input
-          type="number"
+        <NumberInput
           min={1}
-          className="h-6 w-16 text-xs"
+          className="h-6 w-20 text-xs"
           value={(p as any).weight_grams ?? 1000}
-          onChange={async (e) => {
-            await supabase.from("tier_prizes").update({ weight_grams: Number(e.target.value) } as any).eq("id", p.id);
+          onValueChange={async (val) => {
+            await supabase.from("tier_prizes").update({ weight_grams: val } as any).eq("id", p.id);
             onRefresh();
           }}
           placeholder="1000"
@@ -105,13 +105,13 @@ function SortablePrizeRow({
       </div>
       <div className="flex items-center gap-1">
         <label className="text-[10px] text-muted-foreground">Rem</label>
-        <Input type="number" className="h-6 w-14 text-xs" value={p.remaining} onChange={async (e) => {
-          await supabase.from("tier_prizes").update({ remaining: Number(e.target.value) }).eq("id", p.id);
+        <NumberInput className="h-6 w-16 text-xs" value={p.remaining} onValueChange={async (val) => {
+          await supabase.from("tier_prizes").update({ remaining: val }).eq("id", p.id);
           onRefresh();
         }} />
         <span className="text-[10px] text-muted-foreground">/</span>
-        <Input type="number" className="h-6 w-14 text-xs" value={p.total} onChange={async (e) => {
-          await supabase.from("tier_prizes").update({ total: Number(e.target.value) }).eq("id", p.id);
+        <NumberInput className="h-6 w-16 text-xs" value={p.total} onValueChange={async (val) => {
+          await supabase.from("tier_prizes").update({ total: val }).eq("id", p.id);
           onRefresh();
         }} />
       </div>
@@ -284,11 +284,10 @@ export function TierEditor({
       {/* Bulk coin value edit */}
       <div className="flex items-center gap-2 mb-2">
         <Coins className="h-4 w-4 text-accent shrink-0" />
-        <Input
-          type="number"
+        <NumberInput
           min={0}
-          value={bulkCoinValue}
-          onChange={(e) => setBulkCoinValue(e.target.value)}
+          value={bulkCoinValue ? Number(bulkCoinValue) : ""}
+          onValueChange={(val) => setBulkCoinValue(val ? String(val) : "")}
           placeholder="Nilai daur ulang untuk semua prize"
           className="h-7 text-sm flex-1"
         />
@@ -316,11 +315,10 @@ export function TierEditor({
       {/* Bulk weight edit */}
       <div className="flex items-center gap-2 mb-2">
         <Weight className="h-4 w-4 text-primary shrink-0" />
-        <Input
-          type="number"
+        <NumberInput
           min={1}
-          value={bulkWeight}
-          onChange={(e) => setBulkWeight(e.target.value)}
+          value={bulkWeight ? Number(bulkWeight) : ""}
+          onValueChange={(val) => setBulkWeight(val ? String(val) : "")}
           placeholder="Berat (gram) untuk semua prize di tier ini"
           className="h-7 text-sm flex-1"
         />
@@ -364,7 +362,7 @@ export function TierEditor({
         <div className="flex gap-1">
           <Input value={newPrize} onChange={(e) => setNewPrize(e.target.value)} placeholder="New prize name" className="h-7 text-xs flex-1"
             onKeyDown={(e) => { if (e.key === "Enter") { onAddPrize(newPrize, newPrizeTotal); setNewPrize(""); setNewPrizeTotal(1); } }} />
-          <Input type="number" value={newPrizeTotal} onChange={(e) => setNewPrizeTotal(Number(e.target.value))} placeholder="Qty" className="h-7 w-14 text-xs" />
+          <NumberInput value={newPrizeTotal} onValueChange={setNewPrizeTotal} placeholder="Qty" className="h-7 w-20 text-xs" />
           <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => { onAddPrize(newPrize, newPrizeTotal); setNewPrize(""); setNewPrizeTotal(1); }}>
             <Plus className="h-3 w-3" />
           </Button>

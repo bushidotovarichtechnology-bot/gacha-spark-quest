@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, Loader2, Ticket, Gift, Coins, Percent, Gamepad2 }
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -221,18 +222,18 @@ const AdminCoupons = () => {
               </div>
               <div>
                 <Label>Nilai Benefit</Label>
-                <Input type="number" min={0} value={form.benefit_value} onChange={(e) => setForm({ ...form, benefit_value: parseInt(e.target.value) || 0 })} />
+                <NumberInput min={0} value={form.benefit_value} onValueChange={(val) => setForm({ ...form, benefit_value: val })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Maks Total Penggunaan</Label>
-                <Input type="number" min={0} value={form.max_uses} onChange={(e) => setForm({ ...form, max_uses: parseInt(e.target.value) || 0 })} />
+                <NumberInput min={0} value={form.max_uses} onValueChange={(val) => setForm({ ...form, max_uses: val })} />
                 <p className="text-xs text-muted-foreground mt-1">0 = unlimited</p>
               </div>
               <div>
                 <Label>Maks Per User</Label>
-                <Input type="number" min={1} value={form.max_uses_per_user} onChange={(e) => setForm({ ...form, max_uses_per_user: parseInt(e.target.value) || 1 })} />
+                <NumberInput min={1} value={form.max_uses_per_user} onValueChange={(val) => setForm({ ...form, max_uses_per_user: val })} />
               </div>
             </div>
             <div>
