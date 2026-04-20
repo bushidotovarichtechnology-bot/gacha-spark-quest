@@ -28,6 +28,7 @@ import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import AdminUsers from "./pages/admin/AdminUsers.tsx";
+import AdminBannedUsers from "./pages/admin/AdminBannedUsers.tsx";
 import AdminCampaigns from "./pages/admin/AdminCampaigns.tsx";
 import AdminProbability from "./pages/admin/AdminProbability.tsx";
 import AdminCategories from "./pages/admin/AdminCategories.tsx";
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
               <Route index element={<AdminDashboard />} />
               <Route path="users" element={<AdminUsers />} />
+              <Route path="banned-users" element={<AdminBannedUsers />} />
               <Route path="campaigns" element={<AdminCampaigns />} />
               <Route path="probability" element={<AdminProbability />} />
               <Route path="categories" element={<AdminCategories />} />
