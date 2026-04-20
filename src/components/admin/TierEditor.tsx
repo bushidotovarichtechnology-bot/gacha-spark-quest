@@ -129,7 +129,7 @@ function SortablePrizeRow({
       </label>
       <label className="flex h-6 w-6 cursor-pointer items-center justify-center rounded hover:bg-accent" title="Upload gambar hadiah">
         <Upload className="h-3 w-3 text-muted-foreground" />
-        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+        <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) pickFile(file);
           e.target.value = "";
@@ -269,7 +269,7 @@ export function TierEditor({
         <label className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs hover:bg-accent">
           <Upload className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-muted-foreground">{tierImageUrl ? "Ganti gambar tier" : "Upload gambar tier"}</span>
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+          <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) tierCrop.pickFile(file);
             e.target.value = "";

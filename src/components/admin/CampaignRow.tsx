@@ -104,7 +104,7 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
             </Button>
             <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="Upload image">
               <Image className="h-4 w-4 text-muted-foreground" />
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+              <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) pickFile(file);
                 e.target.value = "";

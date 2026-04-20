@@ -257,7 +257,7 @@ const AdminRewards = () => {
                   <img src={form.image_url} alt="Preview" className="h-16 w-16 rounded-lg border border-border object-cover" />
                 )}
                 <div className="flex flex-1 gap-2">
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={handleImageUpload} />
                   <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                     <Upload className="mr-1.5 h-4 w-4" />
                     {uploading ? "Mengupload..." : "Upload Gambar"}
