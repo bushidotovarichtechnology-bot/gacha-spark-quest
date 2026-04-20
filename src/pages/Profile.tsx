@@ -174,7 +174,7 @@ const Profile = () => {
     }
   };
 
-
+  const handleSaveProfile = async () => {
     if (!user) return;
     setSavingProfile(true);
     const { error } = await supabase
