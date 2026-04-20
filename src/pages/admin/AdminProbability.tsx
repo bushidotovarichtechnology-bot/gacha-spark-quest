@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ChevronDown, ChevronRight } from "lucide-react";
+import { Save, Wand2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { supabaseImg } from "@/lib/imageTransform";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -12,98 +14,163 @@ type Tier = Tables<"campaign_tiers">;
 type Prize = Tables<"tier_prizes">;
 type TierWithPrizes = Tier & { tier_prizes: Prize[] };
 
+// Presisi 2 desimal: simpan dalam basis 100 (5.25% -> 5.25)
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const fmt = (n: number) => n.toFixed(2);
+const TIER_RANK: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 };
+
+const tierColorMap: Record<string, string> = {
+  S: "bg-accent/10 text-accent border-accent/30",
+  A: "bg-primary/10 text-primary border-primary/30",
+  B: "bg-neon-pink/10 text-neon-pink border-neon-pink/30",
+  C: "bg-secondary text-muted-foreground border-border",
+};
+
 const AdminProbability = () => {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [tiersByCampaign, setTiersByCampaign] = useState<Record<string, TierWithPrizes[]>>({});
-  const [editedTierWeights, setEditedTierWeights] = useState<Record<string, number>>({});
-  const [editedPrizeWeights, setEditedPrizeWeights] = useState<Record<string, number>>({});
-  const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
+  // % per prize (basis 0..100), sumber kebenaran tunggal di UI
+  const [prizePct, setPrizePct] = useState<Record<string, number>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const { data: c } = await supabase.from("campaigns").select("*").order("title");
-      if (!c) return;
+      const [{ data: c }, { data: t }] = await Promise.all([
+        supabase.from("campaigns").select("*").order("title"),
+        supabase.from("campaign_tiers").select("*, tier_prizes(*)").order("sort_order"),
+      ]);
+      if (!c || !t) return;
       setCampaigns(c);
 
-      const { data: t } = await supabase
-        .from("campaign_tiers")
-        .select("*, tier_prizes(*)")
-        .order("sort_order");
-      if (!t) return;
-
       const grouped: Record<string, TierWithPrizes[]> = {};
-      const tw: Record<string, number> = {};
-      const pw: Record<string, number> = {};
+      const initialPct: Record<string, number> = {};
 
+      // Konversi bobot eksisting ke %.
+      // Asumsi sebelumnya: P(prize) = (tier.weight / Σtier.weight) × (prize.weight / Σprize.weight in tier)
+      const tiersByCamp: Record<string, TierWithPrizes[]> = {};
       (t as TierWithPrizes[]).forEach((tier) => {
-        if (!grouped[tier.campaign_id]) grouped[tier.campaign_id] = [];
-        grouped[tier.campaign_id].push(tier);
-        tw[tier.id] = tier.probability_weight;
-        tier.tier_prizes.forEach((p) => {
-          pw[p.id] = p.probability_weight;
+        if (!tiersByCamp[tier.campaign_id]) tiersByCamp[tier.campaign_id] = [];
+        tiersByCamp[tier.campaign_id].push(tier);
+      });
+
+      Object.entries(tiersByCamp).forEach(([cid, tiers]) => {
+        grouped[cid] = tiers;
+        const sumTierW = tiers.reduce((s, x) => s + Number(x.probability_weight || 0), 0) || 1;
+        tiers.forEach((tier) => {
+          const tierShare = Number(tier.probability_weight || 0) / sumTierW; // 0..1
+          const sumPrizeW = tier.tier_prizes.reduce((s, p) => s + Number(p.probability_weight || 0), 0) || 1;
+          tier.tier_prizes.forEach((p) => {
+            const prizeShare = Number(p.probability_weight || 0) / sumPrizeW; // 0..1
+            initialPct[p.id] = round2(tierShare * prizeShare * 100);
+          });
         });
       });
 
       setTiersByCampaign(grouped);
-      setEditedTierWeights(tw);
-      setEditedPrizeWeights(pw);
+      setPrizePct(initialPct);
     };
     load();
   }, []);
 
-  const totalTierWeight = (campaignId: string) => {
+  const totals = useMemo(() => {
+    const out: Record<string, { total: number; perTier: Record<string, number> }> = {};
+    Object.entries(tiersByCampaign).forEach(([cid, tiers]) => {
+      let total = 0;
+      const perTier: Record<string, number> = {};
+      tiers.forEach((tier) => {
+        const sum = tier.tier_prizes.reduce((s, p) => s + (prizePct[p.id] ?? 0), 0);
+        perTier[tier.id] = round2(sum);
+        total += sum;
+      });
+      out[cid] = { total: round2(total), perTier };
+    });
+    return out;
+  }, [tiersByCampaign, prizePct]);
+
+  const setOne = (prizeId: string, raw: string) => {
+    let v = parseFloat(raw);
+    if (!Number.isFinite(v) || v < 0) v = 0;
+    if (v > 100) v = 100;
+    setPrizePct((prev) => ({ ...prev, [prizeId]: round2(v) }));
+  };
+
+  // Auto-distribusi sisa ke tier terendah (C → B → A → S)
+  const autoFillRemainder = (campaignId: string) => {
     const tiers = tiersByCampaign[campaignId] || [];
-    return tiers.reduce((sum, t) => sum + (editedTierWeights[t.id] ?? t.probability_weight), 0);
+    const sum = totals[campaignId]?.total ?? 0;
+    const remaining = round2(100 - sum);
+    if (remaining <= 0) {
+      toast({ title: "Total sudah ≥ 100%", description: "Tidak ada sisa untuk didistribusikan.", variant: "destructive" });
+      return;
+    }
+    // Cari tier terendah yang punya prize
+    const sorted = [...tiers].sort((a, b) => (TIER_RANK[b.label] ?? 99) - (TIER_RANK[a.label] ?? 99));
+    const target = sorted.find((t) => t.tier_prizes.length > 0);
+    if (!target) {
+      toast({ title: "Tidak ada prize", description: "Tambah prize dulu.", variant: "destructive" });
+      return;
+    }
+    const prizes = target.tier_prizes;
+    const per = round2(remaining / prizes.length);
+    setPrizePct((prev) => {
+      const next = { ...prev };
+      let acc = 0;
+      prizes.forEach((p, i) => {
+        const add = i === prizes.length - 1 ? round2(remaining - acc) : per;
+        next[p.id] = round2((next[p.id] ?? 0) + add);
+        acc = round2(acc + per);
+      });
+      return next;
+    });
+    toast({ title: `Sisa ${fmt(remaining)}% dialokasikan`, description: `Ke tier ${target.label} (${prizes.length} hadiah)` });
   };
 
-  const getTierPct = (tierId: string, campaignId: string) => {
-    const tw = totalTierWeight(campaignId);
-    if (tw === 0) return "0.0";
-    return ((editedTierWeights[tierId] ?? 0) / tw * 100).toFixed(1);
-  };
-
-  const totalPrizeWeight = (tier: TierWithPrizes) => {
-    return tier.tier_prizes.reduce((sum, p) => sum + (editedPrizeWeights[p.id] ?? p.probability_weight), 0);
-  };
-
-  const getPrizePct = (prizeId: string, tier: TierWithPrizes) => {
-    const tw = totalPrizeWeight(tier);
-    if (tw === 0) return "0.0";
-    return ((editedPrizeWeights[prizeId] ?? 0) / tw * 100).toFixed(1);
-  };
-
-  const saveCampaignWeights = async (campaignId: string) => {
+  const saveCampaign = async (campaignId: string) => {
     const tiers = tiersByCampaign[campaignId] || [];
+    const sum = totals[campaignId]?.total ?? 0;
+    if (sum > 100.01) {
+      toast({ title: `Total ${fmt(sum)}% melebihi 100%`, description: "Turunkan beberapa nilai.", variant: "destructive" });
+      return;
+    }
+    setSavingId(campaignId);
+
+    // Tier weight = jumlah % prize dalam tier; Prize weight = % prize.
+    // Engine 2-tahap: P = (tierW / ΣtierW) × (prizeW / ΣprizeW_in_tier) = prizePct / 100 ✓
     const updates: PromiseLike<any>[] = [];
-
     tiers.forEach((tier) => {
+      const tierW = totals[campaignId].perTier[tier.id] ?? 0;
+      // Bila tier 0%, beri weight 0 → tier tidak akan terpilih
       updates.push(
-        supabase.from("campaign_tiers").update({ probability_weight: editedTierWeights[tier.id] ?? tier.probability_weight }).eq("id", tier.id)
+        supabase.from("campaign_tiers").update({ probability_weight: tierW }).eq("id", tier.id),
       );
       tier.tier_prizes.forEach((p) => {
+        // Bila semua prize tier 0, set weight 1 supaya tidak division-by-zero (tier weight 0 sudah blok pemilihan)
+        const w = prizePct[p.id] ?? 0;
         updates.push(
-          supabase.from("tier_prizes").update({ probability_weight: editedPrizeWeights[p.id] ?? p.probability_weight }).eq("id", p.id)
+          supabase.from("tier_prizes").update({ probability_weight: w === 0 ? 0.0001 : w }).eq("id", p.id),
         );
       });
     });
 
-    await Promise.all(updates);
-    toast({ title: "Semua probabilitas tersimpan!" });
-  };
-
-  const tierColorMap: Record<string, string> = {
-    S: "bg-accent/10 text-accent border-accent/30",
-    A: "bg-primary/10 text-primary border-primary/30",
-    B: "bg-neon-pink/10 text-neon-pink border-neon-pink/30",
-    C: "bg-secondary text-muted-foreground border-border",
+    const results = await Promise.all(updates);
+    const err = results.find((r: any) => r?.error);
+    setSavingId(null);
+    if (err && (err as any).error) {
+      toast({ title: "Gagal menyimpan", description: (err as any).error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Probabilitas tersimpan ✓", description: `Total ${fmt(sum)}%` });
   };
 
   return (
     <div>
       <h1 className="mb-2 font-display text-2xl font-bold tracking-wider">Probability Settings</h1>
-      <p className="mb-6 text-sm text-muted-foreground">
-        Atur weight probabilitas untuk setiap tier dan hadiah. Weight lebih tinggi = peluang lebih besar.
+      <p className="mb-2 text-sm text-muted-foreground">
+        Atur peluang <strong>per hadiah</strong> langsung dalam %. Contoh: Apple Watch 0.05% berarti 0.05% dari setiap draw.
+      </p>
+      <p className="mb-6 text-xs text-muted-foreground">
+        Total semua hadiah dalam 1 campaign idealnya = 100%. Bila kurang, klik <em>Auto-isi sisa</em> untuk mengalokasikan ke tier terendah.
       </p>
 
       {campaigns.length === 0 && (
@@ -114,80 +181,86 @@ const AdminProbability = () => {
         {campaigns.map((c) => {
           const cTiers = tiersByCampaign[c.id] || [];
           if (cTiers.length === 0) return null;
+          const sum = totals[c.id]?.total ?? 0;
+          const isFull = Math.abs(sum - 100) < 0.01;
+          const isOver = sum > 100.01;
 
           return (
             <Card key={c.id} className="border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-sm">{c.title}</CardTitle>
-                <Button size="sm" onClick={() => saveCampaignWeights(c.id)} className="gap-1">
-                  <Save className="h-3.5 w-3.5" /> Simpan
-                </Button>
+              <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CardTitle className="text-sm truncate">{c.title}</CardTitle>
+                  <Badge
+                    variant={isOver ? "destructive" : isFull ? "default" : "secondary"}
+                    className="gap-1 shrink-0"
+                  >
+                    {isOver ? <AlertTriangle className="h-3 w-3" /> : isFull ? <CheckCircle2 className="h-3 w-3" /> : null}
+                    Total: {fmt(sum)}%
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => autoFillRemainder(c.id)} className="gap-1" disabled={sum >= 100}>
+                    <Wand2 className="h-3.5 w-3.5" /> Auto-isi sisa
+                  </Button>
+                  <Button size="sm" onClick={() => saveCampaign(c.id)} className="gap-1" disabled={isOver || savingId === c.id}>
+                    <Save className="h-3.5 w-3.5" /> {savingId === c.id ? "Menyimpan..." : "Simpan"}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {cTiers.map((tier) => {
-                    const pct = getTierPct(tier.id, c.id);
-                    const isExpanded = expandedTiers[tier.id] ?? false;
-                    const hasPrizes = tier.tier_prizes.length > 0;
-
+                    const tierTotal = totals[c.id]?.perTier[tier.id] ?? 0;
                     return (
-                      <div key={tier.id}>
-                        <div className={`flex items-center gap-3 rounded-lg border p-3 ${tierColorMap[tier.label] || ""}`}>
-                          {hasPrizes && (
-                            <button
-                              onClick={() => setExpandedTiers((prev) => ({ ...prev, [tier.id]: !prev[tier.id] }))}
-                              className="shrink-0"
-                            >
-                              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                            </button>
-                          )}
+                      <div key={tier.id} className={`rounded-lg border p-3 ${tierColorMap[tier.label] || ""}`}>
+                        <div className="flex items-center gap-3 mb-2">
                           <span className="font-display text-lg font-black w-8 text-center">{tier.label}</span>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{tier.name}</p>
-                            <div className="mt-1 h-2 overflow-hidden rounded-full bg-background/50">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{tier.name}</p>
+                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-background/50">
                               <div
                                 className="h-full rounded-full bg-current transition-all"
-                                style={{ width: `${Math.min(Number(pct), 100)}%` }}
+                                style={{ width: `${Math.min(tierTotal, 100)}%` }}
                               />
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              value={editedTierWeights[tier.id] ?? tier.probability_weight}
-                              onChange={(e) => setEditedTierWeights({ ...editedTierWeights, [tier.id]: Number(e.target.value) })}
-                              className="h-8 w-20 text-sm text-center"
-                            />
-                            <span className="w-14 text-right text-sm font-semibold">{pct}%</span>
-                          </div>
+                          <span className="text-sm font-semibold whitespace-nowrap">{fmt(tierTotal)}%</span>
                         </div>
 
-                        {/* Prize-level weights */}
-                        {isExpanded && hasPrizes && (
-                          <div className="ml-12 mt-1 space-y-1 border-l-2 border-border/30 pl-3">
-                            <p className="text-xs text-muted-foreground font-medium py-1">Probabilitas hadiah dalam tier {tier.label}:</p>
-                            {tier.tier_prizes.map((prize) => {
-                              const prizePct = getPrizePct(prize.id, tier);
-                              return (
-                                <div key={prize.id} className="flex items-center gap-2 rounded-md bg-secondary/30 px-3 py-2">
-                                  {prize.image_url && (
-                                    <img src={prize.image_url} alt={prize.name} className="h-6 w-6 rounded object-cover shrink-0" />
-                                  )}
-                                  <span className="text-xs flex-1 truncate">{prize.name}</span>
+                        {tier.tier_prizes.length === 0 ? (
+                          <p className="text-xs text-muted-foreground italic pl-11">Belum ada hadiah di tier ini.</p>
+                        ) : (
+                          <div className="space-y-1.5 pl-11">
+                            {tier.tier_prizes.map((prize) => (
+                              <div key={prize.id} className="flex items-center gap-2 rounded-md bg-background/40 px-3 py-2">
+                                {prize.image_url ? (
+                                  <img
+                                    src={supabaseImg(prize.image_url, 64)}
+                                    alt={prize.name}
+                                    loading="lazy"
+                                    className="h-7 w-7 rounded object-cover shrink-0"
+                                  />
+                                ) : (
+                                  <div className="h-7 w-7 rounded bg-secondary shrink-0" />
+                                )}
+                                <span className="text-xs flex-1 truncate text-foreground">{prize.name}</span>
+                                <div className="relative">
                                   <Input
                                     type="number"
-                                    step="0.1"
-                                    min="0"
-                                    value={editedPrizeWeights[prize.id] ?? prize.probability_weight}
-                                    onChange={(e) => setEditedPrizeWeights({ ...editedPrizeWeights, [prize.id]: Number(e.target.value) })}
-                                    className="h-7 w-16 text-xs text-center"
+                                    step="0.01"
+                                    min={0}
+                                    max={100}
+                                    inputMode="decimal"
+                                    value={prizePct[prize.id] ?? 0}
+                                    onChange={(e) => setOne(prize.id, e.target.value)}
+                                    className="h-8 w-24 text-sm text-right pr-7"
                                   />
-                                  <span className="w-12 text-right text-xs font-semibold">{prizePct}%</span>
+                                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
+                                    %
+                                  </span>
                                 </div>
-                              );
-                            })}
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
