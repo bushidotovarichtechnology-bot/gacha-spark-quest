@@ -333,7 +333,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                 className="mx-auto mb-4"
               >
                 {prize.image ? (
-                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} p-0.5`}>
+                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} p-0.5 ${prize.tier === "S" ? "box-glow-gold-strong" : prize.tier === "A" ? "box-glow-purple-strong" : ""}`}>
                     <img
                       src={prize.image}
                       alt={prize.prize}
@@ -341,7 +341,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                     />
                   </div>
                 ) : (
-                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient}`}>
+                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} ${prize.tier === "S" ? "box-glow-gold-strong" : prize.tier === "A" ? "box-glow-purple-strong" : ""}`}>
                     <span className="text-4xl">{config.emoji}</span>
                   </div>
                 )}
