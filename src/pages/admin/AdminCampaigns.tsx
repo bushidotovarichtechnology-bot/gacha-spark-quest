@@ -75,6 +75,23 @@ const AdminCampaigns = () => {
   const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryOption[]>([]);
   const { sensors, collisionDetection, reorder } = useSortableList();
 
+  const newCampaignCrop = useImageCrop(
+    { defaultAspect: "1:1", title: "Crop gambar campaign baru" },
+    async (cropped) => {
+      if (!newCampaign.id) {
+        toast({ title: "Set Campaign ID dulu", variant: "destructive" });
+        return;
+      }
+      try {
+        const url = await uploadCampaignImage(cropped, newCampaign.id);
+        setNewCampaign((prev) => ({ ...prev, image_url: url }));
+        toast({ title: "Image uploaded!" });
+      } catch (err: any) {
+        toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      }
+    },
+  );
+
   const fetchSubcategoryOptions = async () => {
     const { data: cats } = await supabase.from("categories").select("id, name").order("sort_order");
     const { data: subs } = await supabase.from("subcategories").select("id, name, category_id").order("sort_order");
