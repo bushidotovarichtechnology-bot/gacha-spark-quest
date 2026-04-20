@@ -9,6 +9,7 @@ interface Category {
   name: string;
   sort_order: number;
   icon: string;
+  image_url: string;
 }
 
 interface Subcategory {
@@ -16,6 +17,7 @@ interface Subcategory {
   category_id: string;
   name: string;
   sort_order: number;
+  image_url: string;
 }
 
 interface CategoryMenuProps {
@@ -78,31 +80,38 @@ const CategoryMenu = ({ selectedSubcategoryId, onSelect }: CategoryMenuProps) =>
             <button
               onClick={() => setExpandedCat(isExpanded ? null : cat.id)}
               className={cn(
-                "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors",
+                "flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-xs font-semibold transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               )}
             >
-              <DynamicIcon name={cat.icon} className="h-3.5 w-3.5" />
-              {cat.name}
+              {cat.image_url ? (
+                <img src={cat.image_url} alt={cat.name} className="h-6 w-6 rounded-full object-cover ring-1 ring-border/40" />
+              ) : (
+                <DynamicIcon name={cat.icon} className="ml-2 h-3.5 w-3.5" />
+              )}
+              <span>{cat.name}</span>
               {subs.length > 0 && <ChevronDown className={cn("h-3 w-3 transition-transform", isExpanded && "rotate-180")} />}
             </button>
 
             {isExpanded && subs.length > 0 && (
-              <div className="absolute left-0 top-full z-20 mt-1 min-w-[140px] rounded-lg border border-border/50 bg-card/95 p-1 shadow-lg backdrop-blur-xl">
+              <div className="absolute left-0 top-full z-20 mt-1 min-w-[180px] rounded-lg border border-border/50 bg-card/95 p-1 shadow-lg backdrop-blur-xl">
                 {subs.map((sub) => (
                   <button
                     key={sub.id}
                     onClick={() => { onSelect(sub.id); setExpandedCat(null); }}
                     className={cn(
-                      "block w-full rounded-md px-3 py-1.5 text-left text-xs font-medium transition-colors",
+                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors",
                       selectedSubcategoryId === sub.id
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     )}
                   >
-                    {sub.name}
+                    {sub.image_url && (
+                      <img src={sub.image_url} alt={sub.name} className="h-6 w-6 shrink-0 rounded object-cover ring-1 ring-border/40" />
+                    )}
+                    <span>{sub.name}</span>
                   </button>
                 ))}
               </div>
