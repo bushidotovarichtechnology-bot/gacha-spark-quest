@@ -17,6 +17,8 @@ import LocationCombobox from "@/components/LocationCombobox";
 import { useToast } from "@/hooks/use-toast";
 import { useProvinces, useCitiesForProvince } from "@/hooks/use-indonesian-locations";
 import defaultAvatar from "@/assets/default-avatar.png";
+import { AVATAR_PRESETS } from "@/lib/avatarPresets";
+import { cn } from "@/lib/utils";
 
 const WA_NUMBER = "6282231283948";
 const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan Bushido Gacha.");
@@ -43,6 +45,7 @@ const Profile = () => {
   });
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectingPreset, setSelectingPreset] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
