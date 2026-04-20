@@ -25,7 +25,7 @@ interface ImageCropDialogProps {
   title?: string;
 }
 
-async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string): Promise<Blob> {
+async function getCroppedBlob(imageSrc: string, area: Area, mimeType: string, quality = 0.9): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -95,11 +95,9 @@ export function ImageCropDialog({
     if (!imageSrc || !croppedArea || !file) return;
     setSaving(true);
     try {
-      const mime = file.type || "image/jpeg";
-      const blob = await getCroppedBlob(imageSrc, croppedArea, mime);
-      const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+      const blob = await getCroppedBlob(imageSrc, croppedArea, OUTPUT_MIME, OUTPUT_QUALITY);
       const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
-      const cropped = new File([blob], `${baseName}-${aspectKey.replace(":", "x")}.${ext}`, { type: mime });
+      const cropped = new File([blob], `${baseName}-${aspectKey.replace(":", "x")}.${OUTPUT_EXT}`, { type: OUTPUT_MIME });
       await onCropped(blob, cropped);
       onOpenChange(false);
     } finally {
