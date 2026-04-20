@@ -8,6 +8,7 @@ import { useGacha, type InventoryItem } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 import ClaimPrizeForm from "@/components/ClaimPrizeForm";
+import { supabaseImg } from "@/lib/imageTransform";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -309,9 +310,10 @@ const Inventory = () => {
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <img
-                      src={item.image}
+                      src={supabaseImg(item.image, 400)}
                       alt={item.prize}
                       loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover opacity-60 transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
