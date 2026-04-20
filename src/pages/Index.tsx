@@ -207,37 +207,29 @@ const Index = () => {
       <section className="border-y border-border/50 bg-secondary/30">
         <div className="container mx-auto grid grid-cols-2 gap-4 px-4 py-8 md:grid-cols-4">
           {features.map((f, i) => (
-            <motion.div
+            <div
               key={f.title}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="flex flex-col items-center gap-2 text-center"
+              className="flex flex-col items-center gap-2 text-center animate-fade-in"
+              style={{ animationDelay: `${i * 100}ms` }}
             >
               <f.icon className="h-6 w-6 text-accent" />
               <h3 className="font-display text-xs font-semibold tracking-wide text-foreground">{f.title}</h3>
               <p className="text-xs text-muted-foreground">{f.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
       <section id="featured-campaigns" className="scroll-mt-20 py-16">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="mb-10 text-center"
-          >
+          <div className="mb-10 text-center animate-fade-in">
             <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
               {t("liveNow")}
             </p>
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {t("featuredCampaigns")}
             </h2>
-          </motion.div>
+          </div>
 
           <div className="mb-8">
             <CategoryMenu selectedSubcategoryId={selectedSubcategoryId} onSelect={setSelectedSubcategoryId} />
