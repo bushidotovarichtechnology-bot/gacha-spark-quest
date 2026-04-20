@@ -4,11 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, GripVertical, Loader2 } from "lucide-react";
 import { CampaignRow } from "@/components/admin/CampaignRow";
 import { TierEditor, type CampaignTier } from "@/components/admin/TierEditor";
 import type { Tables } from "@/integrations/supabase/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useSortableList } from "@/hooks/use-sortable-list";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -30,14 +34,45 @@ type Campaign = Tables<"campaigns">;
 
 const emptyTier = { label: "C", name: "", total: 1, remaining: 1, probability_weight: 1, sort_order: 0 };
 
+interface SortableCampaignProps {
+  campaign: Campaign;
+  index: number;
+  children: React.ReactNode;
+}
+
+const SortableCampaign = ({ campaign, index, children }: SortableCampaignProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: campaign.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-start gap-1">
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none p-2 mt-3 text-muted-foreground/60 hover:text-muted-foreground active:cursor-grabbing"
+        aria-label="Drag to reorder"
+        type="button"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="flex items-center justify-center font-mono text-xs text-muted-foreground w-6 mt-4">
+        {index + 1}
+      </div>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  );
+};
+
 const AdminCampaigns = () => {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [tiers, setTiers] = useState<CampaignTier[]>([]);
   const [loading, setLoading] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const [newCampaign, setNewCampaign] = useState({ id: "", title: "", description: "", image_url: "", price: 5, subcategory_id: "" });
   const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryOption[]>([]);
+  const { sensors, collisionDetection, reorder } = useSortableList();
 
   const fetchSubcategoryOptions = async () => {
     const { data: cats } = await supabase.from("categories").select("id, name").order("sort_order");
@@ -49,7 +84,7 @@ const AdminCampaigns = () => {
   };
 
   const fetchCampaigns = async () => {
-    const { data } = await supabase.from("campaigns").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("campaigns").select("*").order("sort_order").order("created_at");
     if (data) setCampaigns(data);
   };
 
@@ -69,18 +104,43 @@ const AdminCampaigns = () => {
     else { setExpandedId(id); fetchTiers(id); }
   };
 
+  const persistOrder = async (ordered: Campaign[]) => {
+    const updates = ordered.map((c, idx) =>
+      supabase.from("campaigns").update({ sort_order: idx + 1 }).eq("id", c.id)
+    );
+    await Promise.all(updates);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const reordered = reorder(campaigns, event);
+    if (!reordered) return;
+    setCampaigns(reordered);
+    setReordering(true);
+    try {
+      await persistOrder(reordered);
+      toast({ title: "Urutan campaign diperbarui" });
+    } catch (err: any) {
+      toast({ title: "Gagal menyimpan urutan", description: err.message, variant: "destructive" });
+      fetchCampaigns();
+    } finally {
+      setReordering(false);
+    }
+  };
+
   const createCampaign = async () => {
     if (!newCampaign.id || !newCampaign.title) {
       toast({ title: "ID and Title are required", variant: "destructive" });
       return;
     }
     setLoading(true);
+    const nextOrder = campaigns.length > 0 ? Math.max(...campaigns.map(c => c.sort_order || 0)) + 1 : 1;
     const payload = {
       id: newCampaign.id,
       title: newCampaign.title,
       description: newCampaign.description,
       image_url: newCampaign.image_url,
       price: newCampaign.price,
+      sort_order: nextOrder,
       ...(newCampaign.subcategory_id ? { subcategory_id: newCampaign.subcategory_id } : {}),
     };
     const { error } = await supabase.from("campaigns").insert(payload);
@@ -132,7 +192,15 @@ const AdminCampaigns = () => {
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl font-bold tracking-wider">Campaign Management</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-wider">Campaign Management</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Drag <GripVertical className="inline h-3 w-3" /> untuk mengubah urutan tampilan.
+          </p>
+        </div>
+        {reordering && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+      </div>
 
       <Card className="mb-6 border-border/50">
         <CardHeader><CardTitle className="text-sm">Create New Campaign</CardTitle></CardHeader>
@@ -189,55 +257,61 @@ const AdminCampaigns = () => {
         </CardContent>
       </Card>
 
-      <div className="space-y-3">
-        {campaigns.map((c) => (
-          <Card key={c.id} className="border-border/50 group">
-            <CampaignRow
-              campaign={c}
-              isExpanded={expandedId === c.id}
-              onToggleExpand={() => toggleExpand(c.id)}
-              onUpdate={updateCampaign}
-              onDelete={deleteCampaign}
-              subcategoryOptions={subcategoryOptions}
-              onUploadImage={async (id, file) => {
-                try {
-                  const url = await uploadCampaignImage(file, id);
-                  await updateCampaign(id, { image_url: url });
-                  toast({ title: "Image updated!" });
-                } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
-              }}
-            >
-              {expandedId === c.id && (
-                <CardContent className="border-t border-border/50 pt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">Tiers & Prizes</h3>
-                    <Button size="sm" variant="outline" onClick={() => addTier(c.id)} className="gap-1">
-                      <Plus className="h-3 w-3" /> Add Tier
-                    </Button>
-                  </div>
-                  <div className="space-y-4">
-                    {tiers.map((tier) => (
-                      <TierEditor
-                        key={tier.id}
-                        tier={tier}
-                        onUpdate={(u) => updateTier(tier.id, u)}
-                        onDelete={() => deleteTier(tier.id, c.id)}
-                        onAddPrize={(name, total) => addPrize(tier.id, name, total)}
-                        onDeletePrize={deletePrize}
-                        onRefresh={() => fetchTiers(c.id)}
-                      />
-                    ))}
-                    {tiers.length === 0 && <p className="text-sm text-muted-foreground">No tiers yet. Add one to get started.</p>}
-                  </div>
-                </CardContent>
-              )}
-            </CampaignRow>
-          </Card>
-        ))}
-        {campaigns.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-8">No campaigns yet. Create one above.</p>
-        )}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragEnd={handleDragEnd}>
+        <SortableContext items={campaigns.map(c => c.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-3">
+            {campaigns.map((c, idx) => (
+              <SortableCampaign key={c.id} campaign={c} index={idx}>
+                <Card className="border-border/50 group">
+                  <CampaignRow
+                    campaign={c}
+                    isExpanded={expandedId === c.id}
+                    onToggleExpand={() => toggleExpand(c.id)}
+                    onUpdate={updateCampaign}
+                    onDelete={deleteCampaign}
+                    subcategoryOptions={subcategoryOptions}
+                    onUploadImage={async (id, file) => {
+                      try {
+                        const url = await uploadCampaignImage(file, id);
+                        await updateCampaign(id, { image_url: url });
+                        toast({ title: "Image updated!" });
+                      } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
+                    }}
+                  >
+                    {expandedId === c.id && (
+                      <CardContent className="border-t border-border/50 pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-semibold">Tiers & Prizes</h3>
+                          <Button size="sm" variant="outline" onClick={() => addTier(c.id)} className="gap-1">
+                            <Plus className="h-3 w-3" /> Add Tier
+                          </Button>
+                        </div>
+                        <div className="space-y-4">
+                          {tiers.map((tier) => (
+                            <TierEditor
+                              key={tier.id}
+                              tier={tier}
+                              onUpdate={(u) => updateTier(tier.id, u)}
+                              onDelete={() => deleteTier(tier.id, c.id)}
+                              onAddPrize={(name, total) => addPrize(tier.id, name, total)}
+                              onDeletePrize={deletePrize}
+                              onRefresh={() => fetchTiers(c.id)}
+                            />
+                          ))}
+                          {tiers.length === 0 && <p className="text-sm text-muted-foreground">No tiers yet. Add one to get started.</p>}
+                        </div>
+                      </CardContent>
+                    )}
+                  </CampaignRow>
+                </Card>
+              </SortableCampaign>
+            ))}
+            {campaigns.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">No campaigns yet. Create one above.</p>
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 };
