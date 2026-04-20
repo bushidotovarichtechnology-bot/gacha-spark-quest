@@ -264,7 +264,7 @@ export function TierEditor({
       </div>
 
       {/* Tier image */}
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex flex-wrap items-center gap-2 mb-2">
         {tierImageUrl && <img src={tierImageUrl} alt={name} className="h-12 w-12 rounded-lg object-contain bg-secondary/40 p-1" />}
         <label className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs hover:bg-accent">
           <Upload className="h-3.5 w-3.5 text-muted-foreground" />
@@ -275,6 +275,7 @@ export function TierEditor({
             e.target.value = "";
           }} />
         </label>
+        <span className="text-[10px] text-muted-foreground">Max 5MB · JPG/PNG/WebP</span>
         {tierCrop.dialog}
       </div>
 
