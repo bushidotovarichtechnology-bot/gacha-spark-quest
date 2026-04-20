@@ -433,10 +433,16 @@ const CampaignDetail = () => {
                         </div>
 
                         {p.image_url ? (
-                          <div className="relative shrink-0">
-                            <img src={supabaseImg(p.image_url, 128)} alt={p.name} loading="lazy" decoding="async" className={`h-16 w-16 rounded-lg object-contain bg-secondary/40 p-1.5 ring-2 ring-border/50 transition-transform group-hover:scale-110 ${isOut ? "grayscale" : ""}`} />
+                          <div className={`relative shrink-0 h-16 w-16 overflow-hidden rounded-lg bg-secondary/40 ring-2 ring-border/50 transition-transform group-hover:scale-110 ${isOut ? "grayscale" : ""}`}>
+                            <img
+                              src={supabaseImg(p.image_url, 200)}
+                              alt={p.name}
+                              loading="lazy"
+                              decoding="async"
+                              className="absolute inset-0 h-full w-full object-cover"
+                            />
                             {isOut && (
-                              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/70">
+                              <div className="absolute inset-0 flex items-center justify-center bg-background/70">
                                 <Ban className="h-5 w-5 text-destructive" />
                               </div>
                             )}
