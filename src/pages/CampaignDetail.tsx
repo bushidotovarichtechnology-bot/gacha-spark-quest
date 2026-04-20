@@ -316,28 +316,56 @@ const CampaignDetail = () => {
                 {/* Kitakuji-style chevron banner */}
                 <div className="relative">
                   <div
-                    className={`relative flex h-10 items-center bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${isGrand ? "animate-pulse-glow" : ""}`}
+                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${isGrand ? "shadow-[0_0_25px_rgba(251,191,36,0.6)]" : ""}`}
                     style={{
                       clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)",
                     }}
                   >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm ring-2 ring-white/40">
+                    {/* Grand Prize: shimmering gradient overlay + sweeping shine */}
+                    {isGrand && (
+                      <>
+                        <div
+                          className="pointer-events-none absolute inset-0 animate-shimmer opacity-70"
+                          style={{
+                            backgroundImage:
+                              "linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%)",
+                            backgroundSize: "200% 100%",
+                          }}
+                        />
+                        <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-shine-sweep bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
+                      </>
+                    )}
+
+                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm ring-2 ring-white/40 ${isGrand ? "animate-pulse-glow" : ""}`}>
                       <TierIcon className="h-3.5 w-3.5 text-white drop-shadow" />
                     </div>
-                    <span className="ml-2 font-display text-sm font-black uppercase tracking-wider text-white drop-shadow-md">
+                    <span className="relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider text-white drop-shadow-md">
                       {tier.label} · {tierLabel}
                     </span>
-                    <span className="ml-3 hidden text-xs font-bold text-white/90 drop-shadow sm:inline">
+                    <span className="relative z-10 ml-3 hidden text-xs font-bold text-white/90 drop-shadow sm:inline">
                       {tier.name}
                     </span>
-                    <div className="ml-auto flex items-center gap-2">
+                    <div className="relative z-10 ml-auto flex items-center gap-2">
                       <span className={`rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-bold text-white ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
                         {tierRemaining}/{tierTotal}
                       </span>
                     </div>
                   </div>
+
                   {/* Decorative shine line */}
                   <div className="pointer-events-none absolute inset-x-0 top-1 h-px bg-white/40" style={{ clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)" }} />
+
+                  {/* Grand Prize: floating sparkle particles around banner */}
+                  {isGrand && (
+                    <div className="pointer-events-none absolute inset-0 overflow-visible">
+                      <Sparkles className="absolute left-[8%] top-1 h-3 w-3 animate-sparkle-twinkle text-yellow-200 drop-shadow-[0_0_4px_rgba(253,224,71,0.9)]" style={{ animationDelay: "0s" }} />
+                      <Sparkles className="absolute left-[28%] top-5 h-2.5 w-2.5 animate-sparkle-twinkle text-amber-100 drop-shadow-[0_0_4px_rgba(254,240,138,0.9)]" style={{ animationDelay: "0.6s" }} />
+                      <Sparkles className="absolute left-[55%] top-0 h-3.5 w-3.5 animate-sparkle-twinkle text-yellow-100 drop-shadow-[0_0_5px_rgba(253,224,71,1)]" style={{ animationDelay: "1.1s" }} />
+                      <Sparkles className="absolute left-[78%] top-4 h-2 w-2 animate-sparkle-twinkle text-amber-200 drop-shadow-[0_0_4px_rgba(252,211,77,0.9)]" style={{ animationDelay: "1.6s" }} />
+                      <Star className="absolute left-[42%] top-6 h-2 w-2 animate-sparkle-float fill-yellow-200 text-yellow-200" style={{ animationDelay: "0.3s" }} />
+                      <Star className="absolute left-[68%] top-7 h-1.5 w-1.5 animate-sparkle-float fill-amber-100 text-amber-100" style={{ animationDelay: "1.4s" }} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Progress bar */}
