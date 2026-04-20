@@ -1,8 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Star, Gift, Award, X, ChevronLeft, ChevronRight, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
+import { supabase } from "@/integrations/supabase/client";
+
+// Cache audio data URLs across modal re-opens
+const sfxCache: Record<string, string> = {};
+
+const playTierSfx = async (tier: string) => {
+  if (tier !== "S" && tier !== "A") return;
+  try {
+    let dataUrl = sfxCache[tier];
+    if (!dataUrl) {
+      const { data, error } = await supabase.functions.invoke("generate-tier-sfx", {
+        body: { tier },
+      });
+      if (error || !data?.audioContent) return;
+      dataUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+      sfxCache[tier] = dataUrl;
+    }
+    const audio = new Audio(dataUrl);
+    audio.volume = 0.7;
+    await audio.play().catch(() => {});
+  } catch (e) {
+    console.warn("Failed to play tier SFX", e);
+  }
+};
 
 interface PrizeRevealModalProps {
   open: boolean;
