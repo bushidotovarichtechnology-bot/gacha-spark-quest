@@ -49,6 +49,22 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
+  const lastPlayedRef = useRef<string | null>(null);
+
+  const safePrize = prizes[currentIndex] || prizes[0];
+
+  // Play SFX when a new rare tier prize is shown (single view only)
+  useEffect(() => {
+    if (!open || showSummary || !safePrize) {
+      lastPlayedRef.current = null;
+      return;
+    }
+    const key = `${currentIndex}-${safePrize.tier}`;
+    if ((safePrize.tier === "S" || safePrize.tier === "A") && lastPlayedRef.current !== key) {
+      lastPlayedRef.current = key;
+      playTierSfx(safePrize.tier);
+    }
+  }, [open, showSummary, currentIndex, safePrize]);
 
   if (!prizes.length) return null;
 
