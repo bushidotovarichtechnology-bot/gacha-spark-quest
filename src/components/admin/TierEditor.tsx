@@ -216,9 +216,29 @@ export function TierEditor({
 
   const tierColors: Record<string, string> = { S: "border-accent/50", A: "border-primary/50", B: "border-neon-pink/50", C: "border-border" };
 
+  const sortable = useSortable({ id: tier.id });
+  const tierStyle = {
+    transform: CSS.Transform.toString(sortable.transform),
+    transition: sortable.transition,
+    opacity: sortable.isDragging ? 0.5 : 1,
+  };
+
   return (
-    <div className={`rounded-lg border p-3 ${tierColors[label] || "border-border"}`}>
+    <div
+      ref={sortable.setNodeRef}
+      style={tierStyle}
+      className={`rounded-lg border p-3 ${tierColors[label] || "border-border"}`}
+    >
       <div className="flex items-center gap-2 mb-2">
+        <button
+          {...sortable.attributes}
+          {...sortable.listeners}
+          className="cursor-grab touch-none p-1 text-muted-foreground/60 hover:text-muted-foreground active:cursor-grabbing"
+          aria-label="Drag tier to reorder"
+          type="button"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
         <select value={label} onChange={(e) => setLabel(e.target.value)} className="rounded bg-secondary px-2 py-1 text-sm font-bold">
           <option value="S">S</option>
           <option value="A">A</option>
