@@ -9,6 +9,7 @@ interface Category {
   name: string;
   sort_order: number;
   icon: string;
+  image_url: string;
 }
 
 interface Subcategory {
@@ -16,6 +17,7 @@ interface Subcategory {
   category_id: string;
   name: string;
   sort_order: number;
+  image_url: string;
 }
 
 interface CategoryMenuProps {
