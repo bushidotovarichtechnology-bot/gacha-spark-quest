@@ -19,6 +19,20 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const fmt = (n: number) => n.toFixed(2);
 const TIER_RANK: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 };
 
+// "1 dari N" untuk persen 0..100. Mengembalikan string ringkas: "1 dari 2.000", "1 dari 1,2 jt".
+const oneInN = (pct: number): string => {
+  if (!Number.isFinite(pct) || pct <= 0) return "—";
+  if (pct >= 100) return "1 dari 1";
+  const n = 100 / pct;
+  const fmtID = (v: number, digits = 0) =>
+    new Intl.NumberFormat("id-ID", { maximumFractionDigits: digits }).format(v);
+  if (n >= 1_000_000) return `1 dari ${fmtID(n / 1_000_000, 1)} jt`;
+  if (n >= 10_000) return `1 dari ${fmtID(Math.round(n / 100) * 100)}`;
+  if (n >= 100) return `1 dari ${fmtID(Math.round(n))}`;
+  if (n >= 10) return `1 dari ${fmtID(n, 1)}`;
+  return `1 dari ${fmtID(n, 2)}`;
+};
+
 const tierColorMap: Record<string, string> = {
   S: "bg-accent/10 text-accent border-accent/30",
   A: "bg-primary/10 text-primary border-primary/30",
