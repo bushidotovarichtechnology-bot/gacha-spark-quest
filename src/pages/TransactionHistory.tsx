@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { loadMidtransSnap } from "@/lib/midtransSnap";
 
 interface Transaction {
   id: string;
@@ -191,6 +192,7 @@ const TransactionHistory = () => {
 
       if (error || !data?.token) throw new Error(error?.message || "Gagal membuat transaksi baru");
 
+      await loadMidtransSnap();
       if (data.client_key) {
         const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
         if (script) script.setAttribute("data-client-key", data.client_key);
@@ -245,6 +247,7 @@ const TransactionHistory = () => {
     }
     setContinuing(tx.id);
     try {
+      await loadMidtransSnap();
       if (!window.snap) {
         toast.error("Payment gateway belum siap", { description: "Silakan refresh halaman dan coba lagi." });
         return;
