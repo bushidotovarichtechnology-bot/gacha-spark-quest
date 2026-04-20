@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Star, Gift, Award, X, ChevronLeft, ChevronRight, SkipForward } from "lucide-react";
+import { Crown, Star, Gift, Award, X, ChevronLeft, ChevronRight, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +8,28 @@ import { supabase } from "@/integrations/supabase/client";
 // Cache audio data URLs across modal re-opens
 const sfxCache: Record<string, string> = {};
 
+const SFX_MUTE_KEY = "prize-reveal-sfx-muted";
+
+const getSfxMuted = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(SFX_MUTE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const setSfxMuted = (muted: boolean) => {
+  try {
+    localStorage.setItem(SFX_MUTE_KEY, muted ? "1" : "0");
+  } catch {
+    // ignore
+  }
+};
+
 const playTierSfx = async (tier: string) => {
   if (tier !== "S" && tier !== "A") return;
+  if (getSfxMuted()) return;
   try {
     let dataUrl = sfxCache[tier];
     if (!dataUrl) {
@@ -20,6 +40,7 @@ const playTierSfx = async (tier: string) => {
       dataUrl = `data:audio/mpeg;base64,${data.audioContent}`;
       sfxCache[tier] = dataUrl;
     }
+    if (getSfxMuted()) return;
     const audio = new Audio(dataUrl);
     audio.volume = 0.7;
     await audio.play().catch(() => {});
@@ -49,7 +70,16 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
+  const [muted, setMuted] = useState<boolean>(() => getSfxMuted());
   const lastPlayedRef = useRef<string | null>(null);
+
+  const toggleMute = () => {
+    setMuted((prev) => {
+      const next = !prev;
+      setSfxMuted(next);
+      return next;
+    });
+  };
 
   const safePrize = prizes[currentIndex] || prizes[0];
 
@@ -126,9 +156,18 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6"
             >
-              <button onClick={handleClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
+                <button
+                  onClick={toggleMute}
+                  aria-label={muted ? "Unmute sound effects" : "Mute sound effects"}
+                  className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+                <button onClick={handleClose} aria-label="Close" className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
               <p className="mb-1 text-center font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 {t("drawResult", { count: drawCount })}
@@ -207,9 +246,18 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                 prize.isPityReward ? "border-accent box-glow-gold" : `border-border ${config.glow}`
               }`}
             >
-              <button onClick={handleClose} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground z-10">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
+                <button
+                  onClick={toggleMute}
+                  aria-label={muted ? "Unmute sound effects" : "Mute sound effects"}
+                  className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+                <button onClick={handleClose} aria-label="Close" className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
               {/* Pity reward special effect */}
               {prize.isPityReward && (
