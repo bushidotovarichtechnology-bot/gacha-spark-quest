@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Trash2, ChevronDown, ChevronUp, Image, Pencil, Check, X } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useImageCrop } from "@/hooks/use-image-crop";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
