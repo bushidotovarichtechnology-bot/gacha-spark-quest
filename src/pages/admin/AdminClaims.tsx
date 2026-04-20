@@ -255,7 +255,7 @@ const AdminClaims = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {claim.image_url ? (
-                          <img src={claim.image_url} alt="" className="h-10 w-10 rounded-lg object-cover" />
+                          <img src={claim.image_url} alt="" className="h-10 w-10 rounded-lg object-contain bg-secondary/40" />
                         ) : (
                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                             <Package className="h-5 w-5 text-muted-foreground" />
@@ -355,7 +355,7 @@ const AdminClaims = () => {
             <div className="p-5 space-y-4">
               {/* Prize */}
               <div className="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
-                {selectedClaim.image_url && <img src={selectedClaim.image_url} alt="" className="h-14 w-14 rounded-lg object-cover" />}
+                {selectedClaim.image_url && <img src={selectedClaim.image_url} alt="" className="h-14 w-14 rounded-lg object-contain bg-secondary/40" />}
                 <div>
                   <p className="font-display font-bold text-foreground">{selectedClaim.prize_name}</p>
                   <p className="text-xs text-muted-foreground">Tier {selectedClaim.tier_label} · Campaign: {selectedClaim.campaign_id}</p>
