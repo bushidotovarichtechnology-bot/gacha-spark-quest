@@ -9,16 +9,21 @@ const HeroSection = () => {
     <section className="relative overflow-hidden pt-16">
       <div className="absolute inset-0 gradient-hero" />
       <div className="absolute inset-0">
-        <img
-          src="/hero-gacha.jpg"
-          alt="Bushido Gacha"
-          width={1280}
-          height={720}
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          className="h-full w-full object-cover opacity-30"
-        />
+        <picture>
+          <source media="(max-width: 768px)" srcSet="/hero-gacha-mobile.webp" type="image/webp" />
+          <source media="(max-width: 768px)" srcSet="/hero-gacha-mobile.jpg" />
+          <source srcSet="/hero-gacha.webp" type="image/webp" />
+          <img
+            src="/hero-gacha.jpg"
+            alt="Bushido Gacha"
+            width={1280}
+            height={720}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="h-full w-full object-cover opacity-30"
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
       </div>
 

@@ -10,8 +10,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Preload LCP hero image (stable path in /public) -->
-    <link rel="preload" as="image" href="/hero-gacha.jpg" fetchpriority="high" />
+    <!-- Preload LCP hero image (responsive: mobile webp vs desktop webp) -->
+    <link
+      rel="preload"
+      as="image"
+      href="/hero-gacha-mobile.webp"
+      type="image/webp"
+      media="(max-width: 768px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/hero-gacha.webp"
+      type="image/webp"
+      media="(min-width: 769px)"
+      fetchpriority="high"
+    />
+
+    <!-- Favicon (lightweight webp) -->
+    <link rel="icon" type="image/webp" href="/favicon.webp" />
 
     <!-- Google Fonts: load non-blocking (preload + media-swap fallback) -->
     <link
