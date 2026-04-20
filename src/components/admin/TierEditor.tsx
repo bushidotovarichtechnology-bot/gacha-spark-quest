@@ -60,7 +60,7 @@ function SortablePrizeRow({
       <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground">
         <GripVertical className="h-3.5 w-3.5" />
       </button>
-      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-cover" />}
+      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-contain bg-secondary/40" />}
       <div className="flex-1 space-y-1">
         <Input
           className="h-6 text-xs"
