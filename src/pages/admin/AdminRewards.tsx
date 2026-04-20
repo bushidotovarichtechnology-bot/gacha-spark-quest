@@ -13,6 +13,7 @@ import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortableList } from "@/hooks/use-sortable-list";
+import { useImageCrop } from "@/hooks/use-image-crop";
 
 interface RewardForm {
   name: string;
@@ -115,15 +116,11 @@ const AdminRewards = () => {
     },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("File harus berupa gambar"); return; }
+  const uploadCroppedImage = async (file: File) => {
     if (file.size > 5 * 1024 * 1024) { toast.error("Ukuran file maksimal 5MB"); return; }
-
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       const fileName = `reward-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("reward-images").upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
@@ -136,6 +133,19 @@ const AdminRewards = () => {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const { pickFile, dialog: cropDialog } = useImageCrop(
+    { defaultAspect: "1:1", title: "Crop gambar reward" },
+    uploadCroppedImage,
+  );
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("File harus berupa gambar"); return; }
+    pickFile(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const saveMutation = useMutation({
