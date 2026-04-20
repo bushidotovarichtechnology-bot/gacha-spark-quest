@@ -238,7 +238,10 @@ const AdminProbability = () => {
                               />
                             </div>
                           </div>
-                          <span className="text-sm font-semibold whitespace-nowrap">{fmt(tierTotal)}%</span>
+                          <div className="flex flex-col items-end whitespace-nowrap">
+                            <span className="text-sm font-semibold">{fmt(tierTotal)}%</span>
+                            <span className="text-[10px] font-mono text-current/70 tabular-nums">{oneInN(tierTotal)}</span>
+                          </div>
                         </div>
 
                         {tier.tier_prizes.length === 0 ? (
