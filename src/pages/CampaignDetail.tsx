@@ -199,6 +199,7 @@ const CampaignDetail = () => {
           unauthorized: "Sesi Anda kedaluwarsa. Silakan login ulang.",
           invalid_draw_count: "Jumlah draw tidak valid.",
           invalid_params: "Permintaan tidak valid.",
+          user_banned: "Akun Anda di-banned. Hubungi admin untuk informasi lebih lanjut.",
         };
         toast.error(messages[code] || "Gacha gagal. Coba lagi.");
         setIsDrawing(false);
