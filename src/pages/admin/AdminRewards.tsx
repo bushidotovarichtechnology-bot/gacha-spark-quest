@@ -357,6 +357,7 @@ const AdminRewards = () => {
           </div>
         </TabsContent>
       </Tabs>
+      {cropDialog}
     </div>
   );
 };
