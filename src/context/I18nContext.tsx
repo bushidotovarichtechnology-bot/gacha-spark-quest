@@ -20,11 +20,11 @@ const translations = {
     verifiedFair: "Verified Fair",
     verifiedFairDesc: "Provably fair draws with transparent odds",
     limitedPools: "Limited Pools",
-    limitedPoolsDesc: "Once tickets sell out, the campaign ends",
+    limitedPoolsDesc: "Once coins sell out, the campaign ends",
     pitySystem: "Pity System",
     pitySystemDesc: "Guaranteed rare after a set number of draws",
     lastOnePrize: "Last One Prize",
-    lastOnePrizeDesc: "The final ticket wins a special bonus prize",
+    lastOnePrizeDesc: "The final draw wins a special bonus prize",
 
     // Index
     liveNow: "Live Now",
@@ -33,7 +33,7 @@ const translations = {
     allRightsReserved: "© 2026 BUSHIDO GACHA — All rights reserved",
 
     // Campaign Card
-    ticket: "/ticket",
+    ticket: " coins",
     remaining: "Remaining",
     hot: "HOT",
     almostGone: "Almost Gone!",
@@ -43,7 +43,7 @@ const translations = {
     prizePool: "Prize Pool",
     left: "left",
     lastOnePrizeTitle: "Last One Prize",
-    lastOnePrizeDetail: "The person who draws the very last ticket wins an exclusive bonus reward!",
+    lastOnePrizeDetail: "The person who makes the very last draw wins an exclusive bonus reward!",
     price: "Price",
     draw1x: "Draw 1x",
     draw10x: "Draw 10x",
@@ -90,7 +90,7 @@ const translations = {
 
     // Sold Out
     soldOut: "Sold Out",
-    soldOutDesc: "All tickets have been drawn!",
+    soldOutDesc: "All prizes have been drawn!",
     insufficientCoins: "Not enough coins! Top up to continue drawing.",
     pityReady: "🔥 Next draw guarantees Tier A or higher!",
 
@@ -235,11 +235,11 @@ const translations = {
     verifiedFair: "Dijamin Adil",
     verifiedFairDesc: "Undian adil terverifikasi dengan peluang transparan",
     limitedPools: "Pool Terbatas",
-    limitedPoolsDesc: "Setelah tiket habis, kampanye berakhir",
+    limitedPoolsDesc: "Setelah koin habis, kampanye berakhir",
     pitySystem: "Sistem Pity",
     pitySystemDesc: "Jaminan langka setelah sejumlah tarikan",
     lastOnePrize: "Hadiah Terakhir",
-    lastOnePrizeDesc: "Tiket terakhir memenangkan hadiah bonus spesial",
+    lastOnePrizeDesc: "Tarikan terakhir memenangkan hadiah bonus spesial",
 
     // Index
     liveNow: "Sedang Berlangsung",
@@ -248,7 +248,7 @@ const translations = {
     allRightsReserved: "© 2026 BUSHIDO GACHA — Hak cipta dilindungi",
 
     // Campaign Card
-    ticket: "/tiket",
+    ticket: " koin",
     remaining: "Tersisa",
     hot: "POPULER",
     almostGone: "Hampir Habis!",
@@ -258,7 +258,7 @@ const translations = {
     prizePool: "Kolam Hadiah",
     left: "tersisa",
     lastOnePrizeTitle: "Hadiah Terakhir",
-    lastOnePrizeDetail: "Orang yang menarik tiket terakhir memenangkan hadiah bonus eksklusif!",
+    lastOnePrizeDetail: "Orang yang melakukan tarikan terakhir memenangkan hadiah bonus eksklusif!",
     price: "Harga",
     draw1x: "Tarik 1x",
     draw10x: "Tarik 10x",
@@ -305,7 +305,7 @@ const translations = {
 
     // Sold Out
     soldOut: "Habis Terjual",
-    soldOutDesc: "Semua tiket sudah ditarik!",
+    soldOutDesc: "Semua hadiah sudah ditarik!",
     insufficientCoins: "Koin tidak cukup! Isi ulang untuk melanjutkan tarikan.",
     pityReady: "🔥 Tarikan berikutnya dijamin Tingkat A atau lebih tinggi!",
 

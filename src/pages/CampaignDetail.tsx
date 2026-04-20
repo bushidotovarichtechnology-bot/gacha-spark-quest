@@ -642,7 +642,7 @@ const CampaignDetail = () => {
                   </span>
                   {freeDraws > 0 && (
                     <span className="flex items-center gap-1 text-green-400 font-medium">
-                      <Ticket className="h-3 w-3" />
+                      <Zap className="h-3 w-3" />
                       {freeDraws}x gratis
                     </span>
                   )}
