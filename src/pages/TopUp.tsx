@@ -229,14 +229,18 @@ const formatRupiah = (value: number) =>
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
         className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
-          pkg.is_popular ? "border-accent bg-accent/5 box-glow-gold" : "border-border bg-card hover:border-primary/50"
+          isBestValue 
+            ? "border-accent bg-accent/5 box-glow-gold animate-pulse-glow ring-2 ring-accent/50" 
+            : pkg.is_popular 
+              ? "border-accent bg-accent/5 box-glow-gold" 
+              : "border-border bg-card hover:border-primary/50"
         }`}
         onClick={() => onSelect(pkg)}
       >
         {/* Badges */}
         {isBestValue && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground whitespace-nowrap">
-            BEST VALUE
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-3 py-0.5 text-xs font-bold text-black whitespace-nowrap shadow-lg animate-pulse">
+            ⭐ BEST VALUE
           </span>
         )}
         {pkg.is_popular && !isBestValue && (
