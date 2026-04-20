@@ -252,7 +252,7 @@ const AdminCampaigns = () => {
                 <Input placeholder="Image URL" value={newCampaign.image_url} onChange={(e) => setNewCampaign({ ...newCampaign, image_url: e.target.value })} className="flex-1" />
                 <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-input bg-background hover:bg-accent">
                   <Upload className="h-4 w-4 text-muted-foreground" />
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
                     if (!newCampaign.id) {
