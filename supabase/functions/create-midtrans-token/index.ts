@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { getMidtransConfig } from "../_shared/midtransMode.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -40,8 +41,14 @@ Deno.serve(async (req) => {
 
     const orderId = `GACHA-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
 
-    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY")!;
-    const authString = btoa(`${serverKey}:`);
+    const midtransCfg = await getMidtransConfig();
+    if (!midtransCfg.serverKey) {
+      return new Response(JSON.stringify({ error: `Midtrans ${midtransCfg.mode} server key not configured` }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authString = btoa(`${midtransCfg.serverKey}:`);
 
     const midtransPayload = {
       transaction_details: {
@@ -62,7 +69,7 @@ Deno.serve(async (req) => {
     };
 
     const midtransRes = await fetch(
-      "https://app.sandbox.midtrans.com/snap/v1/transactions",
+      midtransCfg.snapUrl,
       {
         method: "POST",
         headers: {
@@ -99,13 +106,12 @@ Deno.serve(async (req) => {
       snap_token: midtransData.token,
     });
 
-    const clientKey = Deno.env.get("MIDTRANS_CLIENT_KEY") || "";
-
     return new Response(
       JSON.stringify({ 
         token: midtransData.token, 
         order_id: orderId,
-        client_key: clientKey,
+        client_key: midtransCfg.clientKey,
+        mode: midtransCfg.mode,
       }),
       {
         status: 200,

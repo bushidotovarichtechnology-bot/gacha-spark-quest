@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { getMidtransConfig } from "../_shared/midtransMode.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -66,7 +67,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY")?.trim();
+    const midtransCfg = await getMidtransConfig();
+    const serverKey = midtransCfg.serverKey?.trim();
     if (!serverKey) {
       return new Response(JSON.stringify({ success: false, status: tx.status, credited: false, retriable: false, error: "midtrans_server_key_missing" }), {
         status: 200,
@@ -75,7 +77,7 @@ Deno.serve(async (req) => {
     }
 
     const auth = btoa(`${serverKey}:`);
-    const baseUrl = "https://api.sandbox.midtrans.com/v2";
+    const baseUrl = midtransCfg.apiUrl;
 
     const resp = await fetch(`${baseUrl}/${order_id}/status`, {
       headers: {

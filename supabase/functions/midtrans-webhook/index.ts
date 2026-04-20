@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { getMidtransConfig } from "../_shared/midtransMode.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,9 +39,24 @@ Deno.serve(async (req) => {
     }
 
     // === SIGNATURE VERIFICATION ===
-    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY")!;
-    const expected = await sha512Hex(`${order_id}${status_code}${gross_amount}${serverKey}`);
-    if (expected !== signature_key) {
+    // Try active mode first, then fall back to the other env (covers webhooks for legacy mode).
+    const cfg = await getMidtransConfig();
+    const candidateKeys = [
+      cfg.serverKey,
+      Deno.env.get("MIDTRANS_SERVER_KEY_SANDBOX") || "",
+      Deno.env.get("MIDTRANS_SERVER_KEY_PRODUCTION") || "",
+      Deno.env.get("MIDTRANS_SERVER_KEY") || "",
+    ].filter((k, i, arr) => k && arr.indexOf(k) === i);
+
+    let signatureValid = false;
+    for (const key of candidateKeys) {
+      const expected = await sha512Hex(`${order_id}${status_code}${gross_amount}${key}`);
+      if (expected === signature_key) {
+        signatureValid = true;
+        break;
+      }
+    }
+    if (!signatureValid) {
       console.error("Invalid Midtrans signature for order:", order_id);
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
