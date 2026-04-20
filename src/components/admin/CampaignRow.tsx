@@ -33,6 +33,10 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
   const [description, setDescription] = useState(c.description);
   const [price, setPrice] = useState(c.price);
   const [subcategoryId, setSubcategoryId] = useState(c.subcategory_id || "");
+  const { pickFile, dialog: cropDialog } = useImageCrop(
+    { defaultAspect: "1:1", title: "Crop gambar campaign" },
+    async (cropped) => onUploadImage(c.id, cropped),
+  );
 
   const startEdit = () => {
     setTitle(c.title);
@@ -102,7 +106,8 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
               <Image className="h-4 w-4 text-muted-foreground" />
               <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) onUploadImage(c.id, file);
+                if (file) pickFile(file);
+                e.target.value = "";
               }} />
             </label>
             <Button variant="ghost" size="sm" onClick={onToggleExpand}>
@@ -117,6 +122,7 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
         )}
       </div>
       {children}
+      {cropDialog}
     </>
   );
 }
