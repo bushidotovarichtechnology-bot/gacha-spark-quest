@@ -30,7 +30,7 @@ const RedeemStore = () => {
   const { data: rewards = [] } = useQuery({
     queryKey: ["redeem-rewards"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("redeem_rewards").select("*").eq("is_active", true).order("ticket_cost", { ascending: true });
+      const { data, error } = await supabase.from("redeem_rewards").select("*").eq("is_active", true).order("sort_order", { ascending: true }).order("ticket_cost", { ascending: true });
       if (error) throw error;
       return data;
     },
