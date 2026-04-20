@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Ticket, Flame } from "lucide-react";
+import { Coins, Flame } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { useEffect, useRef, useState } from "react";
 
@@ -79,9 +79,8 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
 
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <Ticket className="h-4 w-4 text-accent" />
-              <span className="text-lg font-bold text-accent">${price}</span>
-              <span className="text-xs text-muted-foreground">{t("ticket")}</span>
+              <span className="text-lg font-bold text-accent">{price}</span>
+              <Coins className="h-4 w-4 text-accent" />
             </div>
           </div>
 
