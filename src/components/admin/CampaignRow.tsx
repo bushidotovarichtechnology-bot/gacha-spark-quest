@@ -58,8 +58,7 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="h-7 text-sm" />
               <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" className="h-7 text-xs" />
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">$</span>
-                <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="h-7 text-xs w-20" />
+                <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="h-7 text-xs w-20" placeholder="Koin" />
                 <Select value={subcategoryId || "none"} onValueChange={(v) => setSubcategoryId(v === "none" ? "" : v)}>
                   <SelectTrigger className="h-7 text-xs w-40">
                     <SelectValue placeholder="Kategori" />
@@ -81,7 +80,7 @@ export function CampaignRow({ campaign: c, isExpanded, onToggleExpand, onUpdate,
                 {c.title} <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
               </p>
               <p className="text-xs text-muted-foreground truncate">{c.description || "No description"}</p>
-              <p className="text-xs text-muted-foreground">ID: {c.id} • ${c.price}/ticket</p>
+              <p className="text-xs text-muted-foreground">ID: {c.id} • {c.price} koin</p>
             </div>
           )}
         </div>

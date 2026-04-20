@@ -282,8 +282,8 @@ const CampaignDetail = () => {
 
         <div className="mb-8 flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
-            <Ticket className="h-4 w-4 text-accent" />
-            <span className="text-sm font-semibold text-foreground">${campaign.price}{t("ticket")}</span>
+            <span className="text-sm font-semibold text-foreground">{campaign.price}</span>
+            <Coins className="h-4 w-4 text-accent" />
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
