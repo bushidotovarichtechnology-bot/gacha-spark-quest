@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
+import MaintenanceGate from "./components/MaintenanceGate";
 
 // Lazy-loaded routes — code-split to reduce initial JS bundle size & parse/eval time on home.
 const CampaignDetail = lazy(() => import("./pages/CampaignDetail.tsx"));
@@ -50,6 +51,7 @@ const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons.tsx"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping.tsx"));
 const AdminGachaLogs = lazy(() => import("./pages/admin/AdminGachaLogs.tsx"));
 const AdminPaymentSettings = lazy(() => import("./pages/admin/AdminPaymentSettings.tsx"));
+const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <GlobalTransactionWatcher />
+          <MaintenanceGate>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -104,10 +107,12 @@ const App = () => (
                 <Route path="shipping" element={<AdminShipping />} />
                 <Route path="gacha-logs" element={<AdminGachaLogs />} />
                 <Route path="payment-settings" element={<AdminPaymentSettings />} />
+                <Route path="maintenance" element={<AdminMaintenance />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </MaintenanceGate>
         </BrowserRouter>
       </GachaProvider>
       </AuthProvider>
