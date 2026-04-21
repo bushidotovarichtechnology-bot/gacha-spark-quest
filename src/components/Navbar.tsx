@@ -235,9 +235,9 @@ const Navbar = () => {
                     <Coins className="h-4 w-4 text-accent" />
                     <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("bushidoCoins")}</span>
                   </div>
-                  <Link to="/redeem" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
-                    <Ticket className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-primary">{ticketBalance.toLocaleString()} Bushido Tiket</span>
+                  <Link to="/redeem" onClick={() => setIsOpen(false)} className={`flex items-center gap-2 transition-transform ${ticketPulse ? "scale-110" : "scale-100"}`} style={{ transitionDuration: "300ms" }}>
+                    <Ticket className={`h-4 w-4 text-primary ${ticketPulse ? "animate-pulse" : ""}`} />
+                    <span className="text-sm font-semibold text-primary tabular-nums">{displayedTickets.toLocaleString()} Bushido Tiket</span>
                   </Link>
                   {freeDraws > 0 && (
                     <div className="flex items-center gap-1.5">
