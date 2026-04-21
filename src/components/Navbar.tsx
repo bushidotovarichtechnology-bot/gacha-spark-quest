@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket, Gift, Camera, Percent, Gamepad2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,9 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [displayedTickets, setDisplayedTickets] = useState(0);
+  const [ticketPulse, setTicketPulse] = useState(false);
+  const prevTicketsRef = useRef(0);
 
   const { data: ticketBalance = 0 } = useQuery({
     queryKey: ["user-ticket-balance", user?.id],
@@ -27,6 +30,34 @@ const Navbar = () => {
       return (data as any[]).reduce((sum: number, r: any) => sum + Number(r.total_remaining), 0);
     },
   });
+
+  // Count-up animation + pulse when balance changes
+  useEffect(() => {
+    const from = prevTicketsRef.current;
+    const to = ticketBalance;
+    if (from === to) {
+      setDisplayedTickets(to);
+      return;
+    }
+    setTicketPulse(true);
+    const duration = 600;
+    const startTime = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(from + (to - from) * eased);
+      setDisplayedTickets(value);
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        prevTicketsRef.current = to;
+        setTimeout(() => setTicketPulse(false), 400);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ticketBalance]);
 
   useEffect(() => {
     if (!user) { setAvatarUrl(""); return; }
@@ -90,11 +121,12 @@ const Navbar = () => {
               </div>
               <Link
                 to="/redeem"
-                className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 transition-colors hover:bg-secondary/80"
+                className={`flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 transition-all hover:bg-secondary/80 ${ticketPulse ? "scale-110 ring-2 ring-primary/60 shadow-[0_0_20px_hsl(var(--primary)/0.5)]" : "scale-100"}`}
                 title="Bushido Tiket"
+                style={{ transitionDuration: "300ms" }}
               >
-                <Ticket className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">{ticketBalance.toLocaleString()}</span>
+                <Ticket className={`h-4 w-4 text-primary ${ticketPulse ? "animate-pulse" : ""}`} />
+                <span className="text-sm font-semibold text-primary tabular-nums">{displayedTickets.toLocaleString()}</span>
               </Link>
               {freeDraws > 0 && (
                 <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-3 py-1.5 animate-pulse">
@@ -203,9 +235,9 @@ const Navbar = () => {
                     <Coins className="h-4 w-4 text-accent" />
                     <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("bushidoCoins")}</span>
                   </div>
-                  <Link to="/redeem" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
-                    <Ticket className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-primary">{ticketBalance.toLocaleString()} Bushido Tiket</span>
+                  <Link to="/redeem" onClick={() => setIsOpen(false)} className={`flex items-center gap-2 transition-transform ${ticketPulse ? "scale-110" : "scale-100"}`} style={{ transitionDuration: "300ms" }}>
+                    <Ticket className={`h-4 w-4 text-primary ${ticketPulse ? "animate-pulse" : ""}`} />
+                    <span className="text-sm font-semibold text-primary tabular-nums">{displayedTickets.toLocaleString()} Bushido Tiket</span>
                   </Link>
                   {freeDraws > 0 && (
                     <div className="flex items-center gap-1.5">
