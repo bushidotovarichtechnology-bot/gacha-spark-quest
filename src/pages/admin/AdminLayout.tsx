@@ -148,6 +148,7 @@ const AdminLayout = () => {
               <span className={`ml-1 inline-block h-1.5 w-1.5 rounded-full ${isProd ? "bg-destructive animate-pulse" : "bg-amber-500"}`} />
             </Link>
           )}
+          </div>
         </header>
         <div className="p-6">
           <Outlet />
