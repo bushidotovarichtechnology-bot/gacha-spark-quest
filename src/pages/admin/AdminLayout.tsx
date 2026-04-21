@@ -27,6 +27,7 @@ const AdminLayout = () => {
   const { signOut } = useAuth();
   const location = useLocation();
   const [midtransMode, setMidtransMode] = useState<"sandbox" | "production" | null>(null);
+  const [maintenanceOn, setMaintenanceOn] = useState(false);
 
   useEffect(() => {
     const fetchMode = async () => {
@@ -38,14 +39,29 @@ const AdminLayout = () => {
       const m = (data?.value as { mode?: string } | null)?.mode;
       setMidtransMode(m === "production" ? "production" : "sandbox");
     };
+    const fetchMaintenance = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "maintenance_mode")
+        .maybeSingle();
+      const v = (data?.value as { enabled?: boolean } | null) ?? {};
+      setMaintenanceOn(!!v.enabled);
+    };
     fetchMode();
+    fetchMaintenance();
 
     const channel = supabase
-      .channel("admin-midtrans-mode")
+      .channel("admin-app-settings")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "app_settings", filter: "key=eq.midtrans_mode" },
         () => fetchMode(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings", filter: "key=eq.maintenance_mode" },
+        () => fetchMaintenance(),
       )
       .subscribe();
 
@@ -102,7 +118,21 @@ const AdminLayout = () => {
       {/* Main content */}
       <main className="ml-56 flex-1">
         {/* Header bar */}
-        <header className="sticky top-0 z-30 flex h-12 items-center justify-end gap-3 border-b border-border/50 bg-background/80 px-6 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-border/50 bg-background/80 px-6 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            {maintenanceOn && (
+              <Link
+                to="/admin/maintenance"
+                title="Klik untuk mengelola maintenance mode"
+                className="inline-flex items-center gap-2 rounded-full border border-amber-500/50 bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-500/25 transition-colors dark:text-amber-400 animate-pulse"
+              >
+                <Wrench className="h-3.5 w-3.5" />
+                <span className="font-display tracking-wider uppercase">Maintenance Mode AKTIF</span>
+                <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              </Link>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
           {midtransMode && (
             <Link
               to="/admin/payment-settings"
@@ -118,6 +148,7 @@ const AdminLayout = () => {
               <span className={`ml-1 inline-block h-1.5 w-1.5 rounded-full ${isProd ? "bg-destructive animate-pulse" : "bg-amber-500"}`} />
             </Link>
           )}
+          </div>
         </header>
         <div className="p-6">
           <Outlet />
