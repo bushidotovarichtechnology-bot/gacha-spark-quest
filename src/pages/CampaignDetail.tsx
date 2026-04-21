@@ -246,6 +246,7 @@ const CampaignDetail = () => {
       await refreshCoins();
       queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["user-ticket-balance"] });
 
       setDrawnPrizes(results);
       setHasPityReward(!!data.has_pity_reward);
