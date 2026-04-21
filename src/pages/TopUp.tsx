@@ -121,11 +121,7 @@ const TopUp = () => {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    loadMidtransSnap()
-      .then(() => { if (!cancelled) setMidtransReady(true); })
-      .catch(() => { /* user can retry on click */ });
-    return () => { cancelled = true; };
+    setMidtransReady(true); // load deferred until purchase, with correct mode
   }, []);
 
   const handlePurchase = async () => {
