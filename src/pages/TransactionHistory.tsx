@@ -192,11 +192,7 @@ const TransactionHistory = () => {
 
       if (error || !data?.token) throw new Error(error?.message || "Gagal membuat transaksi baru");
 
-      await loadMidtransSnap();
-      if (data.client_key) {
-        const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
-        if (script) script.setAttribute("data-client-key", data.client_key);
-      }
+      await loadMidtransSnap(data.mode ?? "sandbox", data.client_key);
 
       if (window.snap) {
         window.snap.pay(data.token, {
