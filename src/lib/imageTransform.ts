@@ -7,5 +7,5 @@ export function supabaseImg(url: string | null | undefined, width = 500, quality
   if (!url.includes("/storage/v1/object/public/")) return url;
   const transformed = url.replace("/object/public/", "/render/image/public/");
   const sep = transformed.includes("?") ? "&" : "?";
-  return `${transformed}${sep}width=${width}&quality=${quality}`;
+  return `${transformed}${sep}width=${width}&quality=${quality}&resize=contain`;
 }
