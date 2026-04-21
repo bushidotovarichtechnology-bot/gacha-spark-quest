@@ -43,7 +43,7 @@ const AdminMaintenance = () => {
     setSaving(true);
     const { error } = await supabase
       .from("app_settings")
-      .update({ value: next as unknown as Record<string, unknown>, updated_at: new Date().toISOString() })
+      .update({ value: next as unknown as never, updated_at: new Date().toISOString() })
       .eq("key", "maintenance_mode");
     setSaving(false);
     if (error) {
