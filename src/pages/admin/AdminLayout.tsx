@@ -27,6 +27,7 @@ const AdminLayout = () => {
   const { signOut } = useAuth();
   const location = useLocation();
   const [midtransMode, setMidtransMode] = useState<"sandbox" | "production" | null>(null);
+  const [maintenanceOn, setMaintenanceOn] = useState(false);
 
   useEffect(() => {
     const fetchMode = async () => {
@@ -38,14 +39,29 @@ const AdminLayout = () => {
       const m = (data?.value as { mode?: string } | null)?.mode;
       setMidtransMode(m === "production" ? "production" : "sandbox");
     };
+    const fetchMaintenance = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "maintenance_mode")
+        .maybeSingle();
+      const v = (data?.value as { enabled?: boolean } | null) ?? {};
+      setMaintenanceOn(!!v.enabled);
+    };
     fetchMode();
+    fetchMaintenance();
 
     const channel = supabase
-      .channel("admin-midtrans-mode")
+      .channel("admin-app-settings")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "app_settings", filter: "key=eq.midtrans_mode" },
         () => fetchMode(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings", filter: "key=eq.maintenance_mode" },
+        () => fetchMaintenance(),
       )
       .subscribe();
 
