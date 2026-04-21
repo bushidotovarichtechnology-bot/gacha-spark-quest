@@ -88,6 +88,14 @@ const Navbar = () => {
                 <Coins className="h-4 w-4 text-accent" />
                 <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
               </div>
+              <Link
+                to="/redeem"
+                className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 transition-colors hover:bg-secondary/80"
+                title="Bushido Tiket"
+              >
+                <Ticket className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">{ticketBalance.toLocaleString()}</span>
+              </Link>
               {freeDraws > 0 && (
                 <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-3 py-1.5 animate-pulse">
                   <Gamepad2 className="h-3.5 w-3.5 text-green-400" />
