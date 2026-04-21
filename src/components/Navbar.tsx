@@ -121,11 +121,12 @@ const Navbar = () => {
               </div>
               <Link
                 to="/redeem"
-                className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 transition-colors hover:bg-secondary/80"
+                className={`flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 transition-all hover:bg-secondary/80 ${ticketPulse ? "scale-110 ring-2 ring-primary/60 shadow-[0_0_20px_hsl(var(--primary)/0.5)]" : "scale-100"}`}
                 title="Bushido Tiket"
+                style={{ transitionDuration: "300ms" }}
               >
-                <Ticket className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">{ticketBalance.toLocaleString()}</span>
+                <Ticket className={`h-4 w-4 text-primary ${ticketPulse ? "animate-pulse" : ""}`} />
+                <span className="text-sm font-semibold text-primary tabular-nums">{displayedTickets.toLocaleString()}</span>
               </Link>
               {freeDraws > 0 && (
                 <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-3 py-1.5 animate-pulse">
