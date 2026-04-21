@@ -51,6 +51,7 @@ const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons.tsx"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping.tsx"));
 const AdminGachaLogs = lazy(() => import("./pages/admin/AdminGachaLogs.tsx"));
 const AdminPaymentSettings = lazy(() => import("./pages/admin/AdminPaymentSettings.tsx"));
+const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,7 @@ const App = () => (
                 <Route path="shipping" element={<AdminShipping />} />
                 <Route path="gacha-logs" element={<AdminGachaLogs />} />
                 <Route path="payment-settings" element={<AdminPaymentSettings />} />
+                <Route path="maintenance" element={<AdminMaintenance />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
