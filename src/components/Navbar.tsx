@@ -203,6 +203,10 @@ const Navbar = () => {
                     <Coins className="h-4 w-4 text-accent" />
                     <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()} {t("bushidoCoins")}</span>
                   </div>
+                  <Link to="/redeem" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
+                    <Ticket className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold text-primary">{ticketBalance.toLocaleString()} Bushido Tiket</span>
+                  </Link>
                   {freeDraws > 0 && (
                     <div className="flex items-center gap-1.5">
                       <Gamepad2 className="h-4 w-4 text-green-400" />
