@@ -87,6 +87,7 @@ const RedeemStore = () => {
       toast.success("🎉 Hadiah berhasil ditukar! Cek inventory kamu.");
       await refreshInventory();
       queryClient.invalidateQueries({ queryKey: ["ticket-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["user-ticket-balance"] });
       queryClient.invalidateQueries({ queryKey: ["redeem-rewards"] });
       queryClient.invalidateQueries({ queryKey: ["redeem-claims"] });
     },
