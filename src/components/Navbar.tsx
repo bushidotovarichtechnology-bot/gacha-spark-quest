@@ -17,6 +17,17 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
 
+  const { data: ticketBalance = 0 } = useQuery({
+    queryKey: ["user-ticket-balance", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return 0;
+      const { data } = await supabase.rpc("get_user_ticket_balance", { _user_id: user.id });
+      if (!data || (data as any[]).length === 0) return 0;
+      return (data as any[]).reduce((sum: number, r: any) => sum + Number(r.total_remaining), 0);
+    },
+  });
+
   useEffect(() => {
     if (!user) { setAvatarUrl(""); return; }
     const fetchAvatar = async () => {
