@@ -433,7 +433,16 @@ const CampaignDetail = () => {
                         </div>
 
                         {p.image_url ? (
-                          <div className={`relative shrink-0 h-16 w-16 overflow-hidden rounded-lg bg-secondary/40 ring-2 ring-border/50 transition-transform group-hover:scale-110 ${isOut ? "grayscale" : ""}`}>
+                          <div className={`relative shrink-0 h-16 w-16 overflow-hidden rounded-lg ring-2 ring-border/50 transition-transform group-hover:scale-110 ${isOut ? "grayscale" : ""}`}>
+                            {/* Subtle radial gradient + diagonal pattern backdrop */}
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.18),transparent_70%),radial-gradient(circle_at_80%_85%,hsl(var(--accent)/0.15),transparent_65%)] bg-secondary/40" />
+                            <div
+                              className="absolute inset-0 opacity-[0.18] mix-blend-overlay"
+                              style={{
+                                backgroundImage:
+                                  "repeating-linear-gradient(45deg, hsl(var(--foreground)) 0 1px, transparent 1px 6px)",
+                              }}
+                            />
                             <img
                               src={supabaseImg(p.image_url, 200)}
                               alt={p.name}
@@ -448,6 +457,10 @@ const CampaignDetail = () => {
                             )}
                           </div>
                         ) : (
+                          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <Gift className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
                           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
                             <Gift className="h-6 w-6 text-muted-foreground" />
                           </div>
