@@ -32,9 +32,9 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
 
   const isSupabase = image.includes("/storage/v1/object/public/");
   const base = isSupabase ? image.replace("/object/public/", "/render/image/public/") : image;
-  const src = isSupabase ? `${base}?width=420&quality=70` : image;
+  const src = isSupabase ? `${base}?width=420&quality=70&resize=contain` : image;
   const srcSet = isSupabase
-    ? `${base}?width=320&quality=68 320w, ${base}?width=420&quality=70 420w, ${base}?width=640&quality=70 640w`
+    ? `${base}?width=320&quality=68&resize=contain 320w, ${base}?width=420&quality=70&resize=contain 420w, ${base}?width=640&quality=70&resize=contain 640w`
     : undefined;
 
   return (
