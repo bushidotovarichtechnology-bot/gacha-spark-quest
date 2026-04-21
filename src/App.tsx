@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
+import MaintenanceGate from "./components/MaintenanceGate";
 
 // Lazy-loaded routes — code-split to reduce initial JS bundle size & parse/eval time on home.
 const CampaignDetail = lazy(() => import("./pages/CampaignDetail.tsx"));
@@ -67,6 +68,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <GlobalTransactionWatcher />
+          <MaintenanceGate>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -108,6 +110,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </MaintenanceGate>
         </BrowserRouter>
       </GachaProvider>
       </AuthProvider>
