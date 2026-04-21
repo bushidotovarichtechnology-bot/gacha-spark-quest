@@ -31,7 +31,7 @@ const MaintenanceGate = ({ children }: { children: ReactNode }) => {
         .eq("key", "maintenance_mode")
         .maybeSingle();
       if (!mounted) return;
-      const v = (data?.value as MaintenanceConfig | null) ?? { enabled: false };
+      const v = (data?.value as unknown as MaintenanceConfig | null) ?? { enabled: false };
       setConfig({
         enabled: !!v.enabled,
         message: v.message || "",
