@@ -439,7 +439,7 @@ const CampaignDetail = () => {
                               alt={p.name}
                               loading="lazy"
                               decoding="async"
-                              className="absolute inset-0 h-full w-full object-cover"
+                              className="absolute inset-0 h-full w-full object-contain p-1"
                             />
                             {isOut && (
                               <div className="absolute inset-0 flex items-center justify-center bg-background/70">
