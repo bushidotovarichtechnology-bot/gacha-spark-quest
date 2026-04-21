@@ -16,6 +16,9 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [displayedTickets, setDisplayedTickets] = useState(0);
+  const [ticketPulse, setTicketPulse] = useState(false);
+  const prevTicketsRef = useRef(0);
 
   const { data: ticketBalance = 0 } = useQuery({
     queryKey: ["user-ticket-balance", user?.id],
@@ -27,6 +30,34 @@ const Navbar = () => {
       return (data as any[]).reduce((sum: number, r: any) => sum + Number(r.total_remaining), 0);
     },
   });
+
+  // Count-up animation + pulse when balance changes
+  useEffect(() => {
+    const from = prevTicketsRef.current;
+    const to = ticketBalance;
+    if (from === to) {
+      setDisplayedTickets(to);
+      return;
+    }
+    setTicketPulse(true);
+    const duration = 600;
+    const startTime = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(from + (to - from) * eased);
+      setDisplayedTickets(value);
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        prevTicketsRef.current = to;
+        setTimeout(() => setTicketPulse(false), 400);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ticketBalance]);
 
   useEffect(() => {
     if (!user) { setAvatarUrl(""); return; }
