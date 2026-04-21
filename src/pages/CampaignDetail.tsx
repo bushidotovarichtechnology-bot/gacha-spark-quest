@@ -461,10 +461,6 @@ const CampaignDetail = () => {
                             <Gift className="h-6 w-6 text-muted-foreground" />
                           </div>
                         )}
-                          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
-                            <Gift className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        )}
 
                         <div className="min-w-0 flex-1 pr-6">
                           <p className={`truncate text-sm font-semibold ${isOut ? "text-destructive/70 line-through" : "text-foreground"}`}>
