@@ -207,47 +207,45 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
   }, [user, drawsSinceTierA, totalCoins, syncCoins]);
 
   const recycleItem = useCallback((id: string) => {
-    let value = 0;
-    setItems((prev) => {
-      const item = prev.find((i) => i.id === id);
-      if (item) value = item.coinValue;
-      return prev.filter((i) => i.id !== id);
-    });
-    setTotalCoins((prev) => {
-      const newBal = prev + value;
-      if (user) supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
-      return newBal;
-    });
-    if (user && value > 0) supabase.from("user_inventory").delete().eq("id", id);
+    const item = items.find((i) => i.id === id);
+    const value = item?.coinValue ?? 0;
+    // Optimistic UI update
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    setTotalCoins((prev) => prev + value);
+    if (user) {
+      supabase.rpc("recycle_inventory_item" as any, { _item_id: id }).then(({ error }) => {
+        if (error) {
+          // Rollback on failure
+          if (item) setItems((prev) => [item, ...prev]);
+          setTotalCoins((prev) => prev - value);
+        }
+      });
+    }
     return value;
-  }, [user]);
+  }, [user, items]);
 
+  // Optimistic-only helpers — server is the source of truth.
+  // Coin balance changes happen server-side (gacha RPC, gift RPC, coupon RPC, payment webhooks).
   const addCoins = useCallback((amount: number) => {
-    setTotalCoins((prev) => {
-      const newBal = prev + amount;
-      if (user) supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
-      return newBal;
-    });
-  }, [user]);
+    setTotalCoins((prev) => prev + amount);
+    void refreshCoins();
+  }, [refreshCoins]);
 
   const spendCoins = useCallback((amount: number): boolean => {
     if (totalCoins < amount) return false;
-    const newBal = totalCoins - amount;
-    setTotalCoins(newBal);
-    if (user) supabase.from("user_coins").update({ balance: newBal }).eq("user_id", user.id);
+    setTotalCoins((prev) => prev - amount);
     return true;
-  }, [totalCoins, user]);
+  }, [totalCoins]);
 
   const useFreeDraws = useCallback((count: number) => {
-    const newFree = Math.max(0, freeDraws - count);
-    setFreeDraws(newFree);
-    if (user) supabase.from("user_coins").update({ free_draws: newFree } as any).eq("user_id", user.id);
-  }, [freeDraws, user]);
+    setFreeDraws((prev) => Math.max(0, prev - count));
+    void refreshCoins();
+  }, [refreshCoins]);
 
   const clearDiscount = useCallback(() => {
     setActiveDiscountPercent(0);
-    if (user) supabase.from("user_coins").update({ active_discount_percent: 0 } as any).eq("user_id", user.id);
-  }, [user]);
+    void refreshCoins();
+  }, [refreshCoins]);
 
   return (
     <GachaContext.Provider value={{

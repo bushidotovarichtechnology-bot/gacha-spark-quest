@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify sender
+    // Verify sender (use sender's JWT so the RPC runs as them)
     const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -76,7 +76,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert gift record
+    // Atomic balance transfer via RPC (runs as the sender; FOR UPDATE prevents races)
+    const { error: rpcError } = await userClient.rpc("transfer_gift_coins" as any, {
+      _receiver_id: receiver.id,
+      _amount: amount,
+    });
+    if (rpcError) {
+      const msg = rpcError.message?.includes("insufficient_coins")
+        ? "Koin tidak cukup"
+        : rpcError.message?.includes("cannot_send_to_self")
+        ? "Tidak bisa mengirim koin ke diri sendiri"
+        : "Gagal memproses transfer";
+      return new Response(JSON.stringify({ error: msg }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Insert gift record (audit trail) — service role bypasses RLS
     const { error: insertError } = await adminClient.from("coin_gifts").insert({
       sender_id: user.id,
       receiver_id: receiver.id,

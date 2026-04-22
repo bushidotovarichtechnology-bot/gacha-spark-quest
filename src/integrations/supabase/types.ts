@@ -1122,9 +1122,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      recycle_inventory_item: { Args: { _item_id: string }; Returns: Json }
+      redeem_coupon_atomic: { Args: { _code: string }; Returns: Json }
       redeem_reward: { Args: { _reward_id: string }; Returns: Json }
       secure_draw: {
         Args: { _campaign_id: string; _draw_count: number }
+        Returns: Json
+      }
+      transfer_gift_coins: {
+        Args: { _amount: number; _receiver_id: string }
         Returns: Json
       }
     }
