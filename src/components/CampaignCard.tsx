@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Coins, Flame } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { useEffect, useRef, useState } from "react";
+import { obfuscateStock } from "@/lib/obfuscateStock";
 
 interface CampaignCardProps {
   id: string;
