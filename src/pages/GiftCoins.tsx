@@ -70,6 +70,8 @@ const GiftCoins = () => {
         throw new Error(data?.error || error?.message || "Gagal mengirim gift");
       }
 
+      // Server-side already deducted balance via transfer_gift_coins RPC inside the edge function.
+      // Just refresh local state.
       spendCoins(coinAmount);
       toast({ title: "Gift Terkirim! 🎉", description: `${coinAmount.toLocaleString()} koin berhasil dikirim ke ${email}` });
 
