@@ -82,6 +82,10 @@ const AdminStockAudit = () => {
   const totalRemaining = prizes.reduce((s, p) => s + p.remaining, 0);
 
   return (
+    <AdminOnlyGuard
+      title="Admin only — Stock & Draw Audit"
+      message="Exact prize stock counts and raw draw logs are restricted to administrators. Sign in with an admin account to continue."
+    >
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold tracking-wider">Stock & Draw Audit</h1>
