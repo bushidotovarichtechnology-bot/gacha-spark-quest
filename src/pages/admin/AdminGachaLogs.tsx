@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Shield, Search, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
+import AdminOnlyGuard from "@/components/AdminOnlyGuard";
 
 interface GachaLog {
   id: string;
@@ -95,6 +96,10 @@ const AdminGachaLogs = () => {
   };
 
   return (
+    <AdminOnlyGuard
+      title="Admin only — Audit Log Gacha"
+      message="Raw gacha attempt logs (including IP addresses and user agents) are restricted to administrators."
+    >
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Shield className="h-6 w-6 text-destructive" />
@@ -255,6 +260,7 @@ const AdminGachaLogs = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminOnlyGuard>
   );
 };
 
