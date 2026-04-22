@@ -16,9 +16,10 @@ interface CampaignCardProps {
 
 const CampaignCard = ({ id, title, image, price, remaining, total, hot }: CampaignCardProps) => {
   const { t } = useI18n();
-  const percentage = total > 0 ? (remaining / total) * 100 : 0;
-  const isSoldOut = remaining <= 0;
-  const isLow = !isSoldOut && percentage < 30;
+  const obf = obfuscateStock(remaining, total);
+  const percentage = obf.percentage;
+  const isSoldOut = obf.isSoldOut;
+  const isLow = obf.isLow;
   const prevRemaining = useRef(remaining);
   const [flash, setFlash] = useState(false);
 
