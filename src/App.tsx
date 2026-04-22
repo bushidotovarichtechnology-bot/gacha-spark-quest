@@ -107,6 +107,7 @@ const App = () => (
                 <Route path="coupons" element={<AdminCoupons />} />
                 <Route path="shipping" element={<AdminShipping />} />
                 <Route path="gacha-logs" element={<AdminGachaLogs />} />
+                <Route path="stock-audit" element={<AdminStockAudit />} />
                 <Route path="payment-settings" element={<AdminPaymentSettings />} />
                 <Route path="maintenance" element={<AdminMaintenance />} />
               </Route>
