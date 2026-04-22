@@ -90,7 +90,7 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("remaining")}</span>
               <span className={`transition-all duration-300 ${flash ? "text-accent font-bold scale-110" : isLow ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
-                {remaining}/{total}
+                {obf.fractionLabel}
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-secondary">
