@@ -8,6 +8,7 @@ import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { useToast } from "@/hooks/use-toast";
 import { Ban, Search, ShieldOff, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import AdminOnlyGuard from "@/components/AdminOnlyGuard";
 
 interface BannedUser {
   user_id: string;
@@ -60,6 +61,10 @@ const AdminBannedUsers = () => {
   );
 
   return (
+    <AdminOnlyGuard
+      title="Admin only — Banned Users"
+      message="The list of banned users and ban reasons is restricted to administrators."
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
@@ -147,6 +152,7 @@ const AdminBannedUsers = () => {
         )}
       </Card>
     </div>
+    </AdminOnlyGuard>
   );
 };
 
