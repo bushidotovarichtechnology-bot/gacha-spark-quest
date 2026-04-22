@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollText, Package, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import AdminOnlyGuard from "@/components/AdminOnlyGuard";
 
 type TierPrizeRow = {
   id: string;
