@@ -565,7 +565,7 @@ const CampaignDetail = () => {
                     />
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Sisa <span className="font-semibold text-foreground">{nonSRemaining}</span> hadiah lagi sebelum Grand Prize terbuka
+                    Sisa <span className="font-semibold text-foreground">{isAdmin ? nonSRemaining : obfuscateStock(nonSRemaining, totalTickets).remainingLabel}</span> hadiah lagi sebelum Grand Prize terbuka
                   </p>
                 </>
               )}
