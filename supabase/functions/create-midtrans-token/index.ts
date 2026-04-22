@@ -74,7 +74,56 @@ Deno.serve(async (req) => {
     const totalCoins = (pkg.coins ?? 0) + (pkg.bonus_coins ?? 0);
 
     const orderId = `GACHA-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-...
+
+    const midtransCfg = await getMidtransConfig();
+    if (!midtransCfg.serverKey) {
+      return new Response(JSON.stringify({ error: `Midtrans ${midtransCfg.mode} server key not configured` }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authString = btoa(`${midtransCfg.serverKey}:`);
+
+    const midtransPayload = {
+      transaction_details: {
+        order_id: orderId,
+        gross_amount: finalAmount,
+      },
+      item_details: [
+        {
+          id: package_id,
+          price: finalAmount,
+          quantity: 1,
+          name: `${totalCoins} Gacha Coins`,
+        },
+      ],
+      customer_details: {
+        email: user.email,
+      },
+    };
+
+    const midtransRes = await fetch(
+      midtransCfg.snapUrl,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${authString}`,
+        },
+        body: JSON.stringify(midtransPayload),
+      }
+    );
+
+    const midtransData = await midtransRes.json();
+
+    if (!midtransRes.ok) {
+      console.error("Midtrans error:", midtransData);
+      return new Response(JSON.stringify({ error: "Failed to create transaction" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     await supabaseAdmin.from("transactions").insert({
       order_id: orderId,
       user_id: user.id,
@@ -86,8 +135,8 @@ Deno.serve(async (req) => {
     });
 
     return new Response(
-      JSON.stringify({ 
-        token: midtransData.token, 
+      JSON.stringify({
+        token: midtransData.token,
         order_id: orderId,
         client_key: midtransCfg.clientKey,
         mode: midtransCfg.mode,
