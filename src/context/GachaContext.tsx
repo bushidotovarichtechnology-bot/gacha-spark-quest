@@ -196,15 +196,13 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     const newDraws = (prize.tier === "S" || prize.tier === "A") ? 0 : drawsSinceTierA + 1;
     setDrawsSinceTierA(newDraws);
 
+    // Server (secure_draw RPC) is the source of truth for inventory + coin balance.
+    // This optimistic update will be reconciled by refreshInventory/refreshCoins.
     if (user) {
-      await supabase.from("user_inventory").insert({
-        id: newId, user_id: user.id, prize_name: prize.prize, tier_label: prize.tier,
-        campaign_id: prize.campaignId, campaign_name: prize.campaign,
-        image_url: prize.image, coin_value: cv, won_at: now,
-      });
-      await syncCoins(totalCoins, newDraws);
+      void refreshInventory();
+      void refreshCoins();
     }
-  }, [user, drawsSinceTierA, totalCoins, syncCoins]);
+  }, [user, drawsSinceTierA, refreshInventory, refreshCoins]);
 
   const recycleItem = useCallback((id: string) => {
     const item = items.find((i) => i.id === id);
