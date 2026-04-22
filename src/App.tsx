@@ -50,6 +50,7 @@ const AdminCoinPackages = lazy(() => import("./pages/admin/AdminCoinPackages.tsx
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons.tsx"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping.tsx"));
 const AdminGachaLogs = lazy(() => import("./pages/admin/AdminGachaLogs.tsx"));
+const AdminStockAudit = lazy(() => import("./pages/admin/AdminStockAudit.tsx"));
 const AdminPaymentSettings = lazy(() => import("./pages/admin/AdminPaymentSettings.tsx"));
 const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance.tsx"));
 
