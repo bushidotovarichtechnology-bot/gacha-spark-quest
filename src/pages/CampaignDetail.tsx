@@ -14,6 +14,7 @@ import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseImg } from "@/lib/imageTransform";
+import { obfuscateStock } from "@/lib/obfuscateStock";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 
