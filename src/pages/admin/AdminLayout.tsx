@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star, Gift, Coins, Ticket, Truck, ScrollText, Ban, CreditCard, Zap, FlaskConical, Wrench } from "lucide-react";
+import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star, Gift, Coins, Ticket, Truck, ScrollText, Ban, CreditCard, Zap, FlaskConical, Wrench, Boxes } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -20,6 +20,7 @@ const navItems = [
   { to: "/admin/shipping", label: "Tarif Ongkir", icon: Truck },
   { to: "/admin/payment-settings", label: "Pembayaran", icon: CreditCard },
   { to: "/admin/maintenance", label: "Maintenance", icon: Wrench },
+  { to: "/admin/stock-audit", label: "Stock Audit", icon: Boxes },
   { to: "/admin/gacha-logs", label: "Audit Log", icon: ScrollText },
 ];
 
