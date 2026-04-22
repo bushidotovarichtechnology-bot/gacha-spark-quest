@@ -35,78 +35,52 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { package_id, coins, amount } = await req.json();
+    const { package_id } = await req.json();
 
-    if (!package_id || !coins || !amount) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+    if (!package_id || typeof package_id !== "string") {
+      return new Response(JSON.stringify({ error: "Missing package_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const orderId = `GACHA-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-
-    const midtransCfg = await getMidtransConfig();
-    if (!midtransCfg.serverKey) {
-      return new Response(JSON.stringify({ error: `Midtrans ${midtransCfg.mode} server key not configured` }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const authString = btoa(`${midtransCfg.serverKey}:`);
-
-    const midtransPayload = {
-      transaction_details: {
-        order_id: orderId,
-        gross_amount: amount,
-      },
-      item_details: [
-        {
-          id: package_id,
-          price: amount,
-          quantity: 1,
-          name: `${coins} Gacha Coins`,
-        },
-      ],
-      customer_details: {
-        email: user.email,
-      },
-    };
-
-    const midtransRes = await fetch(
-      midtransCfg.snapUrl,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${authString}`,
-        },
-        body: JSON.stringify(midtransPayload),
-      }
-    );
-
-    const midtransData = await midtransRes.json();
-
-    if (!midtransRes.ok) {
-      console.error("Midtrans error:", midtransData);
-      return new Response(JSON.stringify({ error: "Failed to create transaction" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Save transaction to DB using service role
+    // Service role client to read package authoritatively (bypass RLS)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const { data: pkg, error: pkgError } = await supabaseAdmin
+      .from("coin_packages")
+      .select("id, name, coins, bonus_coins, price, discount_percent, discount_start, discount_end, is_active")
+      .eq("id", package_id)
+      .maybeSingle();
+
+    if (pkgError || !pkg || !pkg.is_active) {
+      return new Response(JSON.stringify({ error: "Package not found or inactive" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Compute final price server-side, applying any active discount window
+    const now = Date.now();
+    const startOk = !pkg.discount_start || new Date(pkg.discount_start).getTime() <= now;
+    const endOk = !pkg.discount_end || new Date(pkg.discount_end).getTime() >= now;
+    const discountActive = (pkg.discount_percent ?? 0) > 0 && startOk && endOk;
+    const finalAmount = discountActive
+      ? Math.round(pkg.price * (1 - pkg.discount_percent / 100))
+      : pkg.price;
+    const totalCoins = (pkg.coins ?? 0) + (pkg.bonus_coins ?? 0);
+
+    const orderId = `GACHA-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+...
     await supabaseAdmin.from("transactions").insert({
       order_id: orderId,
       user_id: user.id,
       package_id,
-      coins,
-      amount,
+      coins: totalCoins,
+      amount: finalAmount,
       status: "pending",
       snap_token: midtransData.token,
     });
