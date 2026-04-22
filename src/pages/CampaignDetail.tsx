@@ -375,7 +375,7 @@ const CampaignDetail = () => {
                     </span>
                     <div className="relative z-10 ml-auto flex items-center gap-2">
                       <span className={`rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-bold text-white ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
-                        {tierRemaining}/{tierTotal}
+                        {isAdmin ? tierRemaining : obfuscateStock(tierRemaining, tierTotal).remainingLabel}/{tierTotal}
                       </span>
                     </div>
                   </div>
