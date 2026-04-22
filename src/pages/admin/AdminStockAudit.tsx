@@ -351,6 +351,7 @@ const AdminStockAudit = () => {
         </CardContent>
       </Card>
     </div>
+    </AdminOnlyGuard>
   );
 };
 
