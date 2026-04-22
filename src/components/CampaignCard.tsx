@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Coins, Flame } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 import { useEffect, useRef, useState } from "react";
+import { obfuscateStock } from "@/lib/obfuscateStock";
 
 interface CampaignCardProps {
   id: string;
@@ -15,9 +16,10 @@ interface CampaignCardProps {
 
 const CampaignCard = ({ id, title, image, price, remaining, total, hot }: CampaignCardProps) => {
   const { t } = useI18n();
-  const percentage = total > 0 ? (remaining / total) * 100 : 0;
-  const isSoldOut = remaining <= 0;
-  const isLow = !isSoldOut && percentage < 30;
+  const obf = obfuscateStock(remaining, total);
+  const percentage = obf.percentage;
+  const isSoldOut = obf.isSoldOut;
+  const isLow = obf.isLow;
   const prevRemaining = useRef(remaining);
   const [flash, setFlash] = useState(false);
 
@@ -88,7 +90,7 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">{t("remaining")}</span>
               <span className={`transition-all duration-300 ${flash ? "text-accent font-bold scale-110" : isLow ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
-                {remaining}/{total}
+                {obf.fractionLabel}
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-secondary">

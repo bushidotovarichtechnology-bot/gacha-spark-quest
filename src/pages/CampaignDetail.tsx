@@ -14,6 +14,7 @@ import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseImg } from "@/lib/imageTransform";
+import { obfuscateStock } from "@/lib/obfuscateStock";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 
@@ -81,6 +82,17 @@ const CampaignDetail = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as const });
+      return !!data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaign", campaignId],
@@ -289,7 +301,7 @@ const CampaignDetail = () => {
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm text-foreground">
-              <span className="font-semibold">{totalRemaining}</span>
+              <span className="font-semibold">{isAdmin ? totalRemaining : obfuscateStock(totalRemaining, totalTickets).remainingLabel}</span>
               <span className="text-muted-foreground">/{totalTickets} {t("left")}</span>
             </span>
           </div>
@@ -363,7 +375,7 @@ const CampaignDetail = () => {
                     </span>
                     <div className="relative z-10 ml-auto flex items-center gap-2">
                       <span className={`rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-bold text-white ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
-                        {tierRemaining}/{tierTotal}
+                        {isAdmin ? tierRemaining : obfuscateStock(tierRemaining, tierTotal).remainingLabel}/{tierTotal}
                       </span>
                     </div>
                   </div>
@@ -477,7 +489,7 @@ const CampaignDetail = () => {
                             </span>
                             {!isOut ? (
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                Stok: <span className="text-foreground">{p.remaining}/{p.total}</span>
+                                Stok: <span className="text-foreground">{isAdmin ? p.remaining : obfuscateStock(p.remaining, p.total).remainingLabel}/{p.total}</span>
                               </span>
                             ) : (
                               <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">HABIS</span>
@@ -553,7 +565,7 @@ const CampaignDetail = () => {
                     />
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Sisa <span className="font-semibold text-foreground">{nonSRemaining}</span> hadiah lagi sebelum Grand Prize terbuka
+                    Sisa <span className="font-semibold text-foreground">{isAdmin ? nonSRemaining : obfuscateStock(nonSRemaining, totalTickets).remainingLabel}</span> hadiah lagi sebelum Grand Prize terbuka
                   </p>
                 </>
               )}
