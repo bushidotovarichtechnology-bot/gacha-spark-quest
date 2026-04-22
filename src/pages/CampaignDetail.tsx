@@ -301,7 +301,7 @@ const CampaignDetail = () => {
           <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm text-foreground">
-              <span className="font-semibold">{totalRemaining}</span>
+              <span className="font-semibold">{isAdmin ? totalRemaining : obfuscateStock(totalRemaining, totalTickets).remainingLabel}</span>
               <span className="text-muted-foreground">/{totalTickets} {t("left")}</span>
             </span>
           </div>
