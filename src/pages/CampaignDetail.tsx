@@ -489,7 +489,7 @@ const CampaignDetail = () => {
                             </span>
                             {!isOut ? (
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                Stok: <span className="text-foreground">{p.remaining}/{p.total}</span>
+                                Stok: <span className="text-foreground">{isAdmin ? p.remaining : obfuscateStock(p.remaining, p.total).remainingLabel}/{p.total}</span>
                               </span>
                             ) : (
                               <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">HABIS</span>
