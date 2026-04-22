@@ -3,5 +3,3 @@ project_id = "eeyivrgpdbigxpgtujjy"
 [functions.midtrans-webhook]
 verify_jwt = false
 
-[functions.generate-tier-sfx]
-verify_jwt = false
