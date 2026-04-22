@@ -83,6 +83,17 @@ const CampaignDetail = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as const });
+      return !!data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaign", campaignId],
     queryFn: async () => {
