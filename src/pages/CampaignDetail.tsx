@@ -310,11 +310,28 @@ const CampaignDetail = () => {
         <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.2em] text-accent">
           {t("prizePool")}
         </h2>
+        {(() => {
+          // Hitung peluang per tier (eksklusi tier S — itu untuk last one)
+          return null;
+        })()}
         <div className="space-y-6">
-          {tiers.map((tier, i) => {
-            const tierRemaining = tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
-            const tierTotal = tier.prizes.reduce((s: number, p: any) => s + p.total, 0);
-            const pct = tierTotal > 0 ? (tierRemaining / tierTotal) * 100 : 0;
+          {(() => {
+            const nonSTiers = tiers.filter((t) => t.label !== "S");
+            const weights = new Map<string, number>();
+            nonSTiers.forEach((t) => {
+              const tierRem = t.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
+              weights.set(t.id, tierRem > 0 ? Number(t.probability_weight ?? 1) : 0);
+            });
+            const totalWeight = Array.from(weights.values()).reduce((s, w) => s + w, 0);
+            const chanceFor = (id: string) =>
+              totalWeight > 0 ? ((weights.get(id) ?? 0) / totalWeight) * 100 : 0;
+
+            return tiers.map((tier, i) => {
+              const tierRemaining = tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
+              const tierTotal = tier.prizes.reduce((s: number, p: any) => s + p.total, 0);
+              const pct = tierTotal > 0 ? (tierRemaining / tierTotal) * 100 : 0;
+              const chancePct = tier.label !== "S" ? chanceFor(tier.id) : 0;
+              const showChance = tier.label !== "S" && tierRemaining > 0;
             const bannerGradient = tierBannerMap[tier.label] || tierBannerMap.C;
             const tierLabel = tierLabelMap[tier.label] || tier.name;
             const isGrand = tier.label === "S";
@@ -374,6 +391,14 @@ const CampaignDetail = () => {
                       {tier.name}
                     </span>
                     <div className="relative z-10 ml-auto flex items-center gap-2">
+                      {showChance && (
+                        <span
+                          className="rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/30"
+                          title="Peluang mendapatkan tier ini saat gacha"
+                        >
+                          {chancePct >= 10 ? chancePct.toFixed(0) : chancePct.toFixed(1)}%
+                        </span>
+                      )}
                       <span className={`rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-bold text-white ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
                         {isAdmin ? tierRemaining : obfuscateStock(tierRemaining, tierTotal).remainingLabel}/{tierTotal}
                       </span>
@@ -501,8 +526,9 @@ const CampaignDetail = () => {
                   })}
                 </div>
               </motion.div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
 
         <motion.div
