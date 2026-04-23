@@ -312,26 +312,26 @@ const CampaignDetail = () => {
         </h2>
         {(() => {
           // Hitung peluang per tier (eksklusi tier S — itu untuk last one)
-          const nonSTiers = tiers.filter((t) => t.label !== "S");
-          const tierWeights = new Map<string, number>();
-          nonSTiers.forEach((t) => {
-            const tierRem = t.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
-            // Bobot efektif: weight tier × ada-tidaknya stok (kalau habis = 0)
-            const w = tierRem > 0 ? Number(t.probability_weight ?? 1) : 0;
-            tierWeights.set(t.id, w);
-          });
-          const totalWeight = Array.from(tierWeights.values()).reduce((s, w) => s + w, 0);
-          (window as any).__tierChances = (id: string) =>
-            totalWeight > 0 ? ((tierWeights.get(id) ?? 0) / totalWeight) * 100 : 0;
           return null;
         })()}
         <div className="space-y-6">
-          {tiers.map((tier, i) => {
-            const tierRemaining = tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
-            const tierTotal = tier.prizes.reduce((s: number, p: any) => s + p.total, 0);
-            const pct = tierTotal > 0 ? (tierRemaining / tierTotal) * 100 : 0;
-            const chancePct = tier.label !== "S" ? ((window as any).__tierChances?.(tier.id) ?? 0) : 0;
-            const showChance = tier.label !== "S" && tierRemaining > 0;
+          {(() => {
+            const nonSTiers = tiers.filter((t) => t.label !== "S");
+            const weights = new Map<string, number>();
+            nonSTiers.forEach((t) => {
+              const tierRem = t.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
+              weights.set(t.id, tierRem > 0 ? Number(t.probability_weight ?? 1) : 0);
+            });
+            const totalWeight = Array.from(weights.values()).reduce((s, w) => s + w, 0);
+            const chanceFor = (id: string) =>
+              totalWeight > 0 ? ((weights.get(id) ?? 0) / totalWeight) * 100 : 0;
+
+            return tiers.map((tier, i) => {
+              const tierRemaining = tier.prizes.reduce((s: number, p: any) => s + p.remaining, 0);
+              const tierTotal = tier.prizes.reduce((s: number, p: any) => s + p.total, 0);
+              const pct = tierTotal > 0 ? (tierRemaining / tierTotal) * 100 : 0;
+              const chancePct = tier.label !== "S" ? chanceFor(tier.id) : 0;
+              const showChance = tier.label !== "S" && tierRemaining > 0;
             const bannerGradient = tierBannerMap[tier.label] || tierBannerMap.C;
             const tierLabel = tierLabelMap[tier.label] || tier.name;
             const isGrand = tier.label === "S";
