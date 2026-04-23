@@ -391,6 +391,14 @@ const CampaignDetail = () => {
                       {tier.name}
                     </span>
                     <div className="relative z-10 ml-auto flex items-center gap-2">
+                      {showChance && (
+                        <span
+                          className="rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/30"
+                          title="Peluang mendapatkan tier ini saat gacha"
+                        >
+                          {chancePct >= 10 ? chancePct.toFixed(0) : chancePct.toFixed(1)}%
+                        </span>
+                      )}
                       <span className={`rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-bold text-white ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
                         {isAdmin ? tierRemaining : obfuscateStock(tierRemaining, tierTotal).remainingLabel}/{tierTotal}
                       </span>
