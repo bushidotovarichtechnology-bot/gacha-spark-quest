@@ -38,6 +38,7 @@ interface GrandPrizeWinner {
   display_name: string;
   avatar_url: string;
   prize_name: string;
+  campaign_id: string;
   campaign_title: string;
   won_at: string;
 }
