@@ -87,10 +87,21 @@ const GrandPrizePreview = () => {
                 <p className="flex items-center gap-1 truncate text-xs text-accent">
                   <Crown className="h-3 w-3 shrink-0" /> {w.prize_name}
                 </p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="truncate text-[10px] text-muted-foreground">
                   {w.campaign_title} · {formatDistanceToNow(new Date(w.won_at), { addSuffix: true, locale: idLocale })}
                 </p>
               </div>
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="shrink-0 gap-1 border-accent/30 hover:bg-accent/10 hover:text-accent"
+              >
+                <Link to={`/campaign/${w.campaign_id}`} aria-label={`Lihat campaign ${w.campaign_title}`}>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Detail</span>
+                </Link>
+              </Button>
             </div>
           ))}
         </div>
