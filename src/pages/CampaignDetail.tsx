@@ -518,8 +518,9 @@ const CampaignDetail = () => {
                   })}
                 </div>
               </motion.div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
 
         <motion.div
