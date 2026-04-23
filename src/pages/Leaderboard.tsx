@@ -119,19 +119,32 @@ const Leaderboard = () => {
                       <p className="truncate text-sm font-bold text-foreground">
                         {w.display_name}
                       </p>
-                      <p className="flex items-center gap-1 text-xs text-accent font-semibold">
-                        <Crown className="h-3 w-3" />
-                        {w.prize_name}
+                      <p className="flex items-center gap-1 text-xs text-accent font-semibold truncate">
+                        <Crown className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{w.prize_name}</span>
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="truncate text-[10px] text-muted-foreground">
                         {w.campaign_title} · {formatDistanceToNow(new Date(w.won_at), { addSuffix: true, locale: idLocale })}
                       </p>
                     </div>
 
-                    {/* Trophy for top 3 */}
+                    {/* Top 3 sparkle */}
                     {i < 3 && (
-                      <Sparkles className={`h-5 w-5 shrink-0 ${i === 0 ? "text-accent" : i === 1 ? "text-primary" : "text-neon-pink"}`} />
+                      <Sparkles className={`hidden sm:block h-5 w-5 shrink-0 ${i === 0 ? "text-accent" : i === 1 ? "text-primary" : "text-neon-pink"}`} />
                     )}
+
+                    {/* Detail button */}
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 gap-1 border-accent/30 hover:bg-accent/10 hover:text-accent"
+                    >
+                      <Link to={`/campaign/${w.campaign_id}`} aria-label={`Lihat campaign ${w.campaign_title}`}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Detail</span>
+                      </Link>
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
