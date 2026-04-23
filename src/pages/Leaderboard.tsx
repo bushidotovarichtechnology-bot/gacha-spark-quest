@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Crown, Trophy, Sparkles } from "lucide-react";
+import { ArrowLeft, Crown, Trophy, Sparkles, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
