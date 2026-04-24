@@ -275,12 +275,18 @@ const Index = () => {
           <p className="text-xs text-muted-foreground">
             {t("companyName")}
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
             <Link to="/about" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
               {t("aboutUs")}
             </Link>
             <Link to="/contact" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
               {t("contactUs")}
+            </Link>
+            <Link to="/terms" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
+              {t("termsAndConditions")}
+            </Link>
+            <Link to="/privacy" className="text-xs text-muted-foreground underline transition-colors hover:text-foreground">
+              {t("privacyPolicy")}
             </Link>
           </div>
           <p className="font-display text-xs tracking-wider text-muted-foreground">
