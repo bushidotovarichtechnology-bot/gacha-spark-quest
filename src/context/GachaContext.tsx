@@ -72,15 +72,6 @@ const writePersistedPity = (userId: string, value: number) => {
   }
 };
 
-const clearPersistedPity = (userId: string) => {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(pityKey(userId));
-  } catch {
-    // ignore
-  }
-};
-
 const clearAllPersistedPity = () => {
   if (typeof window === "undefined") return;
   try {
