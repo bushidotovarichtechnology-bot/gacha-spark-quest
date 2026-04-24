@@ -222,6 +222,28 @@ const translations = {
     contactFailed: "Failed to send message",
     contactFieldRequired: "This field is required",
 
+    // SEO Homepage long-form copy
+    seoHomeTitle: "Bushido Gacha — Trusted Online Gacha Platform in Indonesia",
+    seoHomeDesc: "Bushido Gacha is a trusted online gacha simulation platform in Indonesia. Fair gacha system, transparent Pity System, and peer-to-peer coin transfer.",
+    seoSectionWhyTitle: "Why Bushido Gacha is the Trusted Online Gacha Platform in Indonesia",
+    seoSectionWhyP1: "Bushido Gacha is an online gacha platform built by PT. BUSHIDO TOVARICH TECHNOLOGY for the Indonesian community that wants a trusted gacha simulation experience. Every draw uses a fair gacha system with provably fair algorithms — odds are public, prize pools are real-time, and there is no hidden manipulation behind the scenes.",
+    seoSectionWhyP2: "Unlike conventional gacha sites, our pool is limited. Once stock runs out, the campaign closes — no infinite loops, no inflated illusions. This is what makes Bushido Gacha one of the most transparent online gacha platforms in Indonesia today.",
+    seoPityTitle: "Transparent Pity System Guarantee",
+    seoPityP1: "We understand the frustration of bad luck streaks. That is why we built a Pity System that guarantees a rare-tier prize after a specific number of draws. The pity counter is fully visible on your inventory page — no guessing, no fake hope. This is our commitment to a fair gacha system that keeps every player in the game.",
+    seoPityP2: "When the pity meter is full, your next draw is guaranteed Tier A or higher. Once claimed, the meter resets transparently — exactly like the rules say.",
+    seoCoinTransferTitle: "Social Feature: Send Coins to Other Players",
+    seoCoinTransferP1: "Bushido Gacha is more than a solo experience. With our peer-to-peer Coin Transfer feature, you can send Bushido Coin directly to friends — to celebrate a win, help a teammate, or set up a community event.",
+    seoCoinTransferHowTitle: "How to Send Coins to Other Players",
+    seoCoinTransferStep1: "Open the Send Coins menu from your profile.",
+    seoCoinTransferStep2: "Enter the recipient's email and the coin amount.",
+    seoCoinTransferStep3: "Confirm the transfer — coins arrive instantly in the recipient's wallet.",
+    seoCoinTransferP2: "Every transfer is recorded in the coin ledger so both sender and receiver have a fully transparent record.",
+    seoUspTitle: "Indonesia's Trusted Gacha Simulation",
+    seoUspP1: "From limited pool campaigns, real-time prize pools, exclusive Last-One Prize, ticket-based redeem store, to community leaderboards — every feature on Bushido Gacha is designed so you feel an honest, exciting, and rewarding gacha experience.",
+    seoUspP2: "Join thousands of Indonesian players who already trust Bushido Gacha as their go-to online gacha platform. Test your luck today and feel the difference of a truly fair gacha system.",
+    seoSendCoins: "Send Coins",
+    seoLearnMore: "Learn More",
+
     // Legal
     termsAndConditions: "Terms & Conditions",
     privacyPolicy: "Privacy Policy",
