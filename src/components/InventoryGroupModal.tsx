@@ -56,7 +56,7 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="font-display text-base font-bold text-foreground">{t("itemDetail") ?? "Detail Item"}</h2>
+          <h2 className="font-display text-base font-bold text-foreground">Detail Item</h2>
           <button onClick={onClose} className="rounded-full p-1.5 hover:bg-muted">
             <X className="h-5 w-5 text-muted-foreground" />
           </button>
