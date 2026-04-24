@@ -8,6 +8,7 @@ import { useGacha, type InventoryItem } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 import ClaimPrizeForm from "@/components/ClaimPrizeForm";
+import InventoryGroupModal from "@/components/InventoryGroupModal";
 import { supabaseImg } from "@/lib/imageTransform";
 import {
   AlertDialog,
