@@ -148,17 +148,67 @@ const CampaignDetail = () => {
   });
 
   const { data: campaign, isLoading } = useQuery({
-    queryKey: ["campaign", campaignId],
+    queryKey: ["campaign", campaignId, isAdmin],
+    enabled: !!campaignId && (user === null || isAdmin !== undefined),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("*, campaign_tiers(*, tier_prizes(*))")
-        .eq("id", campaignId)
-        .single();
-      if (error) throw error;
-      return data;
+      if (isAdmin) {
+        // Admin: full access via RLS — fetch real counts and weights
+        const { data, error } = await supabase
+          .from("campaigns")
+          .select("*, campaign_tiers(*, tier_prizes(*))")
+          .eq("id", campaignId)
+          .single();
+        if (error) throw error;
+        return data;
+      }
+
+      // Non-admin: use safe public views (no remaining/total/probability_weight)
+      // and the per-prize availability RPC for sold-out flags.
+      const [campRes, tiersRes, availRes] = await Promise.all([
+        supabase.from("campaigns").select("*").eq("id", campaignId).single(),
+        supabase
+          .from("campaign_tiers_public" as any)
+          .select("*, tier_prizes_public(*)")
+          .eq("campaign_id", campaignId),
+        supabase.rpc("get_prize_availability" as any, { _campaign_id: campaignId }),
+      ]);
+      if (campRes.error) throw campRes.error;
+
+      const availMap = new Map<string, boolean>(
+        (availRes.data || []).map((a: any) => [a.prize_id, a.is_sold_out])
+      );
+
+      // Reshape to match the admin shape so downstream code keeps working.
+      const campaign_tiers = (tiersRes.data || []).map((t: any) => ({
+        id: t.id,
+        campaign_id: t.campaign_id,
+        label: t.label,
+        name: t.name,
+        image_url: t.image_url,
+        sort_order: t.sort_order,
+        // Stubbed: server is source of truth; UI must not rely on these for logic
+        remaining: 1,
+        total: 1,
+        probability_weight: 1,
+        tier_prizes: (t.tier_prizes_public || []).map((p: any) => ({
+          id: p.id,
+          tier_id: p.tier_id,
+          name: p.name,
+          description: p.description,
+          image_url: p.image_url,
+          sort_order: p.sort_order,
+          coin_value: p.coin_value,
+          weight_grams: p.weight_grams,
+          auto_refill: p.auto_refill,
+          // Coarse availability only: 1 if available, 0 if sold out
+          remaining: availMap.get(p.id) ? 0 : 1,
+          total: 1,
+          probability_weight: 1,
+        })),
+      }));
+
+      return { ...campRes.data, campaign_tiers };
     },
-    enabled: !!campaignId,
   });
 
   const { data: pitySettings } = useQuery({
