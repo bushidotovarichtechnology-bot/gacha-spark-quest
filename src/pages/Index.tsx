@@ -277,6 +277,95 @@ const Index = () => {
       {/* Grand Prize Leaderboard Preview */}
       <GrandPrizePreview />
 
+      {/* SEO long-form: Why + Pity System */}
+      <section className="border-t border-border/50 py-16">
+        <div className="container mx-auto max-w-3xl px-4">
+          <article className="space-y-6">
+            <header>
+              <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
+                Bushido Gacha
+              </p>
+              <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                {t("seoSectionWhyTitle")}
+              </h2>
+            </header>
+            <p className="leading-relaxed text-muted-foreground">{t("seoSectionWhyP1")}</p>
+            <p className="leading-relaxed text-muted-foreground">{t("seoSectionWhyP2")}</p>
+
+            <div className="rounded-2xl border border-accent/20 bg-accent/5 p-6">
+              <div className="mb-3 flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-accent" aria-hidden="true" />
+                <h3 className="font-display text-lg font-bold text-foreground">{t("seoPityTitle")}</h3>
+              </div>
+              <p className="mb-3 leading-relaxed text-muted-foreground">{t("seoPityP1")}</p>
+              <p className="leading-relaxed text-muted-foreground">{t("seoPityP2")}</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {/* SEO: Coin Transfer (Fitur Sosial) */}
+      <section id="kirim-koin" className="border-t border-border/50 bg-secondary/20 py-16">
+        <div className="container mx-auto max-w-3xl px-4">
+          <article className="space-y-6">
+            <header className="text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                <Send className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                {t("seoCoinTransferTitle")}
+              </h2>
+            </header>
+            <p className="leading-relaxed text-muted-foreground">{t("seoCoinTransferP1")}</p>
+
+            <div className="rounded-2xl border border-border/50 bg-card p-6">
+              <h3 className="mb-4 font-display text-lg font-bold text-foreground">
+                {t("seoCoinTransferHowTitle")}
+              </h3>
+              <ol className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                  <span>{t("seoCoinTransferStep1")}</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                  <span>{t("seoCoinTransferStep2")}</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                  <span>{t("seoCoinTransferStep3")}</span>
+                </li>
+              </ol>
+            </div>
+
+            <p className="leading-relaxed text-muted-foreground">{t("seoCoinTransferP2")}</p>
+
+            <div className="text-center">
+              <Button asChild variant="gold" className="gap-2">
+                <Link to="/gift">
+                  <Send className="h-4 w-4" aria-hidden="true" />
+                  {t("seoSendCoins")}
+                </Link>
+              </Button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {/* SEO USP closer */}
+      <section className="border-t border-border/50 py-16">
+        <div className="container mx-auto max-w-3xl px-4">
+          <article className="space-y-4 text-center">
+            <Users className="mx-auto h-8 w-8 text-accent" aria-hidden="true" />
+            <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              {t("seoUspTitle")}
+            </h2>
+            <p className="leading-relaxed text-muted-foreground">{t("seoUspP1")}</p>
+            <p className="leading-relaxed text-muted-foreground">{t("seoUspP2")}</p>
+          </article>
+        </div>
+      </section>
+
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
           <span className="font-display text-sm font-bold tracking-wider text-foreground">
