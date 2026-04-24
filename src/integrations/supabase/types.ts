@@ -887,6 +887,13 @@ export type Database = {
             referencedRelation: "campaign_tiers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tier_prizes_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tiers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       transactions: {
@@ -1041,7 +1048,149 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      campaign_tiers_public: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          id: string | null
+          image_url: string | null
+          label: string | null
+          name: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          label?: string | null
+          name?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          label?: string | null
+          name?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_tiers_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tier_prizes_public: {
+        Row: {
+          auto_refill: boolean | null
+          coin_value: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          image_url: string | null
+          is_sold_out: boolean | null
+          name: string | null
+          sort_order: number | null
+          tier_id: string | null
+          weight_grams: number | null
+        }
+        Insert: {
+          auto_refill?: boolean | null
+          coin_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_sold_out?: never
+          name?: string | null
+          sort_order?: number | null
+          tier_id?: string | null
+          weight_grams?: number | null
+        }
+        Update: {
+          auto_refill?: boolean | null
+          coin_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_sold_out?: never
+          name?: string | null
+          sort_order?: number | null
+          tier_id?: string | null
+          weight_grams?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tier_prizes_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_prizes_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_tiers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_coins_admin: {
+        Row: {
+          active_discount_percent: number | null
+          balance: number | null
+          ban_reason: string | null
+          banned_at: string | null
+          created_at: string | null
+          draws_since_tier_a: number | null
+          free_draws: number | null
+          id: string | null
+          is_banned: boolean | null
+          last_draw_at: string | null
+          last_draw_ip: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active_discount_percent?: number | null
+          balance?: number | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          created_at?: string | null
+          draws_since_tier_a?: number | null
+          free_draws?: number | null
+          id?: string | null
+          is_banned?: boolean | null
+          last_draw_at?: string | null
+          last_draw_ip?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active_discount_percent?: number | null
+          balance?: number | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          created_at?: string | null
+          draws_since_tier_a?: number | null
+          free_draws?: number | null
+          id?: string | null
+          is_banned?: boolean | null
+          last_draw_at?: string | null
+          last_draw_ip?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_get_banned_users: {
@@ -1072,6 +1221,17 @@ export type Database = {
           last_sign_in_at: string
         }[]
       }
+      get_campaign_stock_summary: {
+        Args: { _campaign_ids: string[] }
+        Returns: {
+          campaign_id: string
+          is_sold_out: boolean
+          remaining_bucket: string
+          tier_id: string
+          tier_label: string
+          total_bucket: number
+        }[]
+      }
       get_grand_prize_winners: {
         Args: { lim?: number }
         Returns: {
@@ -1098,6 +1258,14 @@ export type Database = {
           campaign_id: string
           campaign_title: string
           draw_count: number
+        }[]
+      }
+      get_prize_availability: {
+        Args: { _campaign_id: string }
+        Returns: {
+          is_sold_out: boolean
+          prize_id: string
+          tier_id: string
         }[]
       }
       get_tier_distribution: {

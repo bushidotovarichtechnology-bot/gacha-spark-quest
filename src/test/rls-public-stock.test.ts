@@ -6,68 +6,72 @@ const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVleWl2cmdwZGJpZ3hwZ3R1amp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMzM2MDAsImV4cCI6MjA5MDkwOTYwMH0.rIPgUwunY6mOIiroqoi9bfCdytSibU80ztFSuK7zPOY";
 
 /**
- * Regression guard: home page stock indicator depends on anonymous (logged-out)
- * users being able to read `campaign_tiers` and `tier_prizes`. If RLS is ever
- * tightened back to authenticated-only, the home page will show every campaign
- * as "SOLD OUT" until the visitor logs in.
- *
- * These tests hit the live Supabase project with the anon key (no session) and
- * assert that public SELECT works for both tables.
+ * Security regression guard. After tightening RLS so that exact stock counts
+ * and probability weights are no longer publicly readable, anonymous users
+ * must:
+ *   - be DENIED access to the underlying tables `campaign_tiers` and `tier_prizes`
+ *   - be ALLOWED to read the safe public views (without `remaining`/`total`/`probability_weight`)
+ *   - be ALLOWED to call `get_campaign_stock_summary` for coarse-bucketed display data
  */
-describe("RLS: public read access for stock tables", () => {
+describe("RLS: stock tables are protected from anon", () => {
   const anon = createClient(SUPABASE_URL, ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  it("anonymous users can SELECT from campaign_tiers", async () => {
-    const { data, error } = await anon
+  it("anonymous users CANNOT read raw campaign_tiers", async () => {
+    const { data } = await anon
       .from("campaign_tiers")
       .select("id, label, remaining, total")
       .limit(1);
-
-    expect(error).toBeNull();
-    expect(Array.isArray(data)).toBe(true);
+    // RLS should return zero rows (no error, just empty) for non-admin
+    expect(Array.isArray(data) ? data.length : 0).toBe(0);
   });
 
-  it("anonymous users can SELECT from tier_prizes", async () => {
-    const { data, error } = await anon
+  it("anonymous users CANNOT read raw tier_prizes", async () => {
+    const { data } = await anon
       .from("tier_prizes")
       .select("id, tier_id, remaining, total")
       .limit(1);
+    expect(Array.isArray(data) ? data.length : 0).toBe(0);
+  });
 
+  it("public view campaign_tiers_public is readable", async () => {
+    const { data, error } = await anon
+      .from("campaign_tiers_public" as any)
+      .select("id, label, name")
+      .limit(1);
     expect(error).toBeNull();
     expect(Array.isArray(data)).toBe(true);
   });
 
-  it("anonymous home query returns non-zero stock when prizes exist", async () => {
-    // Mirrors the query in src/pages/Index.tsx
-    const { data: camps, error: campErr } = await anon
-      .from("campaigns")
-      .select("id, campaign_tiers(id)")
-      .eq("is_active", true)
-      .limit(5);
+  it("public view tier_prizes_public is readable and omits sensitive columns", async () => {
+    const { data, error } = await anon
+      .from("tier_prizes_public" as any)
+      .select("id, name, is_sold_out")
+      .limit(1);
+    expect(error).toBeNull();
+    expect(Array.isArray(data)).toBe(true);
+    if (data && data[0]) {
+      expect((data[0] as any).remaining).toBeUndefined();
+      expect((data[0] as any).total).toBeUndefined();
+      expect((data[0] as any).probability_weight).toBeUndefined();
+    }
+  });
 
-    expect(campErr).toBeNull();
-    if (!camps || camps.length === 0) return; // nothing to assert against
+  it("get_campaign_stock_summary returns coarse buckets only", async () => {
+    const { data: camps } = await anon.from("campaigns").select("id").eq("is_active", true).limit(3);
+    const ids = (camps || []).map((c: any) => c.id);
+    if (ids.length === 0) return;
 
-    const tierIds = camps.flatMap((c: any) =>
-      (c.campaign_tiers || []).map((t: any) => t.id)
-    );
-    if (tierIds.length === 0) return;
-
-    const { data: prizes, error: prizeErr } = await anon
-      .from("tier_prizes")
-      .select("tier_id, remaining, total")
-      .in("tier_id", tierIds);
-
-    expect(prizeErr).toBeNull();
-    expect(prizes).not.toBeNull();
-    // If any campaign has prizes configured, anon must be able to see counts.
-    // (Total > 0 anywhere proves the policy isn't silently filtering rows.)
-    const totalAcrossAll = (prizes || []).reduce(
-      (sum, p: any) => sum + (p.total || 0),
-      0
-    );
-    expect(totalAcrossAll).toBeGreaterThanOrEqual(0);
+    const { data, error } = await anon.rpc("get_campaign_stock_summary" as any, {
+      _campaign_ids: ids,
+    });
+    expect(error).toBeNull();
+    if (Array.isArray(data) && data.length > 0) {
+      const row: any = data[0];
+      expect(typeof row.remaining_bucket).toBe("string");
+      // Must be a bucket label, not an exact integer like "13"
+      expect(row.remaining_bucket).toMatch(/^(0|<5|5\+|10\+|25\+|50\+|\d+\+)$/);
+    }
   });
 });
