@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2, ChevronRight, Timer } from "lucide-react";
+import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2, ChevronRight, Timer, Recycle, Package, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { loadMidtransSnap } from "@/lib/midtransSnap";
+import { supabaseImg } from "@/lib/imageTransform";
 
 interface Transaction {
   id: string;
@@ -25,12 +26,27 @@ interface Transaction {
   created_at: string;
 }
 
+interface LedgerEntry {
+  id: string;
+  entry_type: string;
+  amount: number;
+  balance_after: number | null;
+  description: string;
+  reference_id: string | null;
+  metadata: Record<string, any>;
+  created_at: string;
+}
+
+const formatRupiah2 = (value: number) =>
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
+
+
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string; label: string }> = {
-  settlement: { icon: CheckCircle, color: "text-green-500", label: "Berhasil" },
+  settlement: { icon: CheckCircle, color: "text-accent", label: "Berhasil" },
   pending: { icon: Clock, color: "text-yellow-500", label: "Menunggu" },
   expire: { icon: AlertCircle, color: "text-muted-foreground", label: "Kedaluwarsa" },
-  cancel: { icon: XCircle, color: "text-red-500", label: "Dibatalkan" },
-  deny: { icon: XCircle, color: "text-red-500", label: "Ditolak" },
+  cancel: { icon: XCircle, color: "text-destructive", label: "Dibatalkan" },
+  deny: { icon: XCircle, color: "text-destructive", label: "Ditolak" },
   refund: { icon: AlertCircle, color: "text-orange-500", label: "Refund" },
 };
 
@@ -82,6 +98,8 @@ const TransactionHistory = () => {
   const { refreshCoins } = useGacha();
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [recycleEntries, setRecycleEntries] = useState<LedgerEntry[]>([]);
+  const [claimEntries, setClaimEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
@@ -102,18 +120,32 @@ const TransactionHistory = () => {
     }
   };
 
+  const fetchLedger = async () => {
+    const { data } = await supabase
+      .from("coin_ledger" as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (data) {
+      const entries = data as unknown as LedgerEntry[];
+      setRecycleEntries(entries.filter((e) => e.entry_type === "recycle"));
+      setClaimEntries(entries.filter((e) => e.entry_type === "claim_shipping"));
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchTransactions();
+    await Promise.all([fetchTransactions(), fetchLedger()]);
     refreshCoins?.();
     toast.success("Data transaksi diperbarui");
     setRefreshing(false);
   };
 
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      await fetchTransactions();
+      await Promise.all([fetchTransactions(), fetchLedger()]);
       setLoading(false);
     };
     load();
@@ -167,16 +199,29 @@ const TransactionHistory = () => {
       )
       .subscribe();
 
+    // Subscribe to ledger inserts (recycle, claim_shipping, topup) → keep section live
+    const ledgerChannel = supabase
+      .channel("user-coin-ledger")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "coin_ledger", filter: `user_id=eq.${user.id}` },
+        () => { fetchLedger(); }
+      )
+      .subscribe();
+
     // Auto-refresh every 30 seconds
     const autoRefreshInterval = setInterval(() => {
       fetchTransactions();
+      fetchLedger();
     }, 30000);
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(ledgerChannel);
       clearInterval(autoRefreshInterval);
     };
   }, [user, refreshCoins]);
+
 
   const handleRetry = async (tx: Transaction) => {
     if (!user) return;
@@ -437,9 +482,180 @@ const TransactionHistory = () => {
             })}
           </div>
         )}
+
+        {/* ──────────── SECTION: Daur Ulang Hadiah ──────────── */}
+        <div className="mx-auto mt-12 max-w-2xl">
+          <div className="mb-4 flex items-center gap-2">
+            <Recycle className="h-5 w-5 text-accent" />
+            <h2 className="font-display text-lg font-bold tracking-wider text-foreground">
+              Daur Ulang Hadiah
+            </h2>
+            <Badge variant="secondary" className="text-[10px]">{recycleEntries.length}</Badge>
+          </div>
+          {recycleEntries.length === 0 ? (
+            <Card className="border-border/50">
+              <CardContent className="py-6 text-center text-sm text-muted-foreground">
+                Belum ada hadiah yang didaur ulang.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {recycleEntries.map((e, i) => {
+                const m = e.metadata || {};
+                const date = new Date(e.created_at);
+                return (
+                  <motion.div
+                    key={e.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <Card className="border-border/50">
+                      <CardContent className="flex items-center gap-3 py-3">
+                        {m.image_url ? (
+                          <img
+                            src={supabaseImg(m.image_url, 96)}
+                            alt={m.prize_name || ""}
+                            loading="lazy"
+                            className="h-12 w-12 shrink-0 rounded-md object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-secondary">
+                            <Recycle className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              {m.prize_name || "Hadiah"}
+                            </p>
+                            {m.tier_label && (
+                              <Badge variant="outline" className="text-[10px]">Tier {m.tier_label}</Badge>
+                            )}
+                          </div>
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {m.campaign_name || ""}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                            {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                            {" · "}
+                            {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 font-display text-sm font-bold text-accent">
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                            +{e.amount.toLocaleString()}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">koin</span>
+                          {e.balance_after !== null && (
+                            <span className="mt-0.5 text-[10px] text-muted-foreground/70">
+                              Saldo: {e.balance_after.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ──────────── SECTION: Pengambilan Hadiah ──────────── */}
+        <div className="mx-auto mt-12 max-w-2xl">
+          <div className="mb-4 flex items-center gap-2">
+            <Package className="h-5 w-5 text-accent" />
+            <h2 className="font-display text-lg font-bold tracking-wider text-foreground">
+              Pengambilan Hadiah
+            </h2>
+            <Badge variant="secondary" className="text-[10px]">{claimEntries.length}</Badge>
+          </div>
+          {claimEntries.length === 0 ? (
+            <Card className="border-border/50">
+              <CardContent className="py-6 text-center text-sm text-muted-foreground">
+                Belum ada hadiah yang diambil/dikirim.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {claimEntries.map((e, i) => {
+                const m = e.metadata || {};
+                const date = new Date(e.created_at);
+                const shippingIDR = Number(m.shipping_cost_idr || 0);
+                return (
+                  <motion.div
+                    key={e.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <Card className="border-border/50">
+                      <CardContent className="flex items-center gap-3 py-3">
+                        {m.image_url ? (
+                          <img
+                            src={supabaseImg(m.image_url, 96)}
+                            alt={m.prize_name || ""}
+                            loading="lazy"
+                            className="h-12 w-12 shrink-0 rounded-md object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-secondary">
+                            <Package className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              {m.prize_name || "Hadiah"}
+                            </p>
+                            {m.tier_label && (
+                              <Badge variant="outline" className="text-[10px]">Tier {m.tier_label}</Badge>
+                            )}
+                          </div>
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {m.shipping_method ? `${m.shipping_method.toUpperCase()} · ` : ""}
+                            {[m.city, m.province].filter(Boolean).join(", ")}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                            {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                            {" · "}
+                            {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end whitespace-nowrap">
+                          {e.amount !== 0 ? (
+                            <span className="inline-flex items-center gap-1 font-display text-sm font-bold text-destructive">
+                              <ArrowDownLeft className="h-3.5 w-3.5" />
+                              {e.amount.toLocaleString()}
+                            </span>
+                          ) : (
+                            <span className="font-display text-sm font-bold text-foreground">
+                              {formatRupiah2(shippingIDR)}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-muted-foreground">
+                            {e.amount !== 0 ? "koin" : "ongkir"}
+                          </span>
+                          {e.balance_after !== null && (
+                            <span className="mt-0.5 text-[10px] text-muted-foreground/70">
+                              Saldo: {e.balance_after.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
 };
+
 
 export default TransactionHistory;
