@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2, ChevronRight, Timer } from "lucide-react";
+import { ArrowLeft, Receipt, Clock, CheckCircle, XCircle, AlertCircle, Coins, RefreshCw, Loader2, ChevronRight, Timer, Recycle, Package, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { loadMidtransSnap } from "@/lib/midtransSnap";
+import { supabaseImg } from "@/lib/imageTransform";
 
 interface Transaction {
   id: string;
@@ -24,6 +25,21 @@ interface Transaction {
   snap_token: string | null;
   created_at: string;
 }
+
+interface LedgerEntry {
+  id: string;
+  entry_type: string;
+  amount: number;
+  balance_after: number | null;
+  description: string;
+  reference_id: string | null;
+  metadata: Record<string, any>;
+  created_at: string;
+}
+
+const formatRupiah2 = (value: number) =>
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
+
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string; label: string }> = {
   settlement: { icon: CheckCircle, color: "text-green-500", label: "Berhasil" },
