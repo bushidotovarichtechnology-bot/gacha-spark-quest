@@ -44,9 +44,41 @@ interface GachaState {
 const PITY_THRESHOLD = 10;
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
-// localStorage helpers — keyed per user so multiple accounts on same device don't collide.
+// localStorage helpers — keyed per user + per-session salt so a previous user's
+// cache becomes unreadable after logout/login on a shared device. The salt
+// lives in sessionStorage (cleared on tab close) and is regenerated on each
+// fresh login, making old cache keys effectively orphaned (and swept on logout).
 const PITY_LS_PREFIX = "bushido:pity:";
-const pityKey = (userId: string) => `${PITY_LS_PREFIX}${userId}`;
+const PITY_SALT_SS_PREFIX = "bushido:pity-salt:";
+
+const generateSalt = (): string => {
+  try {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    }
+  } catch {
+    // fall through
+  }
+  return Math.random().toString(36).slice(2, 18);
+};
+
+const getOrCreateSalt = (userId: string): string => {
+  if (typeof window === "undefined") return "ssr";
+  const ssKey = `${PITY_SALT_SS_PREFIX}${userId}`;
+  try {
+    const existing = sessionStorage.getItem(ssKey);
+    if (existing && existing.length >= 8) return existing;
+    const fresh = generateSalt();
+    sessionStorage.setItem(ssKey, fresh);
+    return fresh;
+  } catch {
+    // sessionStorage unavailable (private mode, etc) — fall back to a
+    // process-lifetime salt so keys still rotate per page load.
+    return generateSalt();
+  }
+};
+
+const pityKey = (userId: string) => `${PITY_LS_PREFIX}${userId}:${getOrCreateSalt(userId)}`;
 
 // TTL: cached pity is considered stale after this duration. Server is the source
 // of truth and will overwrite within ~1 round-trip on hydrate, but the TTL
