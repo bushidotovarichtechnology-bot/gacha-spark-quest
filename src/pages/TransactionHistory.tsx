@@ -145,7 +145,7 @@ const TransactionHistory = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      await fetchTransactions();
+      await Promise.all([fetchTransactions(), fetchLedger()]);
       setLoading(false);
     };
     load();
