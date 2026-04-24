@@ -4,7 +4,7 @@ import { X, Recycle, PackageCheck, Coins, Minus, Plus, Crown, Star, Gift, Award 
 import { Button } from "@/components/ui/button";
 import { supabaseImg } from "@/lib/imageTransform";
 import type { InventoryItem } from "@/context/GachaContext";
-import { useI18n } from "@/context/I18nContext";
+
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: string }> = {
   S: { color: "text-accent", icon: Crown, gradient: "from-accent/30 to-accent/5" },
@@ -21,7 +21,6 @@ interface Props {
 }
 
 const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
-  const { t } = useI18n();
   const total = items.length;
   const [qty, setQty] = useState(1);
   const sample = items[0];
