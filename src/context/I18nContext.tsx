@@ -93,6 +93,14 @@ const translations = {
     soldOutDesc: "All prizes have been drawn!",
     insufficientCoins: "Not enough coins! Top up to continue drawing.",
     pityReady: "🔥 Next draw guarantees Tier A or higher!",
+    pityProgress: "Pity Meter Updated!",
+    pityProgressDesc: "You're getting closer to a guaranteed prize.",
+    pityReset: "Pity Meter Reset!",
+    pityResetDesc: "You won a rare prize — meter restarts.",
+    pityReadyPopupDesc: "Your pity reward is ready to claim.",
+    pityNextDrawGuaranteed: "Next draw guarantees Tier {tier}!",
+    drawNow: "Draw Now",
+    keepDrawing: "Keep Drawing",
 
     // Top Up
     topUpCoins: "Top Up Coins",
@@ -312,6 +320,14 @@ const translations = {
     soldOutDesc: "Semua hadiah sudah ditarik!",
     insufficientCoins: "Koin tidak cukup! Isi ulang untuk melanjutkan tarikan.",
     pityReady: "🔥 Tarikan berikutnya dijamin Tingkat A atau lebih tinggi!",
+    pityProgress: "Pity Meter Bertambah!",
+    pityProgressDesc: "Kamu makin dekat dengan hadiah jaminan.",
+    pityReset: "Pity Meter Reset!",
+    pityResetDesc: "Kamu menang hadiah langka — meter dimulai ulang.",
+    pityReadyPopupDesc: "Hadiah pity kamu siap diklaim.",
+    pityNextDrawGuaranteed: "Tarikan berikutnya dijamin Tingkat {tier}!",
+    drawNow: "Tarik Sekarang",
+    keepDrawing: "Lanjut Tarik",
 
     // Top Up
     topUpCoins: "Isi Ulang Bushido Coin",
