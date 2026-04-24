@@ -150,7 +150,7 @@ const Index = () => {
     queryFn: async () => {
       let query = supabase
         .from("campaigns")
-        .select("*, campaign_tiers(id, remaining, total, label)")
+        .select("id, title, image_url, price, is_hot, subcategory_id, sort_order, created_at")
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
@@ -162,43 +162,44 @@ const Index = () => {
       const { data: camps, error } = await query;
       if (error) throw error;
 
-      // Fetch actual prize counts from tier_prizes
-      const tierIds = (camps || []).flatMap((c) =>
-        (c.campaign_tiers || []).map((t: { id: string }) => t.id)
-      );
+      // Fetch coarse stock buckets from server (no exact counts leak to client)
+      const campaignIds = (camps || []).map((c) => c.id);
+      const stockByCampaign: Record<string, { remaining: number; total: number; isSoldOut: boolean }> = {};
 
-      let prizeCounts: Record<string, { remaining: number; total: number }> = {};
-      if (tierIds.length > 0) {
-        const { data: prizes } = await supabase
-          .from("tier_prizes")
-          .select("tier_id, remaining, total")
-          .in("tier_id", tierIds);
-
-        (prizes || []).forEach((p) => {
-          if (!prizeCounts[p.tier_id]) prizeCounts[p.tier_id] = { remaining: 0, total: 0 };
-          prizeCounts[p.tier_id].remaining += p.remaining;
-          prizeCounts[p.tier_id].total += p.total;
+      if (campaignIds.length > 0) {
+        const { data: summaries } = await supabase.rpc("get_campaign_stock_summary" as any, {
+          _campaign_ids: campaignIds,
+        });
+        // Aggregate per-campaign. We approximate "remaining" from the bucket
+        // label (for the progress bar) — exact value never leaves the server.
+        const bucketToApprox = (b: string): number => {
+          if (b === "0") return 0;
+          if (b === "<5") return 3;
+          if (b === "5+") return 7;
+          if (b === "10+") return 17;
+          if (b === "25+") return 37;
+          if (b === "50+") return 75;
+          const n = parseInt(b, 10);
+          return Number.isFinite(n) ? n + 25 : 0;
+        };
+        (summaries || []).forEach((s: any) => {
+          const acc = stockByCampaign[s.campaign_id] ||
+            (stockByCampaign[s.campaign_id] = { remaining: 0, total: 0, isSoldOut: true });
+          acc.remaining += bucketToApprox(s.remaining_bucket);
+          acc.total += s.total_bucket || 0;
+          if (!s.is_sold_out) acc.isSoldOut = false;
         });
       }
 
       return (camps || []).map((c) => {
-        const tiers = c.campaign_tiers || [];
-        let remaining = 0;
-        let total = 0;
-        tiers.forEach((t: { id: string }) => {
-          const pc = prizeCounts[t.id];
-          if (pc) {
-            remaining += pc.remaining;
-            total += pc.total;
-          }
-        });
+        const s = stockByCampaign[c.id] || { remaining: 0, total: 0, isSoldOut: true };
         return {
           id: c.id,
           title: c.title,
           image: resolveImage(c.image_url),
           price: c.price,
-          remaining,
-          total,
+          remaining: s.remaining,
+          total: s.total,
           hot: c.is_hot,
         };
       });
