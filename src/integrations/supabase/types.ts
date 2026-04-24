@@ -192,6 +192,42 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_ledger: {
+        Row: {
+          amount: number
+          balance_after: number | null
+          created_at: string
+          description: string
+          entry_type: string
+          id: string
+          metadata: Json
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number | null
+          created_at?: string
+          description?: string
+          entry_type: string
+          id?: string
+          metadata?: Json
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number | null
+          created_at?: string
+          description?: string
+          entry_type?: string
+          id?: string
+          metadata?: Json
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       coin_packages: {
         Row: {
           bonus_coins: number
