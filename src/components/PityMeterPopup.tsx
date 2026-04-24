@@ -47,7 +47,13 @@ const PityMeterPopup = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-background/80 backdrop-blur-md sm:items-center"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 7rem)",
+            paddingLeft: "calc(env(safe-area-inset-left, 0px) + 1rem)",
+            paddingRight: "calc(env(safe-area-inset-right, 0px) + 1rem)",
+          }}
           onClick={onClose}
         >
           <motion.div
