@@ -150,7 +150,7 @@ const Index = () => {
     queryFn: async () => {
       let query = supabase
         .from("campaigns")
-        .select("id, title, image_url, price, is_hot, subcategory_id, sort_order, created_at")
+        .select("id, slug, title, image_url, price, is_hot, subcategory_id, sort_order, created_at")
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
@@ -195,6 +195,7 @@ const Index = () => {
         const s = stockByCampaign[c.id] || { remaining: 0, total: 0, isSoldOut: true };
         return {
           id: c.id,
+          slug: (c as any).slug as string | undefined,
           title: c.title,
           image: resolveImage(c.image_url),
           price: c.price,
