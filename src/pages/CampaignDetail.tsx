@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseImg } from "@/lib/imageTransform";
 import { obfuscateStock } from "@/lib/obfuscateStock";
+import { resolveCanonicalCampaignPath } from "@/lib/campaignRedirect";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 
@@ -166,8 +167,9 @@ const CampaignDetail = () => {
       if (!baseCampaign) throw new Error("campaign_not_found");
 
       // 301-style redirect from id → canonical slug URL.
-      if (baseCampaign.slug && param !== baseCampaign.slug) {
-        navigate(`/campaign/${baseCampaign.slug}`, { replace: true });
+      const canonicalPath = resolveCanonicalCampaignPath(param, baseCampaign);
+      if (canonicalPath) {
+        navigate(canonicalPath, { replace: true });
       }
 
       const realId = baseCampaign.id;
