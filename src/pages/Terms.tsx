@@ -152,8 +152,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB IV — Transaksi dan Pembayaran</h2>
+            <section id="bab-4" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 9 — Metode Pembayaran</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Transfer bank melalui jaringan perbankan terintegrasi.</li>
