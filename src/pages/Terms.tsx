@@ -75,8 +75,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB I — Definisi</h2>
+            <section id="bab-1" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 1 — Pengertian Umum</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li><strong className="text-foreground">Platform</strong> — layanan digital BUSHIDO GACHA yang dapat diakses melalui www.bushidogacha.com beserta seluruh subdomain, aplikasi, dan antarmuka terkait.</li>
