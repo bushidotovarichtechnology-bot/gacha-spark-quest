@@ -75,6 +75,58 @@ const tierLabelMap: Record<string, string> = {
 
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
+// Persisted draw-in-progress state — survives page refresh mid-animation so the
+// shake/glow/unbox animation and the resulting modals replay on next mount.
+// Keyed per user + campaign and TTL'd to avoid stale state.
+const DRAW_STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const drawStateKey = (userId: string, campaignId: string) =>
+  `bushido:draw-state:${userId}:${campaignId}`;
+
+interface PersistedDrawState {
+  drawCount: number;
+  drawnPrizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
+  hasPityReward: boolean;
+  pityPopup: { open: boolean; before: number; after: number; wasReset: boolean };
+  savedAt: number;
+}
+
+const readDrawState = (userId: string, campaignId: string): PersistedDrawState | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(drawStateKey(userId, campaignId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedDrawState;
+    if (!parsed.savedAt || Date.now() - parsed.savedAt > DRAW_STATE_TTL_MS) {
+      sessionStorage.removeItem(drawStateKey(userId, campaignId));
+      return null;
+    }
+    if (!Array.isArray(parsed.drawnPrizes) || parsed.drawnPrizes.length === 0) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeDrawState = (userId: string, campaignId: string, state: Omit<PersistedDrawState, "savedAt">) => {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      drawStateKey(userId, campaignId),
+      JSON.stringify({ ...state, savedAt: Date.now() }),
+    );
+  } catch {
+    // ignore quota / private mode
+  }
+};
+
+const clearDrawState = (userId: string, campaignId: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(drawStateKey(userId, campaignId));
+  } catch {
+    // ignore
+  }
+};
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
@@ -177,6 +229,23 @@ const CampaignDetail = () => {
   const pityThreshold = pitySettings?.threshold ?? 10;
   const pityGuaranteedTier = pitySettings?.guaranteed_tier ?? "A";
 
+  // Restore in-progress draw animation after page refresh.
+  // Runs once per (user, campaign) when both are known.
+  useEffect(() => {
+    if (!user || !campaignId) return;
+    // Don't clobber an active draw in this tab.
+    if (isDrawing || showResult) return;
+    const saved = readDrawState(user.id, campaignId);
+    if (!saved) return;
+    setDrawCount(saved.drawCount);
+    setDrawnPrizes(saved.drawnPrizes);
+    setHasPityReward(saved.hasPityReward);
+    setPityPopup(saved.pityPopup);
+    setPendingDrawComplete(true);
+    setIsDrawing(true); // replays the shake/glow/unbox animation
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, campaignId]);
+
   if (isLoading || !campaign) {
     return (
       <div className="min-h-screen">
@@ -266,12 +335,24 @@ const CampaignDetail = () => {
       setHasPityReward(!!data.has_pity_reward);
 
       // Compute pity meter change for popup
+      let nextPityPopup = { open: false, before: 0, after: 0, wasReset: false };
       if (pityEnabled) {
         const beforeVal = drawsSinceTierA;
         const hitSorA = serverResults.some((r) => r.tier === "S" || r.tier === "A");
         const nonRareCount = serverResults.filter((r) => r.tier !== "S" && r.tier !== "A").length;
         const afterVal = hitSorA ? 0 : Math.min(beforeVal + nonRareCount, pityThreshold);
-        setPityPopup({ open: false, before: beforeVal, after: afterVal, wasReset: hitSorA && beforeVal > 0 });
+        nextPityPopup = { open: false, before: beforeVal, after: afterVal, wasReset: hitSorA && beforeVal > 0 };
+        setPityPopup(nextPityPopup);
+      }
+
+      // Persist for refresh-recovery — replayed on next mount until modal closes.
+      if (user) {
+        writeDrawState(user.id, campaignId, {
+          drawCount: actualCount,
+          drawnPrizes: results,
+          hasPityReward: !!data.has_pity_reward,
+          pityPopup: nextPityPopup,
+        });
       }
 
       setPendingDrawComplete(true);
@@ -671,6 +752,8 @@ const CampaignDetail = () => {
         open={showResult}
         onClose={() => {
           setShowResult(false);
+          // Draw flow is complete — drop persisted recovery state.
+          if (user) clearDrawState(user.id, campaignId);
           // Show pity popup after reveal closes (only if meter changed or reset)
           if (pityEnabled && (pityPopup.after !== pityPopup.before || pityPopup.wasReset)) {
             setTimeout(() => setPityPopup((p) => ({ ...p, open: true })), 250);
