@@ -89,8 +89,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB II — Pendaftaran dan Akun Pengguna</h2>
+            <section id="bab-2" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 2 — Syarat Pendaftaran</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Pengguna telah berusia minimal 18 tahun atau memiliki persetujuan tertulis orang tua/wali yang sah.</li>
