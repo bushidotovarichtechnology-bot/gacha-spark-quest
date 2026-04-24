@@ -229,6 +229,23 @@ const CampaignDetail = () => {
   const pityThreshold = pitySettings?.threshold ?? 10;
   const pityGuaranteedTier = pitySettings?.guaranteed_tier ?? "A";
 
+  // Restore in-progress draw animation after page refresh.
+  // Runs once per (user, campaign) when both are known.
+  useEffect(() => {
+    if (!user || !campaignId) return;
+    // Don't clobber an active draw in this tab.
+    if (isDrawing || showResult) return;
+    const saved = readDrawState(user.id, campaignId);
+    if (!saved) return;
+    setDrawCount(saved.drawCount);
+    setDrawnPrizes(saved.drawnPrizes);
+    setHasPityReward(saved.hasPityReward);
+    setPityPopup(saved.pityPopup);
+    setPendingDrawComplete(true);
+    setIsDrawing(true); // replays the shake/glow/unbox animation
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, campaignId]);
+
   if (isLoading || !campaign) {
     return (
       <div className="min-h-screen">
