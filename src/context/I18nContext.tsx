@@ -214,6 +214,10 @@ const translations = {
     contactFailed: "Failed to send message",
     contactFieldRequired: "This field is required",
 
+    // Legal
+    termsAndConditions: "Terms & Conditions",
+    privacyPolicy: "Privacy Policy",
+
     // 404
     pageNotFound: "Oops! Page not found",
     returnHome: "Return to Home",
@@ -428,6 +432,10 @@ const translations = {
     contactSuccessDesc: "Terima kasih telah menghubungi kami. Kami akan segera membalas.",
     contactFailed: "Gagal mengirim pesan",
     contactFieldRequired: "Kolom ini wajib diisi",
+
+    // Legal
+    termsAndConditions: "Syarat & Ketentuan",
+    privacyPolicy: "Kebijakan Privasi",
 
     // 404
     pageNotFound: "Oops! Halaman tidak ditemukan",
