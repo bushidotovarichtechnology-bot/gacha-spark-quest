@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trop
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
+import PityMeterPopup from "@/components/PityMeterPopup";
 import DinoUnboxAnimation from "@/components/DinoUnboxAnimation";
 import PrizeImagePreview from "@/components/PrizeImagePreview";
 import { useGacha } from "@/context/GachaContext";
@@ -170,6 +171,7 @@ const CampaignDetail = () => {
   const [hasPityReward, setHasPityReward] = useState(false);
   const [pendingDrawComplete, setPendingDrawComplete] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
+  const [pityPopup, setPityPopup] = useState<{ open: boolean; before: number; after: number; wasReset: boolean }>({ open: false, before: 0, after: 0, wasReset: false });
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
@@ -262,6 +264,16 @@ const CampaignDetail = () => {
 
       setDrawnPrizes(results);
       setHasPityReward(!!data.has_pity_reward);
+
+      // Compute pity meter change for popup
+      if (pityEnabled) {
+        const beforeVal = drawsSinceTierA;
+        const hitSorA = serverResults.some((r) => r.tier === "S" || r.tier === "A");
+        const nonRareCount = serverResults.filter((r) => r.tier !== "S" && r.tier !== "A").length;
+        const afterVal = hitSorA ? 0 : Math.min(beforeVal + nonRareCount, pityThreshold);
+        setPityPopup({ open: false, before: beforeVal, after: afterVal, wasReset: hitSorA && beforeVal > 0 });
+      }
+
       setPendingDrawComplete(true);
     } catch (err) {
       console.error("Draw error:", err);
@@ -657,10 +669,26 @@ const CampaignDetail = () => {
 
       <PrizeRevealModal
         open={showResult}
-        onClose={() => setShowResult(false)}
+        onClose={() => {
+          setShowResult(false);
+          // Show pity popup after reveal closes (only if meter changed or reset)
+          if (pityEnabled && (pityPopup.after !== pityPopup.before || pityPopup.wasReset)) {
+            setTimeout(() => setPityPopup((p) => ({ ...p, open: true })), 250);
+          }
+        }}
         prizes={drawnPrizes}
         drawCount={drawCount}
         hasPityReward={hasPityReward}
+      />
+
+      <PityMeterPopup
+        open={pityPopup.open}
+        onClose={() => setPityPopup((p) => ({ ...p, open: false }))}
+        beforeValue={pityPopup.before}
+        afterValue={pityPopup.after}
+        threshold={pityThreshold}
+        guaranteedTier={pityGuaranteedTier}
+        wasReset={pityPopup.wasReset}
       />
 
       <PrizeImagePreview image={previewImage} onClose={() => setPreviewImage(null)} />
