@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { useEffect } from "react";
-import { render, act } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { resolveCanonicalCampaignPath } from "@/lib/campaignRedirect";
 
