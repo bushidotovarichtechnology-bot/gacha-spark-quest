@@ -107,7 +107,9 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
     if (coinsData) {
       setTotalCoins(coinsData.balance);
+      // Server is source of truth — overwrite local cache.
       setDrawsSinceTierA(coinsData.draws_since_tier_a);
+      writePersistedPity(user.id, coinsData.draws_since_tier_a);
       setFreeDraws((coinsData as any).free_draws ?? 0);
       setActiveDiscountPercent((coinsData as any).active_discount_percent ?? 0);
     }
@@ -146,6 +148,14 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    // Hydrate pity from localStorage immediately so the popup's "before" value
+    // and the campaign UI's progress bar are correct on first paint, even
+    // before the network round-trip resolves.
+    const cachedPity = readPersistedPity(user.id);
+    if (cachedPity !== null) {
+      setDrawsSinceTierA(cachedPity);
+    }
+
     const loadData = async () => {
       setLoading(true);
 
@@ -157,13 +167,16 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
 
       if (coinsData) {
         setTotalCoins(coinsData.balance);
+        // Re-sync from server — overwrite the localStorage cache.
         setDrawsSinceTierA(coinsData.draws_since_tier_a);
+        writePersistedPity(user.id, coinsData.draws_since_tier_a);
         setFreeDraws((coinsData as any).free_draws ?? 0);
         setActiveDiscountPercent((coinsData as any).active_discount_percent ?? 0);
       } else {
         await supabase.from("user_coins").insert({ user_id: user.id, balance: 0, draws_since_tier_a: 0 });
         setTotalCoins(0);
         setDrawsSinceTierA(0);
+        writePersistedPity(user.id, 0);
         setFreeDraws(0);
         setActiveDiscountPercent(0);
       }
