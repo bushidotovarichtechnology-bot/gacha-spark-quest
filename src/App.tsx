@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -64,6 +65,7 @@ const RouteFallback = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <HelmetProvider>
     <TooltipProvider>
       <I18nProvider>
       <AuthProvider>
@@ -76,7 +78,10 @@ const App = () => (
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/campaign/:id" element={<CampaignDetail />} />
+              {/* SEO-friendly slug route. Old ID-based URLs are also accepted
+                  here — CampaignDetail resolves either and 301-style redirects
+                  to the canonical slug. */}
+              <Route path="/campaign/:slug" element={<CampaignDetail />} />
               <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><DrawHistory /></ProtectedRoute>} />
               <Route path="/claims" element={<ProtectedRoute><ClaimHistory /></ProtectedRoute>} />
@@ -124,6 +129,7 @@ const App = () => (
       </AuthProvider>
       </I18nProvider>
     </TooltipProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 
