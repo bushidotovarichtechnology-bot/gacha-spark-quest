@@ -66,7 +66,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-1" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB I — Data Pribadi yang Kami Kumpulkan</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 1 — Kategori Data</h3>
 
@@ -96,7 +96,7 @@ const Privacy = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-2" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB II — Tujuan dan Dasar Hukum Pemrosesan</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 2 — Tujuan Penggunaan</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -119,7 +119,7 @@ const Privacy = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-3" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB III — Pengungkapan dan Berbagi Data</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 4 — Berbagi dengan Pihak Ketiga</h3>
               <p>Kami tidak menjual atau menyewakan data pribadi Anda. Kami dapat berbagi data dalam keadaan terbatas:</p>
@@ -137,7 +137,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-4" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB IV — Cookies dan Teknologi Pelacak</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 6 — Penggunaan Cookies</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -152,7 +152,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-5" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB V — Retensi dan Keamanan Data</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 7 — Jangka Waktu Penyimpanan</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -178,7 +178,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-6" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB VI — Hak-Hak Pengguna</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 10 — Hak Anda atas Data Pribadi</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -201,7 +201,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-7" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB VII — Privasi Anak</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 12 — Perlindungan Data Anak</h3>
               <p>
@@ -211,7 +211,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-8" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB VIII — Perubahan Kebijakan Privasi</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 13 — Pembaruan Kebijakan</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -221,7 +221,7 @@ const Privacy = () => {
               <p>Penggunaan Platform setelah tanggal efektif merupakan persetujuan terhadap kebijakan baru.</p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-9" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB IX — Hubungi Kami</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 14 — Pejabat Perlindungan Data (DPO)</h3>
               <ul className="list-disc space-y-1 pl-6">
