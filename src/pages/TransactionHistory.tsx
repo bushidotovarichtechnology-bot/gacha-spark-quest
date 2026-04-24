@@ -42,11 +42,11 @@ const formatRupiah2 = (value: number) =>
 
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string; label: string }> = {
-  settlement: { icon: CheckCircle, color: "text-green-500", label: "Berhasil" },
+  settlement: { icon: CheckCircle, color: "text-accent", label: "Berhasil" },
   pending: { icon: Clock, color: "text-yellow-500", label: "Menunggu" },
   expire: { icon: AlertCircle, color: "text-muted-foreground", label: "Kedaluwarsa" },
-  cancel: { icon: XCircle, color: "text-red-500", label: "Dibatalkan" },
-  deny: { icon: XCircle, color: "text-red-500", label: "Ditolak" },
+  cancel: { icon: XCircle, color: "text-destructive", label: "Dibatalkan" },
+  deny: { icon: XCircle, color: "text-destructive", label: "Ditolak" },
   refund: { icon: AlertCircle, color: "text-orange-500", label: "Refund" },
 };
 
@@ -543,7 +543,7 @@ const TransactionHistory = () => {
                           </p>
                         </div>
                         <div className="flex flex-col items-end whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 font-display text-sm font-bold text-green-500">
+                          <span className="inline-flex items-center gap-1 font-display text-sm font-bold text-accent">
                             <ArrowUpRight className="h-3.5 w-3.5" />
                             +{e.amount.toLocaleString()}
                           </span>
@@ -626,7 +626,7 @@ const TransactionHistory = () => {
                         </div>
                         <div className="flex flex-col items-end whitespace-nowrap">
                           {e.amount !== 0 ? (
-                            <span className="inline-flex items-center gap-1 font-display text-sm font-bold text-red-500">
+                            <span className="inline-flex items-center gap-1 font-display text-sm font-bold text-destructive">
                               <ArrowDownLeft className="h-3.5 w-3.5" />
                               {e.amount.toLocaleString()}
                             </span>
