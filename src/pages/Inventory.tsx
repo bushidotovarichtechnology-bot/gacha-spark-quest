@@ -51,6 +51,21 @@ const Inventory = () => {
     }
     return list;
   })();
+
+  // Group identical items: same prize + tier + campaign
+  const groupKey = (it: InventoryItem) => `${it.campaignId}|${it.tier}|${it.prize}`;
+  const groupedItems = (() => {
+    const map = new Map<string, InventoryItem[]>();
+    filteredItems.forEach((it) => {
+      const k = groupKey(it);
+      const arr = map.get(k);
+      if (arr) arr.push(it); else map.set(k, [it]);
+    });
+    return Array.from(map.entries()).map(([key, list]) => ({ key, list }));
+  })();
+  const activeGroup = groupModalKey
+    ? items.filter((i) => groupKey(i) === groupModalKey)
+    : [];
   const pityProgress = Math.min((drawsSinceTierA / pityThreshold) * 100, 100);
   const recyclableTiers = ["B", "C"];
   const claimableTiers = ["S", "A"];
