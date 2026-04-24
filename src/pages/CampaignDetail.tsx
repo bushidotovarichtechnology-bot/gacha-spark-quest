@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
 import PityMeterPopup from "@/components/PityMeterPopup";
-import DinoUnboxAnimation from "@/components/DinoUnboxAnimation";
+import DrawLoaderAnimation from "@/components/DrawLoaderAnimation";
 import PrizeImagePreview from "@/components/PrizeImagePreview";
 import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
@@ -840,8 +840,7 @@ const CampaignDetail = () => {
 
       <AnimatePresence>
         {isDrawing && (
-          <DinoUnboxAnimation
-            requiredTaps={drawCount > 1 ? 8 : 5}
+          <DrawLoaderAnimation
             drawCount={drawCount}
             tier={drawnPrizes.length > 0 ? (drawnPrizes[0].tier as "S" | "A" | "B" | "C") : "C"}
             prizeImage={drawnPrizes[0]?.image}
