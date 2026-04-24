@@ -131,6 +131,17 @@ const clearAllPersistedPity = () => {
   } catch {
     // ignore
   }
+  // Also rotate salts so a subsequent login in the same tab gets fresh keys.
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith(PITY_SALT_SS_PREFIX)) toRemove.push(k);
+    }
+    toRemove.forEach((k) => sessionStorage.removeItem(k));
+  } catch {
+    // ignore
+  }
 };
 const GachaContext = createContext<GachaState | null>(null);
 
