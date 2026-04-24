@@ -64,6 +64,11 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Hubungi Kami — Bushido Gacha"
+        description="Hubungi tim Bushido Gacha untuk pertanyaan, masukan, atau kerja sama. Platform gacha online Indonesia oleh PT. BUSHIDO TOVARICH TECHNOLOGY."
+        canonicalPath="/contact"
+      />
       <Navbar />
 
       <section className="relative overflow-hidden pt-24 pb-16">
