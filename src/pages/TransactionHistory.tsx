@@ -199,16 +199,29 @@ const TransactionHistory = () => {
       )
       .subscribe();
 
+    // Subscribe to ledger inserts (recycle, claim_shipping, topup) → keep section live
+    const ledgerChannel = supabase
+      .channel("user-coin-ledger")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "coin_ledger", filter: `user_id=eq.${user.id}` },
+        () => { fetchLedger(); }
+      )
+      .subscribe();
+
     // Auto-refresh every 30 seconds
     const autoRefreshInterval = setInterval(() => {
       fetchTransactions();
+      fetchLedger();
     }, 30000);
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(ledgerChannel);
       clearInterval(autoRefreshInterval);
     };
   }, [user, refreshCoins]);
+
 
   const handleRetry = async (tx: Transaction) => {
     if (!user) return;
