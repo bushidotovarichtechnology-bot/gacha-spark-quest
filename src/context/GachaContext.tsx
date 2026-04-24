@@ -244,6 +244,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
 
     const newDraws = (prize.tier === "S" || prize.tier === "A") ? 0 : drawsSinceTierA + 1;
     setDrawsSinceTierA(newDraws);
+    if (user) writePersistedPity(user.id, newDraws);
 
     // Server (secure_draw RPC) is the source of truth for inventory + coin balance.
     // This optimistic update will be reconciled by refreshInventory/refreshCoins.
