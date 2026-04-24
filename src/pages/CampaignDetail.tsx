@@ -128,8 +128,10 @@ const clearDrawState = (userId: string, campaignId: string) => {
   }
 };
 const CampaignDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const campaignId = id || "";
+  // Route is `/campaign/:slug` but we accept either a slug OR a legacy ID and
+  // redirect ID→slug. The param is named `slug` for clarity.
+  const { slug: routeParam } = useParams<{ slug: string }>();
+  const param = routeParam || "";
   const { totalCoins, drawsSinceTierA, freeDraws, activeDiscountPercent, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
@@ -148,15 +150,32 @@ const CampaignDetail = () => {
   });
 
   const { data: campaign, isLoading } = useQuery({
-    queryKey: ["campaign", campaignId, isAdmin],
-    enabled: !!campaignId && (user === null || isAdmin !== undefined),
+    queryKey: ["campaign", param, isAdmin],
+    enabled: !!param && (user === null || isAdmin !== undefined),
     queryFn: async () => {
+      // First, resolve campaign by slug. Falls back to id for legacy URLs.
+      const resolveCampaign = async () => {
+        const bySlug = await supabase.from("campaigns").select("*").eq("slug", param).maybeSingle();
+        if (bySlug.data) return bySlug.data;
+        const byId = await supabase.from("campaigns").select("*").eq("id", param).maybeSingle();
+        return byId.data || null;
+      };
+
+      const baseCampaign = await resolveCampaign();
+      if (!baseCampaign) throw new Error("campaign_not_found");
+
+      // 301-style redirect from id → canonical slug URL.
+      if (baseCampaign.slug && param !== baseCampaign.slug) {
+        navigate(`/campaign/${baseCampaign.slug}`, { replace: true });
+      }
+
+      const realId = baseCampaign.id;
+
       if (isAdmin) {
-        // Admin: full access via RLS — fetch real counts and weights
         const { data, error } = await supabase
           .from("campaigns")
           .select("*, campaign_tiers(*, tier_prizes(*))")
-          .eq("id", campaignId)
+          .eq("id", realId)
           .single();
         if (error) throw error;
         return data;
@@ -164,21 +183,18 @@ const CampaignDetail = () => {
 
       // Non-admin: use safe public views (no remaining/total/probability_weight)
       // and the per-prize availability RPC for sold-out flags.
-      const [campRes, tiersRes, availRes] = await Promise.all([
-        supabase.from("campaigns").select("*").eq("id", campaignId).single(),
+      const [tiersRes, availRes] = await Promise.all([
         supabase
           .from("campaign_tiers_public" as any)
           .select("*, tier_prizes_public(*)")
-          .eq("campaign_id", campaignId),
-        supabase.rpc("get_prize_availability" as any, { _campaign_id: campaignId }),
+          .eq("campaign_id", realId),
+        supabase.rpc("get_prize_availability" as any, { _campaign_id: realId }),
       ]);
-      if (campRes.error) throw campRes.error;
 
       const availMap = new Map<string, boolean>(
         (availRes.data || []).map((a: any) => [a.prize_id, a.is_sold_out])
       );
 
-      // Reshape to match the admin shape so downstream code keeps working.
       const campaign_tiers = (tiersRes.data || []).map((t: any) => ({
         id: t.id,
         campaign_id: t.campaign_id,
@@ -186,7 +202,6 @@ const CampaignDetail = () => {
         name: t.name,
         image_url: t.image_url,
         sort_order: t.sort_order,
-        // Stubbed: server is source of truth; UI must not rely on these for logic
         remaining: 1,
         total: 1,
         probability_weight: 1,
@@ -200,16 +215,18 @@ const CampaignDetail = () => {
           coin_value: p.coin_value,
           weight_grams: p.weight_grams,
           auto_refill: p.auto_refill,
-          // Coarse availability only: 1 if available, 0 if sold out
           remaining: availMap.get(p.id) ? 0 : 1,
           total: 1,
           probability_weight: 1,
         })),
       }));
 
-      return { ...campRes.data, campaign_tiers };
+      return { ...baseCampaign, campaign_tiers };
     },
   });
+
+  // Resolved internal id (for downstream RPCs, realtime channels, draws).
+  const campaignId = (campaign as any)?.id || "";
 
   const { data: pitySettings } = useQuery({
     queryKey: ["pity_settings", campaignId],
