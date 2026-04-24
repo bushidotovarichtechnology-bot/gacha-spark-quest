@@ -44,6 +44,47 @@ interface GachaState {
 const PITY_THRESHOLD = 10;
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
+// localStorage helpers — keyed per user so multiple accounts on same device don't collide.
+const PITY_LS_PREFIX = "bushido:pity:";
+const pityKey = (userId: string) => `${PITY_LS_PREFIX}${userId}`;
+
+const readPersistedPity = (userId: string): number | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(pityKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { value?: number };
+    if (typeof parsed.value === "number" && Number.isFinite(parsed.value)) {
+      return Math.max(0, Math.floor(parsed.value));
+    }
+  } catch {
+    // ignore corrupt entries
+  }
+  return null;
+};
+
+const writePersistedPity = (userId: string, value: number) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(pityKey(userId), JSON.stringify({ value, updatedAt: Date.now() }));
+  } catch {
+    // quota / private mode — ignore
+  }
+};
+
+const clearAllPersistedPity = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PITY_LS_PREFIX)) toRemove.push(k);
+    }
+    toRemove.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    // ignore
+  }
+};
 const GachaContext = createContext<GachaState | null>(null);
 
 export const useGacha = () => {
@@ -71,7 +112,9 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
     if (coinsData) {
       setTotalCoins(coinsData.balance);
+      // Server is source of truth — overwrite local cache.
       setDrawsSinceTierA(coinsData.draws_since_tier_a);
+      writePersistedPity(user.id, coinsData.draws_since_tier_a);
       setFreeDraws((coinsData as any).free_draws ?? 0);
       setActiveDiscountPercent((coinsData as any).active_discount_percent ?? 0);
     }
@@ -106,8 +149,17 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
       setDrawHistory([]);
       setFreeDraws(0);
       setActiveDiscountPercent(0);
+      clearAllPersistedPity();
       setLoading(false);
       return;
+    }
+
+    // Hydrate pity from localStorage immediately so the popup's "before" value
+    // and the campaign UI's progress bar are correct on first paint, even
+    // before the network round-trip resolves.
+    const cachedPity = readPersistedPity(user.id);
+    if (cachedPity !== null) {
+      setDrawsSinceTierA(cachedPity);
     }
 
     const loadData = async () => {
@@ -121,13 +173,16 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
 
       if (coinsData) {
         setTotalCoins(coinsData.balance);
+        // Re-sync from server — overwrite the localStorage cache.
         setDrawsSinceTierA(coinsData.draws_since_tier_a);
+        writePersistedPity(user.id, coinsData.draws_since_tier_a);
         setFreeDraws((coinsData as any).free_draws ?? 0);
         setActiveDiscountPercent((coinsData as any).active_discount_percent ?? 0);
       } else {
         await supabase.from("user_coins").insert({ user_id: user.id, balance: 0, draws_since_tier_a: 0 });
         setTotalCoins(0);
         setDrawsSinceTierA(0);
+        writePersistedPity(user.id, 0);
         setFreeDraws(0);
         setActiveDiscountPercent(0);
       }
@@ -195,6 +250,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
 
     const newDraws = (prize.tier === "S" || prize.tier === "A") ? 0 : drawsSinceTierA + 1;
     setDrawsSinceTierA(newDraws);
+    if (user) writePersistedPity(user.id, newDraws);
 
     // Server (secure_draw RPC) is the source of truth for inventory + coin balance.
     // This optimistic update will be reconciled by refreshInventory/refreshCoins.
