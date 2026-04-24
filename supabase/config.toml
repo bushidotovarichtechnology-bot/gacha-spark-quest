@@ -3,3 +3,6 @@ project_id = "eeyivrgpdbigxpgtujjy"
 [functions.midtrans-webhook]
 verify_jwt = false
 
+[functions.sitemap]
+verify_jwt = false
+
