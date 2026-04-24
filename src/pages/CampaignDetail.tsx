@@ -75,6 +75,58 @@ const tierLabelMap: Record<string, string> = {
 
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
+// Persisted draw-in-progress state — survives page refresh mid-animation so the
+// shake/glow/unbox animation and the resulting modals replay on next mount.
+// Keyed per user + campaign and TTL'd to avoid stale state.
+const DRAW_STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const drawStateKey = (userId: string, campaignId: string) =>
+  `bushido:draw-state:${userId}:${campaignId}`;
+
+interface PersistedDrawState {
+  drawCount: number;
+  drawnPrizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
+  hasPityReward: boolean;
+  pityPopup: { open: boolean; before: number; after: number; wasReset: boolean };
+  savedAt: number;
+}
+
+const readDrawState = (userId: string, campaignId: string): PersistedDrawState | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(drawStateKey(userId, campaignId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedDrawState;
+    if (!parsed.savedAt || Date.now() - parsed.savedAt > DRAW_STATE_TTL_MS) {
+      sessionStorage.removeItem(drawStateKey(userId, campaignId));
+      return null;
+    }
+    if (!Array.isArray(parsed.drawnPrizes) || parsed.drawnPrizes.length === 0) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeDrawState = (userId: string, campaignId: string, state: Omit<PersistedDrawState, "savedAt">) => {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      drawStateKey(userId, campaignId),
+      JSON.stringify({ ...state, savedAt: Date.now() }),
+    );
+  } catch {
+    // ignore quota / private mode
+  }
+};
+
+const clearDrawState = (userId: string, campaignId: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(drawStateKey(userId, campaignId));
+  } catch {
+    // ignore
+  }
+};
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const campaignId = id || "";
