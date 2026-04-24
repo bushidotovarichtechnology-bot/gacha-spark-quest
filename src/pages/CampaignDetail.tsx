@@ -335,12 +335,24 @@ const CampaignDetail = () => {
       setHasPityReward(!!data.has_pity_reward);
 
       // Compute pity meter change for popup
+      let nextPityPopup = { open: false, before: 0, after: 0, wasReset: false };
       if (pityEnabled) {
         const beforeVal = drawsSinceTierA;
         const hitSorA = serverResults.some((r) => r.tier === "S" || r.tier === "A");
         const nonRareCount = serverResults.filter((r) => r.tier !== "S" && r.tier !== "A").length;
         const afterVal = hitSorA ? 0 : Math.min(beforeVal + nonRareCount, pityThreshold);
-        setPityPopup({ open: false, before: beforeVal, after: afterVal, wasReset: hitSorA && beforeVal > 0 });
+        nextPityPopup = { open: false, before: beforeVal, after: afterVal, wasReset: hitSorA && beforeVal > 0 };
+        setPityPopup(nextPityPopup);
+      }
+
+      // Persist for refresh-recovery — replayed on next mount until modal closes.
+      if (user) {
+        writeDrawState(user.id, campaignId, {
+          drawCount: actualCount,
+          drawnPrizes: results,
+          hasPityReward: !!data.has_pity_reward,
+          pityPopup: nextPityPopup,
+        });
       }
 
       setPendingDrawComplete(true);
@@ -740,6 +752,8 @@ const CampaignDetail = () => {
         open={showResult}
         onClose={() => {
           setShowResult(false);
+          // Draw flow is complete — drop persisted recovery state.
+          if (user) clearDrawState(user.id, campaignId);
           // Show pity popup after reveal closes (only if meter changed or reset)
           if (pityEnabled && (pityPopup.after !== pityPopup.before || pityPopup.wasReset)) {
             setTimeout(() => setPityPopup((p) => ({ ...p, open: true })), 250);
