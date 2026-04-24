@@ -218,6 +218,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title={t("seoHomeTitle")}
+        description={t("seoHomeDesc")}
+        canonicalPath="/"
+        jsonLd={[organizationLd, softwareApplicationLd, websiteLd]}
+      />
       <Navbar />
       <HeroSection />
 
