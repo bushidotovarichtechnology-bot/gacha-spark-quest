@@ -42,13 +42,18 @@ const Terms = () => {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-6 md:mb-8">
+              <TableOfContents items={TOC} />
+            </div>
+          </div>
           <motion.article
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-border/50 bg-card p-6 leading-relaxed text-muted-foreground md:p-10"
+            className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-border/50 bg-card p-6 leading-relaxed text-muted-foreground md:p-10 scroll-mt-24"
           >
-            <section className="space-y-3">
+            <section id="pendahuluan" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">Pendahuluan</h2>
               <p>
                 Dokumen Syarat dan Ketentuan ini ("Perjanjian") merupakan perjanjian yang mengikat secara hukum antara Anda
