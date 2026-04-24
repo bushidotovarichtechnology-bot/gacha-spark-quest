@@ -15,7 +15,7 @@ const HeroSection = () => {
           <source srcSet="/hero-gacha.webp" type="image/webp" />
           <img
             src="/hero-gacha.jpg"
-            alt="Bushido Gacha"
+            alt="Banner Bushido Gacha — Platform gacha online Indonesia dengan sistem adil dan Pity System transparan"
             width={1280}
             height={720}
             loading="eager"
