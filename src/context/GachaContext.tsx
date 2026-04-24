@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -330,6 +331,14 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
           // Rollback on failure
           if (item) setItems((prev) => [item, ...prev]);
           setTotalCoins((prev) => prev - value);
+          const code = (error as any)?.message || "";
+          if (code.includes("unauthorized")) {
+            toast.error("Sesi Anda kedaluwarsa. Silakan login ulang.");
+          } else if (code.includes("item_not_found")) {
+            toast.error("Item tidak ditemukan atau sudah didaur ulang.");
+          } else {
+            toast.error("Gagal mendaur ulang item. Coba lagi.");
+          }
         }
       });
     }
