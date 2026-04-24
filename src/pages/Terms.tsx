@@ -190,8 +190,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB VI — Larangan dan Pembatasan Penggunaan</h2>
+            <section id="bab-6" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 14 — Tindakan yang Dilarang</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Menggunakan bot, script otomatis, crawler, atau perangkat lunak untuk akses tidak sah.</li>
