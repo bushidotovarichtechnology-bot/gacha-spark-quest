@@ -1,7 +1,21 @@
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import TableOfContents, { type TocItem } from "@/components/TableOfContents";
 import { useI18n } from "@/context/I18nContext";
+
+const TOC: TocItem[] = [
+  { id: "komitmen", label: "Komitmen Kami Terhadap Privasi Anda" },
+  { id: "bab-1", label: "BAB I — Data Pribadi yang Kami Kumpulkan" },
+  { id: "bab-2", label: "BAB II — Tujuan dan Dasar Hukum Pemrosesan" },
+  { id: "bab-3", label: "BAB III — Pengungkapan dan Berbagi Data" },
+  { id: "bab-4", label: "BAB IV — Cookies dan Teknologi Pelacak" },
+  { id: "bab-5", label: "BAB V — Retensi dan Keamanan Data" },
+  { id: "bab-6", label: "BAB VI — Hak-Hak Pengguna" },
+  { id: "bab-7", label: "BAB VII — Privasi Anak" },
+  { id: "bab-8", label: "BAB VIII — Perubahan Kebijakan Privasi" },
+  { id: "bab-9", label: "BAB IX — Hubungi Kami" },
+];
 
 const Privacy = () => {
   const { t } = useI18n();
@@ -27,13 +41,18 @@ const Privacy = () => {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-6 md:mb-8">
+              <TableOfContents items={TOC} />
+            </div>
+          </div>
           <motion.article
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-border/50 bg-card p-6 leading-relaxed text-muted-foreground md:p-10"
           >
-            <section className="space-y-3">
+            <section id="komitmen" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">Komitmen Kami Terhadap Privasi Anda</h2>
               <p>
                 PT Perorangan Bushido Gacha selaku pengelola Platform BUSHIDO GACHA ("kami") berkomitmen melindungi dan
