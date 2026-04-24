@@ -174,8 +174,7 @@ const Terms = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB V — Hak Kekayaan Intelektual</h2>
+            <section id="bab-5" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 12 — Kepemilikan</h3>
               <p>
                 Seluruh konten, desain, logo, merek dagang, kode perangkat lunak, basis data, dan materi lain pada Platform
