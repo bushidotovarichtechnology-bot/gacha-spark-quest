@@ -203,8 +203,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB VII — Penyelesaian Sengketa</h2>
+            <section id="bab-7" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 15 — Mekanisme Pengaduan</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Sampaikan pengaduan resmi melalui kanal dukungan pelanggan di Platform.</li>
@@ -225,8 +224,7 @@ const Terms = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB VIII — Ketentuan Penutup</h2>
+            <section id="bab-8" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 18 — Perubahan Syarat dan Ketentuan</h3>
               <p>
                 Perusahaan berhak mengubah Perjanjian ini sewaktu-waktu, diberitahukan via notifikasi pada Platform dan
