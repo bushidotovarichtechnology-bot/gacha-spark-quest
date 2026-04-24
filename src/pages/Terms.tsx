@@ -1,7 +1,20 @@
 import { motion } from "framer-motion";
 import { ScrollText } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import TableOfContents, { type TocItem } from "@/components/TableOfContents";
 import { useI18n } from "@/context/I18nContext";
+
+const TOC: TocItem[] = [
+  { id: "pendahuluan", label: "Pendahuluan" },
+  { id: "bab-1", label: "BAB I — Definisi" },
+  { id: "bab-2", label: "BAB II — Pendaftaran dan Akun Pengguna" },
+  { id: "bab-3", label: "BAB III — Mekanisme Gacha dan Hadiah" },
+  { id: "bab-4", label: "BAB IV — Transaksi dan Pembayaran" },
+  { id: "bab-5", label: "BAB V — Hak Kekayaan Intelektual" },
+  { id: "bab-6", label: "BAB VI — Larangan dan Pembatasan Penggunaan" },
+  { id: "bab-7", label: "BAB VII — Penyelesaian Sengketa" },
+  { id: "bab-8", label: "BAB VIII — Ketentuan Penutup" },
+];
 
 const Terms = () => {
   const { t } = useI18n();
