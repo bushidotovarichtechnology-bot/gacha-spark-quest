@@ -98,6 +98,8 @@ const TransactionHistory = () => {
   const { refreshCoins } = useGacha();
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [recycleEntries, setRecycleEntries] = useState<LedgerEntry[]>([]);
+  const [claimEntries, setClaimEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
@@ -118,13 +120,27 @@ const TransactionHistory = () => {
     }
   };
 
+  const fetchLedger = async () => {
+    const { data } = await supabase
+      .from("coin_ledger" as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (data) {
+      const entries = data as unknown as LedgerEntry[];
+      setRecycleEntries(entries.filter((e) => e.entry_type === "recycle"));
+      setClaimEntries(entries.filter((e) => e.entry_type === "claim_shipping"));
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchTransactions();
+    await Promise.all([fetchTransactions(), fetchLedger()]);
     refreshCoins?.();
     toast.success("Data transaksi diperbarui");
     setRefreshing(false);
   };
+
 
   useEffect(() => {
     if (!user) return;
