@@ -471,6 +471,28 @@ const translations = {
     contactFailed: "Gagal mengirim pesan",
     contactFieldRequired: "Kolom ini wajib diisi",
 
+    // SEO Homepage long-form copy
+    seoHomeTitle: "Bushido Gacha — Platform Gacha Online Indonesia Terpercaya",
+    seoHomeDesc: "Bushido Gacha adalah platform gacha online Indonesia terpercaya. Simulasi gacha terpercaya, sistem gacha adil, jaminan Pity System, dan transfer koin antar pemain.",
+    seoSectionWhyTitle: "Kenapa Bushido Gacha Jadi Platform Gacha Online Indonesia Terpercaya",
+    seoSectionWhyP1: "Bushido Gacha adalah platform gacha online yang dibangun oleh PT. BUSHIDO TOVARICH TECHNOLOGY untuk komunitas Indonesia yang ingin pengalaman simulasi gacha terpercaya. Setiap tarikan menggunakan sistem gacha adil dengan algoritma provably fair — peluang dipublikasikan, prize pool real-time, dan tidak ada manipulasi tersembunyi di balik layar.",
+    seoSectionWhyP2: "Berbeda dengan situs gacha biasa, pool kami terbatas. Begitu stok habis, kampanye ditutup — tidak ada loop tak terbatas, tidak ada ilusi prize yang dilebih-lebihkan. Inilah yang membuat Bushido Gacha jadi salah satu platform gacha online di Indonesia yang paling transparan saat ini.",
+    seoPityTitle: "Jaminan Pity System yang Transparan",
+    seoPityP1: "Kami paham frustrasi saat keberuntungan sedang tidak berpihak. Karena itu kami membangun Pity System yang menjamin kamu mendapat hadiah tier langka setelah sejumlah tarikan tertentu. Penghitung pity ditampilkan jelas di halaman inventori kamu — tanpa tebak-tebakan, tanpa janji palsu. Inilah komitmen kami pada sistem gacha adil yang membuat setiap pemain tetap di permainan.",
+    seoPityP2: "Saat pity meter penuh, tarikan berikutnya dijamin Tingkat A atau lebih tinggi. Setelah hadiah pity diklaim, meter direset secara transparan — sesuai aturan yang berlaku.",
+    seoCoinTransferTitle: "Fitur Sosial: Kirim Koin ke Player Lain",
+    seoCoinTransferP1: "Bushido Gacha bukan hanya pengalaman solo. Lewat fitur Coin Transfer peer-to-peer, kamu bisa mengirim Bushido Coin langsung ke teman — buat merayakan kemenangan, membantu rekan satu komunitas, atau ngadain event bareng.",
+    seoCoinTransferHowTitle: "Cara Kirim Koin ke Player Lain",
+    seoCoinTransferStep1: "Buka menu Kirim Koin dari halaman profil kamu.",
+    seoCoinTransferStep2: "Masukkan email penerima dan jumlah koin.",
+    seoCoinTransferStep3: "Konfirmasi transfer — koin langsung sampai ke dompet penerima secara instan.",
+    seoCoinTransferP2: "Setiap transfer tercatat di coin ledger sehingga pengirim dan penerima sama-sama punya catatan yang transparan.",
+    seoUspTitle: "Simulasi Gacha Terpercaya untuk Indonesia",
+    seoUspP1: "Mulai dari kampanye limited pool, prize pool real-time, hadiah Last-One eksklusif, redeem store berbasis ticket, hingga leaderboard komunitas — setiap fitur di Bushido Gacha dirancang supaya kamu merasakan pengalaman gacha yang jujur, seru, dan rewarding.",
+    seoUspP2: "Bergabung dengan ribuan pemain Indonesia yang sudah percaya Bushido Gacha sebagai platform gacha online andalan mereka. Coba keberuntunganmu hari ini dan rasakan bedanya sistem gacha adil yang sesungguhnya.",
+    seoSendCoins: "Kirim Koin",
+    seoLearnMore: "Pelajari Lebih Lanjut",
+
     // Legal
     termsAndConditions: "Syarat & Ketentuan",
     privacyPolicy: "Kebijakan Privasi",
