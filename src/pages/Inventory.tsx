@@ -418,6 +418,29 @@ const Inventory = () => {
         )}
       </div>
 
+      {/* Group detail modal */}
+      <AnimatePresence>
+        {groupModalKey && activeGroup.length > 0 && (
+          <InventoryGroupModal
+            items={activeGroup}
+            onClose={() => setGroupModalKey(null)}
+            onClaim={(it) => {
+              setGroupModalKey(null);
+              setClaimingItem(it);
+            }}
+            onRecycle={(ids) => {
+              let total = 0;
+              ids.forEach((id) => { total += recycleItem(id); });
+              toast.success(`${ids.length} unit didaur ulang`, {
+                description: `+${total.toLocaleString()} koin diterima`,
+                icon: <Coins className="h-4 w-4 text-accent" />,
+              });
+              setGroupModalKey(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Claim Prize Modal */}
       <AnimatePresence>
         {claimingItem && (
