@@ -48,12 +48,27 @@ const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 const PITY_LS_PREFIX = "bushido:pity:";
 const pityKey = (userId: string) => `${PITY_LS_PREFIX}${userId}`;
 
+// TTL: cached pity is considered stale after this duration. Server is the source
+// of truth and will overwrite within ~1 round-trip on hydrate, but the TTL
+// prevents misleading "before" values on shared devices when the cache is old.
+const PITY_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+
 const readPersistedPity = (userId: string): number | null => {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(pityKey(userId));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { value?: number };
+    const parsed = JSON.parse(raw) as { value?: number; updatedAt?: number };
+    const updatedAt = typeof parsed.updatedAt === "number" ? parsed.updatedAt : 0;
+    // Drop stale entries (and entries with no timestamp from older versions).
+    if (!updatedAt || Date.now() - updatedAt > PITY_TTL_MS) {
+      try {
+        localStorage.removeItem(pityKey(userId));
+      } catch {
+        // ignore
+      }
+      return null;
+    }
     if (typeof parsed.value === "number" && Number.isFinite(parsed.value)) {
       return Math.max(0, Math.floor(parsed.value));
     }
