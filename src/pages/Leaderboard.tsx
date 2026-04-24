@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import defaultAvatar from "@/assets/default-avatar.webp";
+import SEO from "@/components/SEO";
 
 interface Winner {
   draw_id: string;

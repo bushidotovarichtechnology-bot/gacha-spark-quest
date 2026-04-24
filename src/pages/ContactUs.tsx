@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import SEO from "@/components/SEO";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -63,6 +64,11 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Hubungi Kami — Bushido Gacha"
+        description="Hubungi tim Bushido Gacha untuk pertanyaan, masukan, atau kerja sama. Platform gacha online Indonesia oleh PT. BUSHIDO TOVARICH TECHNOLOGY."
+        canonicalPath="/contact"
+      />
       <Navbar />
 
       <section className="relative overflow-hidden pt-24 pb-16">

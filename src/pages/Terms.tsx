@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ScrollText } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import SEO from "@/components/SEO";
 import TableOfContents, { type TocItem } from "@/components/TableOfContents";
 import { useI18n } from "@/context/I18nContext";
 
@@ -21,6 +22,11 @@ const Terms = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Syarat & Ketentuan — Bushido Gacha"
+        description="Syarat dan ketentuan penggunaan Bushido Gacha — platform gacha online Indonesia. Pelajari aturan tarikan, transaksi, hadiah, dan kebijakan akun."
+        canonicalPath="/terms"
+      />
       <Navbar />
 
       <section className="relative overflow-hidden pt-24 pb-10">

@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Coins, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import SEO from "@/components/SEO";
 
 const Login = () => {
   const { t } = useI18n();
@@ -61,6 +62,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Masuk — Bushido Gacha" description="Masuk ke akun Bushido Gacha untuk mulai tarikan gacha, klaim hadiah, dan kirim koin ke teman." canonicalPath="/login" noindex />
       <Navbar />
       <div className="flex items-center justify-center px-4 pt-24 pb-12">
         <Card className="w-full max-w-md border-border/50 bg-card/80 backdrop-blur-xl">

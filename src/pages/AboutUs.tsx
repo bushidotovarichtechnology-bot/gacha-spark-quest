@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Shield, Target, Users, Sparkles, Globe, Swords } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import SEO from "@/components/SEO";
+import { organizationLd } from "@/lib/structuredData";
 import { useI18n } from "@/context/I18nContext";
 import { Link } from "react-router-dom";
 
@@ -16,6 +18,12 @@ const AboutUs = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Tentang PT. BUSHIDO TOVARICH TECHNOLOGY — Bushido Gacha"
+        description="PT. BUSHIDO TOVARICH TECHNOLOGY membangun Bushido Gacha — platform gacha online Indonesia dengan fokus Fair Play, Transparansi, dan Komunitas."
+        canonicalPath="/about"
+        jsonLd={organizationLd}
+      />
       <Navbar />
 
       {/* Hero */}

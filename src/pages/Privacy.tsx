@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import SEO from "@/components/SEO";
 import TableOfContents, { type TocItem } from "@/components/TableOfContents";
 import { useI18n } from "@/context/I18nContext";
 
@@ -22,6 +23,11 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Kebijakan Privasi — Bushido Gacha"
+        description="Kebijakan privasi Bushido Gacha. Pelajari bagaimana PT. BUSHIDO TOVARICH TECHNOLOGY mengumpulkan, menggunakan, dan melindungi data pribadi pengguna platform gacha online Indonesia."
+        canonicalPath="/privacy"
+      />
       <Navbar />
 
       <section className="relative overflow-hidden pt-24 pb-10">
