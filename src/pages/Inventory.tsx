@@ -8,6 +8,7 @@ import { useGacha, type InventoryItem } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 import ClaimPrizeForm from "@/components/ClaimPrizeForm";
+import InventoryGroupModal from "@/components/InventoryGroupModal";
 import { supabaseImg } from "@/lib/imageTransform";
 import {
   AlertDialog,
@@ -39,6 +40,7 @@ const Inventory = () => {
   const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC" | "selected">("C");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [groupModalKey, setGroupModalKey] = useState<string | null>(null);
 
   const filteredItems = (() => {
     let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
@@ -49,6 +51,21 @@ const Inventory = () => {
     }
     return list;
   })();
+
+  // Group identical items: same prize + tier + campaign
+  const groupKey = (it: InventoryItem) => `${it.campaignId}|${it.tier}|${it.prize}`;
+  const groupedItems = (() => {
+    const map = new Map<string, InventoryItem[]>();
+    filteredItems.forEach((it) => {
+      const k = groupKey(it);
+      const arr = map.get(k);
+      if (arr) arr.push(it); else map.set(k, [it]);
+    });
+    return Array.from(map.entries()).map(([key, list]) => ({ key, list }));
+  })();
+  const activeGroup = groupModalKey
+    ? items.filter((i) => groupKey(i) === groupModalKey)
+    : [];
   const pityProgress = Math.min((drawsSinceTierA / pityThreshold) * 100, 100);
   const recyclableTiers = ["B", "C"];
   const claimableTiers = ["S", "A"];
@@ -287,26 +304,49 @@ const Inventory = () => {
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:gap-4">
           <AnimatePresence mode="popLayout">
-            {filteredItems.map((item) => {
+            {groupedItems.map(({ key, list }) => {
+              const item = list[0];
               const meta = tierMeta[item.tier];
-              const canRecycle = recyclableTiers.includes(item.tier);
+              const count = list.length;
+              const totalCoinValue = list.reduce((s, i) => s + i.coinValue, 0);
               const timeAgo = (() => {
                 try { return formatDistanceToNow(new Date(item.wonAt), { addSuffix: true }); }
                 catch { return item.wonAt; }
               })();
-              const isSelected = selectedIds.has(item.id);
+              // Selection state for groups: count how many of this group are selected
+              const selectedInGroup = list.filter((i) => selectedIds.has(i.id)).length;
+              const allSelected = selectedInGroup === count;
+              const someSelected = selectedInGroup > 0 && !allSelected;
+
+              const handleGroupClick = () => {
+                if (selectMode) {
+                  // Toggle: if all selected -> unselect all; else select all
+                  setSelectedIds((prev) => {
+                    const next = new Set(prev);
+                    if (allSelected) {
+                      list.forEach((i) => next.delete(i.id));
+                    } else {
+                      list.forEach((i) => next.add(i.id));
+                    }
+                    return next;
+                  });
+                } else {
+                  setGroupModalKey(key);
+                }
+              };
+
               return (
                 <motion.div
-                  key={item.id}
+                  key={key}
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.25 }}
-                  className={`group overflow-hidden rounded-xl border bg-gradient-to-b ${meta.gradient} transition-all hover:border-primary/40 ${
-                    isSelected ? "border-accent ring-2 ring-accent/30" : "border-border/50"
-                  } ${selectMode ? "cursor-pointer" : ""}`}
-                  onClick={selectMode ? () => toggleSelect(item.id) : undefined}
+                  onClick={handleGroupClick}
+                  className={`group cursor-pointer overflow-hidden rounded-xl border bg-gradient-to-b ${meta.gradient} transition-all hover:border-primary/40 ${
+                    allSelected ? "border-accent ring-2 ring-accent/30" : someSelected ? "border-accent/60" : "border-border/50"
+                  }`}
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <img
@@ -314,7 +354,7 @@ const Inventory = () => {
                       alt={item.prize}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-contain opacity-60 transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-contain opacity-70 transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
                     <div className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 font-display text-xs font-black ${meta.color}`}>
@@ -326,11 +366,19 @@ const Inventory = () => {
                         <span className="text-[9px] font-bold text-primary-foreground">TIKET</span>
                       </div>
                     )}
+                    {/* Quantity badge */}
+                    {count > 1 && (
+                      <div className="absolute right-2 top-2 rounded-md bg-background/90 px-2 py-0.5 font-display text-xs font-bold text-foreground border border-border/50 shadow-sm">
+                        ×{count}
+                      </div>
+                    )}
                     {selectMode && (
-                      <div className="absolute right-2 top-2">
-                        {isSelected
+                      <div className="absolute right-2 bottom-2">
+                        {allSelected
                           ? <CheckSquare className="h-6 w-6 text-accent drop-shadow-md" />
-                          : <Square className="h-6 w-6 text-muted-foreground/60 drop-shadow-md" />
+                          : someSelected
+                            ? <CheckSquare className="h-6 w-6 text-accent/60 drop-shadow-md" />
+                            : <Square className="h-6 w-6 text-muted-foreground/60 drop-shadow-md" />
                         }
                       </div>
                     )}
@@ -340,31 +388,19 @@ const Inventory = () => {
                     <h3 className="mb-0.5 truncate font-display text-xs font-semibold text-foreground">
                       {item.prize}
                     </h3>
-                    <p className="mb-2 truncate text-[10px] text-muted-foreground">{item.campaign} · {timeAgo}</p>
-
-                    <div className="flex flex-col gap-1.5">
-                      {/* Claim button — available for all tiers */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setClaimingItem(item)}
-                        className="w-full gap-1.5 border-primary/50 text-xs hover:border-primary hover:text-primary"
-                      >
-                        <PackageCheck className="h-3 w-3" />
-                        {t("claimPrizeBtn")}
-                      </Button>
-                      {/* Recycle button — available for all tiers */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRecyclingItem(item)}
-                        className="w-full gap-1.5 border-border/50 text-xs hover:border-accent/50 hover:text-accent"
-                      >
-                        <Recycle className="h-3 w-3" />
-                        {t("recycle")} · +{item.coinValue}
-                        <Coins className="h-3 w-3 text-accent" />
-                      </Button>
+                    <p className="mb-2 truncate text-[10px] text-muted-foreground">
+                      {count > 1 ? `${count} unit · ` : ""}{item.campaign}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground">{timeAgo}</span>
+                      <span className="flex items-center gap-1 font-semibold text-accent">
+                        <Coins className="h-3 w-3" />
+                        {count > 1 ? `${totalCoinValue.toLocaleString()}` : item.coinValue.toLocaleString()}
+                      </span>
                     </div>
+                    <p className="mt-2 text-center text-[10px] font-medium text-primary/80">
+                      Klik untuk klaim / daur ulang
+                    </p>
                   </div>
                 </motion.div>
               );
@@ -381,6 +417,29 @@ const Inventory = () => {
           </div>
         )}
       </div>
+
+      {/* Group detail modal */}
+      <AnimatePresence>
+        {groupModalKey && activeGroup.length > 0 && (
+          <InventoryGroupModal
+            items={activeGroup}
+            onClose={() => setGroupModalKey(null)}
+            onClaim={(it) => {
+              setGroupModalKey(null);
+              setClaimingItem(it);
+            }}
+            onRecycle={(ids) => {
+              let total = 0;
+              ids.forEach((id) => { total += recycleItem(id); });
+              toast.success(`${ids.length} unit didaur ulang`, {
+                description: `+${total.toLocaleString()} koin diterima`,
+                icon: <Coins className="h-4 w-4 text-accent" />,
+              });
+              setGroupModalKey(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Claim Prize Modal */}
       <AnimatePresence>
