@@ -433,6 +433,29 @@ const CampaignDetail = () => {
 
   return (
     <div className="min-h-screen pb-28">
+      <SEO
+        title={`${campaign.title} — Bushido Gacha`}
+        description={(campaign.description || `Tarik gacha "${campaign.title}" di Bushido Gacha. Sistem adil, transparan, dengan jaminan Pity System.`).slice(0, 158)}
+        canonicalPath={`/campaign/${(campaign as any).slug || campaignId}`}
+        image={image}
+        type="product"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: campaign.title,
+          description: campaign.description || `Campaign gacha ${campaign.title} di Bushido Gacha`,
+          image: image,
+          brand: { "@type": "Brand", name: "Bushido Gacha" },
+          offers: {
+            "@type": "Offer",
+            price: campaign.price,
+            priceCurrency: "BCN",
+            availability: totalRemaining > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          },
+        }}
+      />
       <Navbar />
 
       {/* Hero banner */}
