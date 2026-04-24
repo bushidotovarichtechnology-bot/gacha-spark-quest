@@ -44,6 +44,42 @@ interface GachaState {
 const PITY_THRESHOLD = 10;
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
+// localStorage helpers — keyed per user so multiple accounts on same device don't collide.
+const PITY_LS_PREFIX = "bushido:pity:";
+const pityKey = (userId: string) => `${PITY_LS_PREFIX}${userId}`;
+
+const readPersistedPity = (userId: string): number | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(pityKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { value?: number };
+    if (typeof parsed.value === "number" && Number.isFinite(parsed.value)) {
+      return Math.max(0, Math.floor(parsed.value));
+    }
+  } catch {
+    // ignore corrupt entries
+  }
+  return null;
+};
+
+const writePersistedPity = (userId: string, value: number) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(pityKey(userId), JSON.stringify({ value, updatedAt: Date.now() }));
+  } catch {
+    // quota / private mode — ignore
+  }
+};
+
+const clearPersistedPity = (userId: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(pityKey(userId));
+  } catch {
+    // ignore
+  }
+};
 const GachaContext = createContext<GachaState | null>(null);
 
 export const useGacha = () => {
