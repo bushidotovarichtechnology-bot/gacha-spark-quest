@@ -1,7 +1,20 @@
 import { motion } from "framer-motion";
 import { ScrollText } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import TableOfContents, { type TocItem } from "@/components/TableOfContents";
 import { useI18n } from "@/context/I18nContext";
+
+const TOC: TocItem[] = [
+  { id: "pendahuluan", label: "Pendahuluan" },
+  { id: "bab-1", label: "BAB I — Definisi" },
+  { id: "bab-2", label: "BAB II — Pendaftaran dan Akun Pengguna" },
+  { id: "bab-3", label: "BAB III — Mekanisme Gacha dan Hadiah" },
+  { id: "bab-4", label: "BAB IV — Transaksi dan Pembayaran" },
+  { id: "bab-5", label: "BAB V — Hak Kekayaan Intelektual" },
+  { id: "bab-6", label: "BAB VI — Larangan dan Pembatasan Penggunaan" },
+  { id: "bab-7", label: "BAB VII — Penyelesaian Sengketa" },
+  { id: "bab-8", label: "BAB VIII — Ketentuan Penutup" },
+];
 
 const Terms = () => {
   const { t } = useI18n();
@@ -29,13 +42,18 @@ const Terms = () => {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-6 md:mb-8">
+              <TableOfContents items={TOC} />
+            </div>
+          </div>
           <motion.article
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-border/50 bg-card p-6 leading-relaxed text-muted-foreground md:p-10"
+            className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-border/50 bg-card p-6 leading-relaxed text-muted-foreground md:p-10 scroll-mt-24"
           >
-            <section className="space-y-3">
+            <section id="pendahuluan" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">Pendahuluan</h2>
               <p>
                 Dokumen Syarat dan Ketentuan ini ("Perjanjian") merupakan perjanjian yang mengikat secara hukum antara Anda
@@ -57,8 +75,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB I — Definisi</h2>
+            <section id="bab-1" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 1 — Pengertian Umum</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li><strong className="text-foreground">Platform</strong> — layanan digital BUSHIDO GACHA yang dapat diakses melalui www.bushidogacha.com beserta seluruh subdomain, aplikasi, dan antarmuka terkait.</li>
@@ -72,8 +89,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB II — Pendaftaran dan Akun Pengguna</h2>
+            <section id="bab-2" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 2 — Syarat Pendaftaran</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Pengguna telah berusia minimal 18 tahun atau memiliki persetujuan tertulis orang tua/wali yang sah.</li>
@@ -101,8 +117,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB III — Mekanisme Gacha dan Hadiah</h2>
+            <section id="bab-3" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 5 — Sistem Pull Gacha</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Setiap pull menukarkan kredit/token yang diperoleh secara sah.</li>
@@ -137,8 +152,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB IV — Transaksi dan Pembayaran</h2>
+            <section id="bab-4" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 9 — Metode Pembayaran</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Transfer bank melalui jaringan perbankan terintegrasi.</li>
@@ -160,8 +174,7 @@ const Terms = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB V — Hak Kekayaan Intelektual</h2>
+            <section id="bab-5" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 12 — Kepemilikan</h3>
               <p>
                 Seluruh konten, desain, logo, merek dagang, kode perangkat lunak, basis data, dan materi lain pada Platform
@@ -177,8 +190,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB VI — Larangan dan Pembatasan Penggunaan</h2>
+            <section id="bab-6" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 14 — Tindakan yang Dilarang</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Menggunakan bot, script otomatis, crawler, atau perangkat lunak untuk akses tidak sah.</li>
@@ -191,8 +203,7 @@ const Terms = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB VII — Penyelesaian Sengketa</h2>
+            <section id="bab-7" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 15 — Mekanisme Pengaduan</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Sampaikan pengaduan resmi melalui kanal dukungan pelanggan di Platform.</li>
@@ -213,8 +224,7 @@ const Terms = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
-              <h2 className="font-display text-xl font-bold text-foreground">BAB VIII — Ketentuan Penutup</h2>
+            <section id="bab-8" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 18 — Perubahan Syarat dan Ketentuan</h3>
               <p>
                 Perusahaan berhak mengubah Perjanjian ini sewaktu-waktu, diberitahukan via notifikasi pada Platform dan

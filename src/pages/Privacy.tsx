@@ -1,7 +1,21 @@
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import TableOfContents, { type TocItem } from "@/components/TableOfContents";
 import { useI18n } from "@/context/I18nContext";
+
+const TOC: TocItem[] = [
+  { id: "komitmen", label: "Komitmen Kami Terhadap Privasi Anda" },
+  { id: "bab-1", label: "BAB I — Data Pribadi yang Kami Kumpulkan" },
+  { id: "bab-2", label: "BAB II — Tujuan dan Dasar Hukum Pemrosesan" },
+  { id: "bab-3", label: "BAB III — Pengungkapan dan Berbagi Data" },
+  { id: "bab-4", label: "BAB IV — Cookies dan Teknologi Pelacak" },
+  { id: "bab-5", label: "BAB V — Retensi dan Keamanan Data" },
+  { id: "bab-6", label: "BAB VI — Hak-Hak Pengguna" },
+  { id: "bab-7", label: "BAB VII — Privasi Anak" },
+  { id: "bab-8", label: "BAB VIII — Perubahan Kebijakan Privasi" },
+  { id: "bab-9", label: "BAB IX — Hubungi Kami" },
+];
 
 const Privacy = () => {
   const { t } = useI18n();
@@ -27,13 +41,18 @@ const Privacy = () => {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-6 md:mb-8">
+              <TableOfContents items={TOC} />
+            </div>
+          </div>
           <motion.article
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-border/50 bg-card p-6 leading-relaxed text-muted-foreground md:p-10"
           >
-            <section className="space-y-3">
+            <section id="komitmen" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">Komitmen Kami Terhadap Privasi Anda</h2>
               <p>
                 PT Perorangan Bushido Gacha selaku pengelola Platform BUSHIDO GACHA ("kami") berkomitmen melindungi dan
@@ -47,7 +66,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-1" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB I — Data Pribadi yang Kami Kumpulkan</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 1 — Kategori Data</h3>
 
@@ -77,7 +96,7 @@ const Privacy = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-2" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB II — Tujuan dan Dasar Hukum Pemrosesan</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 2 — Tujuan Penggunaan</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -100,7 +119,7 @@ const Privacy = () => {
               </ul>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-3" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB III — Pengungkapan dan Berbagi Data</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 4 — Berbagi dengan Pihak Ketiga</h3>
               <p>Kami tidak menjual atau menyewakan data pribadi Anda. Kami dapat berbagi data dalam keadaan terbatas:</p>
@@ -118,7 +137,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-4" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB IV — Cookies dan Teknologi Pelacak</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 6 — Penggunaan Cookies</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -133,7 +152,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-5" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB V — Retensi dan Keamanan Data</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 7 — Jangka Waktu Penyimpanan</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -159,7 +178,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-6" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB VI — Hak-Hak Pengguna</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 10 — Hak Anda atas Data Pribadi</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -182,7 +201,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-7" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB VII — Privasi Anak</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 12 — Perlindungan Data Anak</h3>
               <p>
@@ -192,7 +211,7 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-8" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB VIII — Perubahan Kebijakan Privasi</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 13 — Pembaruan Kebijakan</h3>
               <ul className="list-disc space-y-1 pl-6">
@@ -202,7 +221,7 @@ const Privacy = () => {
               <p>Penggunaan Platform setelah tanggal efektif merupakan persetujuan terhadap kebijakan baru.</p>
             </section>
 
-            <section className="space-y-3">
+            <section id="bab-9" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">BAB IX — Hubungi Kami</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 14 — Pejabat Perlindungan Data (DPO)</h3>
               <ul className="list-disc space-y-1 pl-6">
