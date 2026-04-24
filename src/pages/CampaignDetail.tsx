@@ -819,6 +819,23 @@ const CampaignDetail = () => {
           </p>
         </motion.div>
         )}
+
+        {/* SEO-friendly Pity System explainer (crawlable HTML) */}
+        <section className="mt-8 rounded-xl border border-border/50 bg-card/50 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-accent" />
+            <h2 className="font-display text-base font-bold text-foreground">
+              Simulasi Gacha Transparan & Jaminan Pity System
+            </h2>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Setiap tarikan di campaign <strong className="text-foreground">{campaign.title}</strong> menggunakan
+            algoritma <em>provably fair</em> di sisi server Bushido Gacha. Peluang tiap tier ditampilkan terbuka,
+            dan <strong className="text-foreground">Jaminan Pity System</strong> memastikan kamu mendapat hadiah
+            langka setelah {pityThreshold} tarikan tanpa rare. Tidak ada manipulasi tersembunyi — sistem gacha
+            adil untuk semua pemain.
+          </p>
+        </section>
       </div>
 
       <AnimatePresence>
