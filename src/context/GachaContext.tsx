@@ -80,6 +80,20 @@ const clearPersistedPity = (userId: string) => {
     // ignore
   }
 };
+
+const clearAllPersistedPity = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PITY_LS_PREFIX)) toRemove.push(k);
+    }
+    toRemove.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    // ignore
+  }
+};
 const GachaContext = createContext<GachaState | null>(null);
 
 export const useGacha = () => {
@@ -144,6 +158,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
       setDrawHistory([]);
       setFreeDraws(0);
       setActiveDiscountPercent(0);
+      clearAllPersistedPity();
       setLoading(false);
       return;
     }
