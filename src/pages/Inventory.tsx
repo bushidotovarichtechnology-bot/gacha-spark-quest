@@ -40,6 +40,7 @@ const Inventory = () => {
   const [bulkRecycleTier, setBulkRecycleTier] = useState<"B" | "C" | "BC" | "selected">("C");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [groupModalKey, setGroupModalKey] = useState<string | null>(null);
 
   const filteredItems = (() => {
     let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
