@@ -94,6 +94,7 @@ export type Database = {
           is_active: boolean
           is_hot: boolean
           price: number
+          slug: string
           sort_order: number
           subcategory_id: string | null
           title: string
@@ -107,6 +108,7 @@ export type Database = {
           is_active?: boolean
           is_hot?: boolean
           price?: number
+          slug: string
           sort_order?: number
           subcategory_id?: string | null
           title: string
@@ -120,6 +122,7 @@ export type Database = {
           is_active?: boolean
           is_hot?: boolean
           price?: number
+          slug?: string
           sort_order?: number
           subcategory_id?: string | null
           title?: string
@@ -1333,6 +1336,7 @@ export type Database = {
         Args: { _campaign_id: string; _draw_count: number }
         Returns: Json
       }
+      slugify: { Args: { _input: string }; Returns: string }
       transfer_gift_coins: {
         Args: { _amount: number; _receiver_id: string }
         Returns: Json

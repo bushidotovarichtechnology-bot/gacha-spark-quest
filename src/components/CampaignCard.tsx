@@ -6,6 +6,7 @@ import { obfuscateStock } from "@/lib/obfuscateStock";
 
 interface CampaignCardProps {
   id: string;
+  slug?: string;
   title: string;
   image: string;
   price: number;
@@ -14,7 +15,7 @@ interface CampaignCardProps {
   hot?: boolean;
 }
 
-const CampaignCard = ({ id, title, image, price, remaining, total, hot }: CampaignCardProps) => {
+const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: CampaignCardProps) => {
   const { t } = useI18n();
   const obf = obfuscateStock(remaining, total);
   const percentage = obf.percentage;
@@ -40,7 +41,7 @@ const CampaignCard = ({ id, title, image, price, remaining, total, hot }: Campai
     : undefined;
 
   return (
-    <Link to={`/campaign/${id}`} className="group block transition-transform duration-300 hover:-translate-y-1">
+    <Link to={`/campaign/${slug || id}`} className="group block transition-transform duration-300 hover:-translate-y-1">
       <div className={`gradient-card overflow-hidden rounded-xl border transition-all duration-300 ${isSoldOut ? "border-border/30 opacity-60 grayscale" : flash ? "border-accent/80 box-glow-gold" : "border-border/50 group-hover:border-primary/50 group-hover:box-glow-purple"}`}>
         <div className="relative aspect-square overflow-hidden">
           <img

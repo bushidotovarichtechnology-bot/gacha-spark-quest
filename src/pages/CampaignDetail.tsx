@@ -2,9 +2,10 @@ import { useState, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trophy, Ban } from "lucide-react";
+import { ArrowLeft, Sparkles, Zap, Crown, Star, Gift, Award, Ticket, Coins, Trophy, Ban, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import SEO from "@/components/SEO";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
 import PityMeterPopup from "@/components/PityMeterPopup";
 import DinoUnboxAnimation from "@/components/DinoUnboxAnimation";
@@ -128,8 +129,10 @@ const clearDrawState = (userId: string, campaignId: string) => {
   }
 };
 const CampaignDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const campaignId = id || "";
+  // Route is `/campaign/:slug` but we accept either a slug OR a legacy ID and
+  // redirect ID→slug. The param is named `slug` for clarity.
+  const { slug: routeParam } = useParams<{ slug: string }>();
+  const param = routeParam || "";
   const { totalCoins, drawsSinceTierA, freeDraws, activeDiscountPercent, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
@@ -148,15 +151,32 @@ const CampaignDetail = () => {
   });
 
   const { data: campaign, isLoading } = useQuery({
-    queryKey: ["campaign", campaignId, isAdmin],
-    enabled: !!campaignId && (user === null || isAdmin !== undefined),
+    queryKey: ["campaign", param, isAdmin],
+    enabled: !!param && (user === null || isAdmin !== undefined),
     queryFn: async () => {
+      // First, resolve campaign by slug. Falls back to id for legacy URLs.
+      const resolveCampaign = async () => {
+        const bySlug = await supabase.from("campaigns").select("*").eq("slug", param).maybeSingle();
+        if (bySlug.data) return bySlug.data;
+        const byId = await supabase.from("campaigns").select("*").eq("id", param).maybeSingle();
+        return byId.data || null;
+      };
+
+      const baseCampaign = await resolveCampaign();
+      if (!baseCampaign) throw new Error("campaign_not_found");
+
+      // 301-style redirect from id → canonical slug URL.
+      if (baseCampaign.slug && param !== baseCampaign.slug) {
+        navigate(`/campaign/${baseCampaign.slug}`, { replace: true });
+      }
+
+      const realId = baseCampaign.id;
+
       if (isAdmin) {
-        // Admin: full access via RLS — fetch real counts and weights
         const { data, error } = await supabase
           .from("campaigns")
           .select("*, campaign_tiers(*, tier_prizes(*))")
-          .eq("id", campaignId)
+          .eq("id", realId)
           .single();
         if (error) throw error;
         return data;
@@ -164,21 +184,18 @@ const CampaignDetail = () => {
 
       // Non-admin: use safe public views (no remaining/total/probability_weight)
       // and the per-prize availability RPC for sold-out flags.
-      const [campRes, tiersRes, availRes] = await Promise.all([
-        supabase.from("campaigns").select("*").eq("id", campaignId).single(),
+      const [tiersRes, availRes] = await Promise.all([
         supabase
           .from("campaign_tiers_public" as any)
           .select("*, tier_prizes_public(*)")
-          .eq("campaign_id", campaignId),
-        supabase.rpc("get_prize_availability" as any, { _campaign_id: campaignId }),
+          .eq("campaign_id", realId),
+        supabase.rpc("get_prize_availability" as any, { _campaign_id: realId }),
       ]);
-      if (campRes.error) throw campRes.error;
 
       const availMap = new Map<string, boolean>(
         (availRes.data || []).map((a: any) => [a.prize_id, a.is_sold_out])
       );
 
-      // Reshape to match the admin shape so downstream code keeps working.
       const campaign_tiers = (tiersRes.data || []).map((t: any) => ({
         id: t.id,
         campaign_id: t.campaign_id,
@@ -186,7 +203,6 @@ const CampaignDetail = () => {
         name: t.name,
         image_url: t.image_url,
         sort_order: t.sort_order,
-        // Stubbed: server is source of truth; UI must not rely on these for logic
         remaining: 1,
         total: 1,
         probability_weight: 1,
@@ -200,16 +216,18 @@ const CampaignDetail = () => {
           coin_value: p.coin_value,
           weight_grams: p.weight_grams,
           auto_refill: p.auto_refill,
-          // Coarse availability only: 1 if available, 0 if sold out
           remaining: availMap.get(p.id) ? 0 : 1,
           total: 1,
           probability_weight: 1,
         })),
       }));
 
-      return { ...campRes.data, campaign_tiers };
+      return { ...baseCampaign, campaign_tiers };
     },
   });
+
+  // Resolved internal id (for downstream RPCs, realtime channels, draws).
+  const campaignId = (campaign as any)?.id || "";
 
   const { data: pitySettings } = useQuery({
     queryKey: ["pity_settings", campaignId],
@@ -415,6 +433,29 @@ const CampaignDetail = () => {
 
   return (
     <div className="min-h-screen pb-28">
+      <SEO
+        title={`${campaign.title} — Bushido Gacha`}
+        description={(campaign.description || `Tarik gacha "${campaign.title}" di Bushido Gacha. Sistem adil, transparan, dengan jaminan Pity System.`).slice(0, 158)}
+        canonicalPath={`/campaign/${(campaign as any).slug || campaignId}`}
+        image={image}
+        type="product"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: campaign.title,
+          description: campaign.description || `Campaign gacha ${campaign.title} di Bushido Gacha`,
+          image: image,
+          brand: { "@type": "Brand", name: "Bushido Gacha" },
+          offers: {
+            "@type": "Offer",
+            price: campaign.price,
+            priceCurrency: "BCN",
+            availability: totalRemaining > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          },
+        }}
+      />
       <Navbar />
 
       {/* Hero banner */}
@@ -778,6 +819,23 @@ const CampaignDetail = () => {
           </p>
         </motion.div>
         )}
+
+        {/* SEO-friendly Pity System explainer (crawlable HTML) */}
+        <section className="mt-8 rounded-xl border border-border/50 bg-card/50 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-accent" />
+            <h2 className="font-display text-base font-bold text-foreground">
+              Simulasi Gacha Transparan & Jaminan Pity System
+            </h2>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Setiap tarikan di campaign <strong className="text-foreground">{campaign.title}</strong> menggunakan
+            algoritma <em>provably fair</em> di sisi server Bushido Gacha. Peluang tiap tier ditampilkan terbuka,
+            dan <strong className="text-foreground">Jaminan Pity System</strong> memastikan kamu mendapat hadiah
+            langka setelah {pityThreshold} tarikan tanpa rare. Tidak ada manipulasi tersembunyi — sistem gacha
+            adil untuk semua pemain.
+          </p>
+        </section>
       </div>
 
       <AnimatePresence>
