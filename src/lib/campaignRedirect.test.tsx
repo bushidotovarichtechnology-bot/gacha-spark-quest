@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { useEffect } from "react";
+import { render, act } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { resolveCanonicalCampaignPath } from "@/lib/campaignRedirect";
 
@@ -62,7 +63,9 @@ const TestRedirector = ({
   const { slug: routeParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const canonical = resolveCanonicalCampaignPath(routeParam, campaign);
-  if (canonical) navigate(canonical, { replace: true });
+  useEffect(() => {
+    if (canonical) navigate(canonical, { replace: true });
+  }, [canonical, navigate]);
   return <div data-testid="route-param">{routeParam ?? ""}</div>;
 };
 
