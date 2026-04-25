@@ -215,9 +215,8 @@ const AdminPromoBanners = () => {
             <SortableContext items={banners.map((b) => b.id)} strategy={rectSortingStrategy}>
               <div className="grid gap-4 md:grid-cols-2">
                 {banners.map((b) => (
-                  <SortableItem key={b.id} id={b.id} showHandle={false} className="block">
-                    <Card className="relative overflow-hidden">
-                      <SortableHandle id={b.id} />
+                  <SortableItem key={b.id} id={b.id} className="block">
+                    <Card className="overflow-hidden">
                       <div className="aspect-[16/7] bg-muted">
                         {b.image_url ? (
                           <img src={b.image_url} alt={b.title} className="h-full w-full object-cover" />
