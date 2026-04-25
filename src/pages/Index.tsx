@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import PromoCarousel from "@/components/PromoCarousel";
 import CampaignCard from "@/components/CampaignCard";
 import SEO from "@/components/SEO";
 import { organizationLd, softwareApplicationLd, websiteLd } from "@/lib/structuredData";
@@ -220,6 +221,7 @@ const Index = () => {
       />
       <Navbar />
       <HeroSection />
+      <PromoCarousel />
 
       <section className="border-y border-border/50 bg-secondary/30">
         <div className="container mx-auto grid grid-cols-2 gap-4 px-4 py-8 md:grid-cols-4">

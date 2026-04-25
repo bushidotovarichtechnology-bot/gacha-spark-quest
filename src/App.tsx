@@ -56,6 +56,7 @@ const AdminGachaLogs = lazy(() => import("./pages/admin/AdminGachaLogs.tsx"));
 const AdminStockAudit = lazy(() => import("./pages/admin/AdminStockAudit.tsx"));
 const AdminPaymentSettings = lazy(() => import("./pages/admin/AdminPaymentSettings.tsx"));
 const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance.tsx"));
+const AdminPromoBanners = lazy(() => import("./pages/admin/AdminPromoBanners.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -119,6 +120,7 @@ const App = () => (
                 <Route path="stock-audit" element={<AdminStockAudit />} />
                 <Route path="payment-settings" element={<AdminPaymentSettings />} />
                 <Route path="maintenance" element={<AdminMaintenance />} />
+                <Route path="promo-banners" element={<AdminPromoBanners />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
