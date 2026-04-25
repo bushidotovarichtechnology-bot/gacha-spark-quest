@@ -172,22 +172,12 @@ const Index = () => {
         const { data: summaries } = await supabase.rpc("get_campaign_stock_summary" as any, {
           _campaign_ids: campaignIds,
         });
-        // Aggregate per-campaign. We approximate "remaining" from the bucket
-        // label (for the progress bar) — exact value never leaves the server.
-        const bucketToApprox = (b: string): number => {
-          if (b === "0") return 0;
-          if (b === "<5") return 3;
-          if (b === "5+") return 7;
-          if (b === "10+") return 17;
-          if (b === "25+") return 37;
-          if (b === "50+") return 75;
-          const n = parseInt(b, 10);
-          return Number.isFinite(n) ? n + 25 : 0;
-        };
+        // Server now returns exact remaining counts as strings; parse directly.
         (summaries || []).forEach((s: any) => {
           const acc = stockByCampaign[s.campaign_id] ||
             (stockByCampaign[s.campaign_id] = { remaining: 0, total: 0, isSoldOut: true });
-          acc.remaining += bucketToApprox(s.remaining_bucket);
+          const r = parseInt(String(s.remaining_bucket ?? "0"), 10);
+          acc.remaining += Number.isFinite(r) ? r : 0;
           acc.total += s.total_bucket || 0;
           if (!s.is_sold_out) acc.isSoldOut = false;
         });
