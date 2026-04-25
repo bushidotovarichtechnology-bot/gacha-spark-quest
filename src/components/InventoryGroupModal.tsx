@@ -27,6 +27,8 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
   const sample = items[0];
   const meta = tierMeta[sample.tier] ?? tierMeta.C;
   const unitCoin = sample.coinValue;
+  const digitalUnits = items.filter((i) => !!i.digitalCode);
+  const isDigital = digitalUnits.length > 0;
 
   const setSafeQty = (n: number) => setQty(Math.max(1, Math.min(total, n)));
 
