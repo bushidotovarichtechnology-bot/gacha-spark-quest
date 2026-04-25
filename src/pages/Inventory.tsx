@@ -48,7 +48,10 @@ const Inventory = () => {
   const [groupModalKey, setGroupModalKey] = useState<string | null>(null);
 
   const filteredItems = (() => {
-    let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
+    let list: InventoryItem[];
+    if (filter === "all") list = [...items];
+    else if (filter === "digital") list = items.filter((i) => !!i.digitalCode);
+    else list = items.filter((i) => i.tier === filter);
     switch (sortBy) {
       case "coin_high": list.sort((a, b) => b.coinValue - a.coinValue); break;
       case "coin_low": list.sort((a, b) => a.coinValue - b.coinValue); break;
