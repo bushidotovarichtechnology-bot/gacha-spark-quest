@@ -26,6 +26,7 @@ interface Props {
 const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
   const total = items.length;
   const [qty, setQty] = useState(1);
+  const [copiedAll, setCopiedAll] = useState(false);
   const sample = items[0];
   const meta = tierMeta[sample.tier] ?? tierMeta.C;
   const unitCoin = sample.coinValue;
@@ -41,6 +42,18 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
 
   const handleClaimOne = () => {
     onClaim(items[0]);
+  };
+
+  const handleCopyAll = async () => {
+    try {
+      const text = digitalUnits.map((u, idx) => `Unit #${idx + 1}: ${u.digitalCode}`).join("\n");
+      await navigator.clipboard.writeText(text);
+      setCopiedAll(true);
+      toast.success(`${digitalUnits.length} kode disalin ke clipboard!`);
+      setTimeout(() => setCopiedAll(false), 2000);
+    } catch {
+      toast.error("Gagal menyalin kode");
+    }
   };
 
   return (
