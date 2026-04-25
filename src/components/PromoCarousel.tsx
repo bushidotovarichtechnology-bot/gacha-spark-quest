@@ -47,21 +47,76 @@ const PromoCarousel = () => {
 
   if (banners.length === 0) return null;
 
+  const renderCTA = (b: PromoBanner) => {
+    if (!b.cta_label) return null;
+    const className =
+      "mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.03] active:scale-95 sm:text-sm";
+    const content = (
+      <>
+        {b.cta_label}
+        <ArrowRight className="h-3.5 w-3.5" />
+      </>
+    );
+    const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+    if (!b.link_url) {
+      return <span className={className}>{content}</span>;
+    }
+    if (isExternal(b.link_url)) {
+      return (
+        <a href={b.link_url} target="_blank" rel="noopener noreferrer" onClick={stop} className={className}>
+          {content}
+        </a>
+      );
+    }
+    return (
+      <Link to={b.link_url} onClick={stop} className={className}>
+        {content}
+      </Link>
+    );
+  };
+
   const renderSlide = (b: PromoBanner) => {
-    const inner = (
+    const hasOverlay = b.title || b.subtitle || b.cta_label;
+    const ariaLabel = b.title || b.cta_label || "Promo";
+
+    const imageEl = (
+      <img
+        src={b.image_url}
+        alt={b.title || "Promo banner"}
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-cover"
+      />
+    );
+
+    let imageLayer: React.ReactNode = imageEl;
+    if (b.link_url) {
+      imageLayer = isExternal(b.link_url) ? (
+        <a
+          href={b.link_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={ariaLabel}
+          className="absolute inset-0"
+        >
+          {imageEl}
+        </a>
+      ) : (
+        <Link to={b.link_url} aria-label={ariaLabel} className="absolute inset-0">
+          {imageEl}
+        </Link>
+      );
+    }
+
+    return (
       <div className="relative h-full w-full overflow-hidden rounded-2xl border border-border/50 bg-card">
-        <img
-          src={b.image_url}
-          alt={b.title || "Promo banner"}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover"
-        />
-        {(b.title || b.subtitle || b.cta_label) && (
-          <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-transparent" />
+        <div className="absolute inset-0">{imageLayer}</div>
+        {hasOverlay && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-transparent" />
         )}
-        {(b.title || b.subtitle || b.cta_label) && (
-          <div className="absolute inset-y-0 left-0 flex max-w-md flex-col justify-center gap-2 p-5 sm:gap-3 sm:p-8">
+        {hasOverlay && (
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex max-w-md flex-col justify-center gap-2 p-5 sm:gap-3 sm:p-8">
             {b.title && (
               <h3 className="font-display text-lg font-bold leading-tight text-foreground sm:text-2xl md:text-3xl">
                 {b.title}
@@ -72,31 +127,11 @@ const PromoCarousel = () => {
                 {b.subtitle}
               </p>
             )}
-            {b.cta_label && (
-              <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground sm:text-sm">
-                {b.cta_label}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </span>
-            )}
+            {/* CTA harus interaktif walau berada di overlay non-interaktif */}
+            <div className="pointer-events-auto">{renderCTA(b)}</div>
           </div>
         )}
       </div>
-    );
-
-    if (!b.link_url) {
-      return <div className="block h-full w-full">{inner}</div>;
-    }
-    if (isExternal(b.link_url)) {
-      return (
-        <a href={b.link_url} target="_blank" rel="noopener noreferrer" className="block h-full w-full">
-          {inner}
-        </a>
-      );
-    }
-    return (
-      <Link to={b.link_url} className="block h-full w-full">
-        {inner}
-      </Link>
     );
   };
 
