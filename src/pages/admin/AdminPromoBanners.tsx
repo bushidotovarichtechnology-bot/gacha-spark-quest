@@ -157,7 +157,28 @@ const AdminPromoBanners = () => {
     fetchBanners();
   };
 
-  return (
+  const { sensors, collisionDetection, reorder } = useSortableList();
+
+  const onDragEnd = async (event: DragEndEvent) => {
+    const next = reorder(banners, event);
+    if (!next) return;
+    const previous = banners;
+    // Optimistic UI: assign new sort_order by index
+    const updated = next.map((b, i) => ({ ...b, sort_order: i }));
+    setBanners(updated);
+    // Persist only changed rows
+    const changes = updated.filter((b, i) => previous.find((p) => p.id === b.id)?.sort_order !== i);
+    const results = await Promise.all(
+      changes.map((b) => supabase.from("promo_banners").update({ sort_order: b.sort_order }).eq("id", b.id)),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      toast.error("Gagal menyimpan urutan");
+      setBanners(previous);
+    } else if (changes.length > 0) {
+      toast.success("Urutan diperbarui");
+    }
+  };
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
