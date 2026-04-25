@@ -16,12 +16,19 @@ interface Props {
 
 const DigitalCodeCard = ({ code, label, compact = false, showHeader = true, unitLabel }: Props) => {
   const [copied, setCopied] = useState(false);
+  const [everCopied, setEverCopied] = useState(() => isCodeCopied(code));
+
+  useEffect(() => {
+    setEverCopied(isCodeCopied(code));
+    return subscribeCopiedCodes(() => setEverCopied(isCodeCopied(code)));
+  }, [code]);
 
   const handleCopy = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
+      markCodeCopied(code);
       toast.success(
         unitLabel ? `${unitLabel} disalin!` : "Kode disalin ke clipboard!",
         { description: code, duration: 2000 },
@@ -31,6 +38,8 @@ const DigitalCodeCard = ({ code, label, compact = false, showHeader = true, unit
       toast.error("Gagal menyalin kode");
     }
   };
+
+  const showAccent = copied || everCopied;
 
   return (
     <div
