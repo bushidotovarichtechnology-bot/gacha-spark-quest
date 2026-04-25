@@ -43,21 +43,27 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization") || "";
-    const userClient = createClient(SUPA_URL, ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    const user = userData?.user;
-    if (!user) {
+    // Internal seeding tool: gated on shared secret (LOVABLE_API_KEY) OR admin JWT.
+    const seedToken = req.headers.get("x-seed-token") || "";
+    let authorized = !!seedToken && seedToken === LOVABLE_KEY;
+    if (!authorized) {
+      const authHeader = req.headers.get("Authorization") || "";
+      const userClient = createClient(SUPA_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData } = await userClient.auth.getUser();
+      const user = userData?.user;
+      if (user) {
+        const adminCheck = createClient(SUPA_URL, SERVICE_KEY);
+        const { data: roleRow } = await adminCheck
+          .from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+        if (roleRow) authorized = true;
+      }
+    }
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const admin = createClient(SUPA_URL, SERVICE_KEY);
-    const { data: roleRow } = await admin
-      .from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-    if (!roleRow) {
-      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
 
     const body = await req.json().catch(() => ({} as any));
     const startSort = Number(body.start_sort ?? 1001);
