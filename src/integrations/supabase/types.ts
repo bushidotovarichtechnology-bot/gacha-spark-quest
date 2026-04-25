@@ -398,6 +398,54 @@ export type Database = {
         }
         Relationships: []
       }
+      digital_codes: {
+        Row: {
+          assigned_at: string | null
+          assigned_to_inventory_id: string | null
+          assigned_to_user_id: string | null
+          code: string
+          created_at: string
+          id: string
+          prize_id: string
+          status: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to_inventory_id?: string | null
+          assigned_to_user_id?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          prize_id: string
+          status?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to_inventory_id?: string | null
+          assigned_to_user_id?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          prize_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_codes_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "tier_prizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_codes_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "tier_prizes_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       draws: {
         Row: {
           campaign_id: string
@@ -880,6 +928,7 @@ export type Database = {
           description: string
           id: string
           image_url: string
+          is_digital: boolean
           name: string
           probability_weight: number
           remaining: number
@@ -895,6 +944,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string
+          is_digital?: boolean
           name: string
           probability_weight?: number
           remaining?: number
@@ -910,6 +960,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string
+          is_digital?: boolean
           name?: string
           probability_weight?: number
           remaining?: number
@@ -1031,6 +1082,7 @@ export type Database = {
           campaign_name: string
           coin_value: number
           created_at: string
+          digital_code: string | null
           id: string
           image_url: string
           prize_name: string
@@ -1043,6 +1095,7 @@ export type Database = {
           campaign_name?: string
           coin_value?: number
           created_at?: string
+          digital_code?: string | null
           id?: string
           image_url?: string
           prize_name: string
@@ -1055,6 +1108,7 @@ export type Database = {
           campaign_name?: string
           coin_value?: number
           created_at?: string
+          digital_code?: string | null
           id?: string
           image_url?: string
           prize_name?: string
@@ -1243,8 +1297,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_get_digital_code_stats: {
+        Args: { _prize_id: string }
+        Returns: Json
+      }
       admin_set_user_banned: {
         Args: { _banned: boolean; _reason?: string; _user_id: string }
+        Returns: Json
+      }
+      admin_upload_digital_codes: {
+        Args: { _codes: string[]; _prize_id: string }
         Returns: Json
       }
       expire_pending_transactions: { Args: never; Returns: number }
