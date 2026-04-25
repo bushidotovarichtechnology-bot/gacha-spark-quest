@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Recycle, PackageCheck, Coins, Minus, Plus, Crown, Star, Gift, Award, KeyRound } from "lucide-react";
+import { X, Recycle, PackageCheck, Coins, Minus, Plus, Crown, Star, Gift, Award, KeyRound, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabaseImg } from "@/lib/imageTransform";
 import DigitalCodeCard from "@/components/DigitalCodeCard";
+import DigitalBadge from "@/components/DigitalBadge";
 import type { InventoryItem } from "@/context/GachaContext";
 
 
