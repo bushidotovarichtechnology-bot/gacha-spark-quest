@@ -57,92 +57,165 @@ function SortablePrizeRow({
     async (cropped) => handlePrizeImageUpload(p.id, cropped),
   );
 
+  const [showDigital, setShowDigital] = useState(false);
+  const [bulkCodes, setBulkCodes] = useState("");
+  const [codeStats, setCodeStats] = useState<{ available: number; assigned: number } | null>(null);
+  const { toast } = useToast();
+
+  const loadStats = async () => {
+    const { data, error } = await supabase.rpc("admin_get_digital_code_stats" as any, { _prize_id: p.id });
+    if (!error && data) setCodeStats(data as any);
+  };
+
+  const handleUploadCodes = async () => {
+    const codes = bulkCodes.split(/\r?\n/).map((c) => c.trim()).filter(Boolean);
+    if (codes.length === 0) { toast({ title: "Tidak ada kode untuk diupload" }); return; }
+    const { data, error } = await supabase.rpc("admin_upload_digital_codes" as any, { _prize_id: p.id, _codes: codes });
+    if (error) { toast({ title: "Gagal upload kode", description: error.message, variant: "destructive" }); return; }
+    const r = data as any;
+    toast({ title: "Kode diupload", description: `${r.inserted} ditambahkan, ${r.skipped_duplicates} duplikat dilewati` });
+    setBulkCodes("");
+    loadStats();
+  };
+
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 rounded bg-secondary/50 px-2 py-1">
-      <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground">
-        <GripVertical className="h-3.5 w-3.5" />
-      </button>
-      {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-contain bg-secondary/40 p-0.5" />}
-      <div className="flex-1 space-y-1">
-        <Input
-          className="h-6 text-xs"
-          value={p.name}
-          onChange={async (e) => {
-            await supabase.from("tier_prizes").update({ name: e.target.value }).eq("id", p.id);
-            onRefresh();
-          }}
-          placeholder="Nama prize"
-        />
-        <Input
-          className="h-6 text-xs"
-          value={p.description ?? ""}
-          onChange={async (e) => {
-            await supabase.from("tier_prizes").update({ description: e.target.value }).eq("id", p.id);
-            onRefresh();
-          }}
-          placeholder="Deskripsi/spesifikasi prize"
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <label className="text-[10px] text-muted-foreground">Koin</label>
-        <NumberInput className="h-6 w-24 text-xs" suffix="koin" value={(p as any).coin_value ?? 0} onValueChange={async (val) => {
-          await supabase.from("tier_prizes").update({ coin_value: val } as any).eq("id", p.id);
-          onRefresh();
-        }} placeholder="0" title="Nilai daur ulang (koin)" />
-      </div>
-      <div className="flex items-center gap-1">
-        <label className="text-[10px] text-muted-foreground">Berat</label>
-        <NumberInput
-          min={1}
-          className="h-6 w-24 text-xs"
-          suffix="g"
-          value={(p as any).weight_grams ?? 1000}
-          onValueChange={async (val) => {
-            await supabase.from("tier_prizes").update({ weight_grams: val } as any).eq("id", p.id);
-            onRefresh();
-          }}
-          placeholder="1000"
-          title="Berat paket dalam gram (referensi internal)"
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <label className="text-[10px] text-muted-foreground">Rem</label>
-        <NumberInput className="h-6 w-16 text-xs" value={p.remaining} onValueChange={async (val) => {
-          await supabase.from("tier_prizes").update({ remaining: val }).eq("id", p.id);
-          onRefresh();
-        }} />
-        <span className="text-[10px] text-muted-foreground">/</span>
-        <NumberInput className="h-6 w-16 text-xs" value={p.total} onValueChange={async (val) => {
-          await supabase.from("tier_prizes").update({ total: val }).eq("id", p.id);
-          onRefresh();
-        }} />
-      </div>
-      <label className="flex items-center gap-1 cursor-pointer" title="Auto Refill: stok otomatis terisi ulang saat habis">
-        <input
-          type="checkbox"
-          checked={p.auto_refill}
-          onChange={async (e) => {
-            await supabase.from("tier_prizes").update({ auto_refill: e.target.checked }).eq("id", p.id);
-            onRefresh();
-          }}
-          className="h-3 w-3 rounded border-input accent-primary"
-        />
-        <span className="text-[10px] text-muted-foreground whitespace-nowrap">Refill</span>
-      </label>
-      <label className="flex h-6 w-6 cursor-pointer items-center justify-center rounded hover:bg-accent" title="Upload gambar hadiah">
-        <Upload className="h-3 w-3 text-muted-foreground" />
-        <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) pickFile(file);
-          e.target.value = "";
-        }} />
-      </label>
-      {dialog}
-      <ConfirmDelete title="Hapus Hadiah?" description={`Hadiah "${p.name}" akan dihapus dari tier ini.`} onConfirm={() => onDeletePrize(p.id)}>
-        <button className="text-destructive hover:text-destructive/80">
-          <Trash2 className="h-3 w-3" />
+    <div ref={setNodeRef} style={style} className="rounded bg-secondary/50 px-2 py-1 space-y-1">
+      <div className="flex items-center gap-2">
+        <button {...attributes} {...listeners} className="cursor-grab touch-none text-muted-foreground hover:text-foreground">
+          <GripVertical className="h-3.5 w-3.5" />
         </button>
-      </ConfirmDelete>
+        {p.image_url && <img src={p.image_url} alt={p.name} className="h-8 w-8 rounded object-contain bg-secondary/40 p-0.5" />}
+        <div className="flex-1 space-y-1">
+          <Input
+            className="h-6 text-xs"
+            value={p.name}
+            onChange={async (e) => {
+              await supabase.from("tier_prizes").update({ name: e.target.value }).eq("id", p.id);
+              onRefresh();
+            }}
+            placeholder="Nama prize"
+          />
+          <Input
+            className="h-6 text-xs"
+            value={p.description ?? ""}
+            onChange={async (e) => {
+              await supabase.from("tier_prizes").update({ description: e.target.value }).eq("id", p.id);
+              onRefresh();
+            }}
+            placeholder="Deskripsi/spesifikasi prize"
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <label className="text-[10px] text-muted-foreground">Koin</label>
+          <NumberInput className="h-6 w-24 text-xs" suffix="koin" value={(p as any).coin_value ?? 0} onValueChange={async (val) => {
+            await supabase.from("tier_prizes").update({ coin_value: val } as any).eq("id", p.id);
+            onRefresh();
+          }} placeholder="0" title="Nilai daur ulang (koin)" />
+        </div>
+        <div className="flex items-center gap-1">
+          <label className="text-[10px] text-muted-foreground">Berat</label>
+          <NumberInput
+            min={1}
+            className="h-6 w-24 text-xs"
+            suffix="g"
+            value={(p as any).weight_grams ?? 1000}
+            onValueChange={async (val) => {
+              await supabase.from("tier_prizes").update({ weight_grams: val } as any).eq("id", p.id);
+              onRefresh();
+            }}
+            placeholder="1000"
+            title="Berat paket dalam gram (referensi internal)"
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <label className="text-[10px] text-muted-foreground">Rem</label>
+          <NumberInput className="h-6 w-16 text-xs" value={p.remaining} onValueChange={async (val) => {
+            await supabase.from("tier_prizes").update({ remaining: val }).eq("id", p.id);
+            onRefresh();
+          }} />
+          <span className="text-[10px] text-muted-foreground">/</span>
+          <NumberInput className="h-6 w-16 text-xs" value={p.total} onValueChange={async (val) => {
+            await supabase.from("tier_prizes").update({ total: val }).eq("id", p.id);
+            onRefresh();
+          }} />
+        </div>
+        <label className="flex items-center gap-1 cursor-pointer" title="Auto Refill: stok otomatis terisi ulang saat habis">
+          <input
+            type="checkbox"
+            checked={p.auto_refill}
+            onChange={async (e) => {
+              await supabase.from("tier_prizes").update({ auto_refill: e.target.checked }).eq("id", p.id);
+              onRefresh();
+            }}
+            className="h-3 w-3 rounded border-input accent-primary"
+          />
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap">Refill</span>
+        </label>
+        <label className="flex items-center gap-1 cursor-pointer" title="Hadiah Digital: pemenang langsung dapat kode voucher dari pool">
+          <input
+            type="checkbox"
+            checked={(p as any).is_digital ?? false}
+            onChange={async (e) => {
+              await supabase.from("tier_prizes").update({ is_digital: e.target.checked } as any).eq("id", p.id);
+              if (e.target.checked) { setShowDigital(true); loadStats(); }
+              onRefresh();
+            }}
+            className="h-3 w-3 rounded border-input accent-primary"
+          />
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap">Digital</span>
+        </label>
+        {(p as any).is_digital && (
+          <button
+            type="button"
+            onClick={() => { const next = !showDigital; setShowDigital(next); if (next) loadStats(); }}
+            className="flex items-center gap-1 text-[10px] text-primary hover:underline"
+            title="Kelola kode voucher"
+          >
+            <KeyRound className="h-3 w-3" /> Kode
+          </button>
+        )}
+        <label className="flex h-6 w-6 cursor-pointer items-center justify-center rounded hover:bg-accent" title="Upload gambar hadiah">
+          <Upload className="h-3 w-3 text-muted-foreground" />
+          <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) pickFile(file);
+            e.target.value = "";
+          }} />
+        </label>
+        {dialog}
+        <ConfirmDelete title="Hapus Hadiah?" description={`Hadiah "${p.name}" akan dihapus dari tier ini.`} onConfirm={() => onDeletePrize(p.id)}>
+          <button className="text-destructive hover:text-destructive/80">
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </ConfirmDelete>
+      </div>
+      {(p as any).is_digital && showDigital && (
+        <div className="rounded border border-primary/30 bg-primary/5 p-2 space-y-2">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-semibold text-primary flex items-center gap-1"><KeyRound className="h-3 w-3" /> Pool Kode Voucher</span>
+            {codeStats && (
+              <span className="text-muted-foreground">
+                Tersedia: <span className="font-bold text-foreground">{codeStats.available}</span> · Terpakai: <span className="font-bold text-foreground">{codeStats.assigned}</span>
+              </span>
+            )}
+          </div>
+          <Textarea
+            className="min-h-[80px] text-xs font-mono"
+            placeholder="Tempel kode di sini, satu kode per baris..."
+            value={bulkCodes}
+            onChange={(e) => setBulkCodes(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <Button type="button" size="sm" onClick={handleUploadCodes} disabled={!bulkCodes.trim()}>
+              <Plus className="h-3 w-3 mr-1" /> Upload Kode
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={loadStats}>Refresh Stok</Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Saat user gacha & menang hadiah ini, sistem otomatis assign 1 kode ke pemenang. Jika pool kosong, hadiah ini tidak akan keluar.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
