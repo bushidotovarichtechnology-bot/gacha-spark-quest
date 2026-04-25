@@ -1,5 +1,14 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useMemo, memo } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+
+// Detect low-end devices once (hardware concurrency, deviceMemory, or reduced motion)
+const detectLowEnd = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+  const cores = navigator.hardwareConcurrency ?? 8;
+  // @ts-expect-error - deviceMemory is non-standard but widely supported
+  const memory = navigator.deviceMemory ?? 8;
+  return cores <= 4 || memory <= 4;
+};
 
 interface DinoUnboxAnimationProps {
   /** Total taps required to open the box */
@@ -128,7 +137,7 @@ const createDinoSVG = (colorMain: string, colorDark: string, isBiting: boolean) 
   );
 };
 
-const GiftBox = ({ damage, colors }: { damage: number; colors: { main: string; light: string; ribbon: string } }) => {
+const GiftBox = memo(({ damage, colors }: { damage: number; colors: { main: string; light: string; ribbon: string } }) => {
   const crackOpacity = Math.min(damage / 3, 1);
   const shakeIntensity = damage > 0 ? 2 : 0;
 
@@ -183,9 +192,10 @@ const GiftBox = ({ damage, colors }: { damage: number; colors: { main: string; l
       )}
     </motion.svg>
   );
-};
+});
+GiftBox.displayName = "GiftBox";
 
-const Particle = ({ delay, x, y, color }: { delay: number; x: number; y: number; color?: string }) => (
+const Particle = memo(({ delay, x, y, color }: { delay: number; x: number; y: number; color?: string }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
     animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0], x, y }}
@@ -193,17 +203,19 @@ const Particle = ({ delay, x, y, color }: { delay: number; x: number; y: number;
     className="absolute w-2 h-2 rounded-sm"
     style={{ imageRendering: "pixelated", backgroundColor: color || "hsl(var(--accent))" }}
   />
-);
+));
+Particle.displayName = "Particle";
 
-const ExplosionParticle = ({ x, y, size, color, delay }: { x: number; y: number; size: number; color: string; delay: number }) => (
+const ExplosionParticle = memo(({ x, y, size, color, delay }: { x: number; y: number; size: number; color: string; delay: number }) => (
   <motion.div
     initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-    animate={{ opacity: 0, scale: [1, 1.5, 0], x, y, rotate: Math.random() * 360 }}
-    transition={{ duration: 0.6 + Math.random() * 0.4, delay, ease: "easeOut" }}
+    animate={{ opacity: 0, scale: [1, 1.5, 0], x, y, rotate: 180 }}
+    transition={{ duration: 0.7, delay, ease: "easeOut" }}
     className="absolute rounded-sm"
     style={{ width: size, height: size, backgroundColor: color, imageRendering: "pixelated" }}
   />
-);
+));
+ExplosionParticle.displayName = "ExplosionParticle";
 
 const FlashOverlay = ({ color = "hsl(var(--accent))" }: { color?: string }) => (
   <motion.div
@@ -273,18 +285,23 @@ const DinoUnboxAnimation = ({
   const [showFlash, setShowFlash] = useState(false);
   const [screenShake, setScreenShake] = useState(0);
 
+  const prefersReducedMotion = useReducedMotion();
+  const isLowEnd = useMemo(() => detectLowEnd(), []);
+  // Performance scale: 0.4 for reduced-motion, 0.6 for low-end, 1 for normal
+  const perfScale = prefersReducedMotion ? 0.4 : isLowEnd ? 0.6 : 1;
+
   const config = TIER_CONFIG[tier] || TIER_CONFIG.C;
   const progress = Math.min(taps / requiredTaps, 1);
   const damage = Math.min(Math.floor((taps / requiredTaps) * 5), 5);
 
-  // Generate explosion particles on complete
+  // Generate explosion particles on complete (count scaled by device perf)
   const explosionParticles = useMemo(() => {
     if (!completed) return [];
-    return Array.from({ length: config.explosionCount }, (_, i) => {
-      const angle = (i / config.explosionCount) * Math.PI * 2;
-      // Rare tiers have wider explosion range
-      const dist = config.isRare 
-        ? 80 + Math.random() * 150 
+    const count = Math.max(8, Math.floor(config.explosionCount * perfScale));
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const dist = config.isRare
+        ? 80 + Math.random() * 150
         : 60 + Math.random() * 100;
       return {
         id: i,
@@ -295,21 +312,24 @@ const DinoUnboxAnimation = ({
         delay: Math.random() * (config.isRare ? 0.2 : 0.15),
       };
     });
-  }, [completed, config]);
+  }, [completed, config, perfScale]);
 
   const handleTap = useCallback(() => {
     if (completed) return;
 
     setIsBiting(true);
     setTaps((prev) => prev + 1);
-    
-    // Screen shake intensity increases with damage and tier rarity
-    const shakeAmount = (2 + damage * 1.5) * config.screenShakeMultiplier;
-    setScreenShake(shakeAmount);
-    setTimeout(() => setScreenShake(0), 150);
 
-    // Spawn particles with tier-specific colors
-    const particleCount = config.isRare ? 6 + damage * 2 : 4 + damage;
+    // Skip screen shake on low-end / reduced-motion
+    if (!prefersReducedMotion && !isLowEnd) {
+      const shakeAmount = (2 + damage * 1.5) * config.screenShakeMultiplier;
+      setScreenShake(shakeAmount);
+      setTimeout(() => setScreenShake(0), 150);
+    }
+
+    // Spawn particles with tier-specific colors (scaled)
+    const baseCount = config.isRare ? 6 + damage * 2 : 4 + damage;
+    const particleCount = Math.max(2, Math.floor(baseCount * perfScale));
     const newParticles = Array.from({ length: particleCount }, (_, i) => ({
       id: Date.now() + i,
       x: (Math.random() - 0.5) * (80 + damage * 20) * config.screenShakeMultiplier,
@@ -320,7 +340,7 @@ const DinoUnboxAnimation = ({
 
     setTimeout(() => setIsBiting(false), 200);
     setTimeout(() => setParticles((prev) => prev.filter((p) => !newParticles.find((n) => n.id === p.id))), 600);
-  }, [completed, damage, config]);
+  }, [completed, damage, config, perfScale, prefersReducedMotion, isLowEnd]);
 
   useEffect(() => {
     if (taps >= requiredTaps && !completed) {
