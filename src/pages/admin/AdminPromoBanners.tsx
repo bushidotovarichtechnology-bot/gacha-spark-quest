@@ -11,6 +11,10 @@ import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { toast } from "sonner";
 import { Plus, Pencil, Image as ImageIcon, Loader2, Megaphone, ExternalLink, Trash2 } from "lucide-react";
 import { useImageCrop } from "@/hooks/use-image-crop";
+import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableItem } from "@/components/admin/SortableItem";
+import { useSortableList } from "@/hooks/use-sortable-list";
 
 interface PromoBanner {
   id: string;
@@ -153,6 +157,29 @@ const AdminPromoBanners = () => {
     fetchBanners();
   };
 
+  const { sensors, collisionDetection, reorder } = useSortableList();
+
+  const onDragEnd = async (event: DragEndEvent) => {
+    const next = reorder(banners, event);
+    if (!next) return;
+    const previous = banners;
+    // Optimistic UI: assign new sort_order by index
+    const updated = next.map((b, i) => ({ ...b, sort_order: i }));
+    setBanners(updated);
+    // Persist only changed rows
+    const changes = updated.filter((b, i) => previous.find((p) => p.id === b.id)?.sort_order !== i);
+    const results = await Promise.all(
+      changes.map((b) => supabase.from("promo_banners").update({ sort_order: b.sort_order }).eq("id", b.id)),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      toast.error("Gagal menyimpan urutan");
+      setBanners(previous);
+    } else if (changes.length > 0) {
+      toast.success("Urutan diperbarui");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -180,64 +207,75 @@ const AdminPromoBanners = () => {
           Belum ada banner. Klik "Banner Baru" untuk membuat.
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {banners.map((b) => (
-            <Card key={b.id} className="overflow-hidden">
-              <div className="aspect-[16/7] bg-muted">
-                {b.image_url ? (
-                  <img src={b.image_url} alt={b.title} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                )}
+        <>
+          <p className="text-xs text-muted-foreground">
+            Tip: Gunakan ikon <span className="inline-block align-middle">⋮⋮</span> di pojok kiri-atas tiap kartu untuk drag & drop mengubah urutan.
+          </p>
+          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragEnd={onDragEnd}>
+            <SortableContext items={banners.map((b) => b.id)} strategy={rectSortingStrategy}>
+              <div className="grid gap-4 md:grid-cols-2">
+                {banners.map((b) => (
+                  <SortableItem key={b.id} id={b.id} className="block">
+                    <Card className="overflow-hidden">
+                      <div className="aspect-[16/7] bg-muted">
+                        {b.image_url ? (
+                          <img src={b.image_url} alt={b.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center">
+                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2 p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="truncate font-semibold">{b.title || "(Tanpa judul)"}</h3>
+                            <p className="line-clamp-2 text-sm text-muted-foreground">{b.subtitle}</p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                              b.is_active
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {b.is_active ? "Aktif" : "Nonaktif"}
+                          </span>
+                        </div>
+                        {b.link_url && (
+                          <a
+                            href={b.link_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                          >
+                            {b.link_url}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                        <div className="flex items-center justify-between gap-2 pt-2">
+                          <span className="text-xs text-muted-foreground">Urutan: {b.sort_order}</span>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => openEdit(b)} className="gap-1.5">
+                              <Pencil className="h-3.5 w-3.5" />
+                              Edit
+                            </Button>
+                            <ConfirmDelete onConfirm={() => remove(b)} description={`Hapus banner "${b.title || "tanpa judul"}"?`}>
+                              <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive">
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Hapus
+                              </Button>
+                            </ConfirmDelete>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </SortableItem>
+                ))}
               </div>
-              <div className="space-y-2 p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-semibold">{b.title || "(Tanpa judul)"}</h3>
-                    <p className="line-clamp-2 text-sm text-muted-foreground">{b.subtitle}</p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                      b.is_active
-                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {b.is_active ? "Aktif" : "Nonaktif"}
-                  </span>
-                </div>
-                {b.link_url && (
-                  <a
-                    href={b.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    {b.link_url}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-                <div className="flex items-center justify-between gap-2 pt-2">
-                  <span className="text-xs text-muted-foreground">Urutan: {b.sort_order}</span>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => openEdit(b)} className="gap-1.5">
-                      <Pencil className="h-3.5 w-3.5" />
-                      Edit
-                    </Button>
-                    <ConfirmDelete onConfirm={() => remove(b)} description={`Hapus banner "${b.title || "tanpa judul"}"?`}>
-                      <Button size="sm" variant="outline" className="gap-1.5 text-destructive hover:text-destructive">
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Hapus
-                      </Button>
-                    </ConfirmDelete>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+            </SortableContext>
+          </DndContext>
+        </>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
