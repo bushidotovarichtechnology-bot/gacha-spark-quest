@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { NumberInput } from "@/components/ui/number-input";
-import { Save, Trash2, Plus, Upload, GripVertical, Coins, Weight } from "lucide-react";
+import { Save, Trash2, Plus, Upload, GripVertical, Coins, Weight, KeyRound } from "lucide-react";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
