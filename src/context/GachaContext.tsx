@@ -12,6 +12,7 @@ export interface InventoryItem {
   image: string;
   coinValue: number;
   wonAt: string;
+  digitalCode?: string | null;
 }
 
 export interface DrawHistoryEntry {
