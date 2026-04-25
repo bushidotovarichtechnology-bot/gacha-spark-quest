@@ -1,5 +1,14 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useMemo, memo } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+
+// Detect low-end devices once (hardware concurrency, deviceMemory, or reduced motion)
+const detectLowEnd = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+  const cores = navigator.hardwareConcurrency ?? 8;
+  // @ts-expect-error - deviceMemory is non-standard but widely supported
+  const memory = navigator.deviceMemory ?? 8;
+  return cores <= 4 || memory <= 4;
+};
 
 interface DinoUnboxAnimationProps {
   /** Total taps required to open the box */
@@ -128,7 +137,7 @@ const createDinoSVG = (colorMain: string, colorDark: string, isBiting: boolean) 
   );
 };
 
-const GiftBox = ({ damage, colors }: { damage: number; colors: { main: string; light: string; ribbon: string } }) => {
+const GiftBox = memo(({ damage, colors }: { damage: number; colors: { main: string; light: string; ribbon: string } }) => {
   const crackOpacity = Math.min(damage / 3, 1);
   const shakeIntensity = damage > 0 ? 2 : 0;
 
@@ -183,9 +192,10 @@ const GiftBox = ({ damage, colors }: { damage: number; colors: { main: string; l
       )}
     </motion.svg>
   );
-};
+});
+GiftBox.displayName = "GiftBox";
 
-const Particle = ({ delay, x, y, color }: { delay: number; x: number; y: number; color?: string }) => (
+const Particle = memo(({ delay, x, y, color }: { delay: number; x: number; y: number; color?: string }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
     animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0], x, y }}
@@ -193,17 +203,19 @@ const Particle = ({ delay, x, y, color }: { delay: number; x: number; y: number;
     className="absolute w-2 h-2 rounded-sm"
     style={{ imageRendering: "pixelated", backgroundColor: color || "hsl(var(--accent))" }}
   />
-);
+));
+Particle.displayName = "Particle";
 
-const ExplosionParticle = ({ x, y, size, color, delay }: { x: number; y: number; size: number; color: string; delay: number }) => (
+const ExplosionParticle = memo(({ x, y, size, color, delay }: { x: number; y: number; size: number; color: string; delay: number }) => (
   <motion.div
     initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-    animate={{ opacity: 0, scale: [1, 1.5, 0], x, y, rotate: Math.random() * 360 }}
-    transition={{ duration: 0.6 + Math.random() * 0.4, delay, ease: "easeOut" }}
+    animate={{ opacity: 0, scale: [1, 1.5, 0], x, y, rotate: 180 }}
+    transition={{ duration: 0.7, delay, ease: "easeOut" }}
     className="absolute rounded-sm"
     style={{ width: size, height: size, backgroundColor: color, imageRendering: "pixelated" }}
   />
-);
+));
+ExplosionParticle.displayName = "ExplosionParticle";
 
 const FlashOverlay = ({ color = "hsl(var(--accent))" }: { color?: string }) => (
   <motion.div
