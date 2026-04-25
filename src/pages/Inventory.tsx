@@ -9,6 +9,7 @@ import { useI18n } from "@/context/I18nContext";
 import { formatDistanceToNow } from "date-fns";
 import ClaimPrizeForm from "@/components/ClaimPrizeForm";
 import InventoryGroupModal from "@/components/InventoryGroupModal";
+import DigitalCodeCard from "@/components/DigitalCodeCard";
 import { supabaseImg } from "@/lib/imageTransform";
 import {
   AlertDialog,
