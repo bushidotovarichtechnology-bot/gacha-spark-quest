@@ -127,16 +127,20 @@ const Index = () => {
   const queryClient = useQueryClient();
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
 
-  // Realtime: auto-refetch when campaign_tiers changes (e.g. another user draws)
+  // Realtime: auto-refetch when tier_prizes/campaign_tiers change so the
+  // displayed remaining stock per campaign stays in sync with real draws.
   useEffect(() => {
     const channel = supabase
-      .channel("home-campaign-tiers")
+      .channel("home-stock")
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "campaign_tiers" },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-        }
+        () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tier_prizes" },
+        () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
       )
       .subscribe();
 
