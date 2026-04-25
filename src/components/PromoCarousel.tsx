@@ -42,10 +42,12 @@ const computeNextTransitionDelay = (banners: PromoBanner[]): number => {
 
 const PromoCarousel = () => {
   const [banners, setBanners] = useState<PromoBanner[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [api, setApi] = useState<CarouselApi>();
   const [selected, setSelected] = useState(0);
   const autoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }));
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSignatureRef = useRef<string>("");
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -53,7 +55,15 @@ const PromoCarousel = () => {
       .select("id,title,subtitle,image_url,link_url,cta_label,starts_at,ends_at")
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
-    setBanners((data ?? []) as PromoBanner[]);
+    const next = (data ?? []) as PromoBanner[];
+    // Only update state if the payload actually changed — prevents the carousel
+    // from re-mounting / resetting position on every poll (no flicker).
+    const signature = JSON.stringify(next);
+    if (signature !== lastSignatureRef.current) {
+      lastSignatureRef.current = signature;
+      setBanners(next);
+    }
+    setIsInitialLoading(false);
   }, []);
 
   useEffect(() => {
