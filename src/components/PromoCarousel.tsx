@@ -78,20 +78,45 @@ const PromoCarousel = () => {
 
   const renderSlide = (b: PromoBanner) => {
     const hasOverlay = b.title || b.subtitle || b.cta_label;
-    const inner = (
+    const ariaLabel = b.title || b.cta_label || "Promo";
+
+    const imageEl = (
+      <img
+        src={b.image_url}
+        alt={b.title || "Promo banner"}
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-cover"
+      />
+    );
+
+    let imageLayer: React.ReactNode = imageEl;
+    if (b.link_url) {
+      imageLayer = isExternal(b.link_url) ? (
+        <a
+          href={b.link_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={ariaLabel}
+          className="absolute inset-0"
+        >
+          {imageEl}
+        </a>
+      ) : (
+        <Link to={b.link_url} aria-label={ariaLabel} className="absolute inset-0">
+          {imageEl}
+        </Link>
+      );
+    }
+
+    return (
       <div className="relative h-full w-full overflow-hidden rounded-2xl border border-border/50 bg-card">
-        <img
-          src={b.image_url}
-          alt={b.title || "Promo banner"}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover"
-        />
+        <div className="absolute inset-0">{imageLayer}</div>
         {hasOverlay && (
-          <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-transparent" />
         )}
         {hasOverlay && (
-          <div className="absolute inset-y-0 left-0 flex max-w-md flex-col justify-center gap-2 p-5 sm:gap-3 sm:p-8">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex max-w-md flex-col justify-center gap-2 p-5 sm:gap-3 sm:p-8">
             {b.title && (
               <h3 className="font-display text-lg font-bold leading-tight text-foreground sm:text-2xl md:text-3xl">
                 {b.title}
@@ -102,32 +127,11 @@ const PromoCarousel = () => {
                 {b.subtitle}
               </p>
             )}
-            {renderCTA(b)}
+            {/* CTA harus interaktif walau berada di overlay non-interaktif */}
+            <div className="pointer-events-auto">{renderCTA(b)}</div>
           </div>
         )}
       </div>
-    );
-
-    if (!b.link_url) {
-      return <div className="block h-full w-full">{inner}</div>;
-    }
-    if (isExternal(b.link_url)) {
-      return (
-        <a
-          href={b.link_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={b.title || b.cta_label || "Promo"}
-          className="block h-full w-full"
-        >
-          {inner}
-        </a>
-      );
-    }
-    return (
-      <Link to={b.link_url} aria-label={b.title || b.cta_label || "Promo"} className="block h-full w-full">
-        {inner}
-      </Link>
     );
   };
 
