@@ -221,6 +221,34 @@ const Inventory = () => {
                 </button>
               );
             })}
+            {digitalCount > 0 && (() => {
+              const active = filter === "digital";
+              return (
+                <button
+                  onClick={() => setFilter("digital")}
+                  className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                    active
+                      ? "bg-primary text-primary-foreground box-glow-purple"
+                      : "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/15"
+                  }`}
+                  aria-label="Filter hadiah digital"
+                >
+                  <KeyRound className="h-3 w-3" />
+                  Digital
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-primary-foreground/20" : "bg-background/40"}`}>
+                    {digitalCount}
+                  </span>
+                  {uncopiedDigitalCount > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-accent-foreground shadow ring-2 ring-background"
+                      title={`${uncopiedDigitalCount} kode belum disalin`}
+                    >
+                      {uncopiedDigitalCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })()}
           </div>
           <div className="flex gap-1.5">
             {([
