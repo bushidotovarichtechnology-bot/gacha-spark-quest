@@ -130,6 +130,10 @@ const Inventory = () => {
     C: items.filter((i) => i.tier === "C").length,
   };
 
+  const digitalItems = items.filter((i) => !!i.digitalCode);
+  const digitalCount = digitalItems.length;
+  const uncopiedDigitalCount = digitalItems.filter((i) => i.digitalCode && !copiedCodes.has(i.digitalCode)).length;
+
   return (
     <div className="min-h-screen pb-8">
       <Navbar />
