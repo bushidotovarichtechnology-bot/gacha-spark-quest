@@ -83,6 +83,16 @@ const PromoCarousel = () => {
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [load]);
 
+  // Safety-net polling every 60s: catches admin edits (new banners, changed
+  // schedules) that the adaptive timer can't know about until the next refetch.
+  // Skipped while the tab is hidden to avoid wasted requests.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [load]);
+
   useEffect(() => {
     if (!api) return;
     setSelected(api.selectedScrollSnap());
