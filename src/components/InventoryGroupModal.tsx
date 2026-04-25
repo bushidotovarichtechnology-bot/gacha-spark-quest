@@ -142,7 +142,12 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <DigitalCodeCard code={unit.digitalCode!} compact showHeader={false} />
+                    <DigitalCodeCard
+                      code={unit.digitalCode!}
+                      compact
+                      showHeader={false}
+                      unitLabel={`Unit #${idx + 1}`}
+                    />
                   </div>
                 </div>
               ))}
