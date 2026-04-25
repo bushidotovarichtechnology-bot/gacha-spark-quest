@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Copy, Check, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isCodeCopied, markCodeCopied, subscribeCopiedCodes } from "@/lib/copiedCodes";
 
 interface Props {
   code: string;
@@ -15,12 +16,19 @@ interface Props {
 
 const DigitalCodeCard = ({ code, label, compact = false, showHeader = true, unitLabel }: Props) => {
   const [copied, setCopied] = useState(false);
+  const [everCopied, setEverCopied] = useState(() => isCodeCopied(code));
+
+  useEffect(() => {
+    setEverCopied(isCodeCopied(code));
+    return subscribeCopiedCodes(() => setEverCopied(isCodeCopied(code)));
+  }, [code]);
 
   const handleCopy = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
+      markCodeCopied(code);
       toast.success(
         unitLabel ? `${unitLabel} disalin!` : "Kode disalin ke clipboard!",
         { description: code, duration: 2000 },
@@ -30,6 +38,8 @@ const DigitalCodeCard = ({ code, label, compact = false, showHeader = true, unit
       toast.error("Gagal menyalin kode");
     }
   };
+
+  const showAccent = copied || everCopied;
 
   return (
     <div
@@ -47,17 +57,17 @@ const DigitalCodeCard = ({ code, label, compact = false, showHeader = true, unit
           <KeyRound
             className={cn(
               compact ? "h-3 w-3" : "h-3.5 w-3.5",
-              copied ? "text-accent" : "text-primary",
+              showAccent ? "text-accent" : "text-primary",
             )}
           />
           <span
             className={cn(
               compact ? "text-[10px]" : "text-xs",
               "font-bold uppercase tracking-wider transition-colors",
-              copied ? "text-accent" : "text-primary",
+              showAccent ? "text-accent" : "text-primary",
             )}
           >
-            {copied ? "Tersalin" : (label ?? "Kode Voucher")}
+            {copied ? "Tersalin" : everCopied ? "Sudah disalin" : (label ?? "Kode Voucher")}
           </span>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, XCircle, Ticket, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import ClaimPrizeForm from "@/components/ClaimPrizeForm";
 import InventoryGroupModal from "@/components/InventoryGroupModal";
 import DigitalBadge from "@/components/DigitalBadge";
 import { supabaseImg } from "@/lib/imageTransform";
+import { getCopiedCodes, subscribeCopiedCodes } from "@/lib/copiedCodes";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,8 +33,11 @@ const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: st
 const Inventory = () => {
   const { items, totalCoins, drawsSinceTierA, recycleItem, pityThreshold } = useGacha();
   const { t } = useI18n();
-  const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
+  const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C" | "digital">("all");
   const [sortBy, setSortBy] = useState<"newest" | "coin_high" | "coin_low">("newest");
+  const [copiedCodes, setCopiedCodes] = useState<Set<string>>(() => getCopiedCodes());
+
+  useEffect(() => subscribeCopiedCodes(() => setCopiedCodes(getCopiedCodes())), []);
 
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
   const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
@@ -44,7 +48,10 @@ const Inventory = () => {
   const [groupModalKey, setGroupModalKey] = useState<string | null>(null);
 
   const filteredItems = (() => {
-    let list = filter === "all" ? [...items] : items.filter((i) => i.tier === filter);
+    let list: InventoryItem[];
+    if (filter === "all") list = [...items];
+    else if (filter === "digital") list = items.filter((i) => !!i.digitalCode);
+    else list = items.filter((i) => i.tier === filter);
     switch (sortBy) {
       case "coin_high": list.sort((a, b) => b.coinValue - a.coinValue); break;
       case "coin_low": list.sort((a, b) => a.coinValue - b.coinValue); break;
@@ -122,6 +129,10 @@ const Inventory = () => {
     B: items.filter((i) => i.tier === "B").length,
     C: items.filter((i) => i.tier === "C").length,
   };
+
+  const digitalItems = items.filter((i) => !!i.digitalCode);
+  const digitalCount = digitalItems.length;
+  const uncopiedDigitalCount = digitalItems.filter((i) => i.digitalCode && !copiedCodes.has(i.digitalCode)).length;
 
   return (
     <div className="min-h-screen pb-8">
@@ -210,6 +221,34 @@ const Inventory = () => {
                 </button>
               );
             })}
+            {digitalCount > 0 && (() => {
+              const active = filter === "digital";
+              return (
+                <button
+                  onClick={() => setFilter("digital")}
+                  className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                    active
+                      ? "bg-primary text-primary-foreground box-glow-purple"
+                      : "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/15"
+                  }`}
+                  aria-label="Filter hadiah digital"
+                >
+                  <KeyRound className="h-3 w-3" />
+                  Digital
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${active ? "bg-primary-foreground/20" : "bg-background/40"}`}>
+                    {digitalCount}
+                  </span>
+                  {uncopiedDigitalCount > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-accent-foreground shadow ring-2 ring-background"
+                      title={`${uncopiedDigitalCount} kode belum disalin`}
+                    >
+                      {uncopiedDigitalCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })()}
           </div>
           <div className="flex gap-1.5">
             {([
