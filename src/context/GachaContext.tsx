@@ -197,6 +197,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
         image: r.image_url,
         coinValue: r.coin_value,
         wonAt: r.won_at,
+        digitalCode: (r as any).digital_code ?? null,
       })));
     }
   }, [user]);
