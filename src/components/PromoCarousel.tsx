@@ -114,6 +114,14 @@ const PromoCarousel = () => {
     };
   }, [api]);
 
+  if (isInitialLoading) {
+    return (
+      <section className="container mx-auto px-4 pt-6">
+        <div className="aspect-[16/7] w-full animate-pulse rounded-2xl border border-border/50 bg-secondary sm:aspect-[16/5]" />
+      </section>
+    );
+  }
+
   if (banners.length === 0) return null;
 
   const renderCTA = (b: PromoBanner) => {
