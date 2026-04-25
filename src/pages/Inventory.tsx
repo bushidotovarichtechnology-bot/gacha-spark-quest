@@ -33,8 +33,11 @@ const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: st
 const Inventory = () => {
   const { items, totalCoins, drawsSinceTierA, recycleItem, pityThreshold } = useGacha();
   const { t } = useI18n();
-  const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C">("all");
+  const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C" | "digital">("all");
   const [sortBy, setSortBy] = useState<"newest" | "coin_high" | "coin_low">("newest");
+  const [copiedCodes, setCopiedCodes] = useState<Set<string>>(() => getCopiedCodes());
+
+  useEffect(() => subscribeCopiedCodes(() => setCopiedCodes(getCopiedCodes())), []);
 
   const [claimingItem, setClaimingItem] = useState<InventoryItem | null>(null);
   const [recyclingItem, setRecyclingItem] = useState<InventoryItem | null>(null);
