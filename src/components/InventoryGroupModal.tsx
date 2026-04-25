@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Recycle, PackageCheck, Coins, Minus, Plus, Crown, Star, Gift, Award, KeyRound } from "lucide-react";
+import { X, Recycle, PackageCheck, Coins, Minus, Plus, Crown, Star, Gift, Award, KeyRound, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabaseImg } from "@/lib/imageTransform";
 import DigitalCodeCard from "@/components/DigitalCodeCard";
+import DigitalBadge from "@/components/DigitalBadge";
 import type { InventoryItem } from "@/context/GachaContext";
 
 
@@ -24,6 +26,7 @@ interface Props {
 const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
   const total = items.length;
   const [qty, setQty] = useState(1);
+  const [copiedAll, setCopiedAll] = useState(false);
   const sample = items[0];
   const meta = tierMeta[sample.tier] ?? tierMeta.C;
   const unitCoin = sample.coinValue;
@@ -39,6 +42,18 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
 
   const handleClaimOne = () => {
     onClaim(items[0]);
+  };
+
+  const handleCopyAll = async () => {
+    try {
+      const text = digitalUnits.map((u, idx) => `Unit #${idx + 1}: ${u.digitalCode}`).join("\n");
+      await navigator.clipboard.writeText(text);
+      setCopiedAll(true);
+      toast.success(`${digitalUnits.length} kode disalin ke clipboard!`);
+      setTimeout(() => setCopiedAll(false), 2000);
+    } catch {
+      toast.error("Gagal menyalin kode");
+    }
   };
 
   return (
@@ -78,6 +93,11 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
             <div className="absolute right-2 top-2 rounded-md bg-background/85 px-2 py-1 font-display text-xs font-bold text-foreground">
               ×{total}
             </div>
+            {isDigital && (
+              <div className="absolute bottom-2 left-2">
+                <DigitalBadge size="md" />
+              </div>
+            )}
           </div>
           <div className="mt-3 text-center">
             <h3 className="font-display text-base font-bold text-foreground">{sample.prize}</h3>
@@ -92,14 +112,41 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
 
         {/* Digital codes list (if any) */}
         {isDigital && (
-          <div className="px-4 py-3 border-t border-border space-y-2 max-h-60 overflow-y-auto">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <KeyRound className="h-3.5 w-3.5 text-primary" />
-              Kode Voucher ({digitalUnits.length})
-            </p>
-            {digitalUnits.map((unit, idx) => (
-              <DigitalCodeCard key={unit.id} code={unit.digitalCode!} prizeName={`Unit #${idx + 1}`} compact />
-            ))}
+          <div className="border-t border-border bg-primary/[0.03]">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-primary" />
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  Kode Voucher
+                </span>
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                  {digitalUnits.length}
+                </span>
+              </div>
+              {digitalUnits.length > 1 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 gap-1 px-2 text-[11px] text-primary hover:bg-primary/10 hover:text-primary"
+                  onClick={handleCopyAll}
+                >
+                  {copiedAll ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  Salin semua
+                </Button>
+              )}
+            </div>
+            <div className="px-4 py-3 space-y-2 max-h-64 overflow-y-auto">
+              {digitalUnits.map((unit, idx) => (
+                <div key={unit.id} className="flex items-start gap-2">
+                  <span className="mt-2 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 font-display text-[10px] font-bold text-primary">
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <DigitalCodeCard code={unit.digitalCode!} compact showHeader={false} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
