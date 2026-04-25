@@ -11,6 +11,10 @@ import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
 import { toast } from "sonner";
 import { Plus, Pencil, Image as ImageIcon, Loader2, Megaphone, ExternalLink, Trash2 } from "lucide-react";
 import { useImageCrop } from "@/hooks/use-image-crop";
+import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableItem } from "@/components/admin/SortableItem";
+import { useSortableList } from "@/hooks/use-sortable-list";
 
 interface PromoBanner {
   id: string;
