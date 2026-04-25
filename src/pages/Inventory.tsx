@@ -367,6 +367,12 @@ const Inventory = () => {
                         <span className="text-[9px] font-bold text-primary-foreground">TIKET</span>
                       </div>
                     )}
+                    {item.digitalCode && (
+                      <div className="absolute left-2 top-11 flex items-center gap-1 rounded-md bg-primary/90 px-1.5 py-0.5">
+                        <KeyRound className="h-3 w-3 text-primary-foreground" />
+                        <span className="text-[9px] font-bold text-primary-foreground">DIGITAL</span>
+                      </div>
+                    )}
                     {/* Quantity badge */}
                     {count > 1 && (
                       <div className="absolute right-2 top-2 rounded-md bg-background/90 px-2 py-0.5 font-display text-xs font-bold text-foreground border border-border/50 shadow-sm">
@@ -399,9 +405,15 @@ const Inventory = () => {
                         {count > 1 ? `${totalCoinValue.toLocaleString()}` : item.coinValue.toLocaleString()}
                       </span>
                     </div>
-                    <p className="mt-2 text-center text-[10px] font-medium text-primary/80">
-                      Klik untuk klaim / daur ulang
-                    </p>
+                    {item.digitalCode ? (
+                      <div className="mt-2">
+                        <DigitalCodeCard code={item.digitalCode} compact />
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-center text-[10px] font-medium text-primary/80">
+                        Klik untuk klaim / daur ulang
+                      </p>
+                    )}
                   </div>
                 </motion.div>
               );
