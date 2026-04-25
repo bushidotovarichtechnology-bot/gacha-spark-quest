@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Copy, Check, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isCodeCopied, markCodeCopied, subscribeCopiedCodes } from "@/lib/copiedCodes";
 
 interface Props {
   code: string;
