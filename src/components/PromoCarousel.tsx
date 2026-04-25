@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,27 +12,76 @@ interface PromoBanner {
   image_url: string;
   link_url: string;
   cta_label: string;
+  starts_at: string | null;
+  ends_at: string | null;
 }
 
 const isExternal = (url: string) => /^https?:\/\//i.test(url);
+
+// Clamp the next refetch delay so we don't schedule too aggressively or too far out.
+const MIN_DELAY_MS = 5_000; // 5s — avoid hot loops on near-instant transitions
+const MAX_DELAY_MS = 60 * 60 * 1000; // 1h — fall back to hourly when nothing changes soon
+
+const computeNextTransitionDelay = (banners: PromoBanner[]): number => {
+  const now = Date.now();
+  let nearest = Number.POSITIVE_INFINITY;
+
+  for (const b of banners) {
+    for (const ts of [b.starts_at, b.ends_at]) {
+      if (!ts) continue;
+      const t = new Date(ts).getTime();
+      if (Number.isFinite(t) && t > now && t - now < nearest) {
+        nearest = t - now;
+      }
+    }
+  }
+
+  if (!Number.isFinite(nearest)) return MAX_DELAY_MS;
+  return Math.min(MAX_DELAY_MS, Math.max(MIN_DELAY_MS, nearest + 500));
+};
 
 const PromoCarousel = () => {
   const [banners, setBanners] = useState<PromoBanner[]>([]);
   const [api, setApi] = useState<CarouselApi>();
   const [selected, setSelected] = useState(0);
   const autoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }));
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from("promo_banners")
+      .select("id,title,subtitle,image_url,link_url,cta_label,starts_at,ends_at")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
+    setBanners((data ?? []) as PromoBanner[]);
+  }, []);
 
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from("promo_banners")
-        .select("id,title,subtitle,image_url,link_url,cta_label")
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: false });
-      setBanners((data ?? []) as PromoBanner[]);
-    };
     load();
-  }, []);
+  }, [load]);
+
+  // Reschedule a single timer to fire at the next starts_at/ends_at boundary,
+  // so we only refetch when a banner actually transitions in/out.
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const delay = computeNextTransitionDelay(banners);
+    timerRef.current = setTimeout(() => {
+      load();
+    }, delay);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [banners, load]);
+
+  // Refetch when the tab becomes visible again (catches transitions that
+  // happened while the tab was backgrounded and the timer was throttled).
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [load]);
 
   useEffect(() => {
     if (!api) return;
@@ -48,39 +97,32 @@ const PromoCarousel = () => {
   if (banners.length === 0) return null;
 
   const renderCTA = (b: PromoBanner) => {
-    if (!b.cta_label) return null;
-    const className =
-      "mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.03] active:scale-95 sm:text-sm";
+    if (!b.cta_label || !b.link_url) return null;
+    const stop = (e: React.MouseEvent) => e.stopPropagation();
+    const cls =
+      "pointer-events-auto mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-transform hover:scale-105 sm:text-sm";
     const content = (
       <>
         {b.cta_label}
         <ArrowRight className="h-3.5 w-3.5" />
       </>
     );
-    const stop = (e: React.MouseEvent) => e.stopPropagation();
-
-    if (!b.link_url) {
-      return <span className={className}>{content}</span>;
-    }
     if (isExternal(b.link_url)) {
       return (
-        <a href={b.link_url} target="_blank" rel="noopener noreferrer" onClick={stop} className={className}>
+        <a href={b.link_url} target="_blank" rel="noopener noreferrer" onClick={stop} className={cls}>
           {content}
         </a>
       );
     }
     return (
-      <Link to={b.link_url} onClick={stop} className={className}>
+      <Link to={b.link_url} onClick={stop} className={cls}>
         {content}
       </Link>
     );
   };
 
   const renderSlide = (b: PromoBanner) => {
-    const hasOverlay = b.title || b.subtitle || b.cta_label;
-    const ariaLabel = b.title || b.cta_label || "Promo";
-
-    const imageEl = (
+    const image = (
       <img
         src={b.image_url}
         alt={b.title || "Promo banner"}
@@ -89,33 +131,27 @@ const PromoCarousel = () => {
         className="h-full w-full object-cover"
       />
     );
-
-    let imageLayer: React.ReactNode = imageEl;
-    if (b.link_url) {
-      imageLayer = isExternal(b.link_url) ? (
-        <a
-          href={b.link_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={ariaLabel}
-          className="absolute inset-0"
-        >
-          {imageEl}
+    const imageLayer = b.link_url ? (
+      isExternal(b.link_url) ? (
+        <a href={b.link_url} target="_blank" rel="noopener noreferrer" className="absolute inset-0">
+          {image}
         </a>
       ) : (
-        <Link to={b.link_url} aria-label={ariaLabel} className="absolute inset-0">
-          {imageEl}
+        <Link to={b.link_url} className="absolute inset-0">
+          {image}
         </Link>
-      );
-    }
+      )
+    ) : (
+      <div className="absolute inset-0">{image}</div>
+    );
 
     return (
       <div className="relative h-full w-full overflow-hidden rounded-2xl border border-border/50 bg-card">
-        <div className="absolute inset-0">{imageLayer}</div>
-        {hasOverlay && (
+        {imageLayer}
+        {(b.title || b.subtitle || b.cta_label) && (
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-transparent" />
         )}
-        {hasOverlay && (
+        {(b.title || b.subtitle || b.cta_label) && (
           <div className="pointer-events-none absolute inset-y-0 left-0 flex max-w-md flex-col justify-center gap-2 p-5 sm:gap-3 sm:p-8">
             {b.title && (
               <h3 className="font-display text-lg font-bold leading-tight text-foreground sm:text-2xl md:text-3xl">
@@ -127,8 +163,7 @@ const PromoCarousel = () => {
                 {b.subtitle}
               </p>
             )}
-            {/* CTA harus interaktif walau berada di overlay non-interaktif */}
-            <div className="pointer-events-auto">{renderCTA(b)}</div>
+            {renderCTA(b)}
           </div>
         )}
       </div>
