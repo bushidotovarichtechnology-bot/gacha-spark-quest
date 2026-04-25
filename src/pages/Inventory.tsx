@@ -368,9 +368,8 @@ const Inventory = () => {
                       </div>
                     )}
                     {item.digitalCode && (
-                      <div className="absolute left-2 top-11 flex items-center gap-1 rounded-md bg-primary/90 px-1.5 py-0.5">
-                        <KeyRound className="h-3 w-3 text-primary-foreground" />
-                        <span className="text-[9px] font-bold text-primary-foreground">DIGITAL</span>
+                      <div className="absolute left-2 top-11">
+                        <DigitalBadge />
                       </div>
                     )}
                     {/* Quantity badge */}
@@ -406,8 +405,9 @@ const Inventory = () => {
                       </span>
                     </div>
                     {item.digitalCode ? (
-                      <div className="mt-2">
-                        <DigitalCodeCard code={item.digitalCode} compact />
+                      <div className="mt-2 flex items-center justify-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1.5 text-[10px] font-semibold text-primary">
+                        <KeyRound className="h-3 w-3" />
+                        {count > 1 ? `Lihat ${count} kode voucher` : "Lihat kode voucher"}
                       </div>
                     ) : (
                       <p className="mt-2 text-center text-[10px] font-medium text-primary/80">
