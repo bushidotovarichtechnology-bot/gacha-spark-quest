@@ -21,32 +21,15 @@ export function obfuscateStock(remaining: number, total: number): ObfuscatedStoc
   const safeTotal = Math.max(0, Math.floor(total));
   const isSoldOut = safeRemaining <= 0;
 
-  let remainingLabel: string;
-  if (isSoldOut) {
-    remainingLabel = "0";
-  } else if (safeRemaining < 5) {
-    remainingLabel = "<5";
-  } else if (safeRemaining < 10) {
-    remainingLabel = "5+";
-  } else if (safeRemaining < 25) {
-    remainingLabel = "10+";
-  } else if (safeRemaining < 50) {
-    remainingLabel = "25+";
-  } else if (safeRemaining < 100) {
-    remainingLabel = "50+";
-  } else {
-    // Round down to nearest 50 and append "+"
-    const bucket = Math.floor(safeRemaining / 50) * 50;
-    remainingLabel = `${bucket}+`;
-  }
+  // Show the exact remaining count so users can see real-time stock.
+  const remainingLabel = String(safeRemaining);
 
-  // Round percentage to nearest 5 to avoid leaking precise counts
   const rawPct = safeTotal > 0 ? (safeRemaining / safeTotal) * 100 : 0;
-  const percentage = Math.round(rawPct / 5) * 5;
+  const percentage = Math.max(0, Math.min(100, Math.round(rawPct)));
 
   return {
     remainingLabel,
-    fractionLabel: `${remainingLabel}/${safeTotal}`,
+    fractionLabel: `${safeRemaining}/${safeTotal}`,
     percentage,
     isSoldOut,
     isLow: !isSoldOut && rawPct < 30,
