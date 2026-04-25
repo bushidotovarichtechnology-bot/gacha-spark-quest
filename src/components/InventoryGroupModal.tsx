@@ -90,6 +90,19 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
           </div>
         </div>
 
+        {/* Digital codes list (if any) */}
+        {isDigital && (
+          <div className="px-4 py-3 border-t border-border space-y-2 max-h-60 overflow-y-auto">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <KeyRound className="h-3.5 w-3.5 text-primary" />
+              Kode Voucher ({digitalUnits.length})
+            </p>
+            {digitalUnits.map((unit, idx) => (
+              <DigitalCodeCard key={unit.id} code={unit.digitalCode!} prizeName={`Unit #${idx + 1}`} compact />
+            ))}
+          </div>
+        )}
+
         {/* Quantity selector */}
         <div className="px-4 py-4 border-t border-border space-y-3">
           <div>
@@ -97,13 +110,7 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
               Pilih jumlah untuk daur ulang
             </p>
             <div className="flex items-center gap-3">
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-10 w-10 shrink-0"
-                onClick={() => setSafeQty(qty - 1)}
-                disabled={qty <= 1}
-              >
+              <Button size="icon" variant="outline" className="h-10 w-10 shrink-0" onClick={() => setSafeQty(qty - 1)} disabled={qty <= 1}>
                 <Minus className="h-4 w-4" />
               </Button>
               <input
@@ -114,21 +121,10 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
                 min={1}
                 max={total}
               />
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-10 w-10 shrink-0"
-                onClick={() => setSafeQty(qty + 1)}
-                disabled={qty >= total}
-              >
+              <Button size="icon" variant="outline" className="h-10 w-10 shrink-0" onClick={() => setSafeQty(qty + 1)} disabled={qty >= total}>
                 <Plus className="h-4 w-4" />
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="shrink-0 text-xs h-10 px-2"
-                onClick={() => setSafeQty(total)}
-              >
+              <Button size="sm" variant="ghost" className="shrink-0 text-xs h-10 px-2" onClick={() => setSafeQty(total)}>
                 Max
               </Button>
             </div>
@@ -141,25 +137,22 @@ const InventoryGroupModal = ({ items, onClose, onClaim, onRecycle }: Props) => {
           </div>
 
           {/* Actions */}
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={handleClaimOne}
-              className="gap-1.5 border-primary/50 hover:border-primary hover:text-primary"
-            >
-              <PackageCheck className="h-4 w-4" />
-              Klaim 1 unit
-            </Button>
-            <Button
-              onClick={handleRecycle}
-              className="gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90"
-            >
+          <div className={`grid gap-2 pt-2 ${isDigital ? "grid-cols-1" : "grid-cols-2"}`}>
+            {!isDigital && (
+              <Button variant="outline" onClick={handleClaimOne} className="gap-1.5 border-primary/50 hover:border-primary hover:text-primary">
+                <PackageCheck className="h-4 w-4" />
+                Klaim 1 unit
+              </Button>
+            )}
+            <Button onClick={handleRecycle} className="gap-1.5 bg-accent text-accent-foreground hover:bg-accent/90">
               <Recycle className="h-4 w-4" />
               Daur {qty}
             </Button>
           </div>
           <p className="text-[10px] text-muted-foreground text-center">
-            Klaim memproses 1 unit per pengiriman. Daur ulang dapat memilih beberapa unit sekaligus.
+            {isDigital
+              ? "Hadiah digital — kode sudah ada di atas. Daur ulang menukar unit menjadi koin."
+              : "Klaim memproses 1 unit per pengiriman. Daur ulang dapat memilih beberapa unit sekaligus."}
           </p>
         </div>
       </motion.div>
