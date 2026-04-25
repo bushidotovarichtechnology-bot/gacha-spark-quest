@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star, Gift, Coins, Ticket, Truck, ScrollText, Ban, CreditCard, Zap, FlaskConical, Wrench, Boxes } from "lucide-react";
+import { Shield, LayoutDashboard, Users, Package, Settings, LogOut, Home, FolderTree, PackageCheck, Mail, Star, Gift, Coins, Ticket, Truck, ScrollText, Ban, CreditCard, Zap, FlaskConical, Wrench, Boxes, Megaphone } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/banned-users", label: "Banned Users", icon: Ban },
   { to: "/admin/campaigns", label: "Campaigns", icon: Package },
+  { to: "/admin/promo-banners", label: "Promo Banners", icon: Megaphone },
   { to: "/admin/categories", label: "Categories", icon: FolderTree },
   { to: "/admin/claims", label: "Prize Claims", icon: PackageCheck },
   { to: "/admin/messages", label: "Messages", icon: Mail },
