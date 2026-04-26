@@ -1097,7 +1097,9 @@ export type Database = {
           expires_at: string
           id: string
           initiator_id: string
+          initiator_ip: string | null
           initiator_items: Json
+          initiator_user_agent: string | null
           message: string
           responded_at: string | null
           responder_id: string | null
@@ -1112,7 +1114,9 @@ export type Database = {
           expires_at?: string
           id?: string
           initiator_id: string
+          initiator_ip?: string | null
           initiator_items?: Json
+          initiator_user_agent?: string | null
           message?: string
           responded_at?: string | null
           responder_id?: string | null
@@ -1127,7 +1131,9 @@ export type Database = {
           expires_at?: string
           id?: string
           initiator_id?: string
+          initiator_ip?: string | null
           initiator_items?: Json
+          initiator_user_agent?: string | null
           message?: string
           responded_at?: string | null
           responder_id?: string | null
