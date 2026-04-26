@@ -11,6 +11,8 @@ export interface NotificationItem {
   createdAt: number;
   read: boolean;
   href?: string;
+  /** Optional stable key used to dedupe identical notifications (e.g. gift row id + status). */
+  dedupKey?: string;
 }
 
 interface NotificationsContextValue {
@@ -59,6 +61,10 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
 
   const push = useCallback<NotificationsContextValue["push"]>((n) => {
     setItems((curr) => {
+      // Dedupe: if dedupKey given and an item already exists with the same key, skip insert.
+      if (n.dedupKey && curr.some((i) => i.dedupKey === n.dedupKey)) {
+        return curr;
+      }
       const next: NotificationItem = {
         id:
           typeof crypto !== "undefined" && "randomUUID" in crypto
