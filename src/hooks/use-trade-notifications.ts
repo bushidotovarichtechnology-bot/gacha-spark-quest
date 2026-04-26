@@ -378,6 +378,7 @@ export const useTradeNotifications = () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
       window.removeEventListener("inbox-acked", onAcked);
+      unsubPrefs();
       supabase.removeChannel(channel);
     };
   }, [user, push]);
