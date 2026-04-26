@@ -556,7 +556,7 @@ const TradeRequest = () => {
                           <span className="text-[9px] text-muted-foreground">A→B</span>
                         </div>
                         <span className="truncate text-foreground">{it.prize}</span>
-                        <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
+                        <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", tierBadgeClass(trade.tier_label))}>{trade.tier_label}</span>
                         <span className="text-right text-accent">+{it.coin_value}</span>
                       </div>
                     ))}
