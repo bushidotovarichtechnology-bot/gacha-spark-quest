@@ -45,12 +45,14 @@ export const createTrade = async (params: {
   inventoryIds: string[];
   tier: TradableTier;
   message?: string;
+  recipientId?: string | null;
 }): Promise<TradeRow> => {
   const { data, error } = await supabase.functions.invoke("trade-create", {
     body: {
       inventory_ids: params.inventoryIds,
       tier: params.tier,
       message: params.message ?? "",
+      recipient_id: params.recipientId ?? null,
     },
   });
   if (error) throw error;
