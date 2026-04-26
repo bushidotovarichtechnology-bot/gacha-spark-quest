@@ -49,6 +49,16 @@ export const useTradeNotifications = () => {
   const firedKeys = useRef<Set<string>>(new Set());
   const initialized = useRef(false);
 
+  // Expose firedKeys to debug panel via window
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    (window as unknown as { __tradeFiredKeys?: () => string[] }).__tradeFiredKeys =
+      () => Array.from(firedKeys.current);
+    return () => {
+      delete (window as unknown as { __tradeFiredKeys?: () => string[] }).__tradeFiredKeys;
+    };
+  }, []);
+
   useEffect(() => {
     if (!user) {
       prevStatus.current = {};
