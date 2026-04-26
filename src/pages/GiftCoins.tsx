@@ -67,6 +67,71 @@ const GiftCoins = () => {
       });
   }, [user]);
 
+  // Realtime: subscribe to coin_gifts changes for this user, toast on processing → success/error.
+  // Filter to rows where the user is the sender (most useful: feedback on their own send).
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`gift-status-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "coin_gifts",
+          filter: `sender_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const oldRow = payload.old as Partial<GiftRecord>;
+          const newRow = payload.new as GiftRecord;
+          const prev = (oldRow.status || "").toLowerCase();
+          const next = (newRow.status || "").toLowerCase();
+
+          // Update local list
+          setGifts((curr) => curr.map((g) => (g.id === newRow.id ? { ...g, ...newRow } : g)));
+
+          // Only toast on processing → final state to avoid noise
+          if (prev === "processing" && next === "success") {
+            toast({
+              title: "Gift Berhasil Terkirim 🎉",
+              description: `${newRow.amount.toLocaleString()} koin sampai ke ${newRow.receiver_email}.`,
+            });
+          } else if (prev === "processing" && next === "error") {
+            toast({
+              title: "Gift Gagal Dikirim",
+              description: newRow.error_message || "Pengiriman koin gagal diproses. Cek detail di riwayat.",
+              variant: "destructive",
+            });
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "coin_gifts",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const row = payload.new as GiftRecord;
+          // Append to list so receiver sees incoming gifts live
+          setGifts((curr) => (curr.some((g) => g.id === row.id) ? curr : [row, ...curr]));
+          if ((row.status || "success").toLowerCase() === "success") {
+            toast({
+              title: "Kamu Menerima Gift 🎁",
+              description: `+${row.amount.toLocaleString()} koin masuk ke saldo kamu.`,
+            });
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, toast]);
+
   // Reset verified recipient if email changes
   useEffect(() => {
     if (recipient) setRecipient(null);
