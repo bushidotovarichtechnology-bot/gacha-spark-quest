@@ -222,14 +222,11 @@ export const useTradeNotifications = () => {
           });
         });
       } else if (row.status === "cancelled") {
+        // Silent inbox-only — cancelled trades are low-signal and would spam
+        // toasts during auto-refresh / reconcile sweeps.
         const key = `trade-cancelled:${row.id}`;
         const href = `/trade/req/${row.token}`;
         fireOnce(key, "cancelled", ctxBase, () => {
-          toast.warning("Trade dibatalkan", {
-            description: `Trade Tier ${row.tier_label} dibatalkan.`,
-            duration: 7000,
-            action: { label: "Detail", onClick: () => safeNavigate(href) },
-          });
           push({
             kind: "warning",
             title: "Trade dibatalkan",
@@ -239,14 +236,11 @@ export const useTradeNotifications = () => {
           });
         });
       } else if (row.status === "expired") {
+        // Silent inbox-only — expirations often surface in batches via the
+        // periodic reconcile poll; toasts here would feel like spam.
         const key = `trade-expired:${row.id}`;
         const href = `/trade/req/${row.token}`;
         fireOnce(key, "expired", ctxBase, () => {
-          toast.warning("Trade kedaluwarsa", {
-            description: `Trade Tier ${row.tier_label} sudah lewat 24 jam.`,
-            duration: 7000,
-            action: { label: "Detail", onClick: () => safeNavigate(href) },
-          });
           push({
             kind: "warning",
             title: "Trade kedaluwarsa",
