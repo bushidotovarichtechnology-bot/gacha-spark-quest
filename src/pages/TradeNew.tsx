@@ -39,9 +39,12 @@ const TradeNew = () => {
   const [creating, setCreating] = useState(false);
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Determine the locked tier based on selection.
-  const lockedTier: TradableTier | undefined = useMemo(() => {
+  const selectedItems = useMemo(
+    () => items.filter((it) => selectedIds.has(it.id)),
+    [items, selectedIds],
+  );
     const first = items.find((it) => selectedIds.has(it.id));
     if (first && isTradableTier(first.tier)) return first.tier;
     return undefined;
