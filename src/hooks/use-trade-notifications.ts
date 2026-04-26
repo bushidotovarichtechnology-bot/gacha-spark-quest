@@ -210,7 +210,7 @@ export const useTradeNotifications = () => {
           logTradeNotif({
             tradeId: "-", tier: "-", kind: "skipped-no-change", source,
             dedupKey: null, fired: false,
-            note: `reconcile error: ${error?.message ?? "no data"}`,
+            prevStatus: null, nextStatus: "-", note: `reconcile error: ${error?.message ?? "no data"}`,
           });
           return false;
         }
@@ -232,7 +232,7 @@ export const useTradeNotifications = () => {
         logTradeNotif({
           tradeId: "-", tier: "-", kind: "skipped-no-change", source,
           dedupKey: null, fired: false,
-          note: `reconcile threw: ${err instanceof Error ? err.message : String(err)}`,
+          prevStatus: null, nextStatus: "-", note: `reconcile threw: ${err instanceof Error ? err.message : String(err)}`,
         });
         return false;
       }
@@ -290,7 +290,7 @@ export const useTradeNotifications = () => {
           logTradeNotif({
             tradeId: "-", tier: "-", kind: "skipped-no-change", source: "realtime-update",
             dedupKey: null, fired: false,
-            note: `channel status=${status} — triggering backoff reconcile`,
+            prevStatus: null, nextStatus: "-", note: `channel status=${status} — triggering backoff reconcile`,
           });
           reconcileWithBackoff("reconcile-online");
         }
