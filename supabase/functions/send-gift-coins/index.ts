@@ -201,8 +201,12 @@ Deno.serve(async (req) => {
       _amount: amount,
     });
     if (rpcError) {
-      // Roll back the gift row so the idempotency key can be retried with a corrected amount/balance
-      await adminClient.from("coin_gifts").delete().eq("id", giftRow!.id);
+      // Mark gift row as error (keeps audit trail) instead of deleting,
+      // so the client can poll status by request_id.
+      await adminClient
+        .from("coin_gifts")
+        .update({ status: "error", error_message: rpcError.message?.slice(0, 200) ?? "transfer_failed" } as any)
+        .eq("id", giftRow!.id);
       audit("transfer_rpc_failed", {
         request_id: requestId,
         sender_id: user.id,
@@ -215,11 +219,17 @@ Deno.serve(async (req) => {
         : rpcError.message?.includes("cannot_send_to_self")
         ? "Tidak bisa mengirim koin ke diri sendiri"
         : "Gagal memproses transfer";
-      return new Response(JSON.stringify({ error: msg, request_id: requestId }), {
+      return new Response(JSON.stringify({ error: msg, request_id: requestId, gift_id: giftRow?.id, status: "error" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Mark gift as success
+    await adminClient
+      .from("coin_gifts")
+      .update({ status: "success" } as any)
+      .eq("id", giftRow!.id);
 
 
     // Write ledger entries for both sender (debit) and receiver (credit) — full audit trail
