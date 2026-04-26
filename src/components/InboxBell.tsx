@@ -72,6 +72,22 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
 
+  // Auto-clear the "X updates" badge ~1.2s after the dropdown opens — long
+  // enough for the user to register the highlight, short enough that the
+  // badge feels responsive when they re-open the menu.
+  useEffect(() => {
+    if (!open) return;
+    const importantUnreadIds = items
+      .filter((i) => !i.read && isImportant(i.dedupKey))
+      .map((i) => i.id);
+    if (importantUnreadIds.length === 0) return;
+    const t = window.setTimeout(() => {
+      importantUnreadIds.forEach((id) => markRead(id));
+    }, 1200);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const updatesPill = importantCount > 0 && (
     <span
       title={`${importantCount} update penting (accepted/rejected) belum dibaca`}
