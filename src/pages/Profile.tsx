@@ -52,6 +52,15 @@ const Profile = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // Trade notification preferences (persisted in localStorage, broadcast live).
+  const [notifPrefs, setNotifPrefs] = useState<TradeNotifPrefs>(() => getTradeNotifPrefs());
+  useEffect(() => subscribeTradeNotifPrefs(setNotifPrefs), []);
+  const updateNotifPref = (patch: Partial<TradeNotifPrefs>) => {
+    const next = { ...notifPrefs, ...patch };
+    setNotifPrefs(next);
+    setTradeNotifPrefs(patch);
+  };
+
   // Password state
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
