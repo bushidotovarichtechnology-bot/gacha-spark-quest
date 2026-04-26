@@ -76,3 +76,11 @@ export const cancelTrade = async (tradeId: string) => {
     .eq("id", tradeId);
   if (error) throw error;
 };
+
+export const rejectTrade = async (tradeId: string) => {
+  const { error } = await supabase
+    .from("trades")
+    .update({ status: "rejected", responded_at: new Date().toISOString() })
+    .eq("id", tradeId);
+  if (error) throw error;
+};
