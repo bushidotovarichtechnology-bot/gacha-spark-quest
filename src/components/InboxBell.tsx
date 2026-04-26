@@ -246,8 +246,10 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
             </ul>
           </ScrollArea>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {variant === "mobile" && updatesPill}
+    </div>
   );
 };
 
