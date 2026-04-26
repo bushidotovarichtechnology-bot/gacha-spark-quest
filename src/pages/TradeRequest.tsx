@@ -31,6 +31,10 @@ const TradeRequest = () => {
   const [initiatorItemMeta, setInitiatorItemMeta] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
   const [responderItemMetaRemote, setResponderItemMetaRemote] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
   const [selectedEventIdx, setSelectedEventIdx] = useState<number | null>(null);
+  const [itemDetail, setItemDetail] = useState<
+    | { id: string; prize: string; image: string; coin_value: number; side: "initiator" | "responder" }
+    | null
+  >(null);
 
   const isInitiator = !!user && trade?.initiator_id === user.id;
   const isResponder = !!user && trade?.responder_id === user.id;
