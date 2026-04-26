@@ -35,33 +35,28 @@ export interface TradeRow {
   updated_at: string;
 }
 
-/** Create a new pending trade owned by the current user. */
+/**
+ * Create a new pending trade via the `trade-create` edge function.
+ * Routing through the function lets the server capture the initiator's
+ * IP + user-agent so `trade_history.initiator_ip` is never NULL.
+ */
 export const createTrade = async (params: {
   inventoryIds: string[];
   tier: TradableTier;
   message?: string;
 }): Promise<TradeRow> => {
-  const { data: userRes } = await supabase.auth.getUser();
-  const uid = userRes.user?.id;
-  if (!uid) throw new Error("unauthorized");
-
-  // Generate token via RPC (SECURITY DEFINER not strictly needed but unique).
-  const { data: tokenData, error: tokenErr } = await supabase.rpc("generate_trade_token");
-  if (tokenErr) throw tokenErr;
-
-  const { data, error } = await supabase
-    .from("trades")
-    .insert({
-      token: tokenData as string,
-      initiator_id: uid,
-      initiator_items: params.inventoryIds,
-      tier_label: params.tier,
+  const { data, error } = await supabase.functions.invoke("trade-create", {
+    body: {
+      inventory_ids: params.inventoryIds,
+      tier: params.tier,
       message: params.message ?? "",
-    })
-    .select("*")
-    .single();
+    },
+  });
   if (error) throw error;
-  return data as unknown as TradeRow;
+  if (!data?.success || !data?.trade) {
+    throw new Error(data?.error ?? "trade_create_failed");
+  }
+  return data.trade as TradeRow;
 };
 
 export const fetchTradeByToken = async (token: string): Promise<TradeRow | null> => {
