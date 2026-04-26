@@ -157,8 +157,10 @@ const TradeRequest = () => {
   // Live countdown to expiry — ticks every 1s while trade is pending.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (trade?.status !== "pending") return;
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    // Pending trades tick every second (countdown). Finalized trades tick every
+    // 30s so relative timestamps in the timeline ("2 mnt lalu") stay fresh.
+    const intervalMs = trade?.status === "pending" ? 1000 : 30_000;
+    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
     return () => window.clearInterval(id);
   }, [trade?.status]);
 
