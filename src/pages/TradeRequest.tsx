@@ -539,7 +539,13 @@ const TradeRequest = () => {
                   </div>
                   <div className="max-h-48 overflow-y-auto">
                     {initiatorItemMeta.map((it) => (
-                      <div key={`i-${it.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-[11px] last:border-b-0">
+                      <button
+                        key={`i-${it.id}`}
+                        type="button"
+                        onClick={() => setItemDetail({ ...it, side: "initiator" })}
+                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-left text-[11px] transition-colors last:border-b-0 hover:bg-hacker-bg/60 focus:bg-hacker-bg/60 focus:outline-none"
+                        aria-label={`Detail item ${it.prize}`}
+                      >
                         <div className="flex items-center gap-1.5">
                           <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
                             className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
@@ -548,10 +554,16 @@ const TradeRequest = () => {
                         <span className="truncate text-foreground">{it.prize}</span>
                         <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
                         <span className="text-right text-accent">+{it.coin_value}</span>
-                      </div>
+                      </button>
                     ))}
                     {responderItemMetaRemote.map((it) => (
-                      <div key={`r-${it.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-[11px] last:border-b-0">
+                      <button
+                        key={`r-${it.id}`}
+                        type="button"
+                        onClick={() => setItemDetail({ ...it, side: "responder" })}
+                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-left text-[11px] transition-colors last:border-b-0 hover:bg-hacker-bg/60 focus:bg-hacker-bg/60 focus:outline-none"
+                        aria-label={`Detail item ${it.prize}`}
+                      >
                         <div className="flex items-center gap-1.5">
                           <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
                             className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
@@ -560,7 +572,7 @@ const TradeRequest = () => {
                         <span className="truncate text-foreground">{it.prize}</span>
                         <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
                         <span className="text-right text-accent">+{it.coin_value}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
