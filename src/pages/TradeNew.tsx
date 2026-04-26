@@ -68,15 +68,22 @@ const TradeNew = () => {
     };
   }, [user]);
 
+  const openConfirm = () => {
+    if (!lockedTier) { toast.error("Pilih dulu item yang ingin kamu trade."); return; }
+    if (selectedIds.size === 0) { toast.error("Tidak ada item yang dipilih."); return; }
+    // Defensive: validate every selected item is tradable + same tier.
+    const invalid = selectedItems.find((it) => !isTradableTier(it.tier) || it.tier !== lockedTier);
+    if (invalid) {
+      toast.error(`Item "${invalid.prize}" (Tier ${invalid.tier}) tidak valid untuk trade ini.`);
+      return;
+    }
+    if (pinReady === false) { setShowPinSetup(true); return; }
+    setConfirmOpen(true);
+  };
+
   const handleCreate = async () => {
-    if (!lockedTier) {
-      toast.error("Pilih dulu item yang ingin kamu trade.");
-      return;
-    }
-    if (selectedIds.size === 0) {
-      toast.error("Tidak ada item yang dipilih.");
-      return;
-    }
+    if (!lockedTier) return;
+    setConfirmOpen(false);
     setCreating(true);
     try {
       const trade = await createTrade({
