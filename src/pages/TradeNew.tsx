@@ -292,6 +292,27 @@ const TradeNew = () => {
               </div>
             </div>
 
+            <div className="rounded-md border border-border bg-hacker-bg p-3 text-xs">
+              <div className="text-hacker-green text-[11px] uppercase">$ routing</div>
+              <div className="mt-1 text-foreground">
+                {recipient ? (
+                  <>
+                    direct-target → <span className="text-hacker-green">{recipient.email}</span>
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Hanya recipient yang melihat trade & menerima notifikasi inbox.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-hacker-green">open trade link</span>
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Siapa saja dengan link bisa merespond. Tidak ada notifikasi inbox saat dibuat.
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
             <div className="rounded-md border border-hacker bg-hacker-green/5 p-3">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-hacker-green text-glow-hacker">
