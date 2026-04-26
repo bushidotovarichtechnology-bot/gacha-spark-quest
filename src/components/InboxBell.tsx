@@ -127,12 +127,24 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
         </div>
 
         {items.length === 0 ? (
-          <div className="px-4 py-8 text-center">
+          <div className="px-4 py-6 text-center">
             <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Belum ada notifikasi.</p>
-            <p className="mt-1 text-xs text-muted-foreground/70">
+            <p className="text-sm font-medium text-foreground">Belum ada notifikasi</p>
+            <p className="mt-1 text-xs text-muted-foreground/80">
               Status gift dan update penting akan muncul di sini.
             </p>
+
+            <div className="mt-4 rounded-md border border-border/60 bg-secondary/40 p-3 text-left">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Tentang trade
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Notifikasi inbox hanya muncul saat <span className="font-medium text-foreground">trade direct-target</span> dibuat untuk kamu, atau saat trade kamu di-accept / reject / cancel / expired.
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                Untuk <span className="font-medium text-foreground">trade link terbuka</span>, partner harus membuka link kamu — kamu akan dapat ping di sini begitu mereka mengkliknya.
+              </p>
+            </div>
           </div>
         ) : (
           <ScrollArea className="max-h-96">
