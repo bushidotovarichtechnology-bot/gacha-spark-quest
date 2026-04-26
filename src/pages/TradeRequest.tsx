@@ -402,7 +402,7 @@ const TradeRequest = () => {
     });
   }
 
-  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+  const selectedEvent = selectedEventIdx !== null ? timeline[selectedEventIdx] ?? null : null;
 
   return (
     <div className="min-h-screen bg-hacker-bg pb-12 scanline">
