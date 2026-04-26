@@ -25,6 +25,9 @@ interface GiftRecord {
   amount: number;
   message: string;
   created_at: string;
+  status?: string;
+  error_message?: string | null;
+  request_id?: string | null;
 }
 
 interface VerifiedRecipient {
