@@ -58,6 +58,19 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
 
+  const updatesPill = importantCount > 0 && (
+    <span
+      title={`${importantCount} update penting (accepted/rejected) belum dibaca`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30",
+        shake && "animate-badge-shake",
+      )}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-hacker-green" />
+      {importantCount} {importantCount === 1 ? "update" : "updates"}
+    </span>
+  );
+
   const trigger =
     variant === "desktop" ? (
       <button
