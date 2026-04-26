@@ -106,11 +106,16 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     <span
       title={`${importantCount} update penting (accepted/rejected) belum dibaca`}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30",
-        shake && "animate-badge-shake",
+        "inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30 transition-transform motion-reduce:transition-none",
+        updatesPop && "animate-updates-pop motion-reduce:animate-none",
       )}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-hacker-green" />
+      <span
+        className={cn(
+          "h-1.5 w-1.5 rounded-full bg-hacker-green",
+          updatesPop && "animate-pulse motion-reduce:animate-none",
+        )}
+      />
       {importantCount} {importantCount === 1 ? "update" : "updates"}
     </span>
   );
