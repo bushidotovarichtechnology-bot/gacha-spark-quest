@@ -214,10 +214,21 @@ const GiftCoins = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="bg-secondary"
+                      list="gift-recent-recipients"
+                      autoComplete="off"
                     />
+                    {recentRecipients.length > 0 && (
+                      <datalist id="gift-recent-recipients">
+                        {recentRecipients.map((e) => (
+                          <option key={e} value={e} />
+                        ))}
+                      </datalist>
+                    )}
                     <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                       <ShieldCheck className="h-3 w-3" />
-                      Email harus sudah terdaftar di Bushido Gacha
+                      {recentRecipients.length > 0
+                        ? `Saran dari ${recentRecipients.length} penerima sebelumnya — ketik untuk memfilter`
+                        : "Email harus sudah terdaftar di Bushido Gacha"}
                     </p>
                   </div>
                   <div>
