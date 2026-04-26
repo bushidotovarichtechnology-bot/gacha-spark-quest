@@ -53,6 +53,7 @@ const GiftCoins = () => {
   const [confirmText, setConfirmText] = useState("");
   const [gifts, setGifts] = useState<GiftRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailGift, setDetailGift] = useState<GiftRecord | null>(null);
 
   useEffect(() => {
     if (!user) return;
