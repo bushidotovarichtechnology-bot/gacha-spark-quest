@@ -316,7 +316,7 @@ const TradeRequest = () => {
     if (!iso) return "";
     const t = new Date(iso).getTime();
     if (Number.isNaN(t)) return "";
-    const diff = Date.now() - t;
+    const diff = now - t;
     const future = diff < 0;
     const abs = Math.abs(diff);
     const s = Math.floor(abs / 1000);
