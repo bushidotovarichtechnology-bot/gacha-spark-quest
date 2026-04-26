@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Gift, Send, Loader2, Coins, ArrowUpRight, ArrowDownLeft, ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Gift, Send, Loader2, Coins, ArrowUpRight, ArrowDownLeft, ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Clock, Copy } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -53,6 +53,7 @@ const GiftCoins = () => {
   const [confirmText, setConfirmText] = useState("");
   const [gifts, setGifts] = useState<GiftRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailGift, setDetailGift] = useState<GiftRecord | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -382,7 +383,18 @@ const GiftCoins = () => {
 
                   return (
                     <motion.div key={g.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                      <Card className={`border-border/50 ${isError ? "border-destructive/30 bg-destructive/5" : ""}`}>
+                      <Card
+                        className={`cursor-pointer border-border/50 transition-colors hover:bg-secondary/40 ${isError ? "border-destructive/30 bg-destructive/5" : ""}`}
+                        onClick={() => setDetailGift(g)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setDetailGift(g);
+                          }
+                        }}
+                      >
                         <CardContent className="flex items-center gap-3 py-3">
                           <div className={`rounded-full p-2 ${isError ? "bg-destructive/10" : isSent ? "bg-red-500/10" : "bg-green-500/10"}`}>
                             {isError ? (
@@ -523,6 +535,127 @@ const GiftCoins = () => {
                 <span className="flex items-center gap-2"><Send className="h-4 w-4" /> Kirim Sekarang</span>
               )}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail modal — shows full request_id, IDs, error_message etc. */}
+      <Dialog open={!!detailGift} onOpenChange={(open) => !open && setDetailGift(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-accent" />
+              Detail Gift
+            </DialogTitle>
+            <DialogDescription>
+              Informasi lengkap pengiriman koin untuk audit & dukungan.
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailGift && (() => {
+            const isSent = detailGift.sender_id === user?.id;
+            const status = (detailGift.status || "success").toLowerCase();
+            const date = new Date(detailGift.created_at);
+            const copyText = async (text: string, label: string) => {
+              try {
+                await navigator.clipboard.writeText(text);
+                toast({ title: "Disalin", description: `${label} disalin ke clipboard` });
+              } catch {
+                toast({ title: "Gagal menyalin", variant: "destructive" });
+              }
+            };
+            const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
+              <div className="grid grid-cols-3 gap-2 border-b border-border/30 pb-2">
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+                <span className="col-span-2 break-all text-sm">{children}</span>
+              </div>
+            );
+            const CopyValue = ({ value, label }: { value: string; label: string }) => (
+              <span className="flex items-center gap-2 break-all font-mono text-xs">
+                <span className="min-w-0 flex-1">{value}</span>
+                <button
+                  onClick={() => copyText(value, label)}
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-label={`Salin ${label}`}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            );
+            return (
+              <div className="space-y-3 pt-1">
+                <Row label="Status">
+                  {status === "error" ? (
+                    <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive">
+                      <XCircle className="mr-1 h-3 w-3" /> Gagal
+                    </Badge>
+                  ) : status === "processing" ? (
+                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-300">
+                      <Clock className="mr-1 h-3 w-3 animate-pulse" /> Diproses
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-green-500/40 bg-green-500/10 text-green-400">
+                      <CheckCircle2 className="mr-1 h-3 w-3" /> Berhasil
+                    </Badge>
+                  )}
+                </Row>
+                <Row label="Arah">
+                  {isSent ? (
+                    <span className="inline-flex items-center gap-1 text-red-400">
+                      <ArrowUpRight className="h-3.5 w-3.5" /> Terkirim
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-green-400">
+                      <ArrowDownLeft className="h-3.5 w-3.5" /> Diterima
+                    </span>
+                  )}
+                </Row>
+                <Row label="Jumlah">
+                  <span className={`font-display font-bold ${status !== "success" ? "text-muted-foreground line-through" : "text-accent"}`}>
+                    {isSent ? "-" : "+"}{detailGift.amount.toLocaleString()} koin
+                  </span>
+                </Row>
+                <Row label="Waktu">
+                  {date.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                  <br />
+                  <span className="text-xs text-muted-foreground">
+                    {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                  </span>
+                </Row>
+                <Row label={isSent ? "Penerima" : "Pengirim"}>
+                  {isSent
+                    ? (detailGift.receiver_email || "(unknown)")
+                    : "Pengirim (lihat ID)"}
+                </Row>
+                <Row label={isSent ? "Receiver ID" : "Sender ID"}>
+                  <CopyValue value={isSent ? detailGift.receiver_id : detailGift.sender_id} label="User ID" />
+                </Row>
+                <Row label="Gift ID">
+                  <CopyValue value={detailGift.id} label="Gift ID" />
+                </Row>
+                <Row label="Request ID">
+                  {detailGift.request_id ? (
+                    <CopyValue value={detailGift.request_id} label="Request ID" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground/60">—</span>
+                  )}
+                </Row>
+                {detailGift.error_message && (
+                  <Row label="Error">
+                    <span className="text-sm text-destructive">⚠ {detailGift.error_message}</span>
+                  </Row>
+                )}
+                {detailGift.message && (
+                  <Row label="Pesan">
+                    <span className="italic text-muted-foreground">"{detailGift.message}"</span>
+                  </Row>
+                )}
+              </div>
+            );
+          })()}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailGift(null)}>Tutup</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
