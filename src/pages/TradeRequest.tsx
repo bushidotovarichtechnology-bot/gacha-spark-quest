@@ -829,6 +829,65 @@ const TradeRequest = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Item detail modal — opened via thumbnail/row click in the compact items table. */}
+      <Dialog open={!!itemDetail} onOpenChange={(o) => !o && setItemDetail(null)}>
+        <DialogContent className="border-hacker bg-hacker-surface font-mono-hacker max-w-sm">
+          {itemDetail && trade && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-hacker-green text-sm uppercase tracking-wider">
+                  // item_detail
+                </DialogTitle>
+                <DialogDescription className="text-[11px] text-muted-foreground">
+                  Asal: {itemDetail.side === "initiator" ? "Initiator (A→B)" : "Responder (B→A)"}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col items-center gap-3">
+                <div className="aspect-square w-40 overflow-hidden rounded-md border border-border bg-black/40">
+                  <img
+                    src={supabaseImg(itemDetail.image, 320)}
+                    alt={itemDetail.prize}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <div className="w-full space-y-1.5 text-xs">
+                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
+                    <span className="text-muted-foreground">name</span>
+                    <span className="text-right text-foreground">{itemDetail.prize}</span>
+                  </div>
+                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
+                    <span className="text-muted-foreground">tier</span>
+                    <span className="rounded border border-hacker/50 px-1.5 text-[10px] text-hacker-green">
+                      {trade.tier_label}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
+                    <span className="text-muted-foreground">coin_value</span>
+                    <span className="text-accent">+{itemDetail.coin_value}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">origin</span>
+                    <span className="text-right text-foreground">
+                      {itemDetail.side === "initiator" ? "branch: their_offer" : "branch: your_offer"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setItemDetail(null)}
+                  className="font-mono-hacker text-xs uppercase tracking-wider"
+                >
+                  close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
