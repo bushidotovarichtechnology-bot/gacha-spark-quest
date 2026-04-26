@@ -58,7 +58,12 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
+          <span
+            className={cn(
+              "absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground origin-center",
+              shake && "animate-badge-shake",
+            )}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
