@@ -71,6 +71,21 @@ const GiftCoins = () => {
 
   const coinAmountNum = parseInt(amount) || 0;
 
+  // Unique past recipients (most recent first) — for autocomplete suggestions
+  const recentRecipients = (() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const g of gifts) {
+      if (g.sender_id !== user?.id) continue;
+      const e = (g.receiver_email || "").toLowerCase().trim();
+      if (!e || seen.has(e)) continue;
+      seen.add(e);
+      out.push(e);
+      if (out.length >= 20) break;
+    }
+    return out;
+  })();
+
   const handleVerify = async () => {
     if (!user || !email || !amount) return;
     if (coinAmountNum < 1) {
@@ -199,10 +214,21 @@ const GiftCoins = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="bg-secondary"
+                      list="gift-recent-recipients"
+                      autoComplete="off"
                     />
+                    {recentRecipients.length > 0 && (
+                      <datalist id="gift-recent-recipients">
+                        {recentRecipients.map((e) => (
+                          <option key={e} value={e} />
+                        ))}
+                      </datalist>
+                    )}
                     <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                       <ShieldCheck className="h-3 w-3" />
-                      Email harus sudah terdaftar di Bushido Gacha
+                      {recentRecipients.length > 0
+                        ? `Saran dari ${recentRecipients.length} penerima sebelumnya — ketik untuk memfilter`
+                        : "Email harus sudah terdaftar di Bushido Gacha"}
                     </p>
                   </div>
                   <div>
