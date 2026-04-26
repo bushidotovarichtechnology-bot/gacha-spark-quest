@@ -219,24 +219,24 @@ export const useTradeNotifications = () => {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "trades", filter: `responder_id=eq.${user.id}` },
-        (payload) => handleRow(payload.new as TradeRow, true),
+        (payload) => handleRow(payload.new as TradeRow, true, "realtime-insert"),
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "trades", filter: `initiator_id=eq.${user.id}` },
-        (payload) => handleRow(payload.new as TradeRow, false),
+        (payload) => handleRow(payload.new as TradeRow, false, "realtime-update"),
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "trades", filter: `responder_id=eq.${user.id}` },
-        (payload) => handleRow(payload.new as TradeRow, false),
+        (payload) => handleRow(payload.new as TradeRow, false, "realtime-update"),
       )
       .subscribe();
 
     // Fallback: periodic reconcile + on tab focus / network reconnect.
-    const interval = window.setInterval(reconcile, POLL_INTERVAL_MS);
-    const onVisible = () => { if (document.visibilityState === "visible") reconcile(); };
-    const onOnline = () => reconcile();
+    const interval = window.setInterval(() => reconcile("reconcile-poll"), POLL_INTERVAL_MS);
+    const onVisible = () => { if (document.visibilityState === "visible") reconcile("reconcile-visibility"); };
+    const onOnline = () => reconcile("reconcile-online");
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onOnline);
 
