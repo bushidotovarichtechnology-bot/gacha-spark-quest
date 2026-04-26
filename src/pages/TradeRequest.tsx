@@ -10,7 +10,7 @@ import { useGacha } from "@/context/GachaContext";
 import { supabase } from "@/integrations/supabase/client";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
-import { fetchTradeByToken, hasSecurityPin, cancelTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
+import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
 import { supabaseImg } from "@/lib/imageTransform";
 import { cn } from "@/lib/utils";
 
