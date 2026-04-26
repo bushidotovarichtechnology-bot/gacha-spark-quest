@@ -134,8 +134,14 @@ const GiftCoins = () => {
 
     setSending(true);
     try {
+      // Idempotency key: stable per send attempt to dedupe accidental double-clicks/network retries
+      const requestId =
+        (typeof crypto !== "undefined" && "randomUUID" in crypto)
+          ? crypto.randomUUID()
+          : `gift_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
       const { data, error } = await supabase.functions.invoke("send-gift-coins", {
-        body: { receiver_email: email, amount: coinAmountNum, message },
+        body: { receiver_email: email, amount: coinAmountNum, message, request_id: requestId },
       });
 
       if (error || !data?.success) {
