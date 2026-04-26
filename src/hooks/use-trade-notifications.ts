@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationsContext";
+import { logTradeNotif, type TradeNotifKind, type TradeNotifSource } from "@/lib/tradeNotificationLog";
 
 /**
  * Subscribes globally to changes on `trades` rows where the current user is
