@@ -138,6 +138,24 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
             )}
           </div>
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setImportantOnly((v) => !v)}
+              className={cn(
+                "flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors",
+                importantOnly
+                  ? "bg-hacker-green/15 text-hacker-green ring-1 ring-hacker-green/30"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              )}
+              title={importantOnly ? "Tampilkan semua notifikasi" : "Filter: hanya accepted/rejected unread"}
+            >
+              <Filter className="h-3 w-3" />
+              Penting
+              {importantCount > 0 && (
+                <span className="ml-0.5 rounded-full bg-hacker-green/20 px-1.5 text-[10px] font-bold text-hacker-green">
+                  {importantCount}
+                </span>
+              )}
+            </button>
             {items.length > 0 && unreadCount > 0 && (
               <button
                 onClick={markAllRead}
