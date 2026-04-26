@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot, Timer, User, Package } from "lucide-react";
 import { toast } from "sonner";
@@ -45,8 +45,6 @@ const TradeRequest = () => {
   const [initiatorItemMeta, setInitiatorItemMeta] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
   const [responderItemMetaRemote, setResponderItemMetaRemote] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
   const [selectedEventIdx, setSelectedEventIdx] = useState<number | null>(null);
-  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
-  const prevTimelineLenRef = useRef(0);
   const [itemDetail, setItemDetail] = useState<
     | { id: string; prize: string; image: string; coin_value: number; side: "initiator" | "responder" }
     | null
@@ -159,30 +157,10 @@ const TradeRequest = () => {
   // Live countdown to expiry — ticks every 1s while trade is pending.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    // Pending trades tick every second (countdown). Finalized trades tick every
-    // 30s so relative timestamps in the timeline ("2 mnt lalu") stay fresh.
-    const intervalMs = trade?.status === "pending" ? 1000 : 30_000;
-    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
+    if (trade?.status !== "pending") return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [trade?.status]);
-
-  // Auto-scroll the timeline list to the latest entry whenever a new event lands
-  // (status transition or first responded_at). Compares against a length proxy
-  // derived from the trade fields so we don't rely on the post-render array.
-  useEffect(() => {
-    const len =
-      1 + (trade?.responded_at ? 1 : 0) + (trade && !trade.responded_at && trade.status === "pending" ? 1 : 0);
-    if (len > prevTimelineLenRef.current) {
-      const node = timelineScrollRef.current;
-      if (node) {
-        // Defer to next frame so the new row is in the DOM before we scroll.
-        requestAnimationFrame(() => {
-          node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
-        });
-      }
-    }
-    prevTimelineLenRef.current = len;
-  }, [trade?.status, trade?.responded_at]);
 
   const countdown = useMemo(() => {
     if (!trade?.expires_at) return null;
@@ -320,8 +298,6 @@ const TradeRequest = () => {
     );
   }
 
-  // (Relative timestamps below reuse the existing `now` tick — no extra interval needed.)
-
   const fmtTs = (iso: string | null | undefined) => {
     if (!iso) return "—";
     try {
@@ -330,24 +306,6 @@ const TradeRequest = () => {
         hour: "2-digit", minute: "2-digit",
       });
     } catch { return iso; }
-  };
-
-  const fmtRelative = (iso: string | null | undefined) => {
-    if (!iso) return "";
-    const t = new Date(iso).getTime();
-    if (Number.isNaN(t)) return "";
-    const diff = now - t;
-    const future = diff < 0;
-    const abs = Math.abs(diff);
-    const s = Math.floor(abs / 1000);
-    const fmt =
-      s < 5 ? "baru saja" :
-      s < 60 ? `${s} dtk` :
-      s < 3600 ? `${Math.floor(s / 60)} mnt` :
-      s < 86400 ? `${Math.floor(s / 3600)} jam` :
-      `${Math.floor(s / 86400)} hr`;
-    if (s < 5) return fmt;
-    return future ? `dalam ${fmt}` : `${fmt} lalu`;
   };
 
   const statusMeta: Record<TradeRow["status"], { label: string; cls: string; panelCls: string; Icon: typeof CircleDot; description: string }> = {
@@ -538,55 +496,34 @@ const TradeRequest = () => {
                 </div>
               )}
 
-              {/* Timeline — each row is clickable for detail modal. Auto-scrolls
-                  to the latest entry when realtime/poll appends a new event. */}
-              <div
-                ref={timelineScrollRef}
-                className="mt-3 max-h-56 space-y-1.5 overflow-y-auto border-l border-border/50 pl-3"
-              >
-                {timeline.map((ev, idx) => {
-                  const isLatest = idx === timeline.length - 1;
-                  const rel = fmtRelative(ev.ts);
-                  return (
-                    <button
-                      type="button"
-                      key={idx}
-                      onClick={() => setSelectedEventIdx(idx)}
-                      aria-label={`Detail langkah: ${ev.label}`}
-                      className={cn(
-                        "group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-hacker-green/10 focus-visible:bg-hacker-green/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hacker-green/60",
-                        isLatest && ev.done && "bg-hacker-green/5",
-                      )}
-                    >
-                      <ev.Icon className={cn(
-                        "h-3 w-3 shrink-0 mt-0.5",
-                        ev.done ? "text-hacker-green" : "text-muted-foreground",
-                      )} />
-                      <div className="flex-1 min-w-0">
-                        <div className={cn(
-                          "flex items-center gap-1",
-                          ev.done ? "text-foreground" : "text-muted-foreground",
-                        )}>
-                          <span className="truncate">{ev.label}</span>
-                          <span className="text-[9px] uppercase text-hacker-green opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                            [details]
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-muted-foreground/70">
-                          {rel && (
-                            <span
-                              className="rounded bg-hacker-bg/50 px-1 text-[9px] font-medium text-hacker-green tabular-nums"
-                              title={fmtTs(ev.ts)}
-                            >
-                              {rel}
-                            </span>
-                          )}
-                          <span className="truncate">{fmtTs(ev.ts)}</span>
-                        </div>
+              {/* Timeline — each row is clickable for detail modal */}
+              <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
+                {timeline.map((ev, idx) => (
+                  <button
+                    type="button"
+                    key={idx}
+                    onClick={() => setSelectedEventIdx(idx)}
+                    aria-label={`Detail langkah: ${ev.label}`}
+                    className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-hacker-green/10 focus-visible:bg-hacker-green/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hacker-green/60"
+                  >
+                    <ev.Icon className={cn(
+                      "h-3 w-3 shrink-0 mt-0.5",
+                      ev.done ? "text-hacker-green" : "text-muted-foreground",
+                    )} />
+                    <div className="flex-1 min-w-0">
+                      <div className={cn(
+                        "flex items-center gap-1",
+                        ev.done ? "text-foreground" : "text-muted-foreground",
+                      )}>
+                        <span className="truncate">{ev.label}</span>
+                        <span className="text-[9px] uppercase text-hacker-green opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                          [details]
+                        </span>
                       </div>
-                    </button>
-                  );
-                })}
+                      <div className="text-muted-foreground/70">{fmtTs(ev.ts)}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
 
               {/* Exchange summary */}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent, Camera, Upload } from "lucide-react";
+import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent, Camera, Upload, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -13,12 +13,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import LocationCombobox from "@/components/LocationCombobox";
 import { useToast } from "@/hooks/use-toast";
 import { useProvinces, useCitiesForProvince } from "@/hooks/use-indonesian-locations";
 import defaultAvatar from "@/assets/default-avatar.webp";
 import { AVATAR_PRESETS } from "@/lib/avatarPresets";
 import { cn } from "@/lib/utils";
+import { getTradeNotifPrefs, setTradeNotifPrefs, subscribeTradeNotifPrefs, type TradeNotifPrefs } from "@/lib/tradeNotifPrefs";
 
 const WA_NUMBER = "6282231283948";
 const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan Bushido Gacha.");
@@ -48,6 +51,15 @@ const Profile = () => {
   const [selectingPreset, setSelectingPreset] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Trade notification preferences (persisted in localStorage, broadcast live).
+  const [notifPrefs, setNotifPrefs] = useState<TradeNotifPrefs>(() => getTradeNotifPrefs());
+  useEffect(() => subscribeTradeNotifPrefs(setNotifPrefs), []);
+  const updateNotifPref = (patch: Partial<TradeNotifPrefs>) => {
+    const next = { ...notifPrefs, ...patch };
+    setNotifPrefs(next);
+    setTradeNotifPrefs(patch);
+  };
 
   // Password state
   const [newPassword, setNewPassword] = useState("");
@@ -281,10 +293,11 @@ const Profile = () => {
 
         <div className="mx-auto max-w-lg">
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-3 gap-1 sm:grid-cols-6">
               <TabsTrigger value="avatar" className="gap-1 text-xs"><Camera className="h-3.5 w-3.5" /> Foto</TabsTrigger>
               <TabsTrigger value="address" className="gap-1 text-xs"><MapPin className="h-3.5 w-3.5" /> Alamat</TabsTrigger>
-              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Bushido Kupon</TabsTrigger>
+              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Kupon</TabsTrigger>
+              <TabsTrigger value="notif" className="gap-1 text-xs"><Bell className="h-3.5 w-3.5" /> Notif</TabsTrigger>
               <TabsTrigger value="password" className="gap-1 text-xs"><Lock className="h-3.5 w-3.5" /> Password</TabsTrigger>
               <TabsTrigger value="help" className="gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" /> Bantuan</TabsTrigger>
             </TabsList>
@@ -482,6 +495,61 @@ const Profile = () => {
                         })}
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
+            {/* Notification preferences */}
+            <TabsContent value="notif">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-display text-lg">
+                      <Bell className="h-5 w-5 text-primary" /> Notifikasi Trade
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <p className="text-xs text-muted-foreground">
+                      Atur kapan kamu ingin menerima toast notifikasi untuk perubahan status trade.
+                      Notifikasi tetap masuk ke inbox meski toast dimatikan.
+                    </p>
+
+                    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-secondary/40 p-3">
+                      <div className="flex-1 min-w-0">
+                        <Label htmlFor="pref-decisions" className="text-sm text-foreground">
+                          Toast untuk Accepted / Rejected
+                        </Label>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Tampilkan toast ketika trade kamu diterima atau ditolak.
+                        </p>
+                      </div>
+                      <Switch
+                        id="pref-decisions"
+                        checked={notifPrefs.toastDecisions}
+                        onCheckedChange={(v) => updateNotifPref({ toastDecisions: v })}
+                      />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-secondary/40 p-3">
+                      <div className="flex-1 min-w-0">
+                        <Label htmlFor="pref-passive" className="text-sm text-foreground">
+                          Toast untuk Cancelled / Expired
+                        </Label>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Saat dimatikan, status pasif (dibatalkan / kedaluwarsa) hanya muncul di inbox tanpa toast.
+                        </p>
+                      </div>
+                      <Switch
+                        id="pref-passive"
+                        checked={notifPrefs.toastPassive}
+                        onCheckedChange={(v) => updateNotifPref({ toastPassive: v })}
+                      />
+                    </div>
+
+                    <p className="text-[11px] text-muted-foreground">
+                      Notifikasi penting (incoming trade, partner ditemukan) selalu ditampilkan.
+                    </p>
                   </CardContent>
                 </Card>
               </motion.div>
