@@ -144,7 +144,7 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   return (
     <div className="inline-flex items-center gap-2">
       {variant === "desktop" && updatesPill}
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
