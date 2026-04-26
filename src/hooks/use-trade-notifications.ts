@@ -124,16 +124,18 @@ export const useTradeNotifications = () => {
       // New incoming trade request (responder explicitly assigned).
       if (isInsert && isResponder && row.status === "pending") {
         const key = `trade-incoming:${row.id}`;
+        const href = `/trade/req/${row.token}`;
         fireOnce(key, "incoming", ctxBase, () => {
           toast.info("Trade Request Masuk", {
             description: `Tier ${row.tier_label} — buka untuk merespons.`,
             duration: 8000,
+            action: { label: "Buka", onClick: () => safeNavigate(href) },
           });
           push({
             kind: "info",
             title: "Trade request masuk",
             description: `Permintaan trade Tier ${row.tier_label}.`,
-            href: `/trade/req/${row.token}`,
+            href,
             dedupKey: key,
           });
         });
