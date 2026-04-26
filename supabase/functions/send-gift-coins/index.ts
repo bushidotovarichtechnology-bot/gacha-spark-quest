@@ -53,14 +53,51 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { receiver_email, amount, message } = body;
-    // Idempotency key: prefer client-provided request_id (in body or header), else use generated one
-    const idempotencyKey: string =
-      (typeof body?.request_id === "string" && body.request_id.trim()) ||
+
+    // STRICT: request_id is required and must be a non-empty string.
+    // Prefer body.request_id, fall back to x-idempotency-key / x-request-id headers.
+    const rawRequestId =
+      (typeof body?.request_id === "string" ? body.request_id : "") ||
       req.headers.get("x-idempotency-key") ||
-      requestId;
+      req.headers.get("x-request-id") ||
+      "";
+    const idempotencyKey = rawRequestId.trim();
+
+    if (!idempotencyKey) {
+      audit("validation_failed", {
+        request_id: requestId,
+        sender_id: user.id,
+        reason: "missing_request_id",
+      });
+      return new Response(
+        JSON.stringify({
+          error: "request_id wajib diisi (idempotency key tidak boleh kosong)",
+          code: "missing_request_id",
+          request_id: requestId,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (idempotencyKey.length < 8 || idempotencyKey.length > 128) {
+      audit("validation_failed", {
+        request_id: requestId,
+        sender_id: user.id,
+        reason: "invalid_request_id_length",
+        length: idempotencyKey.length,
+      });
+      return new Response(
+        JSON.stringify({
+          error: "request_id harus 8-128 karakter",
+          code: "invalid_request_id",
+          request_id: requestId,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     audit("request_received", {
       request_id: requestId,
+      idempotency_key: idempotencyKey,
       sender_id: user.id,
       receiver_email: typeof receiver_email === "string" ? receiver_email.toLowerCase() : null,
       amount,
