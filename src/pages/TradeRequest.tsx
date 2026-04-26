@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot } from "lucide-react";
+import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot, Timer } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
