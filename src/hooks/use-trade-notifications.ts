@@ -362,7 +362,9 @@ export const useTradeNotifications = () => {
         // When the realtime channel hiccups (CHANNEL_ERROR / TIMED_OUT / CLOSED),
         // kick off a backoff-driven reconcile so we self-heal once the network
         // returns instead of waiting up to a full poll interval.
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        if (status === "SUBSCRIBED") {
+          emitRtStatus("online");
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           logTradeNotif({
             tradeId: "-", tier: "-", kind: "skipped-no-change", source: "realtime-update",
             dedupKey: null, fired: false,
