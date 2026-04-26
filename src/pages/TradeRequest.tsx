@@ -298,6 +298,13 @@ const TradeRequest = () => {
     );
   }
 
+  // Tick every 10s so relative timestamps stay fresh without re-rendering on every frame.
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick((n) => n + 1), 10_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const fmtTs = (iso: string | null | undefined) => {
     if (!iso) return "—";
     try {
@@ -306,6 +313,24 @@ const TradeRequest = () => {
         hour: "2-digit", minute: "2-digit",
       });
     } catch { return iso; }
+  };
+
+  const fmtRelative = (iso: string | null | undefined) => {
+    if (!iso) return "";
+    const t = new Date(iso).getTime();
+    if (Number.isNaN(t)) return "";
+    const diff = Date.now() - t;
+    const future = diff < 0;
+    const abs = Math.abs(diff);
+    const s = Math.floor(abs / 1000);
+    const fmt =
+      s < 5 ? "baru saja" :
+      s < 60 ? `${s} dtk` :
+      s < 3600 ? `${Math.floor(s / 60)} mnt` :
+      s < 86400 ? `${Math.floor(s / 3600)} jam` :
+      `${Math.floor(s / 86400)} hr`;
+    if (s < 5) return fmt;
+    return future ? `dalam ${fmt}` : `${fmt} lalu`;
   };
 
   const statusMeta: Record<TradeRow["status"], { label: string; cls: string; panelCls: string; Icon: typeof CircleDot; description: string }> = {
