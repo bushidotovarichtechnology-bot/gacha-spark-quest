@@ -293,10 +293,11 @@ const Profile = () => {
 
         <div className="mx-auto max-w-lg">
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-3 gap-1 sm:grid-cols-6">
               <TabsTrigger value="avatar" className="gap-1 text-xs"><Camera className="h-3.5 w-3.5" /> Foto</TabsTrigger>
               <TabsTrigger value="address" className="gap-1 text-xs"><MapPin className="h-3.5 w-3.5" /> Alamat</TabsTrigger>
-              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Bushido Kupon</TabsTrigger>
+              <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Kupon</TabsTrigger>
+              <TabsTrigger value="notif" className="gap-1 text-xs"><Bell className="h-3.5 w-3.5" /> Notif</TabsTrigger>
               <TabsTrigger value="password" className="gap-1 text-xs"><Lock className="h-3.5 w-3.5" /> Password</TabsTrigger>
               <TabsTrigger value="help" className="gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" /> Bantuan</TabsTrigger>
             </TabsList>
