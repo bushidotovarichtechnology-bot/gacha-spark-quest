@@ -189,7 +189,7 @@ export const useTradeNotifications = () => {
      * - Subsequent runs surface any transitions the realtime channel missed
      *   (e.g. during reconnects, throttling, or background tabs).
      */
-    const reconcile = async () => {
+    const reconcile = async (source: TradeNotifSource = "reconcile-poll") => {
       const { data, error } = await supabase
         .from("trades")
         .select("id,token,status,initiator_id,responder_id,tier_label")
@@ -205,14 +205,14 @@ export const useTradeNotifications = () => {
           prevResponder.current[row.id] = row.responder_id;
           return;
         }
-        if (known !== row.status) handleRow(row as TradeRow, false);
+        if (known !== row.status) handleRow(row as TradeRow, false, source);
         else prevResponder.current[row.id] = row.responder_id;
       });
 
       if (!initialized.current) initialized.current = true;
     };
 
-    reconcile();
+    reconcile("reconcile-init");
 
     const channel = supabase
       .channel(`global-trades-${user.id}`)
