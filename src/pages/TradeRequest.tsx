@@ -166,6 +166,24 @@ const TradeRequest = () => {
     return () => window.clearInterval(id);
   }, [trade?.status]);
 
+  // Auto-scroll the timeline list to the latest entry whenever a new event lands
+  // (status transition or first responded_at). Compares against a length proxy
+  // derived from the trade fields so we don't rely on the post-render array.
+  useEffect(() => {
+    const len =
+      1 + (trade?.responded_at ? 1 : 0) + (trade && !trade.responded_at && trade.status === "pending" ? 1 : 0);
+    if (len > prevTimelineLenRef.current) {
+      const node = timelineScrollRef.current;
+      if (node) {
+        // Defer to next frame so the new row is in the DOM before we scroll.
+        requestAnimationFrame(() => {
+          node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+        });
+      }
+    }
+    prevTimelineLenRef.current = len;
+  }, [trade?.status, trade?.responded_at]);
+
   const countdown = useMemo(() => {
     if (!trade?.expires_at) return null;
     const expMs = new Date(trade.expires_at).getTime();
