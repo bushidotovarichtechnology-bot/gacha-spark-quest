@@ -42,6 +42,20 @@ const computeBackoff = (attempt: number) => {
   return Math.floor(Math.random() * exp);
 };
 
+/**
+ * Connection state surfaced to the UI via the `trade-rt-status` window event:
+ *  - `online`        → realtime channel SUBSCRIBED, last reconcile OK.
+ *  - `reconnecting`  → fallback reconcile is in-flight (channel hiccup or poll).
+ *  - `missed-sync`   → reconcile failed after exhausting backoff; data may be stale.
+ */
+export type TradeRtStatus = "online" | "reconnecting" | "missed-sync";
+
+const emitRtStatus = (status: TradeRtStatus) => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("trade-rt-status", { detail: { status } }));
+};
+
+
 export const useTradeNotifications = () => {
   const { user } = useAuth();
   const { push } = useNotifications();
@@ -301,10 +315,18 @@ export const useTradeNotifications = () => {
         backoffTimer = null;
       }
 
+      // Surface "reconnecting" the moment a fallback refetch begins so the UI
+      // chip can flip even before the first network round-trip completes.
+      emitRtStatus("reconnecting");
+
       for (let attempt = 0; attempt < BACKOFF_MAX_ATTEMPTS; attempt++) {
         if (cancelled || myToken !== backoffToken) return;
         const ok = await reconcile(source);
-        if (ok || cancelled || myToken !== backoffToken) return;
+        if (cancelled || myToken !== backoffToken) return;
+        if (ok) {
+          emitRtStatus("online");
+          return;
+        }
         const delay = computeBackoff(attempt);
         await new Promise<void>((resolve) => {
           backoffTimer = window.setTimeout(() => {
@@ -313,6 +335,8 @@ export const useTradeNotifications = () => {
           }, delay);
         });
       }
+      // Exhausted all attempts — flag missed sync so user knows data may be stale.
+      if (!cancelled && myToken === backoffToken) emitRtStatus("missed-sync");
     };
 
     reconcileWithBackoff("reconcile-init");
@@ -338,7 +362,9 @@ export const useTradeNotifications = () => {
         // When the realtime channel hiccups (CHANNEL_ERROR / TIMED_OUT / CLOSED),
         // kick off a backoff-driven reconcile so we self-heal once the network
         // returns instead of waiting up to a full poll interval.
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        if (status === "SUBSCRIBED") {
+          emitRtStatus("online");
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           logTradeNotif({
             tradeId: "-", tier: "-", kind: "skipped-no-change", source: "realtime-update",
             dedupKey: null, fired: false,
