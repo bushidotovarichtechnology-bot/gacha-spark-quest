@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNotifications, getAckedDedupKeys } from "@/context/NotificationsContext";
 import { logTradeNotif, type TradeNotifKind, type TradeNotifSource } from "@/lib/tradeNotificationLog";
 import { safeNavigate } from "@/lib/safeNavigate";
+import { getTradeNotifPrefs, subscribeTradeNotifPrefs, type TradeNotifPrefs } from "@/lib/tradeNotifPrefs";
 
 /**
  * Subscribes globally to changes on `trades` rows where the current user is
