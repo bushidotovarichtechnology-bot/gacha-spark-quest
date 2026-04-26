@@ -148,12 +148,18 @@ export const useTradeNotifications = () => {
       // Initiator gets pinged when someone claims their open link.
       if (isInitiator && responderClaimed && row.status === "pending") {
         const key = `trade-claimed:${row.id}`;
+        const href = `/trade/req/${row.token}`;
         fireOnce(key, "claimed", ctxBase, () => {
+          toast.info("Partner trade ditemukan", {
+            description: `Seseorang mengklaim trade link Tier ${row.tier_label}.`,
+            duration: 8000,
+            action: { label: "Lihat", onClick: () => safeNavigate(href) },
+          });
           push({
             kind: "info",
             title: "Partner trade ditemukan",
             description: `Seseorang mengklaim trade link Tier ${row.tier_label}.`,
-            href: `/trade/req/${row.token}`,
+            href,
             dedupKey: key,
           });
         });
