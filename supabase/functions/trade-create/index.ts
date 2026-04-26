@@ -54,6 +54,13 @@ Deno.serve(async (req) => {
     return json(400, { error: "invalid_tier" });
   }
   const message = (payload.message ?? "").slice(0, 200);
+  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  let recipientId: string | null = null;
+  if (payload.recipient_id) {
+    if (!uuidRe.test(payload.recipient_id)) return json(400, { error: "invalid_recipient_id" });
+    if (payload.recipient_id === callerId) return json(400, { error: "recipient_is_self" });
+    recipientId = payload.recipient_id;
+  }
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
