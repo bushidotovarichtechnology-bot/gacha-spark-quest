@@ -500,6 +500,61 @@ const Profile = () => {
               </motion.div>
             </TabsContent>
 
+            {/* Notification preferences */}
+            <TabsContent value="notif">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-display text-lg">
+                      <Bell className="h-5 w-5 text-primary" /> Notifikasi Trade
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <p className="text-xs text-muted-foreground">
+                      Atur kapan kamu ingin menerima toast notifikasi untuk perubahan status trade.
+                      Notifikasi tetap masuk ke inbox meski toast dimatikan.
+                    </p>
+
+                    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-secondary/40 p-3">
+                      <div className="flex-1 min-w-0">
+                        <Label htmlFor="pref-decisions" className="text-sm text-foreground">
+                          Toast untuk Accepted / Rejected
+                        </Label>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Tampilkan toast ketika trade kamu diterima atau ditolak.
+                        </p>
+                      </div>
+                      <Switch
+                        id="pref-decisions"
+                        checked={notifPrefs.toastDecisions}
+                        onCheckedChange={(v) => updateNotifPref({ toastDecisions: v })}
+                      />
+                    </div>
+
+                    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-secondary/40 p-3">
+                      <div className="flex-1 min-w-0">
+                        <Label htmlFor="pref-passive" className="text-sm text-foreground">
+                          Toast untuk Cancelled / Expired
+                        </Label>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Saat dimatikan, status pasif (dibatalkan / kedaluwarsa) hanya muncul di inbox tanpa toast.
+                        </p>
+                      </div>
+                      <Switch
+                        id="pref-passive"
+                        checked={notifPrefs.toastPassive}
+                        onCheckedChange={(v) => updateNotifPref({ toastPassive: v })}
+                      />
+                    </div>
+
+                    <p className="text-[11px] text-muted-foreground">
+                      Notifikasi penting (incoming trade, partner ditemukan) selalu ditampilkan.
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
             <TabsContent value="password">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <Card className="border-border/50">
