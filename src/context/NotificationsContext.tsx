@@ -28,8 +28,25 @@ interface NotificationsContextValue {
 const NotificationsContext = createContext<NotificationsContextValue | undefined>(undefined);
 
 const MAX_ITEMS = 50;
+const MAX_ACK_KEYS = 500;
 const storageKey = (uid: string | null | undefined) =>
   uid ? `inbox-notifications:${uid}` : "inbox-notifications:guest";
+const ackStorageKey = (uid: string | null | undefined) =>
+  uid ? `inbox-acked-dedup:${uid}` : "inbox-acked-dedup:guest";
+
+/** Read acknowledged dedupKeys for a user. Used by toast emitters to suppress
+ *  re-firing for events the user already marked as read. */
+export const getAckedDedupKeys = (uid: string | null | undefined): string[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(ackStorageKey(uid));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((k): k is string => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+};
 
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
@@ -78,13 +95,41 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     });
   }, []);
 
-  const markAllRead = useCallback(() => {
-    setItems((curr) => (curr.some((i) => !i.read) ? curr.map((i) => ({ ...i, read: true })) : curr));
-  }, []);
+  const persistAck = useCallback(
+    (keys: string[]) => {
+      if (keys.length === 0) return;
+      try {
+        const existing = getAckedDedupKeys(user?.id);
+        const merged = Array.from(new Set([...existing, ...keys])).slice(-MAX_ACK_KEYS);
+        localStorage.setItem(ackStorageKey(user?.id), JSON.stringify(merged));
+        // Broadcast so live hooks (e.g. useTradeNotifications) can suppress future toasts.
+        window.dispatchEvent(new CustomEvent("inbox-acked", { detail: { keys } }));
+      } catch {
+        /* ignore quota */
+      }
+    },
+    [user?.id],
+  );
 
-  const markRead = useCallback((id: string) => {
-    setItems((curr) => curr.map((i) => (i.id === id ? { ...i, read: true } : i)));
-  }, []);
+  const markAllRead = useCallback(() => {
+    setItems((curr) => {
+      if (!curr.some((i) => !i.read)) return curr;
+      const ackKeys = curr.filter((i) => !i.read && i.dedupKey).map((i) => i.dedupKey as string);
+      persistAck(ackKeys);
+      return curr.map((i) => ({ ...i, read: true }));
+    });
+  }, [persistAck]);
+
+  const markRead = useCallback(
+    (id: string) => {
+      setItems((curr) => {
+        const target = curr.find((i) => i.id === id);
+        if (target && !target.read && target.dedupKey) persistAck([target.dedupKey]);
+        return curr.map((i) => (i.id === id ? { ...i, read: true } : i));
+      });
+    },
+    [persistAck],
+  );
 
   const remove = useCallback((id: string) => {
     setItems((curr) => curr.filter((i) => i.id !== id));

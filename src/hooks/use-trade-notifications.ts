@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { useNotifications } from "@/context/NotificationsContext";
+import { useNotifications, getAckedDedupKeys } from "@/context/NotificationsContext";
 import { logTradeNotif, type TradeNotifKind, type TradeNotifSource } from "@/lib/tradeNotificationLog";
 
 /**
@@ -67,6 +67,16 @@ export const useTradeNotifications = () => {
       initialized.current = false;
       return;
     }
+
+    // Seed firedKeys from previously acknowledged dedupKeys so we never re-toast
+    // events the user already marked as read (survives reload + reconnect).
+    getAckedDedupKeys(user.id).forEach((k) => firedKeys.current.add(k));
+
+    const onAcked = (e: Event) => {
+      const detail = (e as CustomEvent<{ keys: string[] }>).detail;
+      detail?.keys?.forEach((k) => firedKeys.current.add(k));
+    };
+    window.addEventListener("inbox-acked", onAcked);
 
     let cancelled = false;
 
@@ -322,6 +332,7 @@ export const useTradeNotifications = () => {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
+      window.removeEventListener("inbox-acked", onAcked);
       supabase.removeChannel(channel);
     };
   }, [user, push]);
