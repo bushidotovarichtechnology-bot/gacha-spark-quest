@@ -37,6 +37,18 @@ interface InboxBellProps {
 
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
+  const [shake, setShake] = useState(false);
+  const prevUnreadRef = useRef(unreadCount);
+
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) {
+      setShake(true);
+      const t = setTimeout(() => setShake(false), 650);
+      prevUnreadRef.current = unreadCount;
+      return () => clearTimeout(t);
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount]);
 
   const trigger =
     variant === "desktop" ? (
