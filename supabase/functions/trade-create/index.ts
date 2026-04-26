@@ -16,6 +16,7 @@ interface CreatePayload {
   inventory_ids: string[];
   tier: "S" | "A" | "B";
   message?: string;
+  recipient_id?: string | null;
 }
 
 const json = (status: number, body: unknown) =>
