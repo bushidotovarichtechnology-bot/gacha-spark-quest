@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
+import { useNotifications } from "@/context/NotificationsContext";
 import { useI18n } from "@/context/I18nContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ const GiftCoins = () => {
   const { totalCoins, spendCoins, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
+  const { push: pushNotification } = useNotifications();
 
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
@@ -92,17 +94,31 @@ const GiftCoins = () => {
 
           // Only toast on processing → final state to avoid noise
           if (prev === "processing" && next === "success") {
+            const desc = `${newRow.amount.toLocaleString()} koin sampai ke ${newRow.receiver_email}.`;
             toast({
               title: "Gift Berhasil Terkirim 🎉",
-              description: `${newRow.amount.toLocaleString()} koin sampai ke ${newRow.receiver_email}.`,
+              description: desc,
+            });
+            pushNotification({
+              title: "Gift Berhasil Terkirim 🎉",
+              description: desc,
+              kind: "success",
+              href: "/gift",
             });
             // Reconcile sender balance with server (in case optimistic spend drifted)
             void refreshCoins();
           } else if (prev === "processing" && next === "error") {
+            const desc = newRow.error_message || "Pengiriman koin gagal diproses. Cek detail di riwayat.";
             toast({
               title: "Gift Gagal Dikirim",
-              description: newRow.error_message || "Pengiriman koin gagal diproses. Cek detail di riwayat.",
+              description: desc,
               variant: "destructive",
+            });
+            pushNotification({
+              title: "Gift Gagal Dikirim",
+              description: desc,
+              kind: "error",
+              href: "/gift",
             });
             // Server may have rolled back the deduction → resync balance
             void refreshCoins();
@@ -122,9 +138,16 @@ const GiftCoins = () => {
           // Append to list so receiver sees incoming gifts live
           setGifts((curr) => (curr.some((g) => g.id === row.id) ? curr : [row, ...curr]));
           if ((row.status || "success").toLowerCase() === "success") {
+            const desc = `+${row.amount.toLocaleString()} koin masuk ke saldo kamu.`;
             toast({
               title: "Kamu Menerima Gift 🎁",
-              description: `+${row.amount.toLocaleString()} koin masuk ke saldo kamu.`,
+              description: desc,
+            });
+            pushNotification({
+              title: "Kamu Menerima Gift 🎁",
+              description: desc,
+              kind: "success",
+              href: "/gift",
             });
             // Pull updated balance for receiver
             void refreshCoins();
@@ -136,7 +159,7 @@ const GiftCoins = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, toast, refreshCoins]);
+  }, [user, toast, refreshCoins, pushNotification]);
 
   // Reset verified recipient if email changes
   useEffect(() => {
