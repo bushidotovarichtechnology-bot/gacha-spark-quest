@@ -38,6 +38,8 @@ interface InboxBellProps {
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
   const [shake, setShake] = useState(false);
+  // Subtle pop animation on the "X updates" pill when its count grows.
+  const [updatesPop, setUpdatesPop] = useState(false);
   // Controlled open state so we can auto-clear "X updates" once the user has
   // had a moment to glance at them — the badge feels alive without forcing
   // the user to click each item individually.
@@ -45,6 +47,7 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   // When true, the dropdown list filters down to unread accepted/rejected only.
   const [importantOnly, setImportantOnly] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
+  const prevImportantRef = useRef(0);
 
   const isImportant = (dedupKey: string | undefined) => {
     const k = dedupKey ?? "";
@@ -72,6 +75,17 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
 
+  // Trigger a brief pop on the "X updates" pill whenever its count grows.
+  useEffect(() => {
+    if (importantCount > prevImportantRef.current) {
+      setUpdatesPop(true);
+      const t = window.setTimeout(() => setUpdatesPop(false), 950);
+      prevImportantRef.current = importantCount;
+      return () => window.clearTimeout(t);
+    }
+    prevImportantRef.current = importantCount;
+  }, [importantCount]);
+
   // Auto-clear the "X updates" badge ~1.2s after the dropdown opens — long
   // enough for the user to register the highlight, short enough that the
   // badge feels responsive when they re-open the menu.
@@ -92,11 +106,16 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     <span
       title={`${importantCount} update penting (accepted/rejected) belum dibaca`}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30",
-        shake && "animate-badge-shake",
+        "inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30 transition-transform motion-reduce:transition-none",
+        updatesPop && "animate-updates-pop motion-reduce:animate-none",
       )}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-hacker-green" />
+      <span
+        className={cn(
+          "h-1.5 w-1.5 rounded-full bg-hacker-green",
+          updatesPop && "animate-pulse motion-reduce:animate-none",
+        )}
+      />
       {importantCount} {importantCount === 1 ? "update" : "updates"}
     </span>
   );
