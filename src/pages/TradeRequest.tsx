@@ -15,6 +15,20 @@ import { supabaseImg } from "@/lib/imageTransform";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+/**
+ * Map a tier label (S/A/B/C, case-insensitive) to a high-contrast badge
+ * className using semantic tokens defined in index.css. Falls back to a
+ * neutral muted style for unknown labels.
+ */
+const tierBadgeClass = (label: string) => {
+  const t = label?.trim().toUpperCase();
+  if (t === "S") return "bg-[hsl(var(--tier-s))] text-[hsl(var(--tier-s-foreground))] border-[hsl(var(--tier-s))]";
+  if (t === "A") return "bg-[hsl(var(--tier-a))] text-[hsl(var(--tier-a-foreground))] border-[hsl(var(--tier-a))]";
+  if (t === "B") return "bg-[hsl(var(--tier-b))] text-[hsl(var(--tier-b-foreground))] border-[hsl(var(--tier-b))]";
+  if (t === "C") return "bg-[hsl(var(--tier-c))] text-[hsl(var(--tier-c-foreground))] border-[hsl(var(--tier-c))]";
+  return "bg-secondary text-secondary-foreground border-border";
+};
+
 const TradeRequest = () => {
   const { token = "" } = useParams<{ token: string }>();
   const navigate = useNavigate();
@@ -552,7 +566,7 @@ const TradeRequest = () => {
                           <span className="text-[9px] text-muted-foreground">A→B</span>
                         </div>
                         <span className="truncate text-foreground">{it.prize}</span>
-                        <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
+                        <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", tierBadgeClass(trade.tier_label))}>{trade.tier_label}</span>
                         <span className="text-right text-accent">+{it.coin_value}</span>
                       </button>
                     ))}
@@ -570,7 +584,7 @@ const TradeRequest = () => {
                           <span className="text-[9px] text-muted-foreground">B→A</span>
                         </div>
                         <span className="truncate text-foreground">{it.prize}</span>
-                        <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
+                        <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", tierBadgeClass(trade.tier_label))}>{trade.tier_label}</span>
                         <span className="text-right text-accent">+{it.coin_value}</span>
                       </button>
                     ))}
