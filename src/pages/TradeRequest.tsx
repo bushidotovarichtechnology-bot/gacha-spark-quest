@@ -79,6 +79,23 @@ const TradeRequest = () => {
     return () => { cancelled = true; };
   }, [trade?.initiator_items]);
 
+  // Fetch responder item metadata once trade has them locked in (post-merge or in-flight).
+  useEffect(() => {
+    if (!trade?.responder_items?.length) { setResponderItemMetaRemote([]); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("user_inventory")
+        .select("id, prize_name, image_url, coin_value")
+        .in("id", trade.responder_items);
+      if (cancelled || !data) return;
+      setResponderItemMetaRemote(
+        data.map((r) => ({ id: r.id, prize: r.prize_name, image: r.image_url, coin_value: r.coin_value })),
+      );
+    })();
+    return () => { cancelled = true; };
+  }, [trade?.responder_items]);
+
   // PIN check on mount (only relevant if user is logged in & not initiator's own preview).
   useEffect(() => {
     if (!user) return;
