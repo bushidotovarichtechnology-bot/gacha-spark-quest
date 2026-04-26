@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 1: Insert the gift row FIRST as the idempotency lock (unique request_id).
-    // This guarantees that concurrent retries with the same key cannot both proceed to transfer.
+    // Status starts as "processing" — flips to "success" after transfer or "error" on failure.
     const { data: giftRow, error: insertError } = await adminClient
       .from("coin_gifts")
       .insert({
@@ -159,7 +159,8 @@ Deno.serve(async (req) => {
         amount,
         message: (message || "").slice(0, 200),
         request_id: idempotencyKey,
-      })
+        status: "processing",
+      } as any)
       .select("id")
       .single();
 
@@ -200,8 +201,12 @@ Deno.serve(async (req) => {
       _amount: amount,
     });
     if (rpcError) {
-      // Roll back the gift row so the idempotency key can be retried with a corrected amount/balance
-      await adminClient.from("coin_gifts").delete().eq("id", giftRow!.id);
+      // Mark gift row as error (keeps audit trail) instead of deleting,
+      // so the client can poll status by request_id.
+      await adminClient
+        .from("coin_gifts")
+        .update({ status: "error", error_message: rpcError.message?.slice(0, 200) ?? "transfer_failed" } as any)
+        .eq("id", giftRow!.id);
       audit("transfer_rpc_failed", {
         request_id: requestId,
         sender_id: user.id,
@@ -214,11 +219,17 @@ Deno.serve(async (req) => {
         : rpcError.message?.includes("cannot_send_to_self")
         ? "Tidak bisa mengirim koin ke diri sendiri"
         : "Gagal memproses transfer";
-      return new Response(JSON.stringify({ error: msg, request_id: requestId }), {
+      return new Response(JSON.stringify({ error: msg, request_id: requestId, gift_id: giftRow?.id, status: "error" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Mark gift as success
+    await adminClient
+      .from("coin_gifts")
+      .update({ status: "success" } as any)
+      .eq("id", giftRow!.id);
 
 
     // Write ledger entries for both sender (debit) and receiver (credit) — full audit trail

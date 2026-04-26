@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Gift, Send, Loader2, Coins, ArrowUpRight, ArrowDownLeft, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Gift, Send, Loader2, Coins, ArrowUpRight, ArrowDownLeft, ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -25,6 +25,9 @@ interface GiftRecord {
   amount: number;
   message: string;
   created_at: string;
+  status?: string;
+  error_message?: string | null;
+  request_id?: string | null;
 }
 
 interface VerifiedRecipient {
@@ -339,31 +342,69 @@ const GiftCoins = () => {
                 {gifts.map((g, i) => {
                   const isSent = g.sender_id === user?.id;
                   const date = new Date(g.created_at);
+                  const status = (g.status || "success").toLowerCase();
+                  const isError = status === "error";
+                  const isProcessing = status === "processing";
+                  const isSuccess = status === "success";
+
+                  const statusBadge = isError ? (
+                    <Badge variant="outline" className="border-destructive/40 bg-destructive/10 px-1.5 py-0 text-[10px] text-destructive">
+                      <XCircle className="mr-0.5 h-2.5 w-2.5" />
+                      Gagal
+                    </Badge>
+                  ) : isProcessing ? (
+                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 px-1.5 py-0 text-[10px] text-amber-300">
+                      <Clock className="mr-0.5 h-2.5 w-2.5 animate-pulse" />
+                      Diproses
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-green-500/40 bg-green-500/10 px-1.5 py-0 text-[10px] text-green-400">
+                      <CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />
+                      Berhasil
+                    </Badge>
+                  );
+
+                  // Failed/processing transfers don't move coins — render amount muted
+                  const amountColor = !isSuccess
+                    ? "text-muted-foreground line-through"
+                    : isSent
+                    ? "text-red-400"
+                    : "text-green-400";
+
                   return (
                     <motion.div key={g.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                      <Card className="border-border/50">
+                      <Card className={`border-border/50 ${isError ? "border-destructive/30 bg-destructive/5" : ""}`}>
                         <CardContent className="flex items-center gap-3 py-3">
-                          <div className={`rounded-full p-2 ${isSent ? "bg-red-500/10" : "bg-green-500/10"}`}>
-                            {isSent ? <ArrowUpRight className="h-4 w-4 text-red-400" /> : <ArrowDownLeft className="h-4 w-4 text-green-400" />}
+                          <div className={`rounded-full p-2 ${isError ? "bg-destructive/10" : isSent ? "bg-red-500/10" : "bg-green-500/10"}`}>
+                            {isError ? (
+                              <XCircle className="h-4 w-4 text-destructive" />
+                            ) : isSent ? (
+                              <ArrowUpRight className="h-4 w-4 text-red-400" />
+                            ) : (
+                              <ArrowDownLeft className="h-4 w-4 text-green-400" />
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                               <p className="truncate text-sm font-medium text-foreground">
                                 {isSent ? `Kirim ke ${g.receiver_email}` : "Koin diterima"}
                               </p>
-                              <Badge variant="outline" className="border-green-500/40 bg-green-500/10 px-1.5 py-0 text-[10px] text-green-400">
-                                <CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />
-                                Berhasil
-                              </Badge>
+                              {statusBadge}
                             </div>
                             <p className="text-xs text-muted-foreground">
                               {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                               {" · "}
                               {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                             </p>
+                            {isError && g.error_message && (
+                              <p className="mt-0.5 truncate text-xs text-destructive/80">⚠ {g.error_message}</p>
+                            )}
                             {g.message && <p className="mt-0.5 truncate text-xs text-muted-foreground/70">"{g.message}"</p>}
+                            {g.request_id && (
+                              <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground/50">ID: {g.request_id.slice(0, 8)}…</p>
+                            )}
                           </div>
-                          <div className={`font-display text-sm font-bold ${isSent ? "text-red-400" : "text-green-400"}`}>
+                          <div className={`font-display text-sm font-bold ${amountColor}`}>
                             {isSent ? "-" : "+"}{g.amount.toLocaleString()}
                           </div>
                         </CardContent>
