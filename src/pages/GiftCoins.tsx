@@ -151,8 +151,17 @@ const GiftCoins = () => {
         throw new Error(data?.error || error?.message || "Gagal mengirim gift");
       }
 
-      spendCoins(coinAmountNum);
-      toast({ title: "Gift Terkirim! 🎉", description: `${coinAmountNum.toLocaleString()} koin berhasil dikirim ke ${recipient.masked_email}` });
+      if (data?.replayed) {
+        // Server detected duplicate request_id — gift was already processed earlier.
+        // Don't deduct coins again; just inform the user and refresh the list.
+        toast({
+          title: "Sudah Terkirim ✓",
+          description: `Gift ini sudah diproses sebelumnya — menampilkan data yang sudah ada. Tidak ada koin yang dipotong ulang.`,
+        });
+      } else {
+        spendCoins(coinAmountNum);
+        toast({ title: "Gift Terkirim! 🎉", description: `${coinAmountNum.toLocaleString()} koin berhasil dikirim ke ${recipient.masked_email}` });
+      }
 
       const { data: newGifts } = await supabase
         .from("coin_gifts")
