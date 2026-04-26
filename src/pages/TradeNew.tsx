@@ -189,6 +189,13 @@ const TradeNew = () => {
               <p className="mt-1 text-right text-[10px] text-muted-foreground">{message.length}/200</p>
             </div>
 
+            <div>
+              <label className="mb-1 block text-xs uppercase text-hacker-green">
+                $ recipient <span className="text-muted-foreground normal-case">(opsional)</span>
+              </label>
+              <RecipientPicker value={recipient} onChange={setRecipient} />
+            </div>
+
             <div className="rounded-md border border-hacker/50 bg-hacker-bg p-3 text-[11px]">
               <div className="flex items-center gap-1.5 text-hacker-green text-glow-hacker">
                 <Coins className="h-3.5 w-3.5" />
