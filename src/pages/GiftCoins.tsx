@@ -14,6 +14,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 interface GiftRecord {
   id: string;
@@ -177,113 +179,133 @@ const GiftCoins = () => {
           </Card>
         </div>
 
-        {/* Send form */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-md space-y-4">
-          <Card className="border-border/50">
-            <CardContent className="space-y-4 pt-6">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Email Penerima</label>
-                <Input
-                  type="email"
-                  placeholder="teman@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-secondary"
-                />
-                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                  <ShieldCheck className="h-3 w-3" />
-                  Email harus sudah terdaftar di Bushido Gacha
-                </p>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Jumlah Koin</label>
-                <Input
-                  type="number"
-                  placeholder="100"
-                  min={1}
-                  max={100000}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="bg-secondary"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Pesan (opsional)</label>
-                <Textarea
-                  placeholder="Selamat ya! 🎉"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  maxLength={200}
-                  className="bg-secondary"
-                  rows={2}
-                />
-              </div>
+        <Tabs defaultValue="send" className="mx-auto max-w-md">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="send">Kirim Gift</TabsTrigger>
+            <TabsTrigger value="history">
+              Riwayat Gift{gifts.length > 0 ? ` (${gifts.length})` : ""}
+            </TabsTrigger>
+          </TabsList>
 
-              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
-                <p className="flex items-start gap-2 text-xs text-amber-200/90">
-                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-                  <span>Pengiriman koin <strong>tidak dapat dibatalkan</strong>. Pastikan email penerima benar sebelum konfirmasi.</span>
-                </p>
+          <TabsContent value="send" className="mt-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+              <Card className="border-border/50">
+                <CardContent className="space-y-4 pt-6">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Email Penerima</label>
+                    <Input
+                      type="email"
+                      placeholder="teman@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-secondary"
+                    />
+                    <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                      <ShieldCheck className="h-3 w-3" />
+                      Email harus sudah terdaftar di Bushido Gacha
+                    </p>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Jumlah Koin</label>
+                    <Input
+                      type="number"
+                      placeholder="100"
+                      min={1}
+                      max={100000}
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="bg-secondary"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Pesan (opsional)</label>
+                    <Textarea
+                      placeholder="Selamat ya! 🎉"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      maxLength={200}
+                      className="bg-secondary"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                    <p className="flex items-start gap-2 text-xs text-amber-200/90">
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                      <span>Pengiriman koin <strong>tidak dapat dibatalkan</strong>. Pastikan email penerima benar sebelum konfirmasi.</span>
+                    </p>
+                  </div>
+
+                  <Button
+                    className="w-full"
+                    onClick={handleVerify}
+                    disabled={verifying || sending || !email || !amount}
+                  >
+                    {verifying ? (
+                      <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Memverifikasi...</span>
+                    ) : (
+                      <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Verifikasi & Lanjutkan</span>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-4">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
               </div>
-
-              <Button
-                className="w-full"
-                onClick={handleVerify}
-                disabled={verifying || sending || !email || !amount}
-              >
-                {verifying ? (
-                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Memverifikasi...</span>
-                ) : (
-                  <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Verifikasi & Lanjutkan</span>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Gift History */}
-        <div className="mx-auto mt-10 max-w-md">
-          <h2 className="mb-4 font-display text-lg font-bold text-foreground">Riwayat Gift</h2>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-            </div>
-          ) : gifts.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground">Belum ada riwayat gift</p>
-          ) : (
-            <div className="space-y-2">
-              {gifts.map((g, i) => {
-                const isSent = g.sender_id === user?.id;
-                const date = new Date(g.created_at);
-                return (
-                  <motion.div key={g.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                    <Card className="border-border/50">
-                      <CardContent className="flex items-center gap-3 py-3">
-                        <div className={`rounded-full p-2 ${isSent ? "bg-red-500/10" : "bg-green-500/10"}`}>
-                          {isSent ? <ArrowUpRight className="h-4 w-4 text-red-400" /> : <ArrowDownLeft className="h-4 w-4 text-green-400" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {isSent ? `Kirim ke ${g.receiver_email}` : "Koin diterima"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                            {" · "}
-                            {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                          {g.message && <p className="mt-0.5 truncate text-xs text-muted-foreground/70">"{g.message}"</p>}
-                        </div>
-                        <div className={`font-display text-sm font-bold ${isSent ? "text-red-400" : "text-green-400"}`}>
-                          {isSent ? "-" : "+"}{g.amount.toLocaleString()}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+            ) : gifts.length === 0 ? (
+              <Card className="border-border/50">
+                <CardContent className="py-10 text-center">
+                  <Gift className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground">Belum ada riwayat gift</p>
+                  <p className="mt-1 text-xs text-muted-foreground/70">Pengiriman koin yang berhasil akan muncul di sini</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {gifts.map((g, i) => {
+                  const isSent = g.sender_id === user?.id;
+                  const date = new Date(g.created_at);
+                  return (
+                    <motion.div key={g.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                      <Card className="border-border/50">
+                        <CardContent className="flex items-center gap-3 py-3">
+                          <div className={`rounded-full p-2 ${isSent ? "bg-red-500/10" : "bg-green-500/10"}`}>
+                            {isSent ? <ArrowUpRight className="h-4 w-4 text-red-400" /> : <ArrowDownLeft className="h-4 w-4 text-green-400" />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {isSent ? `Kirim ke ${g.receiver_email}` : "Koin diterima"}
+                              </p>
+                              <Badge variant="outline" className="border-green-500/40 bg-green-500/10 px-1.5 py-0 text-[10px] text-green-400">
+                                <CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />
+                                Berhasil
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                              {" · "}
+                              {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                            {g.message && <p className="mt-0.5 truncate text-xs text-muted-foreground/70">"{g.message}"</p>}
+                          </div>
+                          <div className={`font-display text-sm font-bold ${isSent ? "text-red-400" : "text-green-400"}`}>
+                            {isSent ? "-" : "+"}{g.amount.toLocaleString()}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Confirmation Dialog */}
