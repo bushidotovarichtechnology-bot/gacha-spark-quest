@@ -28,7 +28,7 @@ const TradeRequest = () => {
   const [pinReady, setPinReady] = useState<boolean | null>(null);
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [initiatorItemMeta, setInitiatorItemMeta] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
-  const [responderItemMeta, setResponderItemMeta] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
+  const [responderItemMetaRemote, setResponderItemMetaRemote] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
 
   const isInitiator = !!user && trade?.initiator_id === user.id;
   const isResponder = !!user && trade?.responder_id === user.id;
