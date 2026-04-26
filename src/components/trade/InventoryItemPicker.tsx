@@ -104,20 +104,26 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
         <div className="grid max-h-[360px] grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
           {visible.map((it) => {
             const checked = selectedIds.has(it.id);
+            const sel = isSelectable(it);
+            const disabled = !sel.ok;
             return (
               <button
                 key={it.id}
                 type="button"
                 onClick={() => toggle(it)}
+                aria-disabled={disabled}
+                title={sel.reason}
                 className={cn(
                   "group relative overflow-hidden rounded-md border bg-hacker-bg p-2 text-left transition-all",
-                  checked
-                    ? "border-hacker box-glow-hacker"
-                    : "border-border hover:border-hacker/60",
+                  checked && "border-hacker box-glow-hacker",
+                  !checked && !disabled && "border-border hover:border-hacker/60",
+                  disabled && "border-border/50 opacity-50 cursor-not-allowed",
                 )}
               >
                 <div className="absolute right-1.5 top-1.5 z-10">
-                  {checked ? (
+                  {disabled ? (
+                    <Lock className="h-4 w-4 text-muted-foreground/70" />
+                  ) : checked ? (
                     <CheckSquare className="h-4 w-4 text-hacker-green text-glow-hacker" />
                   ) : (
                     <Square className="h-4 w-4 text-muted-foreground/50" />
@@ -129,18 +135,25 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
                     alt={it.prize}
                     loading="lazy"
                     decoding="async"
-                    className="h-full w-full object-contain"
+                    className={cn("h-full w-full object-contain", disabled && "grayscale")}
                   />
                 </div>
                 <div className="mt-1.5 font-mono-hacker text-[10px]">
-                  <div className="flex items-center justify-between text-hacker-green">
-                    <span>tier_{it.tier}</span>
+                  <div className="flex items-center justify-between">
+                    <span className={cn(
+                      isTradableTier(it.tier) ? "text-hacker-green" : "text-muted-foreground",
+                    )}>tier_{it.tier}</span>
                     <span className="flex items-center gap-0.5 text-accent">
                       <Coins className="h-2.5 w-2.5" />
                       {it.coinValue}
                     </span>
                   </div>
                   <div className="truncate text-foreground">{it.prize}</div>
+                  {disabled && (
+                    <div className="truncate text-[9px] text-muted-foreground/80">
+                      {!isTradableTier(it.tier) ? "// locked: tier C" : `// pilih tier ${lockedTier}`}
+                    </div>
+                  )}
                 </div>
               </button>
             );
