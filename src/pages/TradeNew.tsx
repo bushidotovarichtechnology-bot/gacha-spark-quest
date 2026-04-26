@@ -92,10 +92,13 @@ const TradeNew = () => {
         inventoryIds: Array.from(selectedIds),
         tier: lockedTier,
         message: message.trim(),
+        recipientId: recipient?.userId ?? null,
       });
       setGeneratedToken(trade.token);
       toast.success("Trade Link tergenerate", {
-        description: "Bagikan link ini ke calon partner trade-mu.",
+        description: recipient
+          ? `Direct-target ke ${recipient.email}. Notifikasi inbox terkirim.`
+          : "Bagikan link ini ke calon partner trade-mu.",
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal membuat trade");
