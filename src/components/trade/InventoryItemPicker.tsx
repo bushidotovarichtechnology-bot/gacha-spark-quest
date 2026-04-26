@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Coins, CheckSquare, Square, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { useGacha, type InventoryItem } from "@/context/GachaContext";
 import { supabaseImg } from "@/lib/imageTransform";
 import { TRADABLE_TIERS, type TradableTier, isTradableTier } from "@/lib/tradeApi";
@@ -17,20 +18,19 @@ interface Props {
 }
 
 /**
- * Hacker-themed inventory picker for P2P trade. Restricted to tiers S/A/B
- * (Tier C is shown disabled with a lock icon for clarity). When `lockedTier`
- * is provided, only same-tier items can be selected.
+ * Hacker-themed inventory picker for P2P trade. Restricted to tiers S/A/B.
+ * Tier C items are rendered visibly disabled (lock icon) so users see exactly
+ * why those entries aren't selectable.
  */
 const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, emptyMessage }: Props) => {
   const { items } = useGacha();
   const [tierFilter, setTierFilter] = useState<TradableTier | "all">(lockedTier ?? "all");
 
+  // Show tradable items + Tier C (disabled) so users see why they can't pick C.
   const visible = useMemo(() => {
     return items.filter((it) => {
       if (hideIds?.has(it.id)) return false;
-      // Hide non-tradable (Tier C) entirely from the picker grid; we render a footnote instead.
-      if (!isTradableTier(it.tier)) return false;
-      if (lockedTier && it.tier !== lockedTier) return false;
+      if (lockedTier) return true; // show all (locked-tier highlight handled per-cell)
       if (tierFilter !== "all" && it.tier !== tierFilter) return false;
       return true;
     });
@@ -38,17 +38,32 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
 
   const tierCCount = items.filter((i) => i.tier === "C").length;
 
+  const isSelectable = (it: InventoryItem): { ok: boolean; reason?: string } => {
+    if (!isTradableTier(it.tier)) {
+      return { ok: false, reason: `Tier ${it.tier} terkunci dari trade (anti-farming).` };
+    }
+    if (lockedTier && it.tier !== lockedTier) {
+      return { ok: false, reason: `Hanya item Tier ${lockedTier} yang bisa dipilih dalam trade ini.` };
+    }
+    return { ok: true };
+  };
+
   const toggle = (it: InventoryItem) => {
+    const check = isSelectable(it);
+    if (!check.ok) {
+      toast.error(check.reason ?? "Item ini tidak bisa dipilih");
+      return;
+    }
     const next = new Set(selectedIds);
     if (next.has(it.id)) {
       next.delete(it.id);
     } else {
-      // If selecting a different tier than already-selected, clear first.
       const currentTier = (() => {
         const first = items.find((x) => next.has(x.id));
         return first?.tier;
       })();
       if (currentTier && currentTier !== it.tier) {
+        toast.warning(`Pilihan sebelumnya (Tier ${currentTier}) di-reset — bundle harus satu tier.`);
         next.clear();
       }
       next.add(it.id);
@@ -89,20 +104,26 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
         <div className="grid max-h-[360px] grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
           {visible.map((it) => {
             const checked = selectedIds.has(it.id);
+            const sel = isSelectable(it);
+            const disabled = !sel.ok;
             return (
               <button
                 key={it.id}
                 type="button"
                 onClick={() => toggle(it)}
+                aria-disabled={disabled}
+                title={sel.reason}
                 className={cn(
                   "group relative overflow-hidden rounded-md border bg-hacker-bg p-2 text-left transition-all",
-                  checked
-                    ? "border-hacker box-glow-hacker"
-                    : "border-border hover:border-hacker/60",
+                  checked && "border-hacker box-glow-hacker",
+                  !checked && !disabled && "border-border hover:border-hacker/60",
+                  disabled && "border-border/50 opacity-50 cursor-not-allowed",
                 )}
               >
                 <div className="absolute right-1.5 top-1.5 z-10">
-                  {checked ? (
+                  {disabled ? (
+                    <Lock className="h-4 w-4 text-muted-foreground/70" />
+                  ) : checked ? (
                     <CheckSquare className="h-4 w-4 text-hacker-green text-glow-hacker" />
                   ) : (
                     <Square className="h-4 w-4 text-muted-foreground/50" />
@@ -114,18 +135,25 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
                     alt={it.prize}
                     loading="lazy"
                     decoding="async"
-                    className="h-full w-full object-contain"
+                    className={cn("h-full w-full object-contain", disabled && "grayscale")}
                   />
                 </div>
                 <div className="mt-1.5 font-mono-hacker text-[10px]">
-                  <div className="flex items-center justify-between text-hacker-green">
-                    <span>tier_{it.tier}</span>
+                  <div className="flex items-center justify-between">
+                    <span className={cn(
+                      isTradableTier(it.tier) ? "text-hacker-green" : "text-muted-foreground",
+                    )}>tier_{it.tier}</span>
                     <span className="flex items-center gap-0.5 text-accent">
                       <Coins className="h-2.5 w-2.5" />
                       {it.coinValue}
                     </span>
                   </div>
                   <div className="truncate text-foreground">{it.prize}</div>
+                  {disabled && (
+                    <div className="truncate text-[9px] text-muted-foreground/80">
+                      {!isTradableTier(it.tier) ? "// locked: tier C" : `// pilih tier ${lockedTier}`}
+                    </div>
+                  )}
                 </div>
               </button>
             );

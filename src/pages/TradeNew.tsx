@@ -1,10 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, GitBranch, Copy, Check, AlertTriangle, Terminal } from "lucide-react";
+import { Loader2, GitBranch, Copy, Check, AlertTriangle, Terminal, Coins, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
@@ -35,13 +39,18 @@ const TradeNew = () => {
   const [creating, setCreating] = useState(false);
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Determine the locked tier based on selection.
+  const selectedItems = useMemo(
+    () => items.filter((it) => selectedIds.has(it.id)),
+    [items, selectedIds],
+  );
+
   const lockedTier: TradableTier | undefined = useMemo(() => {
-    const first = items.find((it) => selectedIds.has(it.id));
+    const first = selectedItems[0];
     if (first && isTradableTier(first.tier)) return first.tier;
     return undefined;
-  }, [items, selectedIds]);
+  }, [selectedItems]);
 
   // Check PIN once on mount.
   useEffect(() => {
@@ -59,15 +68,22 @@ const TradeNew = () => {
     };
   }, [user]);
 
+  const openConfirm = () => {
+    if (!lockedTier) { toast.error("Pilih dulu item yang ingin kamu trade."); return; }
+    if (selectedIds.size === 0) { toast.error("Tidak ada item yang dipilih."); return; }
+    // Defensive: validate every selected item is tradable + same tier.
+    const invalid = selectedItems.find((it) => !isTradableTier(it.tier) || it.tier !== lockedTier);
+    if (invalid) {
+      toast.error(`Item "${invalid.prize}" (Tier ${invalid.tier}) tidak valid untuk trade ini.`);
+      return;
+    }
+    if (pinReady === false) { setShowPinSetup(true); return; }
+    setConfirmOpen(true);
+  };
+
   const handleCreate = async () => {
-    if (!lockedTier) {
-      toast.error("Pilih dulu item yang ingin kamu trade.");
-      return;
-    }
-    if (selectedIds.size === 0) {
-      toast.error("Tidak ada item yang dipilih.");
-      return;
-    }
+    if (!lockedTier) return;
+    setConfirmOpen(false);
     setCreating(true);
     try {
       const trade = await createTrade({
@@ -168,14 +184,18 @@ const TradeNew = () => {
               <p className="mt-1 text-right text-[10px] text-muted-foreground">{message.length}/200</p>
             </div>
 
-            <div className="rounded-md border border-border bg-hacker-bg p-3 text-[11px] text-muted-foreground">
-              <span className="text-hacker-green">⚡ gas_fee:</span> {TRADE_GAS_FEE} koin / pihak (dipotong saat merge berhasil).
-              <br />
-              <span className="text-hacker-green">⏳ ttl:</span> 24 jam, lalu trade auto-expired.
+            <div className="rounded-md border border-hacker/50 bg-hacker-bg p-3 text-[11px]">
+              <div className="flex items-center gap-1.5 text-hacker-green text-glow-hacker">
+                <Coins className="h-3.5 w-3.5" />
+                <span className="font-bold uppercase tracking-wider">gas fee {TRADE_GAS_FEE} koin / pihak</span>
+              </div>
+              <div className="mt-1 text-muted-foreground">
+                Dipotong otomatis dari saldo koin saat merge berhasil. TTL 24 jam, lalu auto-expired.
+              </div>
             </div>
 
             <Button
-              onClick={handleCreate}
+              onClick={openConfirm}
               disabled={creating || selectedIds.size === 0 || pinReady === false}
               className="w-full bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase tracking-wider"
             >
@@ -226,6 +246,65 @@ const TradeNew = () => {
         onOpenChange={setShowPinSetup}
         onReady={() => setPinReady(true)}
       />
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="border-hacker bg-hacker-surface font-mono-hacker">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-hacker-green text-glow-hacker">
+              <ShieldCheck className="h-5 w-5" />
+              Konfirmasi Trade
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              Periksa detail di bawah sebelum trade link di-generate.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-3 text-xs">
+            <div className="rounded-md border border-border bg-hacker-bg p-3">
+              <div className="mb-1 flex items-center justify-between text-hacker-green">
+                <span>$ items_offered</span>
+                <span className="rounded bg-hacker-surface px-1.5 py-0.5 text-[10px]">tier {lockedTier}</span>
+              </div>
+              <ul className="mt-2 space-y-1 text-foreground">
+                {selectedItems.map((it) => (
+                  <li key={it.id} className="flex items-center justify-between gap-2 truncate">
+                    <span className="truncate">• {it.prize}</span>
+                    <span className="flex items-center gap-0.5 text-accent">
+                      <Coins className="h-3 w-3" />{it.coinValue}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-2 text-[10px] text-muted-foreground">
+                Total: {selectedItems.length} item
+              </div>
+            </div>
+
+            <div className="rounded-md border border-hacker bg-hacker-green/5 p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-hacker-green text-glow-hacker">
+                  <Coins className="h-4 w-4" />
+                  <span className="font-bold uppercase">gas fee</span>
+                </span>
+                <span className="font-bold text-hacker-green">{TRADE_GAS_FEE} koin</span>
+              </div>
+              <div className="mt-1 text-[10px] text-muted-foreground">
+                Dipotong dari saldo masing-masing pihak hanya jika trade berhasil di-merge.
+              </div>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-mono-hacker text-xs">Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCreate}
+              className="bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase"
+            >
+              git push →
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
