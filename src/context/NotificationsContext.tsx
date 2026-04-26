@@ -28,8 +28,25 @@ interface NotificationsContextValue {
 const NotificationsContext = createContext<NotificationsContextValue | undefined>(undefined);
 
 const MAX_ITEMS = 50;
+const MAX_ACK_KEYS = 500;
 const storageKey = (uid: string | null | undefined) =>
   uid ? `inbox-notifications:${uid}` : "inbox-notifications:guest";
+const ackStorageKey = (uid: string | null | undefined) =>
+  uid ? `inbox-acked-dedup:${uid}` : "inbox-acked-dedup:guest";
+
+/** Read acknowledged dedupKeys for a user. Used by toast emitters to suppress
+ *  re-firing for events the user already marked as read. */
+export const getAckedDedupKeys = (uid: string | null | undefined): string[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(ackStorageKey(uid));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((k): k is string => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+};
 
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
