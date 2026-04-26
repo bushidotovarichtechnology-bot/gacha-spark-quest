@@ -38,6 +38,10 @@ interface InboxBellProps {
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
   const [shake, setShake] = useState(false);
+  // Controlled open state so we can auto-clear "X updates" once the user has
+  // had a moment to glance at them — the badge feels alive without forcing
+  // the user to click each item individually.
+  const [open, setOpen] = useState(false);
   // When true, the dropdown list filters down to unread accepted/rejected only.
   const [importantOnly, setImportantOnly] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
@@ -67,6 +71,22 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     }
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
+
+  // Auto-clear the "X updates" badge ~1.2s after the dropdown opens — long
+  // enough for the user to register the highlight, short enough that the
+  // badge feels responsive when they re-open the menu.
+  useEffect(() => {
+    if (!open) return;
+    const importantUnreadIds = items
+      .filter((i) => !i.read && isImportant(i.dedupKey))
+      .map((i) => i.id);
+    if (importantUnreadIds.length === 0) return;
+    const t = window.setTimeout(() => {
+      importantUnreadIds.forEach((id) => markRead(id));
+    }, 1200);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const updatesPill = importantCount > 0 && (
     <span
@@ -124,7 +144,7 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   return (
     <div className="inline-flex items-center gap-2">
       {variant === "desktop" && updatesPill}
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
