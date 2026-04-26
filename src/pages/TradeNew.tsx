@@ -35,6 +35,7 @@ const TradeNew = () => {
     return set;
   });
   const [message, setMessage] = useState("");
+  const [recipient, setRecipient] = useState<ResolvedRecipient | null>(null);
   const [pinReady, setPinReady] = useState<boolean | null>(null);
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [creating, setCreating] = useState(false);
