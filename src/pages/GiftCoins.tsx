@@ -39,7 +39,7 @@ interface VerifiedRecipient {
 
 const GiftCoins = () => {
   const { user } = useAuth();
-  const { totalCoins, spendCoins } = useGacha();
+  const { totalCoins, spendCoins, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -96,12 +96,16 @@ const GiftCoins = () => {
               title: "Gift Berhasil Terkirim 🎉",
               description: `${newRow.amount.toLocaleString()} koin sampai ke ${newRow.receiver_email}.`,
             });
+            // Reconcile sender balance with server (in case optimistic spend drifted)
+            void refreshCoins();
           } else if (prev === "processing" && next === "error") {
             toast({
               title: "Gift Gagal Dikirim",
               description: newRow.error_message || "Pengiriman koin gagal diproses. Cek detail di riwayat.",
               variant: "destructive",
             });
+            // Server may have rolled back the deduction → resync balance
+            void refreshCoins();
           }
         },
       )
@@ -122,6 +126,8 @@ const GiftCoins = () => {
               title: "Kamu Menerima Gift 🎁",
               description: `+${row.amount.toLocaleString()} koin masuk ke saldo kamu.`,
             });
+            // Pull updated balance for receiver
+            void refreshCoins();
           }
         },
       )
@@ -130,7 +136,7 @@ const GiftCoins = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, toast]);
+  }, [user, toast, refreshCoins]);
 
   // Reset verified recipient if email changes
   useEffect(() => {
