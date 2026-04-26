@@ -31,6 +31,15 @@ type TradeRow = {
 };
 
 const POLL_INTERVAL_MS = 60_000; // gentle background re-sync
+const BACKOFF_BASE_MS = 1_000;   // 1s, then 2s, 4s, 8s, …
+const BACKOFF_MAX_MS = 60_000;   // cap at 60s
+const BACKOFF_MAX_ATTEMPTS = 8;  // ~2 minutes total before giving up the cycle
+
+const computeBackoff = (attempt: number) => {
+  const exp = Math.min(BACKOFF_BASE_MS * 2 ** attempt, BACKOFF_MAX_MS);
+  // Full jitter — avoids thundering herd on shared reconnect events.
+  return Math.floor(Math.random() * exp);
+};
 
 export const useTradeNotifications = () => {
   const { user } = useAuth();
