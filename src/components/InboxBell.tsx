@@ -38,15 +38,25 @@ interface InboxBellProps {
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
   const [shake, setShake] = useState(false);
+  // When true, the dropdown list filters down to unread accepted/rejected only.
+  const [importantOnly, setImportantOnly] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
+
+  const isImportant = (dedupKey: string | undefined) => {
+    const k = dedupKey ?? "";
+    return k.startsWith("trade-accepted:") || k.startsWith("trade-rejected:");
+  };
 
   // Count only high-priority unread updates (trade accepted / rejected) for the
   // dedicated "X updates" pill — keeps users alerted to outcomes without spam.
-  const importantCount = items.reduce((n, i) => {
-    if (i.read) return n;
-    const k = i.dedupKey ?? "";
-    return k.startsWith("trade-accepted:") || k.startsWith("trade-rejected:") ? n + 1 : n;
-  }, 0);
+  const importantCount = items.reduce(
+    (n, i) => (!i.read && isImportant(i.dedupKey) ? n + 1 : n),
+    0,
+  );
+
+  const visibleItems = importantOnly
+    ? items.filter((i) => !i.read && isImportant(i.dedupKey))
+    : items;
 
   useEffect(() => {
     if (unreadCount > prevUnreadRef.current) {
