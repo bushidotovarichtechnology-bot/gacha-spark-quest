@@ -1101,6 +1101,7 @@ export type Database = {
           initiator_items: Json
           initiator_user_agent: string | null
           message: string
+          recipient_id: string | null
           responded_at: string | null
           responder_id: string | null
           responder_items: Json
@@ -1118,6 +1119,7 @@ export type Database = {
           initiator_items?: Json
           initiator_user_agent?: string | null
           message?: string
+          recipient_id?: string | null
           responded_at?: string | null
           responder_id?: string | null
           responder_items?: Json
@@ -1135,6 +1137,7 @@ export type Database = {
           initiator_items?: Json
           initiator_user_agent?: string | null
           message?: string
+          recipient_id?: string | null
           responded_at?: string | null
           responder_id?: string | null
           responder_items?: Json
