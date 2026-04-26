@@ -177,7 +177,7 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
           </div>
         </div>
 
-        {items.length === 0 ? (
+        {items.length === 0 || visibleItems.length === 0 ? items.length === 0 ? (
           <div className="px-4 py-6 text-center">
             <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
             <p className="text-sm font-medium text-foreground">Belum ada notifikasi</p>
