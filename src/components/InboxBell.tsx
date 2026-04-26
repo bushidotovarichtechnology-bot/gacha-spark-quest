@@ -40,6 +40,14 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const [shake, setShake] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
 
+  // Count only high-priority unread updates (trade accepted / rejected) for the
+  // dedicated "X updates" pill — keeps users alerted to outcomes without spam.
+  const importantCount = items.reduce((n, i) => {
+    if (i.read) return n;
+    const k = i.dedupKey ?? "";
+    return k.startsWith("trade-accepted:") || k.startsWith("trade-rejected:") ? n + 1 : n;
+  }, 0);
+
   useEffect(() => {
     if (unreadCount > prevUnreadRef.current) {
       setShake(true);
