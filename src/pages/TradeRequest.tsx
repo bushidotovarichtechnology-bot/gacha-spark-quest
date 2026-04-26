@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight } from "lucide-react";
+import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -182,19 +182,77 @@ const TradeRequest = () => {
     );
   }
 
-  const statusBadge = (() => {
-    const map: Record<TradeRow["status"], { label: string; cls: string }> = {
-      pending: { label: "● pending", cls: "text-hacker-green border-hacker" },
-      accepted: { label: "✓ merged", cls: "text-hacker-green border-hacker text-glow-hacker" },
-      rejected: { label: "✗ rejected", cls: "text-destructive border-destructive/40" },
-      cancelled: { label: "⊘ cancelled", cls: "text-muted-foreground border-border" },
-      expired: { label: "⏱ expired", cls: "text-muted-foreground border-border" },
-    };
-    const m = map[trade.status];
-    return <span className={cn("rounded border px-2 py-0.5 text-[10px] uppercase", m.cls)}>{m.label}</span>;
-  })();
+  const fmtTs = (iso: string | null | undefined) => {
+    if (!iso) return "—";
+    try {
+      return new Date(iso).toLocaleString("id-ID", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+    } catch { return iso; }
+  };
+
+  const statusMeta: Record<TradeRow["status"], { label: string; cls: string; panelCls: string; Icon: typeof CircleDot; description: string }> = {
+    pending: {
+      label: "● waiting", cls: "text-hacker-green border-hacker",
+      panelCls: "border-hacker bg-hacker-surface",
+      Icon: Hourglass,
+      description: "Menunggu responder memilih item & menyetujui merge.",
+    },
+    accepted: {
+      label: "✓ completed", cls: "text-hacker-green border-hacker text-glow-hacker",
+      panelCls: "border-hacker bg-hacker-green/5",
+      Icon: CheckCircle2,
+      description: "Merge berhasil. Item telah berpindah tangan.",
+    },
+    rejected: {
+      label: "✗ rejected", cls: "text-destructive border-destructive/40",
+      panelCls: "border-destructive/40 bg-destructive/5",
+      Icon: XCircle,
+      description: "Trade ditolak oleh responder.",
+    },
+    cancelled: {
+      label: "⊘ cancelled", cls: "text-muted-foreground border-border",
+      panelCls: "border-border bg-hacker-surface",
+      Icon: Ban,
+      description: "Trade dibatalkan oleh inisiator.",
+    },
+    expired: {
+      label: "⏱ expired", cls: "text-muted-foreground border-border",
+      panelCls: "border-border bg-hacker-surface",
+      Icon: Clock,
+      description: "Trade kedaluwarsa sebelum diselesaikan.",
+    },
+  };
+  const sMeta = statusMeta[trade.status];
+  const statusBadge = (
+    <span className={cn("rounded border px-2 py-0.5 text-[10px] uppercase", sMeta.cls)}>{sMeta.label}</span>
+  );
 
   const canExecute = trade.status === "pending" && !!user && !isInitiator;
+
+  // Timeline events (chronological)
+  const timeline: Array<{ ts: string; label: string; done: boolean; Icon: typeof CircleDot }> = [
+    { ts: trade.created_at, label: "Trade dibuat oleh inisiator", done: true, Icon: GitMerge },
+  ];
+  if (trade.responded_at) {
+    const respLabelMap: Record<string, string> = {
+      accepted: "Merge diselesaikan oleh responder",
+      rejected: "Trade ditolak oleh responder",
+      cancelled: "Trade dibatalkan",
+      expired: "Trade kedaluwarsa",
+    };
+    timeline.push({
+      ts: trade.responded_at,
+      label: respLabelMap[trade.status] ?? `Status: ${trade.status}`,
+      done: true,
+      Icon: trade.status === "accepted" ? CheckCircle2 : XCircle,
+    });
+  } else if (trade.status === "pending") {
+    timeline.push({
+      ts: trade.expires_at, label: "Akan kedaluwarsa", done: false, Icon: Hourglass,
+    });
+  }
 
   return (
     <div className="min-h-screen bg-hacker-bg pb-12 scanline">
@@ -218,6 +276,55 @@ const TradeRequest = () => {
             <span className="text-hacker-green">// message:</span> {trade.message}
           </div>
         )}
+
+        {/* Status panel — clear status, timeline, & exchange summary */}
+        <div className={cn("mb-4 rounded-lg border p-4", sMeta.panelCls)}>
+          <div className="flex items-start gap-3">
+            <sMeta.Icon className={cn("h-5 w-5 shrink-0 mt-0.5", sMeta.cls.split(" ")[0])} />
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className={cn("text-sm font-bold uppercase tracking-wider", sMeta.cls.split(" ")[0])}>
+                  status: {trade.status}
+                </h2>
+                {statusBadge}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{sMeta.description}</p>
+
+              {/* Timeline */}
+              <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
+                {timeline.map((ev, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-[11px]">
+                    <ev.Icon className={cn(
+                      "h-3 w-3 shrink-0 mt-0.5",
+                      ev.done ? "text-hacker-green" : "text-muted-foreground",
+                    )} />
+                    <div className="flex-1">
+                      <div className={ev.done ? "text-foreground" : "text-muted-foreground"}>{ev.label}</div>
+                      <div className="text-muted-foreground/70">{fmtTs(ev.ts)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Exchange summary */}
+              <div className="mt-3 grid grid-cols-3 gap-2 rounded-md border border-border/50 bg-hacker-bg/40 p-2 text-[11px]">
+                <div>
+                  <div className="text-muted-foreground">items_offered</div>
+                  <div className="text-hacker-green">{trade.initiator_items?.length ?? 0} item</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-muted-foreground">tier</div>
+                  <div className="text-hacker-green">{trade.tier_label}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-muted-foreground">items_received</div>
+                  <div className="text-hacker-green">{trade.responder_items?.length ?? 0} item</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
         {/* Git-merge two-branch view */}
         <div className="grid gap-3 md:grid-cols-2">
