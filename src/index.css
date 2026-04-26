@@ -49,6 +49,13 @@
     --sidebar-accent-foreground: 60 20% 95%;
     --sidebar-border: 270 20% 18%;
     --sidebar-ring: 270 80% 60%;
+
+    /* P2P Trading — hacker palette */
+    --hacker-green: 120 100% 50%;        /* #00ff00 */
+    --hacker-green-dim: 120 70% 35%;
+    --hacker-bg: 220 15% 6%;
+    --hacker-surface: 220 15% 9%;
+    --hacker-border: 120 50% 25%;
   }
 }
 
@@ -103,5 +110,45 @@
   }
   .gradient-card {
     background: linear-gradient(145deg, hsl(270 25% 13%), hsl(270 25% 8%));
+  }
+
+  /* Hacker / P2P Trading utilities */
+  .font-mono-hacker {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-feature-settings: "calt" 0, "liga" 0;
+  }
+  .text-hacker-green {
+    color: hsl(var(--hacker-green));
+  }
+  .bg-hacker-bg {
+    background-color: hsl(var(--hacker-bg));
+  }
+  .bg-hacker-surface {
+    background-color: hsl(var(--hacker-surface));
+  }
+  .border-hacker {
+    border-color: hsl(var(--hacker-border));
+  }
+  .text-glow-hacker {
+    text-shadow: 0 0 8px hsl(var(--hacker-green) / 0.7), 0 0 16px hsl(var(--hacker-green) / 0.35);
+  }
+  .box-glow-hacker {
+    box-shadow: 0 0 12px hsl(var(--hacker-green) / 0.35), 0 0 32px hsl(var(--hacker-green) / 0.15), inset 0 1px 0 hsl(var(--hacker-green) / 0.2);
+  }
+  .scanline {
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 3px,
+      hsl(var(--hacker-green) / 0.04) 3px,
+      hsl(var(--hacker-green) / 0.04) 4px
+    );
+  }
+  @keyframes hacker-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .animate-hacker-blink {
+    animation: hacker-blink 1s step-end infinite;
   }
 }

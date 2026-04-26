@@ -1439,6 +1439,16 @@ export type Database = {
       }
     }
     Functions: {
+      _internal_execute_trade: {
+        Args: {
+          _caller_id: string
+          _caller_ip: string
+          _responder_items: Json
+          _trade_id: string
+          _user_agent: string
+        }
+        Returns: Json
+      }
       admin_get_banned_users: {
         Args: never
         Returns: {
