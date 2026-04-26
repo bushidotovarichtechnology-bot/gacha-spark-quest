@@ -724,6 +724,95 @@ const TradeRequest = () => {
       </div>
 
       <SecurityPinDialog open={showPinSetup} onOpenChange={setShowPinSetup} onReady={() => setPinReady(true)} />
+
+      {/* Timeline event detail modal */}
+      <Dialog open={selectedEvent !== null} onOpenChange={(o) => !o && setSelectedEventIdx(null)}>
+        <DialogContent className="border-hacker bg-hacker-surface font-mono-hacker text-foreground sm:max-w-md">
+          {selectedEvent && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-sm uppercase tracking-wider text-hacker-green text-glow-hacker">
+                  <selectedEvent.Icon className="h-4 w-4" />
+                  {selectedEvent.label}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Detail langkah trade · event #{(selectedEventIdx ?? 0) + 1}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 text-xs">
+                <div className="grid grid-cols-[80px_1fr] gap-2 rounded-md border border-border/50 bg-hacker-bg/40 p-2">
+                  <span className="text-muted-foreground">// actor</span>
+                  <span className="flex items-center gap-1.5 text-foreground">
+                    <User className="h-3 w-3 text-hacker-green" />
+                    <span>{selectedEvent.actor}</span>
+                    <span className="rounded border border-border px-1 py-0 text-[9px] uppercase text-muted-foreground">
+                      {selectedEvent.actorRole}
+                    </span>
+                  </span>
+
+                  <span className="text-muted-foreground">// when</span>
+                  <span className="text-foreground">
+                    {fmtTs(selectedEvent.ts)}
+                    <div className="text-[10px] text-muted-foreground/70">{selectedEvent.ts}</div>
+                  </span>
+
+                  <span className="text-muted-foreground">// status</span>
+                  <span>
+                    <span className={cn("rounded border px-1.5 py-0.5 text-[10px] uppercase", sMeta.cls)}>
+                      {selectedEvent.kind}
+                    </span>
+                  </span>
+                </div>
+
+                <div className="rounded-md border border-border/50 bg-hacker-bg/40 p-2">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+                    <Package className="h-3 w-3 text-hacker-green" />
+                    <span>// items</span>
+                  </div>
+                  <p className="text-foreground">{selectedEvent.itemsLabel}</p>
+
+                  {selectedEvent.items.length > 0 && (
+                    <div className="mt-2 grid grid-cols-2 gap-1.5">
+                      {selectedEvent.items.map((it) => (
+                        <div key={it.id} className="flex items-center gap-1.5 rounded border border-border/40 bg-hacker-bg/60 p-1.5">
+                          <img
+                            src={supabaseImg(it.image, 64)}
+                            alt=""
+                            loading="lazy"
+                            className="h-7 w-7 shrink-0 rounded-sm border border-border/40 bg-black/40 object-contain"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[10px] text-foreground">{it.prize}</div>
+                            <div className="text-[9px] text-accent">+{it.coin_value} coin</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {selectedEvent.detailNote && (
+                  <div className="rounded-md border border-border/50 bg-hacker-bg/40 p-2 text-muted-foreground">
+                    <span className="text-hacker-green">// note:</span> {selectedEvent.detailNote}
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedEventIdx(null)}
+                  className="font-mono-hacker text-xs uppercase tracking-wider"
+                >
+                  close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
