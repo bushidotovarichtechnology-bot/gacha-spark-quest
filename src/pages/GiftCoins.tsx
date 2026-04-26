@@ -71,6 +71,21 @@ const GiftCoins = () => {
 
   const coinAmountNum = parseInt(amount) || 0;
 
+  // Unique past recipients (most recent first) — for autocomplete suggestions
+  const recentRecipients = (() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const g of gifts) {
+      if (g.sender_id !== user?.id) continue;
+      const e = (g.receiver_email || "").toLowerCase().trim();
+      if (!e || seen.has(e)) continue;
+      seen.add(e);
+      out.push(e);
+      if (out.length >= 20) break;
+    }
+    return out;
+  })();
+
   const handleVerify = async () => {
     if (!user || !email || !amount) return;
     if (coinAmountNum < 1) {
