@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell, CheckCheck, Trash2, CheckCircle2, XCircle, Info, AlertTriangle, Filter } from "lucide-react";
+import type { LottieRefCurrentProps } from "lottie-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +10,66 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications, NotificationKind } from "@/context/NotificationsContext";
 import { cn } from "@/lib/utils";
+import updatesPulseAnimation from "@/lib/lottie/updatesPulse";
+
+// Lazy-load lottie-react so it doesn't bloat initial bundle. The badge pulse
+// is a non-critical UX flourish — fine to defer until the navbar mounts.
+const Lottie = lazy(() => import("lottie-react"));
+
+/**
+ * One-shot Lottie ring pulse layered behind the "X updates" pill. Plays only
+ * when `trigger` (importantCount) increases, respects prefers-reduced-motion,
+ * and stays mounted (hidden via opacity) so re-triggering is instant.
+ */
+const UpdatesPulse = ({ trigger }: { trigger: number }) => {
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
+  const prevRef = useRef(trigger);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (trigger > prevRef.current && !reducedMotion) {
+      setVisible(true);
+      lottieRef.current?.stop();
+      lottieRef.current?.play();
+      const t = window.setTimeout(() => setVisible(false), 950);
+      prevRef.current = trigger;
+      return () => window.clearTimeout(t);
+    }
+    prevRef.current = trigger;
+  }, [trigger, reducedMotion]);
+
+  if (reducedMotion) return null;
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200",
+        visible ? "opacity-100" : "opacity-0",
+      )}
+      style={{ width: 44, height: 44 }}
+    >
+      <Suspense fallback={null}>
+        <Lottie
+          lottieRef={lottieRef}
+          animationData={updatesPulseAnimation}
+          loop={false}
+          autoplay={false}
+          style={{ width: "100%", height: "100%" }}
+        />
+      </Suspense>
+    </span>
+  );
+};
 
 const KindIcon = ({ kind }: { kind: NotificationKind }) => {
   const className = "h-4 w-4 shrink-0";
@@ -38,16 +99,9 @@ interface InboxBellProps {
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
   const [shake, setShake] = useState(false);
-  // Subtle pop animation on the "X updates" pill when its count grows.
-  const [updatesPop, setUpdatesPop] = useState(false);
-  // Controlled open state so we can auto-clear "X updates" once the user has
-  // had a moment to glance at them — the badge feels alive without forcing
-  // the user to click each item individually.
-  const [open, setOpen] = useState(false);
   // When true, the dropdown list filters down to unread accepted/rejected only.
   const [importantOnly, setImportantOnly] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
-  const prevImportantRef = useRef(0);
 
   const isImportant = (dedupKey: string | undefined) => {
     const k = dedupKey ?? "";
@@ -75,48 +129,19 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
 
-  // Trigger a brief pop on the "X updates" pill whenever its count grows.
-  useEffect(() => {
-    if (importantCount > prevImportantRef.current) {
-      setUpdatesPop(true);
-      const t = window.setTimeout(() => setUpdatesPop(false), 950);
-      prevImportantRef.current = importantCount;
-      return () => window.clearTimeout(t);
-    }
-    prevImportantRef.current = importantCount;
-  }, [importantCount]);
-
-  // Auto-clear the "X updates" badge ~1.2s after the dropdown opens — long
-  // enough for the user to register the highlight, short enough that the
-  // badge feels responsive when they re-open the menu.
-  useEffect(() => {
-    if (!open) return;
-    const importantUnreadIds = items
-      .filter((i) => !i.read && isImportant(i.dedupKey))
-      .map((i) => i.id);
-    if (importantUnreadIds.length === 0) return;
-    const t = window.setTimeout(() => {
-      importantUnreadIds.forEach((id) => markRead(id));
-    }, 1200);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
   const updatesPill = importantCount > 0 && (
-    <span
-      title={`${importantCount} update penting (accepted/rejected) belum dibaca`}
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30 transition-transform motion-reduce:transition-none",
-        updatesPop && "animate-updates-pop motion-reduce:animate-none",
-      )}
-    >
+    <span className="relative inline-flex items-center">
+      <UpdatesPulse trigger={importantCount} />
       <span
+        title={`${importantCount} update penting (accepted/rejected) belum dibaca`}
         className={cn(
-          "h-1.5 w-1.5 rounded-full bg-hacker-green",
-          updatesPop && "animate-pulse motion-reduce:animate-none",
+          "relative inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30",
+          shake && "animate-badge-shake",
         )}
-      />
-      {importantCount} {importantCount === 1 ? "update" : "updates"}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-hacker-green" />
+        {importantCount} {importantCount === 1 ? "update" : "updates"}
+      </span>
     </span>
   );
 
@@ -163,7 +188,7 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   return (
     <div className="inline-flex items-center gap-2">
       {variant === "desktop" && updatesPill}
-      <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
