@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot, Timer } from "lucide-react";
+import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot, Timer, User, Package } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
 import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
 import { supabaseImg } from "@/lib/imageTransform";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 const TradeRequest = () => {
@@ -29,6 +30,7 @@ const TradeRequest = () => {
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [initiatorItemMeta, setInitiatorItemMeta] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
   const [responderItemMetaRemote, setResponderItemMetaRemote] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
+  const [selectedEventIdx, setSelectedEventIdx] = useState<number | null>(null);
 
   const isInitiator = !!user && trade?.initiator_id === user.id;
   const isResponder = !!user && trade?.responder_id === user.id;
@@ -327,9 +329,37 @@ const TradeRequest = () => {
 
   const canExecute = trade.status === "pending" && !!user && !isInitiator;
 
-  // Timeline events (chronological)
-  const timeline: Array<{ ts: string; label: string; done: boolean; Icon: typeof CircleDot }> = [
-    { ts: trade.created_at, label: "Trade dibuat oleh inisiator", done: true, Icon: GitMerge },
+  // Timeline events (chronological) — enriched with actor + items for detail modal.
+  type TimelineKind = "created" | "accepted" | "rejected" | "cancelled" | "expired" | "expiring";
+  type TimelineEvent = {
+    ts: string;
+    label: string;
+    done: boolean;
+    Icon: typeof CircleDot;
+    kind: TimelineKind;
+    actor: string;
+    actorRole: "initiator" | "responder" | "system";
+    items: Array<{ id: string; prize: string; image: string; coin_value: number }>;
+    itemsLabel: string;
+    detailNote?: string;
+  };
+
+  const initiatorActor = isInitiator ? "Kamu (initiator)" : "Initiator";
+  const responderActor = isResponder ? "Kamu (responder)" : trade.responder_id ? "Responder" : "Belum ada responder";
+
+  const timeline: TimelineEvent[] = [
+    {
+      ts: trade.created_at,
+      label: "Trade dibuat oleh inisiator",
+      done: true,
+      Icon: GitMerge,
+      kind: "created",
+      actor: initiatorActor,
+      actorRole: "initiator",
+      items: initiatorItemMeta,
+      itemsLabel: `Initiator menawarkan ${trade.initiator_items?.length ?? 0} item Tier ${trade.tier_label}`,
+      detailNote: trade.message ? `Pesan: "${trade.message}"` : undefined,
+    },
   ];
   if (trade.responded_at) {
     const respLabelMap: Record<string, string> = {
@@ -338,17 +368,41 @@ const TradeRequest = () => {
       cancelled: "Trade dibatalkan",
       expired: "Trade kedaluwarsa",
     };
+    const kind = (trade.status as TimelineKind);
     timeline.push({
       ts: trade.responded_at,
       label: respLabelMap[trade.status] ?? `Status: ${trade.status}`,
       done: true,
       Icon: trade.status === "accepted" ? CheckCircle2 : XCircle,
+      kind,
+      actor: kind === "cancelled" ? initiatorActor : responderActor,
+      actorRole: kind === "cancelled" ? "initiator" : "responder",
+      items: kind === "accepted" ? responderItemMetaRemote : [],
+      itemsLabel: kind === "accepted"
+        ? `Responder menyetujui dengan ${trade.responder_items?.length ?? 0} item Tier ${trade.tier_label}`
+        : kind === "rejected"
+          ? "Tidak ada item yang ditukar."
+          : kind === "cancelled"
+            ? "Initiator membatalkan sebelum diselesaikan."
+            : "Sistem menandai trade ini kedaluwarsa.",
+      detailNote: kind === "accepted" ? `Gas fee ${TRADE_GAS_FEE} koin dikenakan ke kedua belah pihak.` : undefined,
     });
   } else if (trade.status === "pending") {
     timeline.push({
-      ts: trade.expires_at, label: "Akan kedaluwarsa", done: false, Icon: Hourglass,
+      ts: trade.expires_at,
+      label: "Akan kedaluwarsa",
+      done: false,
+      Icon: Hourglass,
+      kind: "expiring",
+      actor: "Sistem (auto-expire)",
+      actorRole: "system",
+      items: [],
+      itemsLabel: "Belum ada item yang berpindah tangan.",
+      detailNote: "Trade otomatis di-expire bila responder tidak merespons sebelum waktu ini.",
     });
   }
+
+  const selectedEvent = selectedEventIdx !== null ? timeline[selectedEventIdx] ?? null : null;
 
   return (
     <div className="min-h-screen bg-hacker-bg pb-12 scanline">
@@ -424,19 +478,33 @@ const TradeRequest = () => {
                 </div>
               )}
 
-              {/* Timeline */}
+              {/* Timeline — each row is clickable for detail modal */}
               <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
                 {timeline.map((ev, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    key={idx}
+                    onClick={() => setSelectedEventIdx(idx)}
+                    aria-label={`Detail langkah: ${ev.label}`}
+                    className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-hacker-green/10 focus-visible:bg-hacker-green/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hacker-green/60"
+                  >
                     <ev.Icon className={cn(
                       "h-3 w-3 shrink-0 mt-0.5",
                       ev.done ? "text-hacker-green" : "text-muted-foreground",
                     )} />
-                    <div className="flex-1">
-                      <div className={ev.done ? "text-foreground" : "text-muted-foreground"}>{ev.label}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className={cn(
+                        "flex items-center gap-1",
+                        ev.done ? "text-foreground" : "text-muted-foreground",
+                      )}>
+                        <span className="truncate">{ev.label}</span>
+                        <span className="text-[9px] uppercase text-hacker-green opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                          [details]
+                        </span>
+                      </div>
                       <div className="text-muted-foreground/70">{fmtTs(ev.ts)}</div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
 
@@ -656,6 +724,95 @@ const TradeRequest = () => {
       </div>
 
       <SecurityPinDialog open={showPinSetup} onOpenChange={setShowPinSetup} onReady={() => setPinReady(true)} />
+
+      {/* Timeline event detail modal */}
+      <Dialog open={selectedEvent !== null} onOpenChange={(o) => !o && setSelectedEventIdx(null)}>
+        <DialogContent className="border-hacker bg-hacker-surface font-mono-hacker text-foreground sm:max-w-md">
+          {selectedEvent && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-sm uppercase tracking-wider text-hacker-green text-glow-hacker">
+                  <selectedEvent.Icon className="h-4 w-4" />
+                  {selectedEvent.label}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Detail langkah trade · event #{(selectedEventIdx ?? 0) + 1}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 text-xs">
+                <div className="grid grid-cols-[80px_1fr] gap-2 rounded-md border border-border/50 bg-hacker-bg/40 p-2">
+                  <span className="text-muted-foreground">// actor</span>
+                  <span className="flex items-center gap-1.5 text-foreground">
+                    <User className="h-3 w-3 text-hacker-green" />
+                    <span>{selectedEvent.actor}</span>
+                    <span className="rounded border border-border px-1 py-0 text-[9px] uppercase text-muted-foreground">
+                      {selectedEvent.actorRole}
+                    </span>
+                  </span>
+
+                  <span className="text-muted-foreground">// when</span>
+                  <span className="text-foreground">
+                    {fmtTs(selectedEvent.ts)}
+                    <div className="text-[10px] text-muted-foreground/70">{selectedEvent.ts}</div>
+                  </span>
+
+                  <span className="text-muted-foreground">// status</span>
+                  <span>
+                    <span className={cn("rounded border px-1.5 py-0.5 text-[10px] uppercase", sMeta.cls)}>
+                      {selectedEvent.kind}
+                    </span>
+                  </span>
+                </div>
+
+                <div className="rounded-md border border-border/50 bg-hacker-bg/40 p-2">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+                    <Package className="h-3 w-3 text-hacker-green" />
+                    <span>// items</span>
+                  </div>
+                  <p className="text-foreground">{selectedEvent.itemsLabel}</p>
+
+                  {selectedEvent.items.length > 0 && (
+                    <div className="mt-2 grid grid-cols-2 gap-1.5">
+                      {selectedEvent.items.map((it) => (
+                        <div key={it.id} className="flex items-center gap-1.5 rounded border border-border/40 bg-hacker-bg/60 p-1.5">
+                          <img
+                            src={supabaseImg(it.image, 64)}
+                            alt=""
+                            loading="lazy"
+                            className="h-7 w-7 shrink-0 rounded-sm border border-border/40 bg-black/40 object-contain"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[10px] text-foreground">{it.prize}</div>
+                            <div className="text-[9px] text-accent">+{it.coin_value} coin</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {selectedEvent.detailNote && (
+                  <div className="rounded-md border border-border/50 bg-hacker-bg/40 p-2 text-muted-foreground">
+                    <span className="text-hacker-green">// note:</span> {selectedEvent.detailNote}
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedEventIdx(null)}
+                  className="font-mono-hacker text-xs uppercase tracking-wider"
+                >
+                  close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
