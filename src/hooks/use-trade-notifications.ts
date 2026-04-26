@@ -68,6 +68,16 @@ export const useTradeNotifications = () => {
       return;
     }
 
+    // Seed firedKeys from previously acknowledged dedupKeys so we never re-toast
+    // events the user already marked as read (survives reload + reconnect).
+    getAckedDedupKeys(user.id).forEach((k) => firedKeys.current.add(k));
+
+    const onAcked = (e: Event) => {
+      const detail = (e as CustomEvent<{ keys: string[] }>).detail;
+      detail?.keys?.forEach((k) => firedKeys.current.add(k));
+    };
+    window.addEventListener("inbox-acked", onAcked);
+
     let cancelled = false;
 
     const fireOnce = (key: string, kind: TradeNotifKind, ctx: {
