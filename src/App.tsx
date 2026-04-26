@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { GachaProvider } from "./context/GachaContext";
 import { I18nProvider } from "./context/I18nContext";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
@@ -71,6 +72,7 @@ const App = () => (
     <TooltipProvider>
       <I18nProvider>
       <AuthProvider>
+      <NotificationsProvider>
       <GachaProvider>
         <Toaster />
         <Sonner />
@@ -130,6 +132,7 @@ const App = () => (
           </MaintenanceGate>
         </BrowserRouter>
       </GachaProvider>
+      </NotificationsProvider>
       </AuthProvider>
       </I18nProvider>
     </TooltipProvider>
