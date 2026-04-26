@@ -386,6 +386,44 @@ const TradeRequest = () => {
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{sMeta.description}</p>
 
+              {/* Live countdown — only while pending */}
+              {trade.status === "pending" && countdown && (
+                <div
+                  role={countdown.severity === "critical" ? "alert" : undefined}
+                  aria-live={countdown.severity === "normal" ? "off" : "polite"}
+                  className={cn(
+                    "mt-3 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs",
+                    countdown.severity === "critical" && "border-destructive/60 bg-destructive/10 text-destructive animate-pulse",
+                    countdown.severity === "warning" && "border-amber-500/60 bg-amber-500/10 text-amber-400",
+                    countdown.severity === "normal" && "border-border bg-hacker-bg/40 text-hacker-green",
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    {countdown.severity === "critical"
+                      ? <AlertTriangle className="h-4 w-4 shrink-0" />
+                      : countdown.severity === "warning"
+                        ? <Timer className="h-4 w-4 shrink-0" />
+                        : <Clock className="h-4 w-4 shrink-0" />}
+                    <span className="uppercase tracking-wider">
+                      {countdown.expired
+                        ? "trade expired"
+                        : countdown.severity === "critical"
+                          ? "expiring NOW"
+                          : countdown.severity === "warning"
+                            ? "expires soon"
+                            : "expires in"}
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "font-mono-hacker tabular-nums text-sm font-bold",
+                    countdown.severity === "critical" && "text-glow-destructive",
+                    countdown.severity === "normal" && "text-glow-hacker",
+                  )}>
+                    {countdown.expired ? "00:00" : countdown.formatted}
+                  </span>
+                </div>
+              )}
+
               {/* Timeline */}
               <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
                 {timeline.map((ev, idx) => (
