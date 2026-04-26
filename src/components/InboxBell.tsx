@@ -75,6 +75,17 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
 
+  // Trigger a brief pop on the "X updates" pill whenever its count grows.
+  useEffect(() => {
+    if (importantCount > prevImportantRef.current) {
+      setUpdatesPop(true);
+      const t = window.setTimeout(() => setUpdatesPop(false), 950);
+      prevImportantRef.current = importantCount;
+      return () => window.clearTimeout(t);
+    }
+    prevImportantRef.current = importantCount;
+  }, [importantCount]);
+
   // Auto-clear the "X updates" badge ~1.2s after the dropdown opens — long
   // enough for the user to register the highlight, short enough that the
   // badge feels responsive when they re-open the menu.
