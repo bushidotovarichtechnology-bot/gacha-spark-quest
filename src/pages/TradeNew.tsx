@@ -246,6 +246,65 @@ const TradeNew = () => {
         onOpenChange={setShowPinSetup}
         onReady={() => setPinReady(true)}
       />
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="border-hacker bg-hacker-surface font-mono-hacker">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-hacker-green text-glow-hacker">
+              <ShieldCheck className="h-5 w-5" />
+              Konfirmasi Trade
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              Periksa detail di bawah sebelum trade link di-generate.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-3 text-xs">
+            <div className="rounded-md border border-border bg-hacker-bg p-3">
+              <div className="mb-1 flex items-center justify-between text-hacker-green">
+                <span>$ items_offered</span>
+                <span className="rounded bg-hacker-surface px-1.5 py-0.5 text-[10px]">tier {lockedTier}</span>
+              </div>
+              <ul className="mt-2 space-y-1 text-foreground">
+                {selectedItems.map((it) => (
+                  <li key={it.id} className="flex items-center justify-between gap-2 truncate">
+                    <span className="truncate">• {it.prize}</span>
+                    <span className="flex items-center gap-0.5 text-accent">
+                      <Coins className="h-3 w-3" />{it.coinValue}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-2 text-[10px] text-muted-foreground">
+                Total: {selectedItems.length} item
+              </div>
+            </div>
+
+            <div className="rounded-md border border-hacker bg-hacker-green/5 p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-hacker-green text-glow-hacker">
+                  <Coins className="h-4 w-4" />
+                  <span className="font-bold uppercase">gas fee</span>
+                </span>
+                <span className="font-bold text-hacker-green">{TRADE_GAS_FEE} koin</span>
+              </div>
+              <div className="mt-1 text-[10px] text-muted-foreground">
+                Dipotong dari saldo masing-masing pihak hanya jika trade berhasil di-merge.
+              </div>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-mono-hacker text-xs">Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCreate}
+              className="bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase"
+            >
+              git push →
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
