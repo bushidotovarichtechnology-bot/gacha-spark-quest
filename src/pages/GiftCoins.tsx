@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
+import { useNotifications } from "@/context/NotificationsContext";
 import { useI18n } from "@/context/I18nContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,13 @@ const GiftCoins = () => {
   const { totalCoins, spendCoins, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
+  const { push: pushNotification, markAllRead } = useNotifications();
+
+  // Sinkronkan status "sudah dibaca": saat user membuka /gift, semua notifikasi
+  // Inbox langsung ditandai terbaca — sumber kebenarannya adalah halaman ini.
+  useEffect(() => {
+    markAllRead();
+  }, [markAllRead]);
 
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
