@@ -134,6 +134,7 @@ export default {
         "fade-in": "fade-in 0.5s ease-out both",
         "scale-in": "scale-in 0.4s ease-out 0.3s both",
         "bounce-slow": "bounce-slow 2s ease-in-out infinite",
+        "badge-shake": "badge-shake 0.6s ease-in-out",
       },
     },
   },
