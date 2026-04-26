@@ -298,12 +298,7 @@ const TradeRequest = () => {
     );
   }
 
-  // Tick every 10s so relative timestamps stay fresh without re-rendering on every frame.
-  const [, setNowTick] = useState(0);
-  useEffect(() => {
-    const id = window.setInterval(() => setNowTick((n) => n + 1), 10_000);
-    return () => window.clearInterval(id);
-  }, []);
+  // (Relative timestamps below reuse the existing `now` tick — no extra interval needed.)
 
   const fmtTs = (iso: string | null | undefined) => {
     if (!iso) return "—";
