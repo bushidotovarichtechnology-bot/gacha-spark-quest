@@ -13,12 +13,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import LocationCombobox from "@/components/LocationCombobox";
 import { useToast } from "@/hooks/use-toast";
 import { useProvinces, useCitiesForProvince } from "@/hooks/use-indonesian-locations";
 import defaultAvatar from "@/assets/default-avatar.webp";
 import { AVATAR_PRESETS } from "@/lib/avatarPresets";
 import { cn } from "@/lib/utils";
+import { getTradeNotifPrefs, setTradeNotifPrefs, subscribeTradeNotifPrefs, type TradeNotifPrefs } from "@/lib/tradeNotifPrefs";
 
 const WA_NUMBER = "6282231283948";
 const WA_MESSAGE = encodeURIComponent("Halo, saya ingin bertanya tentang layanan Bushido Gacha.");
