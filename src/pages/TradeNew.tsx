@@ -45,10 +45,12 @@ const TradeNew = () => {
     () => items.filter((it) => selectedIds.has(it.id)),
     [items, selectedIds],
   );
-    const first = items.find((it) => selectedIds.has(it.id));
+
+  const lockedTier: TradableTier | undefined = useMemo(() => {
+    const first = selectedItems[0];
     if (first && isTradableTier(first.tier)) return first.tier;
     return undefined;
-  }, [items, selectedIds]);
+  }, [selectedItems]);
 
   // Check PIN once on mount.
   useEffect(() => {
