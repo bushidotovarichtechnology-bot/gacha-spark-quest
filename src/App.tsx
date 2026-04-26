@@ -122,6 +122,7 @@ const App = () => (
                 <Route path="payment-settings" element={<AdminPaymentSettings />} />
                 <Route path="maintenance" element={<AdminMaintenance />} />
                 <Route path="promo-banners" element={<AdminPromoBanners />} />
+                <Route path="gift-audit" element={<AdminGiftAudit />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
