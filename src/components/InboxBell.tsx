@@ -68,7 +68,7 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     );
 
   return (
-    <DropdownMenu onOpenChange={(open) => { if (open && unreadCount > 0) markAllRead(); }}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
