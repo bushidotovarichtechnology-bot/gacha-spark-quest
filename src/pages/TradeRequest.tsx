@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot } from "lucide-react";
+import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot, Timer } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -133,6 +133,36 @@ const TradeRequest = () => {
     if (!user) return;
     hasSecurityPin().then(setPinReady).catch(() => setPinReady(false));
   }, [user]);
+
+  // Live countdown to expiry — ticks every 1s while trade is pending.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (trade?.status !== "pending") return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [trade?.status]);
+
+  const countdown = useMemo(() => {
+    if (!trade?.expires_at) return null;
+    const expMs = new Date(trade.expires_at).getTime();
+    const diff = expMs - now;
+    const expired = diff <= 0;
+    const totalSec = Math.max(0, Math.floor(diff / 1000));
+    const hours = Math.floor(totalSec / 3600);
+    const minutes = Math.floor((totalSec % 3600) / 60);
+    const seconds = totalSec % 60;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const formatted = hours > 0
+      ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+      : `${pad(minutes)}:${pad(seconds)}`;
+    // Severity tiers: critical <60s, warning <5min, normal otherwise.
+    const severity: "critical" | "warning" | "normal" = expired
+      ? "critical"
+      : diff < 60_000 ? "critical"
+      : diff < 5 * 60_000 ? "warning"
+      : "normal";
+    return { expired, totalSec, formatted, severity, diffMs: diff };
+  }, [trade?.expires_at, now]);
 
   const responderItemMeta = useMemo(
     () => items.filter((it) => responderItems.has(it.id)),
@@ -355,6 +385,44 @@ const TradeRequest = () => {
                 {statusBadge}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{sMeta.description}</p>
+
+              {/* Live countdown — only while pending */}
+              {trade.status === "pending" && countdown && (
+                <div
+                  role={countdown.severity === "critical" ? "alert" : undefined}
+                  aria-live={countdown.severity === "normal" ? "off" : "polite"}
+                  className={cn(
+                    "mt-3 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs",
+                    countdown.severity === "critical" && "border-destructive/60 bg-destructive/10 text-destructive animate-pulse",
+                    countdown.severity === "warning" && "border-accent/60 bg-accent/10 text-accent",
+                    countdown.severity === "normal" && "border-border bg-hacker-bg/40 text-hacker-green",
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    {countdown.severity === "critical"
+                      ? <AlertTriangle className="h-4 w-4 shrink-0" />
+                      : countdown.severity === "warning"
+                        ? <Timer className="h-4 w-4 shrink-0" />
+                        : <Clock className="h-4 w-4 shrink-0" />}
+                    <span className="uppercase tracking-wider">
+                      {countdown.expired
+                        ? "trade expired"
+                        : countdown.severity === "critical"
+                          ? "expiring NOW"
+                          : countdown.severity === "warning"
+                            ? "expires soon"
+                            : "expires in"}
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "font-mono-hacker tabular-nums text-sm font-bold",
+                    countdown.severity === "critical" && "text-glow-destructive",
+                    countdown.severity === "normal" && "text-glow-hacker",
+                  )}>
+                    {countdown.expired ? "00:00" : countdown.formatted}
+                  </span>
+                </div>
+              )}
 
               {/* Timeline */}
               <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
