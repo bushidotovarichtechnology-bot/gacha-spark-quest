@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 1: Insert the gift row FIRST as the idempotency lock (unique request_id).
-    // This guarantees that concurrent retries with the same key cannot both proceed to transfer.
+    // Status starts as "processing" — flips to "success" after transfer or "error" on failure.
     const { data: giftRow, error: insertError } = await adminClient
       .from("coin_gifts")
       .insert({
@@ -159,7 +159,8 @@ Deno.serve(async (req) => {
         amount,
         message: (message || "").slice(0, 200),
         request_id: idempotencyKey,
-      })
+        status: "processing",
+      } as any)
       .select("id")
       .single();
 
