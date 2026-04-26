@@ -520,34 +520,55 @@ const TradeRequest = () => {
                 </div>
               )}
 
-              {/* Timeline — each row is clickable for detail modal */}
-              <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
-                {timeline.map((ev, idx) => (
-                  <button
-                    type="button"
-                    key={idx}
-                    onClick={() => setSelectedEventIdx(idx)}
-                    aria-label={`Detail langkah: ${ev.label}`}
-                    className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-hacker-green/10 focus-visible:bg-hacker-green/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hacker-green/60"
-                  >
-                    <ev.Icon className={cn(
-                      "h-3 w-3 shrink-0 mt-0.5",
-                      ev.done ? "text-hacker-green" : "text-muted-foreground",
-                    )} />
-                    <div className="flex-1 min-w-0">
-                      <div className={cn(
-                        "flex items-center gap-1",
-                        ev.done ? "text-foreground" : "text-muted-foreground",
-                      )}>
-                        <span className="truncate">{ev.label}</span>
-                        <span className="text-[9px] uppercase text-hacker-green opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                          [details]
-                        </span>
+              {/* Timeline — each row is clickable for detail modal. Auto-scrolls
+                  to the latest entry when realtime/poll appends a new event. */}
+              <div
+                ref={timelineScrollRef}
+                className="mt-3 max-h-56 space-y-1.5 overflow-y-auto border-l border-border/50 pl-3"
+              >
+                {timeline.map((ev, idx) => {
+                  const isLatest = idx === timeline.length - 1;
+                  const rel = fmtRelative(ev.ts);
+                  return (
+                    <button
+                      type="button"
+                      key={idx}
+                      onClick={() => setSelectedEventIdx(idx)}
+                      aria-label={`Detail langkah: ${ev.label}`}
+                      className={cn(
+                        "group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-hacker-green/10 focus-visible:bg-hacker-green/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hacker-green/60",
+                        isLatest && ev.done && "bg-hacker-green/5",
+                      )}
+                    >
+                      <ev.Icon className={cn(
+                        "h-3 w-3 shrink-0 mt-0.5",
+                        ev.done ? "text-hacker-green" : "text-muted-foreground",
+                      )} />
+                      <div className="flex-1 min-w-0">
+                        <div className={cn(
+                          "flex items-center gap-1",
+                          ev.done ? "text-foreground" : "text-muted-foreground",
+                        )}>
+                          <span className="truncate">{ev.label}</span>
+                          <span className="text-[9px] uppercase text-hacker-green opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                            [details]
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground/70">
+                          {rel && (
+                            <span
+                              className="rounded bg-hacker-bg/50 px-1 text-[9px] font-medium text-hacker-green tabular-nums"
+                              title={fmtTs(ev.ts)}
+                            >
+                              {rel}
+                            </span>
+                          )}
+                          <span className="truncate">{fmtTs(ev.ts)}</span>
+                        </div>
                       </div>
-                      <div className="text-muted-foreground/70">{fmtTs(ev.ts)}</div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Exchange summary */}
