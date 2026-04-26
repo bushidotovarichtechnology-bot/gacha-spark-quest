@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
+import RecipientPicker, { type ResolvedRecipient } from "@/components/trade/RecipientPicker";
 import {
   createTrade,
   hasSecurityPin,
@@ -34,6 +35,7 @@ const TradeNew = () => {
     return set;
   });
   const [message, setMessage] = useState("");
+  const [recipient, setRecipient] = useState<ResolvedRecipient | null>(null);
   const [pinReady, setPinReady] = useState<boolean | null>(null);
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -90,10 +92,13 @@ const TradeNew = () => {
         inventoryIds: Array.from(selectedIds),
         tier: lockedTier,
         message: message.trim(),
+        recipientId: recipient?.userId ?? null,
       });
       setGeneratedToken(trade.token);
       toast.success("Trade Link tergenerate", {
-        description: "Bagikan link ini ke calon partner trade-mu.",
+        description: recipient
+          ? `Direct-target ke ${recipient.email}. Notifikasi inbox terkirim.`
+          : "Bagikan link ini ke calon partner trade-mu.",
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal membuat trade");
@@ -182,6 +187,13 @@ const TradeNew = () => {
                 rows={2}
               />
               <p className="mt-1 text-right text-[10px] text-muted-foreground">{message.length}/200</p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs uppercase text-hacker-green">
+                $ recipient <span className="text-muted-foreground normal-case">(opsional)</span>
+              </label>
+              <RecipientPicker value={recipient} onChange={setRecipient} />
             </div>
 
             <div className="rounded-md border border-hacker/50 bg-hacker-bg p-3 text-[11px]">
@@ -277,6 +289,27 @@ const TradeNew = () => {
               </ul>
               <div className="mt-2 text-[10px] text-muted-foreground">
                 Total: {selectedItems.length} item
+              </div>
+            </div>
+
+            <div className="rounded-md border border-border bg-hacker-bg p-3 text-xs">
+              <div className="text-hacker-green text-[11px] uppercase">$ routing</div>
+              <div className="mt-1 text-foreground">
+                {recipient ? (
+                  <>
+                    direct-target → <span className="text-hacker-green">{recipient.email}</span>
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Hanya recipient yang melihat trade & menerima notifikasi inbox.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-hacker-green">open trade link</span>
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Siapa saja dengan link bisa merespond. Tidak ada notifikasi inbox saat dibuat.
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

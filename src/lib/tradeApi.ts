@@ -24,6 +24,7 @@ export interface TradeRow {
   token: string;
   initiator_id: string;
   responder_id: string | null;
+  recipient_id: string | null;
   initiator_items: string[];
   responder_items: string[];
   tier_label: TradableTier;
@@ -44,12 +45,14 @@ export const createTrade = async (params: {
   inventoryIds: string[];
   tier: TradableTier;
   message?: string;
+  recipientId?: string | null;
 }): Promise<TradeRow> => {
   const { data, error } = await supabase.functions.invoke("trade-create", {
     body: {
       inventory_ids: params.inventoryIds,
       tier: params.tier,
       message: params.message ?? "",
+      recipient_id: params.recipientId ?? null,
     },
   });
   if (error) throw error;
