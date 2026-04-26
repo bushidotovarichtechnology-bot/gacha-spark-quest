@@ -85,6 +85,7 @@ const App = () => (
           <RouterReadyBridge />
           <GlobalTransactionWatcher />
           <TradeNotifDebugPanel />
+          <TradeRealtimeIndicator />
           <MaintenanceGate>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
