@@ -40,6 +40,14 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const [shake, setShake] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
 
+  // Count only high-priority unread updates (trade accepted / rejected) for the
+  // dedicated "X updates" pill — keeps users alerted to outcomes without spam.
+  const importantCount = items.reduce((n, i) => {
+    if (i.read) return n;
+    const k = i.dedupKey ?? "";
+    return k.startsWith("trade-accepted:") || k.startsWith("trade-rejected:") ? n + 1 : n;
+  }, 0);
+
   useEffect(() => {
     if (unreadCount > prevUnreadRef.current) {
       setShake(true);
@@ -49,6 +57,19 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     }
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
+
+  const updatesPill = importantCount > 0 && (
+    <span
+      title={`${importantCount} update penting (accepted/rejected) belum dibaca`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full bg-hacker-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hacker-green ring-1 ring-hacker-green/30",
+        shake && "animate-badge-shake",
+      )}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-hacker-green" />
+      {importantCount} {importantCount === 1 ? "update" : "updates"}
+    </span>
+  );
 
   const trigger =
     variant === "desktop" ? (
@@ -91,8 +112,10 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
     );
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+    <div className="inline-flex items-center gap-2">
+      {variant === "desktop" && updatesPill}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
           <div className="flex items-center gap-2">
@@ -223,8 +246,10 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
             </ul>
           </ScrollArea>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {variant === "mobile" && updatesPill}
+    </div>
   );
 };
 
