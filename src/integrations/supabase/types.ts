@@ -169,32 +169,38 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          error_message: string | null
           id: string
           message: string
           receiver_email: string
           receiver_id: string
           request_id: string | null
           sender_id: string
+          status: string
         }
         Insert: {
           amount: number
           created_at?: string
+          error_message?: string | null
           id?: string
           message?: string
           receiver_email?: string
           receiver_id: string
           request_id?: string | null
           sender_id: string
+          status?: string
         }
         Update: {
           amount?: number
           created_at?: string
+          error_message?: string | null
           id?: string
           message?: string
           receiver_email?: string
           receiver_id?: string
           request_id?: string | null
           sender_id?: string
+          status?: string
         }
         Relationships: []
       }
