@@ -339,6 +339,44 @@ const TradeRequest = () => {
                   <div className="text-hacker-green">{trade.responder_items?.length ?? 0} item</div>
                 </div>
               </div>
+
+              {/* Compact items table — name + tier + small icon per item */}
+              {(initiatorItemMeta.length > 0 || responderItemMetaRemote.length > 0) && (
+                <div className="mt-3 overflow-hidden rounded-md border border-border/50 bg-hacker-bg/40">
+                  <div className="grid grid-cols-[auto_1fr_auto_auto] gap-x-2 border-b border-border/50 bg-hacker-bg/60 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>side</span>
+                    <span>item</span>
+                    <span>tier</span>
+                    <span className="text-right">coin</span>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {initiatorItemMeta.map((it) => (
+                      <div key={`i-${it.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-[11px] last:border-b-0">
+                        <div className="flex items-center gap-1.5">
+                          <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
+                            className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
+                          <span className="text-[9px] text-muted-foreground">A→B</span>
+                        </div>
+                        <span className="truncate text-foreground">{it.prize}</span>
+                        <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
+                        <span className="text-right text-accent">+{it.coin_value}</span>
+                      </div>
+                    ))}
+                    {responderItemMetaRemote.map((it) => (
+                      <div key={`r-${it.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-[11px] last:border-b-0">
+                        <div className="flex items-center gap-1.5">
+                          <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
+                            className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
+                          <span className="text-[9px] text-muted-foreground">B→A</span>
+                        </div>
+                        <span className="truncate text-foreground">{it.prize}</span>
+                        <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
+                        <span className="text-right text-accent">+{it.coin_value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
