@@ -114,6 +114,14 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(8px)" },
         },
+        "badge-shake": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "15%": { transform: "translate(-1.5px, 0) scale(1.25)" },
+          "30%": { transform: "translate(1.5px, -1px) scale(1.25)" },
+          "45%": { transform: "translate(-1.5px, 1px) scale(1.2)" },
+          "60%": { transform: "translate(1px, 0) scale(1.18)" },
+          "75%": { transform: "translate(-1px, 0) scale(1.12)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
