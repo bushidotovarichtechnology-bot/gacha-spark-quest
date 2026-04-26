@@ -14,6 +14,7 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
 import { TradeNotifDebugPanel } from "./components/TradeNotifDebugPanel";
+import { TradeRealtimeIndicator } from "./components/TradeRealtimeIndicator";
 import RouterReadyBridge from "./components/RouterReadyBridge";
 import MaintenanceGate from "./components/MaintenanceGate";
 
