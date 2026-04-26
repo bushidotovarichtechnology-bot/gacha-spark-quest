@@ -700,6 +700,7 @@ export type Database = {
           postal_code: string
           province: string
           recipient_name: string
+          security_pin_hash: string
           updated_at: string
           user_id: string
         }
@@ -714,6 +715,7 @@ export type Database = {
           postal_code?: string
           province?: string
           recipient_name?: string
+          security_pin_hash?: string
           updated_at?: string
           user_id: string
         }
@@ -728,6 +730,7 @@ export type Database = {
           postal_code?: string
           province?: string
           recipient_name?: string
+          security_pin_hash?: string
           updated_at?: string
           user_id?: string
         }
@@ -1039,6 +1042,102 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trade_history: {
+        Row: {
+          created_at: string
+          error_reason: string | null
+          gas_fee: number
+          id: string
+          initiator_id: string
+          initiator_ip: string | null
+          items_exchanged: Json
+          outcome: string
+          responder_id: string | null
+          responder_ip: string | null
+          tier_label: string | null
+          trade_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_reason?: string | null
+          gas_fee?: number
+          id?: string
+          initiator_id: string
+          initiator_ip?: string | null
+          items_exchanged?: Json
+          outcome: string
+          responder_id?: string | null
+          responder_ip?: string | null
+          tier_label?: string | null
+          trade_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_reason?: string | null
+          gas_fee?: number
+          id?: string
+          initiator_id?: string
+          initiator_ip?: string | null
+          items_exchanged?: Json
+          outcome?: string
+          responder_id?: string | null
+          responder_ip?: string | null
+          tier_label?: string | null
+          trade_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          initiator_id: string
+          initiator_items: Json
+          message: string
+          responded_at: string | null
+          responder_id: string | null
+          responder_items: Json
+          status: string
+          tier_label: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          initiator_id: string
+          initiator_items?: Json
+          message?: string
+          responded_at?: string | null
+          responder_id?: string | null
+          responder_items?: Json
+          status?: string
+          tier_label: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          initiator_id?: string
+          initiator_items?: Json
+          message?: string
+          responded_at?: string | null
+          responder_id?: string | null
+          responder_items?: Json
+          status?: string
+          tier_label?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
@@ -1364,8 +1463,10 @@ export type Database = {
         Returns: Json
       }
       expire_pending_transactions: { Args: never; Returns: number }
+      expire_stale_trades: { Args: never; Returns: number }
       expire_unpaid_claims: { Args: never; Returns: number }
       find_user_id_by_email: { Args: { _email: string }; Returns: string }
+      generate_trade_token: { Args: never; Returns: string }
       get_admin_stats: { Args: never; Returns: Json }
       get_all_users_admin: {
         Args: never
@@ -1445,6 +1546,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_security_pin: { Args: never; Returns: boolean }
       recycle_inventory_item: { Args: { _item_id: string }; Returns: Json }
       redeem_coupon_atomic: { Args: { _code: string }; Returns: Json }
       redeem_reward: { Args: { _reward_id: string }; Returns: Json }
@@ -1452,10 +1554,15 @@ export type Database = {
         Args: { _campaign_id: string; _draw_count: number }
         Returns: Json
       }
+      set_security_pin: { Args: { _pin: string }; Returns: Json }
       slugify: { Args: { _input: string }; Returns: string }
       transfer_gift_coins: {
         Args: { _amount: number; _receiver_id: string }
         Returns: Json
+      }
+      verify_security_pin: {
+        Args: { _pin: string; _user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
