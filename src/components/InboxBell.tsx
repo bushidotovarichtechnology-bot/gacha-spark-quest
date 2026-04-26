@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bell, CheckCheck, Trash2, CheckCircle2, XCircle, Info, AlertTriangle } from "lucide-react";
+import { Bell, CheckCheck, Trash2, CheckCircle2, XCircle, Info, AlertTriangle, Filter } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,15 +38,25 @@ interface InboxBellProps {
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
   const [shake, setShake] = useState(false);
+  // When true, the dropdown list filters down to unread accepted/rejected only.
+  const [importantOnly, setImportantOnly] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
+
+  const isImportant = (dedupKey: string | undefined) => {
+    const k = dedupKey ?? "";
+    return k.startsWith("trade-accepted:") || k.startsWith("trade-rejected:");
+  };
 
   // Count only high-priority unread updates (trade accepted / rejected) for the
   // dedicated "X updates" pill — keeps users alerted to outcomes without spam.
-  const importantCount = items.reduce((n, i) => {
-    if (i.read) return n;
-    const k = i.dedupKey ?? "";
-    return k.startsWith("trade-accepted:") || k.startsWith("trade-rejected:") ? n + 1 : n;
-  }, 0);
+  const importantCount = items.reduce(
+    (n, i) => (!i.read && isImportant(i.dedupKey) ? n + 1 : n),
+    0,
+  );
+
+  const visibleItems = importantOnly
+    ? items.filter((i) => !i.read && isImportant(i.dedupKey))
+    : items;
 
   useEffect(() => {
     if (unreadCount > prevUnreadRef.current) {
@@ -128,6 +138,24 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
             )}
           </div>
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setImportantOnly((v) => !v)}
+              className={cn(
+                "flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors",
+                importantOnly
+                  ? "bg-hacker-green/15 text-hacker-green ring-1 ring-hacker-green/30"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              )}
+              title={importantOnly ? "Tampilkan semua notifikasi" : "Filter: hanya accepted/rejected unread"}
+            >
+              <Filter className="h-3 w-3" />
+              Penting
+              {importantCount > 0 && (
+                <span className="ml-0.5 rounded-full bg-hacker-green/20 px-1.5 text-[10px] font-bold text-hacker-green">
+                  {importantCount}
+                </span>
+              )}
+            </button>
             {items.length > 0 && unreadCount > 0 && (
               <button
                 onClick={markAllRead}
@@ -169,10 +197,24 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
               </p>
             </div>
           </div>
+        ) : visibleItems.length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <Filter className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+            <p className="text-sm font-medium text-foreground">Tidak ada update penting</p>
+            <p className="mt-1 text-xs text-muted-foreground/80">
+              Belum ada notifikasi accepted/rejected yang belum dibaca.
+            </p>
+            <button
+              onClick={() => setImportantOnly(false)}
+              className="mt-3 rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary/80"
+            >
+              Tampilkan semua
+            </button>
+          </div>
         ) : (
           <ScrollArea className="max-h-96">
             <ul className="divide-y divide-border/50">
-              {items.map((n) => {
+              {visibleItems.map((n) => {
                 const Body = (
                   <div className="flex items-start gap-2.5 px-3 py-2.5">
                     <KindIcon kind={n.kind} />
