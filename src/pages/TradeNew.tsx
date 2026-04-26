@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
+import RecipientPicker, { type ResolvedRecipient } from "@/components/trade/RecipientPicker";
 import {
   createTrade,
   hasSecurityPin,
