@@ -57,6 +57,7 @@ const AdminStockAudit = lazy(() => import("./pages/admin/AdminStockAudit.tsx"));
 const AdminPaymentSettings = lazy(() => import("./pages/admin/AdminPaymentSettings.tsx"));
 const AdminMaintenance = lazy(() => import("./pages/admin/AdminMaintenance.tsx"));
 const AdminPromoBanners = lazy(() => import("./pages/admin/AdminPromoBanners.tsx"));
+const AdminGiftAudit = lazy(() => import("./pages/admin/AdminGiftAudit.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -121,6 +122,7 @@ const App = () => (
                 <Route path="payment-settings" element={<AdminPaymentSettings />} />
                 <Route path="maintenance" element={<AdminMaintenance />} />
                 <Route path="promo-banners" element={<AdminPromoBanners />} />
+                <Route path="gift-audit" element={<AdminGiftAudit />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
