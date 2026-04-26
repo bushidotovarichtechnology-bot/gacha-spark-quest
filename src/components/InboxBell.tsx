@@ -197,10 +197,24 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
               </p>
             </div>
           </div>
+        ) : visibleItems.length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <Filter className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+            <p className="text-sm font-medium text-foreground">Tidak ada update penting</p>
+            <p className="mt-1 text-xs text-muted-foreground/80">
+              Belum ada notifikasi accepted/rejected yang belum dibaca.
+            </p>
+            <button
+              onClick={() => setImportantOnly(false)}
+              className="mt-3 rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary/80"
+            >
+              Tampilkan semua
+            </button>
+          </div>
         ) : (
           <ScrollArea className="max-h-96">
             <ul className="divide-y divide-border/50">
-              {items.map((n) => {
+              {visibleItems.map((n) => {
                 const Body = (
                   <div className="flex items-start gap-2.5 px-3 py-2.5">
                     <KindIcon kind={n.kind} />
