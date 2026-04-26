@@ -194,34 +194,76 @@ export const useTradeNotifications = () => {
 
     /**
      * Pull the user's recent trades and reconcile against `prevStatus`.
-     * - On the first run we only hydrate baseline state (no toasts).
-     * - Subsequent runs surface any transitions the realtime channel missed
-     *   (e.g. during reconnects, throttling, or background tabs).
+     * Returns `true` on success, `false` on failure (so the caller can decide
+     * whether to retry with backoff).
      */
-    const reconcile = async (source: TradeNotifSource = "reconcile-poll") => {
-      const { data, error } = await supabase
-        .from("trades")
-        .select("id,token,status,initiator_id,responder_id,tier_label")
-        .or(`initiator_id.eq.${user.id},responder_id.eq.${user.id}`)
-        .order("updated_at", { ascending: false })
-        .limit(100);
-      if (cancelled || error || !data) return;
-
-      data.forEach((row) => {
-        const known = prevStatus.current[row.id];
-        if (!initialized.current) {
-          prevStatus.current[row.id] = row.status;
-          prevResponder.current[row.id] = row.responder_id;
-          return;
+    const reconcile = async (source: TradeNotifSource = "reconcile-poll"): Promise<boolean> => {
+      try {
+        const { data, error } = await supabase
+          .from("trades")
+          .select("id,token,status,initiator_id,responder_id,tier_label")
+          .or(`initiator_id.eq.${user.id},responder_id.eq.${user.id}`)
+          .order("updated_at", { ascending: false })
+          .limit(100);
+        if (cancelled) return true;
+        if (error || !data) {
+          logTradeNotif({
+            tradeId: "-", tier: "-", kind: "skipped-no-change", source,
+            dedupKey: null, fired: false,
+            note: `reconcile error: ${error?.message ?? "no data"}`,
+          });
+          return false;
         }
-        if (known !== row.status) handleRow(row as TradeRow, false, source);
-        else prevResponder.current[row.id] = row.responder_id;
-      });
 
-      if (!initialized.current) initialized.current = true;
+        data.forEach((row) => {
+          const known = prevStatus.current[row.id];
+          if (!initialized.current) {
+            prevStatus.current[row.id] = row.status;
+            prevResponder.current[row.id] = row.responder_id;
+            return;
+          }
+          if (known !== row.status) handleRow(row as TradeRow, false, source);
+          else prevResponder.current[row.id] = row.responder_id;
+        });
+
+        if (!initialized.current) initialized.current = true;
+        return true;
+      } catch (err) {
+        logTradeNotif({
+          tradeId: "-", tier: "-", kind: "skipped-no-change", source,
+          dedupKey: null, fired: false,
+          note: `reconcile threw: ${err instanceof Error ? err.message : String(err)}`,
+        });
+        return false;
+      }
     };
 
-    reconcile("reconcile-init");
+    // Exponential-backoff retry loop. One cycle per trigger; new triggers cancel
+    // any in-flight retry chain via `backoffToken` so we never stack timers.
+    let backoffToken = 0;
+    let backoffTimer: number | null = null;
+    const reconcileWithBackoff = async (source: TradeNotifSource) => {
+      const myToken = ++backoffToken;
+      if (backoffTimer !== null) {
+        window.clearTimeout(backoffTimer);
+        backoffTimer = null;
+      }
+
+      for (let attempt = 0; attempt < BACKOFF_MAX_ATTEMPTS; attempt++) {
+        if (cancelled || myToken !== backoffToken) return;
+        const ok = await reconcile(source);
+        if (ok || cancelled || myToken !== backoffToken) return;
+        const delay = computeBackoff(attempt);
+        await new Promise<void>((resolve) => {
+          backoffTimer = window.setTimeout(() => {
+            backoffTimer = null;
+            resolve();
+          }, delay);
+        });
+      }
+    };
+
+    reconcileWithBackoff("reconcile-init");
 
     const channel = supabase
       .channel(`global-trades-${user.id}`)
@@ -240,17 +282,33 @@ export const useTradeNotifications = () => {
         { event: "UPDATE", schema: "public", table: "trades", filter: `responder_id=eq.${user.id}` },
         (payload) => handleRow(payload.new as TradeRow, false, "realtime-update"),
       )
-      .subscribe();
+      .subscribe((status) => {
+        // When the realtime channel hiccups (CHANNEL_ERROR / TIMED_OUT / CLOSED),
+        // kick off a backoff-driven reconcile so we self-heal once the network
+        // returns instead of waiting up to a full poll interval.
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          logTradeNotif({
+            tradeId: "-", tier: "-", kind: "skipped-no-change", source: "realtime-update",
+            dedupKey: null, fired: false,
+            note: `channel status=${status} — triggering backoff reconcile`,
+          });
+          reconcileWithBackoff("reconcile-online");
+        }
+      });
 
     // Fallback: periodic reconcile + on tab focus / network reconnect.
-    const interval = window.setInterval(() => reconcile("reconcile-poll"), POLL_INTERVAL_MS);
-    const onVisible = () => { if (document.visibilityState === "visible") reconcile("reconcile-visibility"); };
-    const onOnline = () => reconcile("reconcile-online");
+    // Each trigger flows through the backoff wrapper so transient failures
+    // (offline, 5xx, throttled) retry gracefully without spamming the API.
+    const interval = window.setInterval(() => reconcileWithBackoff("reconcile-poll"), POLL_INTERVAL_MS);
+    const onVisible = () => { if (document.visibilityState === "visible") reconcileWithBackoff("reconcile-visibility"); };
+    const onOnline = () => reconcileWithBackoff("reconcile-online");
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onOnline);
 
     return () => {
       cancelled = true;
+      backoffToken++;
+      if (backoffTimer !== null) window.clearTimeout(backoffTimer);
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
