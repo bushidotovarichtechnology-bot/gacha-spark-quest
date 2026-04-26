@@ -122,6 +122,12 @@ export default {
           "60%": { transform: "translate(1px, 0) scale(1.18)" },
           "75%": { transform: "translate(-1px, 0) scale(1.12)" },
         },
+        "updates-pop": {
+          "0%":   { transform: "scale(1)",    boxShadow: "0 0 0 0 hsl(var(--hacker-green) / 0.45)" },
+          "30%":  { transform: "scale(1.12)", boxShadow: "0 0 0 6px hsl(var(--hacker-green) / 0.18)" },
+          "60%":  { transform: "scale(0.98)", boxShadow: "0 0 0 10px hsl(var(--hacker-green) / 0.05)" },
+          "100%": { transform: "scale(1)",    boxShadow: "0 0 0 0 hsl(var(--hacker-green) / 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
