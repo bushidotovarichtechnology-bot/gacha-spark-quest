@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import InboxBell from "@/components/InboxBell";
 import defaultAvatar from "@/assets/default-avatar.webp";
 
 const Navbar = () => {
@@ -150,6 +151,8 @@ const Navbar = () => {
             </>
           )}
           {user ? (
+            <>
+            <InboxBell variant="desktop" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full transition-opacity hover:opacity-80 focus:outline-none">
@@ -173,6 +176,7 @@ const Navbar = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <Link
               to="/login"
@@ -216,6 +220,11 @@ const Navbar = () => {
                     <p className="text-sm font-semibold text-foreground">{user.email}</p>
                     <Link to="/profile" onClick={() => setIsOpen(false)} className="text-xs text-primary hover:underline">Lihat Profil</Link>
                   </div>
+                </div>
+              )}
+              {user && (
+                <div className="pb-2 border-b border-border/50">
+                  <InboxBell variant="mobile" />
                 </div>
               )}
               {user && navLinks.map((link) => (
