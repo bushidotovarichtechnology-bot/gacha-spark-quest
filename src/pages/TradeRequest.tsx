@@ -277,6 +277,55 @@ const TradeRequest = () => {
           </div>
         )}
 
+        {/* Status panel — clear status, timeline, & exchange summary */}
+        <div className={cn("mb-4 rounded-lg border p-4", sMeta.panelCls)}>
+          <div className="flex items-start gap-3">
+            <sMeta.Icon className={cn("h-5 w-5 shrink-0 mt-0.5", sMeta.cls.split(" ")[0])} />
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className={cn("text-sm font-bold uppercase tracking-wider", sMeta.cls.split(" ")[0])}>
+                  status: {trade.status}
+                </h2>
+                {statusBadge}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{sMeta.description}</p>
+
+              {/* Timeline */}
+              <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
+                {timeline.map((ev, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-[11px]">
+                    <ev.Icon className={cn(
+                      "h-3 w-3 shrink-0 mt-0.5",
+                      ev.done ? "text-hacker-green" : "text-muted-foreground",
+                    )} />
+                    <div className="flex-1">
+                      <div className={ev.done ? "text-foreground" : "text-muted-foreground"}>{ev.label}</div>
+                      <div className="text-muted-foreground/70">{fmtTs(ev.ts)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Exchange summary */}
+              <div className="mt-3 grid grid-cols-3 gap-2 rounded-md border border-border/50 bg-hacker-bg/40 p-2 text-[11px]">
+                <div>
+                  <div className="text-muted-foreground">items_offered</div>
+                  <div className="text-hacker-green">{trade.initiator_items?.length ?? 0} item</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-muted-foreground">tier</div>
+                  <div className="text-hacker-green">{trade.tier_label}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-muted-foreground">items_received</div>
+                  <div className="text-hacker-green">{trade.responder_items?.length ?? 0} item</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
         {/* Git-merge two-branch view */}
         <div className="grid gap-3 md:grid-cols-2">
           {/* Their branch (initiator) */}
