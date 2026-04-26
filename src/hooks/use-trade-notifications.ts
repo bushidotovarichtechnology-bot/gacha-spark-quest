@@ -42,6 +42,20 @@ const computeBackoff = (attempt: number) => {
   return Math.floor(Math.random() * exp);
 };
 
+/**
+ * Connection state surfaced to the UI via the `trade-rt-status` window event:
+ *  - `online`        → realtime channel SUBSCRIBED, last reconcile OK.
+ *  - `reconnecting`  → fallback reconcile is in-flight (channel hiccup or poll).
+ *  - `missed-sync`   → reconcile failed after exhausting backoff; data may be stale.
+ */
+export type TradeRtStatus = "online" | "reconnecting" | "missed-sync";
+
+const emitRtStatus = (status: TradeRtStatus) => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("trade-rt-status", { detail: { status } }));
+};
+
+
 export const useTradeNotifications = () => {
   const { user } = useAuth();
   const { push } = useNotifications();
