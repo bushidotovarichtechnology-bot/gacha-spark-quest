@@ -243,6 +243,43 @@ const GiftCoins = () => {
                       className="bg-secondary"
                     />
                   </div>
+                  {coinAmountNum > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="overflow-hidden"
+                    >
+                      <div className={`rounded-md border p-3 space-y-1.5 ${
+                        coinAmountNum > totalCoins
+                          ? "border-destructive/40 bg-destructive/5"
+                          : "border-accent/30 bg-accent/5"
+                      }`}>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Saldo saat ini</span>
+                          <span className="font-mono text-foreground">{totalCoins.toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Potongan</span>
+                          <span className="font-mono text-red-400">−{coinAmountNum.toLocaleString()}</span>
+                        </div>
+                        <div className="border-t border-border/50 pt-1.5 flex items-center justify-between">
+                          <span className="text-xs font-medium text-foreground">Sisa saldo</span>
+                          <span className={`font-display text-sm font-bold ${
+                            coinAmountNum > totalCoins ? "text-destructive" : "text-accent"
+                          }`}>
+                            {(totalCoins - coinAmountNum).toLocaleString()}
+                          </span>
+                        </div>
+                        {coinAmountNum > totalCoins && (
+                          <p className="flex items-center gap-1 pt-1 text-xs text-destructive">
+                            <AlertTriangle className="h-3 w-3" />
+                            Saldo tidak cukup untuk pengiriman ini
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">Pesan (opsional)</label>
                     <Textarea
