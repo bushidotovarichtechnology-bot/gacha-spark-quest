@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
+import { TradeNotifDebugPanel } from "./components/TradeNotifDebugPanel";
 import MaintenanceGate from "./components/MaintenanceGate";
 
 // Lazy-loaded routes — code-split to reduce initial JS bundle size & parse/eval time on home.
