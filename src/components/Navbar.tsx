@@ -222,6 +222,11 @@ const Navbar = () => {
                   </div>
                 </div>
               )}
+              {user && (
+                <div className="pb-2 border-b border-border/50">
+                  <InboxBell variant="mobile" />
+                </div>
+              )}
               {user && navLinks.map((link) => (
                 <Link
                   key={link.to}
