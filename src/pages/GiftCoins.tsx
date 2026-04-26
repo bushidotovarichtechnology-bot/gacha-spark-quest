@@ -39,7 +39,7 @@ interface VerifiedRecipient {
 
 const GiftCoins = () => {
   const { user } = useAuth();
-  const { totalCoins, spendCoins } = useGacha();
+  const { totalCoins, spendCoins, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
 
