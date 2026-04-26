@@ -383,7 +383,18 @@ const GiftCoins = () => {
 
                   return (
                     <motion.div key={g.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                      <Card className={`border-border/50 ${isError ? "border-destructive/30 bg-destructive/5" : ""}`}>
+                      <Card
+                        className={`cursor-pointer border-border/50 transition-colors hover:bg-secondary/40 ${isError ? "border-destructive/30 bg-destructive/5" : ""}`}
+                        onClick={() => setDetailGift(g)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setDetailGift(g);
+                          }
+                        }}
+                      >
                         <CardContent className="flex items-center gap-3 py-3">
                           <div className={`rounded-full p-2 ${isError ? "bg-destructive/10" : isSent ? "bg-red-500/10" : "bg-green-500/10"}`}>
                             {isError ? (
