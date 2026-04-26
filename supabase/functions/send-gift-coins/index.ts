@@ -5,15 +5,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Structured audit logger — emits one JSON line per event for easy grep/parse
+function audit(event: string, data: Record<string, unknown>) {
+  console.log(JSON.stringify({ scope: "gift_coins_audit", event, ts: new Date().toISOString(), ...data }));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Generate request_id (use incoming header if provided, else create one)
+  const requestId =
+    req.headers.get("x-request-id") ||
+    (globalThis.crypto?.randomUUID?.() ?? `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("cf-connecting-ip") ||
+    null;
+  const userAgent = req.headers.get("user-agent") || null;
+
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      audit("unauthorized_no_header", { request_id: requestId, ip });
+      return new Response(JSON.stringify({ error: "Unauthorized", request_id: requestId }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -28,7 +44,8 @@ Deno.serve(async (req) => {
     });
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      audit("unauthorized_invalid_token", { request_id: requestId, ip });
+      return new Response(JSON.stringify({ error: "Unauthorized", request_id: requestId }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -36,20 +53,33 @@ Deno.serve(async (req) => {
 
     const { receiver_email, amount, message } = await req.json();
 
+    audit("request_received", {
+      request_id: requestId,
+      sender_id: user.id,
+      receiver_email: typeof receiver_email === "string" ? receiver_email.toLowerCase() : null,
+      amount,
+      message_length: typeof message === "string" ? message.length : 0,
+      ip,
+      user_agent: userAgent,
+    });
+
     if (!receiver_email || typeof receiver_email !== "string") {
-      return new Response(JSON.stringify({ error: "Email penerima wajib diisi" }), {
+      audit("validation_failed", { request_id: requestId, sender_id: user.id, reason: "missing_email" });
+      return new Response(JSON.stringify({ error: "Email penerima wajib diisi", request_id: requestId }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (!amount || typeof amount !== "number" || amount < 1 || !Number.isInteger(amount)) {
-      return new Response(JSON.stringify({ error: "Jumlah koin minimal 1" }), {
+      audit("validation_failed", { request_id: requestId, sender_id: user.id, reason: "invalid_amount", amount });
+      return new Response(JSON.stringify({ error: "Jumlah koin minimal 1", request_id: requestId }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (amount > 100000) {
-      return new Response(JSON.stringify({ error: "Maksimal 100.000 koin per pengiriman" }), {
+      audit("validation_failed", { request_id: requestId, sender_id: user.id, reason: "exceeds_max", amount });
+      return new Response(JSON.stringify({ error: "Maksimal 100.000 koin per pengiriman", request_id: requestId }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -63,14 +93,16 @@ Deno.serve(async (req) => {
 
     const receiver = foundUsers?.find((u: any) => u.email?.toLowerCase() === receiver_email.toLowerCase());
     if (!receiver) {
-      return new Response(JSON.stringify({ error: "User dengan email tersebut tidak ditemukan" }), {
+      audit("receiver_not_found", { request_id: requestId, sender_id: user.id, receiver_email: receiver_email.toLowerCase() });
+      return new Response(JSON.stringify({ error: "User dengan email tersebut tidak ditemukan", request_id: requestId }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (receiver.id === user.id) {
-      return new Response(JSON.stringify({ error: "Tidak bisa mengirim koin ke diri sendiri" }), {
+      audit("self_send_blocked", { request_id: requestId, sender_id: user.id });
+      return new Response(JSON.stringify({ error: "Tidak bisa mengirim koin ke diri sendiri", request_id: requestId }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -82,39 +114,104 @@ Deno.serve(async (req) => {
       _amount: amount,
     });
     if (rpcError) {
+      audit("transfer_rpc_failed", {
+        request_id: requestId,
+        sender_id: user.id,
+        receiver_id: receiver.id,
+        amount,
+        error: rpcError.message,
+      });
       const msg = rpcError.message?.includes("insufficient_coins")
         ? "Koin tidak cukup"
         : rpcError.message?.includes("cannot_send_to_self")
         ? "Tidak bisa mengirim koin ke diri sendiri"
         : "Gagal memproses transfer";
-      return new Response(JSON.stringify({ error: msg }), {
+      return new Response(JSON.stringify({ error: msg, request_id: requestId }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Insert gift record (audit trail) — service role bypasses RLS
-    const { error: insertError } = await adminClient.from("coin_gifts").insert({
+    const { data: giftRow, error: insertError } = await adminClient
+      .from("coin_gifts")
+      .insert({
+        sender_id: user.id,
+        receiver_id: receiver.id,
+        receiver_email: receiver_email.toLowerCase(),
+        amount,
+        message: (message || "").slice(0, 200),
+      })
+      .select("id")
+      .single();
+
+    if (insertError) throw insertError;
+
+    // Write ledger entries for both sender (debit) and receiver (credit) — full audit trail
+    const { data: senderCoins } = await adminClient
+      .from("user_coins")
+      .select("balance")
+      .eq("user_id", user.id)
+      .single();
+    const { data: receiverCoins } = await adminClient
+      .from("user_coins")
+      .select("balance")
+      .eq("user_id", receiver.id)
+      .single();
+
+    const ledgerMeta = {
+      request_id: requestId,
+      gift_id: giftRow?.id,
+      ip,
+      user_agent: userAgent,
+    };
+
+    await adminClient.from("coin_ledger").insert([
+      {
+        user_id: user.id,
+        entry_type: "gift_sent",
+        amount: -amount,
+        balance_after: senderCoins?.balance ?? null,
+        description: `Kirim gift koin ke ${receiver_email.toLowerCase()}`,
+        reference_id: giftRow?.id ?? null,
+        metadata: { ...ledgerMeta, counterparty_id: receiver.id, counterparty_email: receiver_email.toLowerCase(), message: (message || "").slice(0, 200) },
+      },
+      {
+        user_id: receiver.id,
+        entry_type: "gift_received",
+        amount: amount,
+        balance_after: receiverCoins?.balance ?? null,
+        description: `Terima gift koin dari pengirim`,
+        reference_id: giftRow?.id ?? null,
+        metadata: { ...ledgerMeta, counterparty_id: user.id, message: (message || "").slice(0, 200) },
+      },
+    ]);
+
+    audit("gift_completed", {
+      request_id: requestId,
+      gift_id: giftRow?.id,
       sender_id: user.id,
       receiver_id: receiver.id,
       receiver_email: receiver_email.toLowerCase(),
       amount,
-      message: (message || "").slice(0, 200),
+      sender_balance_after: senderCoins?.balance ?? null,
+      receiver_balance_after: receiverCoins?.balance ?? null,
     });
-
-    if (insertError) throw insertError;
 
     return new Response(
       JSON.stringify({
         success: true,
         receiver_id: receiver.id,
         amount,
+        request_id: requestId,
+        gift_id: giftRow?.id,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": requestId } }
     );
   } catch (err: any) {
+    audit("unhandled_error", { request_id: requestId, error: err?.message, stack: err?.stack });
     console.error("Gift error:", err);
-    return new Response(JSON.stringify({ error: err.message || "Gagal mengirim gift" }), {
+    return new Response(JSON.stringify({ error: err.message || "Gagal mengirim gift", request_id: requestId }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
