@@ -51,7 +51,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { receiver_email, amount, message } = await req.json();
+    const body = await req.json();
+    const { receiver_email, amount, message } = body;
+    // Idempotency key: prefer client-provided request_id (in body or header), else use generated one
+    const idempotencyKey: string =
+      (typeof body?.request_id === "string" && body.request_id.trim()) ||
+      req.headers.get("x-idempotency-key") ||
+      requestId;
 
     audit("request_received", {
       request_id: requestId,
