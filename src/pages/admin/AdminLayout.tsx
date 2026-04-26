@@ -22,6 +22,7 @@ const navItems = [
   { to: "/admin/payment-settings", label: "Pembayaran", icon: CreditCard },
   { to: "/admin/maintenance", label: "Maintenance", icon: Wrench },
   { to: "/admin/stock-audit", label: "Stock Audit", icon: Boxes },
+  { to: "/admin/gift-audit", label: "Gift Audit", icon: Gift },
   { to: "/admin/gacha-logs", label: "Audit Log", icon: ScrollText },
 ];
 
