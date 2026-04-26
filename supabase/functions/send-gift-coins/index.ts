@@ -51,7 +51,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { receiver_email, amount, message } = await req.json();
+    const body = await req.json();
+    const { receiver_email, amount, message } = body;
+    // Idempotency key: prefer client-provided request_id (in body or header), else use generated one
+    const idempotencyKey: string =
+      (typeof body?.request_id === "string" && body.request_id.trim()) ||
+      req.headers.get("x-idempotency-key") ||
+      requestId;
 
     audit("request_received", {
       request_id: requestId,
@@ -87,6 +93,40 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
+    // Idempotency check: if a gift with this request_id already exists for this sender, return success without re-processing
+    const { data: existingGift } = await adminClient
+      .from("coin_gifts")
+      .select("id, sender_id, receiver_id, amount")
+      .eq("request_id", idempotencyKey)
+      .maybeSingle();
+    if (existingGift) {
+      if (existingGift.sender_id !== user.id) {
+        audit("idempotency_key_conflict", { request_id: requestId, idempotency_key: idempotencyKey, sender_id: user.id });
+        return new Response(JSON.stringify({ error: "Idempotency key conflict", request_id: requestId }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      audit("idempotent_replay", {
+        request_id: requestId,
+        idempotency_key: idempotencyKey,
+        gift_id: existingGift.id,
+        sender_id: user.id,
+      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          replayed: true,
+          receiver_id: existingGift.receiver_id,
+          amount: existingGift.amount,
+          request_id: requestId,
+          gift_id: existingGift.id,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": requestId } }
+      );
+    }
+
+
     // Find receiver by email
     const { data: { users: foundUsers }, error: listError } = await adminClient.auth.admin.listUsers();
     if (listError) throw listError;
@@ -108,12 +148,60 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Atomic balance transfer via RPC (runs as the sender; FOR UPDATE prevents races)
+    // Step 1: Insert the gift row FIRST as the idempotency lock (unique request_id).
+    // This guarantees that concurrent retries with the same key cannot both proceed to transfer.
+    const { data: giftRow, error: insertError } = await adminClient
+      .from("coin_gifts")
+      .insert({
+        sender_id: user.id,
+        receiver_id: receiver.id,
+        receiver_email: receiver_email.toLowerCase(),
+        amount,
+        message: (message || "").slice(0, 200),
+        request_id: idempotencyKey,
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      const isUniqueViolation = (insertError as any)?.code === "23505" || /duplicate key|unique/i.test(insertError.message || "");
+      if (isUniqueViolation) {
+        // Concurrent retry won the race — return the already-processed gift as a replay
+        audit("idempotent_race_detected", { request_id: requestId, idempotency_key: idempotencyKey, sender_id: user.id });
+        const { data: existing } = await adminClient
+          .from("coin_gifts")
+          .select("id, receiver_id, amount, sender_id")
+          .eq("request_id", idempotencyKey)
+          .maybeSingle();
+        if (existing && existing.sender_id !== user.id) {
+          return new Response(JSON.stringify({ error: "Idempotency key conflict", request_id: requestId }), {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return new Response(
+          JSON.stringify({
+            success: true,
+            replayed: true,
+            receiver_id: existing?.receiver_id ?? receiver.id,
+            amount: existing?.amount ?? amount,
+            request_id: requestId,
+            gift_id: existing?.id,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": requestId } }
+        );
+      }
+      throw insertError;
+    }
+
+    // Step 2: Atomic balance transfer via RPC (runs as the sender; FOR UPDATE prevents balance races)
     const { error: rpcError } = await userClient.rpc("transfer_gift_coins" as any, {
       _receiver_id: receiver.id,
       _amount: amount,
     });
     if (rpcError) {
+      // Roll back the gift row so the idempotency key can be retried with a corrected amount/balance
+      await adminClient.from("coin_gifts").delete().eq("id", giftRow!.id);
       audit("transfer_rpc_failed", {
         request_id: requestId,
         sender_id: user.id,
@@ -132,20 +220,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert gift record (audit trail) — service role bypasses RLS
-    const { data: giftRow, error: insertError } = await adminClient
-      .from("coin_gifts")
-      .insert({
-        sender_id: user.id,
-        receiver_id: receiver.id,
-        receiver_email: receiver_email.toLowerCase(),
-        amount,
-        message: (message || "").slice(0, 200),
-      })
-      .select("id")
-      .single();
-
-    if (insertError) throw insertError;
 
     // Write ledger entries for both sender (debit) and receiver (credit) — full audit trail
     const { data: senderCoins } = await adminClient
