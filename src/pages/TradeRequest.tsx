@@ -478,19 +478,33 @@ const TradeRequest = () => {
                 </div>
               )}
 
-              {/* Timeline */}
+              {/* Timeline — each row is clickable for detail modal */}
               <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
                 {timeline.map((ev, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    key={idx}
+                    onClick={() => setSelectedEventIdx(idx)}
+                    aria-label={`Detail langkah: ${ev.label}`}
+                    className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-hacker-green/10 focus-visible:bg-hacker-green/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hacker-green/60"
+                  >
                     <ev.Icon className={cn(
                       "h-3 w-3 shrink-0 mt-0.5",
                       ev.done ? "text-hacker-green" : "text-muted-foreground",
                     )} />
-                    <div className="flex-1">
-                      <div className={ev.done ? "text-foreground" : "text-muted-foreground"}>{ev.label}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className={cn(
+                        "flex items-center gap-1",
+                        ev.done ? "text-foreground" : "text-muted-foreground",
+                      )}>
+                        <span className="truncate">{ev.label}</span>
+                        <span className="text-[9px] uppercase text-hacker-green opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                          [details]
+                        </span>
+                      </div>
                       <div className="text-muted-foreground/70">{fmtTs(ev.ts)}</div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
 
