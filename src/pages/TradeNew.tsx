@@ -1,10 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, GitBranch, Copy, Check, AlertTriangle, Terminal } from "lucide-react";
+import { Loader2, GitBranch, Copy, Check, AlertTriangle, Terminal, Coins, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
