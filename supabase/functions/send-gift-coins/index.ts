@@ -93,6 +93,40 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
+    // Idempotency check: if a gift with this request_id already exists for this sender, return success without re-processing
+    const { data: existingGift } = await adminClient
+      .from("coin_gifts")
+      .select("id, sender_id, receiver_id, amount")
+      .eq("request_id", idempotencyKey)
+      .maybeSingle();
+    if (existingGift) {
+      if (existingGift.sender_id !== user.id) {
+        audit("idempotency_key_conflict", { request_id: requestId, idempotency_key: idempotencyKey, sender_id: user.id });
+        return new Response(JSON.stringify({ error: "Idempotency key conflict", request_id: requestId }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      audit("idempotent_replay", {
+        request_id: requestId,
+        idempotency_key: idempotencyKey,
+        gift_id: existingGift.id,
+        sender_id: user.id,
+      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          replayed: true,
+          receiver_id: existingGift.receiver_id,
+          amount: existingGift.amount,
+          request_id: requestId,
+          gift_id: existingGift.id,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": requestId } }
+      );
+    }
+
+
     // Find receiver by email
     const { data: { users: foundUsers }, error: listError } = await adminClient.auth.admin.listUsers();
     if (listError) throw listError;
