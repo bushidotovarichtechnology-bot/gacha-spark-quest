@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Gift, Send, Loader2, Coins, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ArrowLeft, Gift, Send, Loader2, Coins, ArrowUpRight, ArrowDownLeft, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface GiftRecord {
   id: string;
@@ -23,16 +25,27 @@ interface GiftRecord {
   created_at: string;
 }
 
+interface VerifiedRecipient {
+  id: string;
+  masked_email: string;
+  display_name: string;
+  avatar_url: string;
+}
+
 const GiftCoins = () => {
   const { user } = useAuth();
-  const { totalCoins, spendCoins, addCoins } = useGacha();
+  const { totalCoins, spendCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
 
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
+  const [verifying, setVerifying] = useState(false);
   const [sending, setSending] = useState(false);
+  const [recipient, setRecipient] = useState<VerifiedRecipient | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const [gifts, setGifts] = useState<GiftRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,34 +61,73 @@ const GiftCoins = () => {
       });
   }, [user]);
 
-  const handleSend = async () => {
+  // Reset verified recipient if email changes
+  useEffect(() => {
+    if (recipient) setRecipient(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email]);
+
+  const coinAmountNum = parseInt(amount) || 0;
+
+  const handleVerify = async () => {
     if (!user || !email || !amount) return;
-    const coinAmount = parseInt(amount);
-    if (isNaN(coinAmount) || coinAmount < 1) {
-      toast({ title: "Error", description: "Jumlah koin tidak valid", variant: "destructive" });
+    if (coinAmountNum < 1) {
+      toast({ title: "Error", description: "Jumlah koin minimal 1", variant: "destructive" });
       return;
     }
-    if (coinAmount > totalCoins) {
+    if (coinAmountNum > totalCoins) {
       toast({ title: "Koin tidak cukup", description: `Koin kamu hanya ${totalCoins.toLocaleString()}`, variant: "destructive" });
+      return;
+    }
+    if (coinAmountNum > 100000) {
+      toast({ title: "Melebihi batas", description: "Maksimal 100.000 koin per pengiriman", variant: "destructive" });
+      return;
+    }
+
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-gift-recipient", {
+        body: { email },
+      });
+      if (error) throw new Error(error.message || "Gagal verifikasi");
+      if (!data?.found) {
+        toast({
+          title: "Email tidak terdaftar",
+          description: data?.error || "Pastikan email penerima sudah terdaftar di Bushido Gacha",
+          variant: "destructive",
+        });
+        return;
+      }
+      setRecipient(data.receiver);
+      setConfirmText("");
+      setConfirmOpen(true);
+    } catch (err: any) {
+      toast({ title: "Gagal verifikasi", description: err.message, variant: "destructive" });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleConfirmSend = async () => {
+    if (!user || !recipient) return;
+    if (confirmText.trim().toUpperCase() !== "KIRIM") {
+      toast({ title: "Konfirmasi gagal", description: 'Ketik "KIRIM" untuk melanjutkan', variant: "destructive" });
       return;
     }
 
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-gift-coins", {
-        body: { receiver_email: email, amount: coinAmount, message },
+        body: { receiver_email: email, amount: coinAmountNum, message },
       });
 
       if (error || !data?.success) {
         throw new Error(data?.error || error?.message || "Gagal mengirim gift");
       }
 
-      // Server-side already deducted balance via transfer_gift_coins RPC inside the edge function.
-      // Just refresh local state.
-      spendCoins(coinAmount);
-      toast({ title: "Gift Terkirim! 🎉", description: `${coinAmount.toLocaleString()} koin berhasil dikirim ke ${email}` });
+      spendCoins(coinAmountNum);
+      toast({ title: "Gift Terkirim! 🎉", description: `${coinAmountNum.toLocaleString()} koin berhasil dikirim ke ${recipient.masked_email}` });
 
-      // Refresh gift list
       const { data: newGifts } = await supabase
         .from("coin_gifts")
         .select("*")
@@ -85,6 +137,9 @@ const GiftCoins = () => {
       setEmail("");
       setAmount("");
       setMessage("");
+      setRecipient(null);
+      setConfirmOpen(false);
+      setConfirmText("");
     } catch (err: any) {
       toast({ title: "Gagal", description: err.message, variant: "destructive" });
     } finally {
@@ -135,6 +190,10 @@ const GiftCoins = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-secondary"
                 />
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                  <ShieldCheck className="h-3 w-3" />
+                  Email harus sudah terdaftar di Bushido Gacha
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Jumlah Koin</label>
@@ -142,6 +201,7 @@ const GiftCoins = () => {
                   type="number"
                   placeholder="100"
                   min={1}
+                  max={100000}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="bg-secondary"
@@ -158,15 +218,23 @@ const GiftCoins = () => {
                   rows={2}
                 />
               </div>
+
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="flex items-start gap-2 text-xs text-amber-200/90">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Pengiriman koin <strong>tidak dapat dibatalkan</strong>. Pastikan email penerima benar sebelum konfirmasi.</span>
+                </p>
+              </div>
+
               <Button
                 className="w-full"
-                onClick={handleSend}
-                disabled={sending || !email || !amount}
+                onClick={handleVerify}
+                disabled={verifying || sending || !email || !amount}
               >
-                {sending ? (
-                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Mengirim...</span>
+                {verifying ? (
+                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Memverifikasi...</span>
                 ) : (
-                  <span className="flex items-center gap-2"><Send className="h-4 w-4" /> Kirim Gift</span>
+                  <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Verifikasi & Lanjutkan</span>
                 )}
               </Button>
             </CardContent>
@@ -217,6 +285,106 @@ const GiftCoins = () => {
           )}
         </div>
       </main>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={(open) => !sending && setConfirmOpen(open)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-400" />
+              Konfirmasi Pengiriman Koin
+            </DialogTitle>
+            <DialogDescription>
+              Periksa kembali detail penerima sebelum mengirim. Transaksi tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+
+          {recipient && (
+            <div className="space-y-4">
+              {/* Recipient card */}
+              <div className="rounded-lg border border-border/60 bg-secondary/50 p-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={recipient.avatar_url} alt={recipient.display_name} />
+                    <AvatarFallback className="bg-accent/20 text-accent">
+                      {recipient.display_name?.[0]?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-foreground">{recipient.display_name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{recipient.masked_email}</p>
+                  </div>
+                  <ShieldCheck className="h-5 w-5 text-green-400" />
+                </div>
+              </div>
+
+              {/* Amount */}
+              <div className="flex items-center justify-between rounded-lg border border-accent/30 bg-accent/5 p-4">
+                <span className="text-sm text-muted-foreground">Jumlah dikirim</span>
+                <div className="flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-accent" />
+                  <span className="font-display text-xl font-bold text-foreground">
+                    {coinAmountNum.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {message && (
+                <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">Pesan</p>
+                  <p className="text-sm text-foreground">"{message}"</p>
+                </div>
+              )}
+
+              {/* Email match check */}
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="text-xs text-amber-200/90">
+                  Email yang kamu input: <strong className="text-foreground">{email}</strong>
+                </p>
+                <p className="mt-1 text-xs text-amber-200/70">
+                  Jika ini bukan penerima yang dimaksud, batalkan dan periksa kembali.
+                </p>
+              </div>
+
+              {/* Type-to-confirm */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">
+                  Ketik <span className="font-mono text-accent">KIRIM</span> untuk konfirmasi
+                </label>
+                <Input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="KIRIM"
+                  className="bg-secondary font-mono"
+                  autoFocus
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+              disabled={sending}
+              className="flex-1"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleConfirmSend}
+              disabled={sending || confirmText.trim().toUpperCase() !== "KIRIM"}
+              className="flex-1"
+            >
+              {sending ? (
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Mengirim...</span>
+              ) : (
+                <span className="flex items-center gap-2"><Send className="h-4 w-4" /> Kirim Sekarang</span>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
