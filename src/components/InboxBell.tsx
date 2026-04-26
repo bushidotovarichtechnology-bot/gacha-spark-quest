@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell, CheckCheck, Trash2, CheckCircle2, XCircle, Info, AlertTriangle } from "lucide-react";
 import {
@@ -36,6 +37,18 @@ interface InboxBellProps {
 
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
+  const [shake, setShake] = useState(false);
+  const prevUnreadRef = useRef(unreadCount);
+
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) {
+      setShake(true);
+      const t = setTimeout(() => setShake(false), 650);
+      prevUnreadRef.current = unreadCount;
+      return () => clearTimeout(t);
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount]);
 
   const trigger =
     variant === "desktop" ? (
@@ -45,7 +58,12 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
+          <span
+            className={cn(
+              "absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground origin-center",
+              shake && "animate-badge-shake",
+            )}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -58,7 +76,12 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
         <span className="relative inline-flex">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
+            <span
+              className={cn(
+                "absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground origin-center",
+                shake && "animate-badge-shake",
+              )}
+            >
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
