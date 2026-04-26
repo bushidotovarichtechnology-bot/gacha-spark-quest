@@ -102,14 +102,14 @@ const GiftCoins = () => {
           if (prev === "processing" && next === "success") {
             const desc = `${newRow.amount.toLocaleString()} koin sampai ke ${newRow.receiver_email}.`;
             toast({ title: "Gift Berhasil Terkirim 🎉", description: desc });
-            pushNotification({ title: "Gift Berhasil Terkirim 🎉", description: desc, kind: "success", href: "/gift" });
+            pushNotification({ title: "Gift Berhasil Terkirim 🎉", description: desc, kind: "success", href: "/gift", dedupKey: `gift:${newRow.id}:success` });
             // Halaman /gift terbuka → langsung tandai terbaca
             markAllRead();
             void refreshCoins();
           } else if (prev === "processing" && next === "error") {
             const desc = newRow.error_message || "Pengiriman koin gagal diproses. Cek detail di riwayat.";
             toast({ title: "Gift Gagal Dikirim", description: desc, variant: "destructive" });
-            pushNotification({ title: "Gift Gagal Dikirim", description: desc, kind: "error", href: "/gift" });
+            pushNotification({ title: "Gift Gagal Dikirim", description: desc, kind: "error", href: "/gift", dedupKey: `gift:${newRow.id}:error` });
             markAllRead();
             void refreshCoins();
           }
@@ -129,7 +129,7 @@ const GiftCoins = () => {
           if ((row.status || "success").toLowerCase() === "success") {
             const desc = `+${row.amount.toLocaleString()} koin masuk ke saldo kamu.`;
             toast({ title: "Kamu Menerima Gift 🎁", description: desc });
-            pushNotification({ title: "Kamu Menerima Gift 🎁", description: desc, kind: "success", href: "/gift" });
+            pushNotification({ title: "Kamu Menerima Gift 🎁", description: desc, kind: "success", href: "/gift", dedupKey: `gift-recv:${row.id}` });
             markAllRead();
             void refreshCoins();
           }
