@@ -81,6 +81,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <RouterReadyBridge />
           <GlobalTransactionWatcher />
           <TradeNotifDebugPanel />
           <MaintenanceGate>
