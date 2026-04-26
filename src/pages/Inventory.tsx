@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, XCircle, Ticket, KeyRound } from "lucide-react";
+import { Coins, Recycle, Crown, Star, Gift, Award, Package, Sparkles, PackageCheck, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, CheckSquare, Square, XCircle, Ticket, KeyRound, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -138,11 +139,25 @@ const Inventory = () => {
     <div className="min-h-screen pb-8">
       <Navbar />
       <div className="container mx-auto px-4 pt-24">
-        <div className="mb-8">
-          <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {t("myInventory")}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t("yourCollection")}</p>
+        <div className="mb-8 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              {t("myInventory")}
+            </h1>
+            <p className="text-sm text-muted-foreground">{t("yourCollection")}</p>
+          </div>
+          {(tierCounts.S + tierCounts.A + tierCounts.B) > 0 && (
+            <Button
+              asChild
+              size="sm"
+              className="shrink-0 gap-1.5 border border-[hsl(var(--hacker-green)/0.4)] bg-[hsl(var(--hacker-bg))] font-mono-hacker text-xs text-[hsl(var(--hacker-green))] shadow-[0_0_12px_hsl(var(--hacker-green)/0.25)] hover:bg-[hsl(var(--hacker-green)/0.1)] hover:text-[hsl(var(--hacker-green))]"
+            >
+              <Link to="/trade/new" aria-label="Buka P2P Trade Hub">
+                <ArrowLeftRight className="h-3.5 w-3.5" />
+                <span>$ trade --init</span>
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Stats row */}
