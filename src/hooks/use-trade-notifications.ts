@@ -182,11 +182,13 @@ export const useTradeNotifications = () => {
         const key = `trade-accepted:${row.id}`;
         const href = `/inventory`;
         fireOnce(key, "accepted", ctxBase, () => {
-          toast.success("Trade Berhasil ✓", {
-            description: `Pertukaran Tier ${row.tier_label} selesai.`,
-            duration: 8000,
-            action: { label: "Inventory", onClick: () => safeNavigate(href) },
-          });
+          if (prefs.current.toastDecisions) {
+            toast.success("Trade Berhasil ✓", {
+              description: `Pertukaran Tier ${row.tier_label} selesai.`,
+              duration: 8000,
+              action: { label: "Inventory", onClick: () => safeNavigate(href) },
+            });
+          }
           push({
             kind: "success",
             title: "Trade selesai",
@@ -199,11 +201,13 @@ export const useTradeNotifications = () => {
         const key = `trade-rejected:${row.id}`;
         const href = `/trade/req/${row.token}`;
         fireOnce(key, "rejected", ctxBase, () => {
-          toast.warning("Trade ditolak", {
-            description: `Permintaan trade Tier ${row.tier_label} ditolak.`,
-            duration: 7000,
-            action: { label: "Detail", onClick: () => safeNavigate(href) },
-          });
+          if (prefs.current.toastDecisions) {
+            toast.warning("Trade ditolak", {
+              description: `Permintaan trade Tier ${row.tier_label} ditolak.`,
+              duration: 7000,
+              action: { label: "Detail", onClick: () => safeNavigate(href) },
+            });
+          }
           push({
             kind: "warning",
             title: "Trade ditolak",
@@ -216,11 +220,13 @@ export const useTradeNotifications = () => {
         const key = `trade-cancelled:${row.id}`;
         const href = `/trade/req/${row.token}`;
         fireOnce(key, "cancelled", ctxBase, () => {
-          toast.warning("Trade dibatalkan", {
-            description: `Trade Tier ${row.tier_label} dibatalkan.`,
-            duration: 7000,
-            action: { label: "Detail", onClick: () => safeNavigate(href) },
-          });
+          if (prefs.current.toastPassive) {
+            toast.warning("Trade dibatalkan", {
+              description: `Trade Tier ${row.tier_label} dibatalkan.`,
+              duration: 7000,
+              action: { label: "Detail", onClick: () => safeNavigate(href) },
+            });
+          }
           push({
             kind: "warning",
             title: "Trade dibatalkan",
@@ -233,11 +239,13 @@ export const useTradeNotifications = () => {
         const key = `trade-expired:${row.id}`;
         const href = `/trade/req/${row.token}`;
         fireOnce(key, "expired", ctxBase, () => {
-          toast.warning("Trade kedaluwarsa", {
-            description: `Trade Tier ${row.tier_label} sudah lewat 24 jam.`,
-            duration: 7000,
-            action: { label: "Detail", onClick: () => safeNavigate(href) },
-          });
+          if (prefs.current.toastPassive) {
+            toast.warning("Trade kedaluwarsa", {
+              description: `Trade Tier ${row.tier_label} sudah lewat 24 jam.`,
+              duration: 7000,
+              action: { label: "Detail", onClick: () => safeNavigate(href) },
+            });
+          }
           push({
             kind: "warning",
             title: "Trade kedaluwarsa",
