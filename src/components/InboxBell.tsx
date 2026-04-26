@@ -135,20 +135,34 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
                           {n.description}
                         </p>
                       )}
-                      <div className="mt-1 flex items-center justify-between">
+                      <div className="mt-1 flex items-center justify-between gap-2">
                         <span className="text-[10px] text-muted-foreground/70">
                           {formatRelative(n.createdAt)}
                         </span>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            remove(n.id);
-                          }}
-                          className="text-[10px] text-muted-foreground/70 transition-colors hover:text-destructive"
-                        >
-                          Hapus
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {!n.read && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                markRead(n.id);
+                              }}
+                              className="text-[10px] font-semibold text-primary transition-colors hover:text-primary/80"
+                            >
+                              Baca
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              remove(n.id);
+                            }}
+                            className="text-[10px] text-muted-foreground/70 transition-colors hover:text-destructive"
+                          >
+                            Hapus
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
