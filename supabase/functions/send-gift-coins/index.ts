@@ -173,6 +173,7 @@ Deno.serve(async (req) => {
     }
 
     // Insert gift record (audit trail) — service role bypasses RLS
+    // request_id provides idempotency: unique index prevents duplicates from concurrent retries
     const { data: giftRow, error: insertError } = await adminClient
       .from("coin_gifts")
       .insert({
@@ -181,11 +182,45 @@ Deno.serve(async (req) => {
         receiver_email: receiver_email.toLowerCase(),
         amount,
         message: (message || "").slice(0, 200),
+        request_id: idempotencyKey,
       })
       .select("id")
       .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      // Unique-violation race: another concurrent request with same idempotency key already inserted.
+      // Roll back the just-completed transfer to keep balances correct, then return the existing gift.
+      const isUniqueViolation = (insertError as any)?.code === "23505" || /duplicate key|unique/i.test(insertError.message || "");
+      if (isUniqueViolation) {
+        audit("idempotent_race_detected", { request_id: requestId, idempotency_key: idempotencyKey, sender_id: user.id });
+        // Reverse the transfer we just performed
+        const { error: reverseError } = await adminClient.rpc("transfer_gift_coins" as any, {
+          _receiver_id: user.id,
+          _amount: amount,
+        } as any);
+        if (reverseError) {
+          audit("idempotent_reverse_failed", { request_id: requestId, sender_id: user.id, error: reverseError.message });
+        }
+        const { data: existing } = await adminClient
+          .from("coin_gifts")
+          .select("id, receiver_id, amount")
+          .eq("request_id", idempotencyKey)
+          .maybeSingle();
+        return new Response(
+          JSON.stringify({
+            success: true,
+            replayed: true,
+            receiver_id: existing?.receiver_id ?? receiver.id,
+            amount: existing?.amount ?? amount,
+            request_id: requestId,
+            gift_id: existing?.id,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": requestId } }
+        );
+      }
+      throw insertError;
+    }
+
 
     // Write ledger entries for both sender (debit) and receiver (credit) — full audit trail
     const { data: senderCoins } = await adminClient
