@@ -10,7 +10,7 @@ import { useGacha } from "@/context/GachaContext";
 import { supabase } from "@/integrations/supabase/client";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
-import { fetchTradeByToken, hasSecurityPin, cancelTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
+import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
 import { supabaseImg } from "@/lib/imageTransform";
 import { cn } from "@/lib/utils";
 
@@ -202,6 +202,22 @@ const TradeRequest = () => {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal cancel");
     }
+  };
+
+  const handleReject = async () => {
+    if (!trade) return;
+    try {
+      await rejectTrade(trade.id);
+      toast.success("Trade ditolak");
+      const updated = await fetchTradeByToken(token);
+      setTrade(updated);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal menolak trade");
+    }
+  };
+
+  const scrollToMergeAction = () => {
+    document.getElementById("trade-action-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   if (loading) {
@@ -470,9 +486,30 @@ const TradeRequest = () => {
           </div>
         </div>
 
+        {/* Contextual quick actions for responder while waiting */}
+        {trade.status === "pending" && !!user && !isInitiator && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              onClick={scrollToMergeAction}
+              className="bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase tracking-wider"
+            >
+              <CheckCircle2 className="mr-1 h-4 w-4" /> accept &amp; merge
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReject}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 font-mono-hacker text-xs uppercase tracking-wider"
+            >
+              <XCircle className="mr-1 h-4 w-4" /> reject trade
+            </Button>
+          </div>
+        )}
+
         {/* Action area */}
         {canExecute && (
-          <div className="mt-4 rounded-lg border-hacker border bg-hacker-surface p-4">
+          <div id="trade-action-panel" className="mt-4 rounded-lg border-hacker border bg-hacker-surface p-4">
             <div className="mb-3 flex items-center gap-2 text-xs text-hacker-green">
               <ShieldCheck className="h-4 w-4" />
               $ enter security PIN to merge
@@ -503,6 +540,14 @@ const TradeRequest = () => {
                 <>git merge --no-ff trade/{trade.tier_label} →</>
               )}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReject}
+              className="mt-2 w-full border-destructive/40 text-destructive hover:bg-destructive/10 font-mono-hacker text-xs uppercase tracking-wider"
+            >
+              <XCircle className="mr-1 h-4 w-4" /> reject trade
+            </Button>
           </div>
         )}
 
@@ -512,6 +557,32 @@ const TradeRequest = () => {
               onClick={handleCancel}>
               git revert (cancel)
             </Button>
+          </div>
+        )}
+
+        {/* Final-state back button */}
+        {(trade.status === "accepted" || trade.status === "rejected" || trade.status === "cancelled" || trade.status === "expired") && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-hacker-surface p-3">
+            <div className="text-xs text-muted-foreground">
+              <span className="text-hacker-green">// session_closed:</span> trade sudah {trade.status}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate("/inventory")}
+                className="font-mono-hacker text-xs uppercase tracking-wider"
+              >
+                ← back to /inventory
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate("/trade/new")}
+                className="bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase tracking-wider"
+              >
+                <GitMerge className="mr-1 h-4 w-4" /> new trade
+              </Button>
+            </div>
           </div>
         )}
       </div>
