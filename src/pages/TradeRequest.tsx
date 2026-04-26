@@ -394,7 +394,7 @@ const TradeRequest = () => {
                   className={cn(
                     "mt-3 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs",
                     countdown.severity === "critical" && "border-destructive/60 bg-destructive/10 text-destructive animate-pulse",
-                    countdown.severity === "warning" && "border-amber-500/60 bg-amber-500/10 text-amber-400",
+                    countdown.severity === "warning" && "border-accent/60 bg-accent/10 text-accent",
                     countdown.severity === "normal" && "border-border bg-hacker-bg/40 text-hacker-green",
                   )}
                 >
