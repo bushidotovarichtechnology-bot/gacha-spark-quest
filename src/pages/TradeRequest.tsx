@@ -51,16 +51,48 @@ const TradeRequest = () => {
     return () => { cancelled = true; };
   }, [token]);
 
-  // Realtime: refetch trade on update.
+  // Realtime auto-refresh + fallback reconcile.
+  // Subscribes to trade row UPDATEs so status badge, timeline, and exchange
+  // table refresh without manual reload. Adds a 30s poll + visibility/online
+  // listeners as a safety net for missed realtime events (reconnects, etc.).
   useEffect(() => {
     if (!trade?.id) return;
+    const tradeId = trade.id;
+    const tradeToken = trade.token;
+    let cancelled = false;
+
+    const refetch = async () => {
+      try {
+        const fresh = await fetchTradeByToken(tradeToken);
+        if (!cancelled && fresh) setTrade(fresh);
+      } catch {
+        /* ignore — next tick will retry */
+      }
+    };
+
     const channel = supabase
-      .channel(`trade-${trade.id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "trades", filter: `id=eq.${trade.id}` },
-        (payload) => setTrade(payload.new as unknown as TradeRow))
+      .channel(`trade-${tradeId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "trades", filter: `id=eq.${tradeId}` },
+        (payload) => setTrade(payload.new as unknown as TradeRow),
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [trade?.id]);
+
+    const interval = window.setInterval(refetch, 30_000);
+    const onVisible = () => { if (document.visibilityState === "visible") refetch(); };
+    const onOnline = () => refetch();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+      supabase.removeChannel(channel);
+    };
+  }, [trade?.id, trade?.token]);
 
   // Fetch initiator item metadata (image, name, coin_value) — viewer may not own them.
   useEffect(() => {
