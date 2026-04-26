@@ -328,9 +328,37 @@ const TradeRequest = () => {
 
   const canExecute = trade.status === "pending" && !!user && !isInitiator;
 
-  // Timeline events (chronological)
-  const timeline: Array<{ ts: string; label: string; done: boolean; Icon: typeof CircleDot }> = [
-    { ts: trade.created_at, label: "Trade dibuat oleh inisiator", done: true, Icon: GitMerge },
+  // Timeline events (chronological) — enriched with actor + items for detail modal.
+  type TimelineKind = "created" | "accepted" | "rejected" | "cancelled" | "expired" | "expiring";
+  type TimelineEvent = {
+    ts: string;
+    label: string;
+    done: boolean;
+    Icon: typeof CircleDot;
+    kind: TimelineKind;
+    actor: string;
+    actorRole: "initiator" | "responder" | "system";
+    items: Array<{ id: string; prize: string; image: string; coin_value: number }>;
+    itemsLabel: string;
+    detailNote?: string;
+  };
+
+  const initiatorActor = isInitiator ? "Kamu (initiator)" : "Initiator";
+  const responderActor = isResponder ? "Kamu (responder)" : trade.responder_id ? "Responder" : "Belum ada responder";
+
+  const timeline: TimelineEvent[] = [
+    {
+      ts: trade.created_at,
+      label: "Trade dibuat oleh inisiator",
+      done: true,
+      Icon: GitMerge,
+      kind: "created",
+      actor: initiatorActor,
+      actorRole: "initiator",
+      items: initiatorItemMeta,
+      itemsLabel: `Initiator menawarkan ${trade.initiator_items?.length ?? 0} item Tier ${trade.tier_label}`,
+      detailNote: trade.message ? `Pesan: "${trade.message}"` : undefined,
+    },
   ];
   if (trade.responded_at) {
     const respLabelMap: Record<string, string> = {
@@ -339,17 +367,41 @@ const TradeRequest = () => {
       cancelled: "Trade dibatalkan",
       expired: "Trade kedaluwarsa",
     };
+    const kind = (trade.status as TimelineKind);
     timeline.push({
       ts: trade.responded_at,
       label: respLabelMap[trade.status] ?? `Status: ${trade.status}`,
       done: true,
       Icon: trade.status === "accepted" ? CheckCircle2 : XCircle,
+      kind,
+      actor: kind === "cancelled" ? initiatorActor : responderActor,
+      actorRole: kind === "cancelled" ? "initiator" : "responder",
+      items: kind === "accepted" ? responderItemMetaRemote : [],
+      itemsLabel: kind === "accepted"
+        ? `Responder menyetujui dengan ${trade.responder_items?.length ?? 0} item Tier ${trade.tier_label}`
+        : kind === "rejected"
+          ? "Tidak ada item yang ditukar."
+          : kind === "cancelled"
+            ? "Initiator membatalkan sebelum diselesaikan."
+            : "Sistem menandai trade ini kedaluwarsa.",
+      detailNote: kind === "accepted" ? `Gas fee ${TRADE_GAS_FEE} koin dikenakan ke kedua belah pihak.` : undefined,
     });
   } else if (trade.status === "pending") {
     timeline.push({
-      ts: trade.expires_at, label: "Akan kedaluwarsa", done: false, Icon: Hourglass,
+      ts: trade.expires_at,
+      label: "Akan kedaluwarsa",
+      done: false,
+      Icon: Hourglass,
+      kind: "expiring",
+      actor: "Sistem (auto-expire)",
+      actorRole: "system",
+      items: [],
+      itemsLabel: "Belum ada item yang berpindah tangan.",
+      detailNote: "Trade otomatis di-expire bila responder tidak merespons sebelum waktu ini.",
     });
   }
+
+  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
 
   return (
     <div className="min-h-screen bg-hacker-bg pb-12 scanline">
