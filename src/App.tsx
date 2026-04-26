@@ -81,6 +81,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <GlobalTransactionWatcher />
+          <TradeNotifDebugPanel />
           <MaintenanceGate>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
