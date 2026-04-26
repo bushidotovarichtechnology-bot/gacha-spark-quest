@@ -80,6 +80,10 @@ export const useTradeNotifications = () => {
     };
     window.addEventListener("inbox-acked", onAcked);
 
+    // User-tunable toast preferences (live-updated via subscribeTradeNotifPrefs).
+    const prefs: { current: TradeNotifPrefs } = { current: getTradeNotifPrefs() };
+    const unsubPrefs = subscribeTradeNotifPrefs((next) => { prefs.current = next; });
+
     let cancelled = false;
 
     const fireOnce = (key: string, kind: TradeNotifKind, ctx: {
