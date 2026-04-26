@@ -31,6 +31,10 @@ const TradeRequest = () => {
   const [initiatorItemMeta, setInitiatorItemMeta] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
   const [responderItemMetaRemote, setResponderItemMetaRemote] = useState<Array<{ id: string; prize: string; image: string; coin_value: number }>>([]);
   const [selectedEventIdx, setSelectedEventIdx] = useState<number | null>(null);
+  const [itemDetail, setItemDetail] = useState<
+    | { id: string; prize: string; image: string; coin_value: number; side: "initiator" | "responder" }
+    | null
+  >(null);
 
   const isInitiator = !!user && trade?.initiator_id === user.id;
   const isResponder = !!user && trade?.responder_id === user.id;
@@ -535,7 +539,13 @@ const TradeRequest = () => {
                   </div>
                   <div className="max-h-48 overflow-y-auto">
                     {initiatorItemMeta.map((it) => (
-                      <div key={`i-${it.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-[11px] last:border-b-0">
+                      <button
+                        key={`i-${it.id}`}
+                        type="button"
+                        onClick={() => setItemDetail({ ...it, side: "initiator" })}
+                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-left text-[11px] transition-colors last:border-b-0 hover:bg-hacker-bg/60 focus:bg-hacker-bg/60 focus:outline-none"
+                        aria-label={`Detail item ${it.prize}`}
+                      >
                         <div className="flex items-center gap-1.5">
                           <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
                             className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
@@ -544,10 +554,16 @@ const TradeRequest = () => {
                         <span className="truncate text-foreground">{it.prize}</span>
                         <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
                         <span className="text-right text-accent">+{it.coin_value}</span>
-                      </div>
+                      </button>
                     ))}
                     {responderItemMetaRemote.map((it) => (
-                      <div key={`r-${it.id}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-[11px] last:border-b-0">
+                      <button
+                        key={`r-${it.id}`}
+                        type="button"
+                        onClick={() => setItemDetail({ ...it, side: "responder" })}
+                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-left text-[11px] transition-colors last:border-b-0 hover:bg-hacker-bg/60 focus:bg-hacker-bg/60 focus:outline-none"
+                        aria-label={`Detail item ${it.prize}`}
+                      >
                         <div className="flex items-center gap-1.5">
                           <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
                             className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
@@ -556,7 +572,7 @@ const TradeRequest = () => {
                         <span className="truncate text-foreground">{it.prize}</span>
                         <span className="rounded border border-hacker/50 px-1 py-0 text-[9px] text-hacker-green">{trade.tier_label}</span>
                         <span className="text-right text-accent">+{it.coin_value}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -804,6 +820,65 @@ const TradeRequest = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedEventIdx(null)}
+                  className="font-mono-hacker text-xs uppercase tracking-wider"
+                >
+                  close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Item detail modal — opened via thumbnail/row click in the compact items table. */}
+      <Dialog open={!!itemDetail} onOpenChange={(o) => !o && setItemDetail(null)}>
+        <DialogContent className="border-hacker bg-hacker-surface font-mono-hacker max-w-sm">
+          {itemDetail && trade && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-hacker-green text-sm uppercase tracking-wider">
+                  // item_detail
+                </DialogTitle>
+                <DialogDescription className="text-[11px] text-muted-foreground">
+                  Asal: {itemDetail.side === "initiator" ? "Initiator (A→B)" : "Responder (B→A)"}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col items-center gap-3">
+                <div className="aspect-square w-40 overflow-hidden rounded-md border border-border bg-black/40">
+                  <img
+                    src={supabaseImg(itemDetail.image, 320)}
+                    alt={itemDetail.prize}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <div className="w-full space-y-1.5 text-xs">
+                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
+                    <span className="text-muted-foreground">name</span>
+                    <span className="text-right text-foreground">{itemDetail.prize}</span>
+                  </div>
+                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
+                    <span className="text-muted-foreground">tier</span>
+                    <span className="rounded border border-hacker/50 px-1.5 text-[10px] text-hacker-green">
+                      {trade.tier_label}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
+                    <span className="text-muted-foreground">coin_value</span>
+                    <span className="text-accent">+{itemDetail.coin_value}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">origin</span>
+                    <span className="text-right text-foreground">
+                      {itemDetail.side === "initiator" ? "branch: their_offer" : "branch: your_offer"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setItemDetail(null)}
                   className="font-mono-hacker text-xs uppercase tracking-wider"
                 >
                   close
