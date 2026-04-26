@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
       message,
       initiator_ip: ip,
       initiator_user_agent: userAgent,
+      recipient_id: recipientId,
     })
     .select("*")
     .single();
