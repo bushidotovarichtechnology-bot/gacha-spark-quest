@@ -315,10 +315,18 @@ export const useTradeNotifications = () => {
         backoffTimer = null;
       }
 
+      // Surface "reconnecting" the moment a fallback refetch begins so the UI
+      // chip can flip even before the first network round-trip completes.
+      emitRtStatus("reconnecting");
+
       for (let attempt = 0; attempt < BACKOFF_MAX_ATTEMPTS; attempt++) {
         if (cancelled || myToken !== backoffToken) return;
         const ok = await reconcile(source);
-        if (ok || cancelled || myToken !== backoffToken) return;
+        if (cancelled || myToken !== backoffToken) return;
+        if (ok) {
+          emitRtStatus("online");
+          return;
+        }
         const delay = computeBackoff(attempt);
         await new Promise<void>((resolve) => {
           backoffTimer = window.setTimeout(() => {
@@ -327,6 +335,8 @@ export const useTradeNotifications = () => {
           }, delay);
         });
       }
+      // Exhausted all attempts — flag missed sync so user knows data may be stale.
+      if (!cancelled && myToken === backoffToken) emitRtStatus("missed-sync");
     };
 
     reconcileWithBackoff("reconcile-init");
