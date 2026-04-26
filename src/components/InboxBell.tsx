@@ -38,6 +38,8 @@ interface InboxBellProps {
 const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   const { items, unreadCount, markAllRead, markRead, remove, clearAll } = useNotifications();
   const [shake, setShake] = useState(false);
+  // Subtle pop animation on the "X updates" pill when its count grows.
+  const [updatesPop, setUpdatesPop] = useState(false);
   // Controlled open state so we can auto-clear "X updates" once the user has
   // had a moment to glance at them — the badge feels alive without forcing
   // the user to click each item individually.
@@ -45,6 +47,7 @@ const InboxBell = ({ variant = "desktop" }: InboxBellProps) => {
   // When true, the dropdown list filters down to unread accepted/rejected only.
   const [importantOnly, setImportantOnly] = useState(false);
   const prevUnreadRef = useRef(unreadCount);
+  const prevImportantRef = useRef(0);
 
   const isImportant = (dedupKey: string | undefined) => {
     const k = dedupKey ?? "";
