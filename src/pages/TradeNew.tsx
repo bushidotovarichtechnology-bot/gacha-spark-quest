@@ -184,14 +184,18 @@ const TradeNew = () => {
               <p className="mt-1 text-right text-[10px] text-muted-foreground">{message.length}/200</p>
             </div>
 
-            <div className="rounded-md border border-border bg-hacker-bg p-3 text-[11px] text-muted-foreground">
-              <span className="text-hacker-green">⚡ gas_fee:</span> {TRADE_GAS_FEE} koin / pihak (dipotong saat merge berhasil).
-              <br />
-              <span className="text-hacker-green">⏳ ttl:</span> 24 jam, lalu trade auto-expired.
+            <div className="rounded-md border border-hacker/50 bg-hacker-bg p-3 text-[11px]">
+              <div className="flex items-center gap-1.5 text-hacker-green text-glow-hacker">
+                <Coins className="h-3.5 w-3.5" />
+                <span className="font-bold uppercase tracking-wider">gas fee {TRADE_GAS_FEE} koin / pihak</span>
+              </div>
+              <div className="mt-1 text-muted-foreground">
+                Dipotong otomatis dari saldo koin saat merge berhasil. TTL 24 jam, lalu auto-expired.
+              </div>
             </div>
 
             <Button
-              onClick={handleCreate}
+              onClick={openConfirm}
               disabled={creating || selectedIds.size === 0 || pinReady === false}
               className="w-full bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase tracking-wider"
             >
