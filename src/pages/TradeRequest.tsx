@@ -204,6 +204,22 @@ const TradeRequest = () => {
     }
   };
 
+  const handleReject = async () => {
+    if (!trade) return;
+    try {
+      await rejectTrade(trade.id);
+      toast.success("Trade ditolak");
+      const updated = await fetchTradeByToken(token);
+      setTrade(updated);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal menolak trade");
+    }
+  };
+
+  const scrollToMergeAction = () => {
+    document.getElementById("trade-action-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-hacker-bg scanline">
