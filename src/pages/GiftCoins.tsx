@@ -43,7 +43,13 @@ const GiftCoins = () => {
   const { totalCoins, spendCoins, refreshCoins } = useGacha();
   const { t } = useI18n();
   const { toast } = useToast();
-  const { push: pushNotification } = useNotifications();
+  const { push: pushNotification, markAllRead } = useNotifications();
+
+  // Sinkronkan status "sudah dibaca": saat user membuka /gift, semua notifikasi
+  // Inbox langsung ditandai terbaca — sumber kebenarannya adalah halaman ini.
+  useEffect(() => {
+    markAllRead();
+  }, [markAllRead]);
 
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
@@ -95,32 +101,16 @@ const GiftCoins = () => {
           // Only toast on processing → final state to avoid noise
           if (prev === "processing" && next === "success") {
             const desc = `${newRow.amount.toLocaleString()} koin sampai ke ${newRow.receiver_email}.`;
-            toast({
-              title: "Gift Berhasil Terkirim 🎉",
-              description: desc,
-            });
-            pushNotification({
-              title: "Gift Berhasil Terkirim 🎉",
-              description: desc,
-              kind: "success",
-              href: "/gift",
-            });
-            // Reconcile sender balance with server (in case optimistic spend drifted)
+            toast({ title: "Gift Berhasil Terkirim 🎉", description: desc });
+            pushNotification({ title: "Gift Berhasil Terkirim 🎉", description: desc, kind: "success", href: "/gift" });
+            // Halaman /gift terbuka → langsung tandai terbaca
+            markAllRead();
             void refreshCoins();
           } else if (prev === "processing" && next === "error") {
             const desc = newRow.error_message || "Pengiriman koin gagal diproses. Cek detail di riwayat.";
-            toast({
-              title: "Gift Gagal Dikirim",
-              description: desc,
-              variant: "destructive",
-            });
-            pushNotification({
-              title: "Gift Gagal Dikirim",
-              description: desc,
-              kind: "error",
-              href: "/gift",
-            });
-            // Server may have rolled back the deduction → resync balance
+            toast({ title: "Gift Gagal Dikirim", description: desc, variant: "destructive" });
+            pushNotification({ title: "Gift Gagal Dikirim", description: desc, kind: "error", href: "/gift" });
+            markAllRead();
             void refreshCoins();
           }
         },
@@ -135,21 +125,12 @@ const GiftCoins = () => {
         },
         (payload) => {
           const row = payload.new as GiftRecord;
-          // Append to list so receiver sees incoming gifts live
           setGifts((curr) => (curr.some((g) => g.id === row.id) ? curr : [row, ...curr]));
           if ((row.status || "success").toLowerCase() === "success") {
             const desc = `+${row.amount.toLocaleString()} koin masuk ke saldo kamu.`;
-            toast({
-              title: "Kamu Menerima Gift 🎁",
-              description: desc,
-            });
-            pushNotification({
-              title: "Kamu Menerima Gift 🎁",
-              description: desc,
-              kind: "success",
-              href: "/gift",
-            });
-            // Pull updated balance for receiver
+            toast({ title: "Kamu Menerima Gift 🎁", description: desc });
+            pushNotification({ title: "Kamu Menerima Gift 🎁", description: desc, kind: "success", href: "/gift" });
+            markAllRead();
             void refreshCoins();
           }
         },
@@ -159,7 +140,7 @@ const GiftCoins = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, toast, refreshCoins, pushNotification]);
+  }, [user, toast, refreshCoins, pushNotification, markAllRead]);
 
   // Reset verified recipient if email changes
   useEffect(() => {

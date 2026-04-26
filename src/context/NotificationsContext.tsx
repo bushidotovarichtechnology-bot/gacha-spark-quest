@@ -8,9 +8,9 @@ export interface NotificationItem {
   title: string;
   description?: string;
   kind: NotificationKind;
-  createdAt: number; // epoch ms
+  createdAt: number;
   read: boolean;
-  href?: string; // optional in-app link
+  href?: string;
 }
 
 interface NotificationsContextValue {
@@ -26,7 +26,6 @@ interface NotificationsContextValue {
 const NotificationsContext = createContext<NotificationsContextValue | undefined>(undefined);
 
 const MAX_ITEMS = 50;
-
 const storageKey = (uid: string | null | undefined) =>
   uid ? `inbox-notifications:${uid}` : "inbox-notifications:guest";
 
@@ -34,7 +33,6 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const { user } = useAuth();
   const [items, setItems] = useState<NotificationItem[]>([]);
 
-  // Load from localStorage when user changes
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey(user?.id));
@@ -46,17 +44,16 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
         }
       }
     } catch {
-      // ignore parse errors
+      // ignore
     }
     setItems([]);
   }, [user?.id]);
 
-  // Persist on change
   useEffect(() => {
     try {
       localStorage.setItem(storageKey(user?.id), JSON.stringify(items));
     } catch {
-      // ignore quota / serialization errors
+      // ignore
     }
   }, [items, user?.id]);
 
@@ -64,9 +61,9 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     setItems((curr) => {
       const next: NotificationItem = {
         id:
-          (typeof crypto !== "undefined" && "randomUUID" in crypto
+          typeof crypto !== "undefined" && "randomUUID" in crypto
             ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).slice(2)}`),
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         createdAt: Date.now(),
         read: false,
         ...n,
@@ -76,7 +73,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   }, []);
 
   const markAllRead = useCallback(() => {
-    setItems((curr) => curr.map((i) => (i.read ? i : { ...i, read: true })));
+    setItems((curr) => (curr.some((i) => !i.read) ? curr.map((i) => ({ ...i, read: true })) : curr));
   }, []);
 
   const markRead = useCallback((id: string) => {
