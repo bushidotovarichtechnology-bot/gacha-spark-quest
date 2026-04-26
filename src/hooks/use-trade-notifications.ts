@@ -51,27 +51,50 @@ export const useTradeNotifications = () => {
 
     let cancelled = false;
 
-    const fireOnce = (key: string, fn: () => void) => {
-      if (firedKeys.current.has(key)) return;
+    const fireOnce = (key: string, kind: TradeNotifKind, ctx: {
+      tradeId: string; tier: string; source: TradeNotifSource;
+      prevStatus: string | null; nextStatus: string;
+    }, fn: () => void) => {
+      if (firedKeys.current.has(key)) {
+        logTradeNotif({
+          tradeId: ctx.tradeId, tier: ctx.tier, kind: "deduped", source: ctx.source,
+          dedupKey: key, prevStatus: ctx.prevStatus, nextStatus: ctx.nextStatus,
+          fired: false, note: `dedup hit for kind=${kind}`,
+        });
+        return;
+      }
       firedKeys.current.add(key);
       fn();
+      logTradeNotif({
+        tradeId: ctx.tradeId, tier: ctx.tier, kind, source: ctx.source,
+        dedupKey: key, prevStatus: ctx.prevStatus, nextStatus: ctx.nextStatus,
+        fired: true,
+      });
     };
 
-    const handleRow = (row: TradeRow, isInsert: boolean) => {
-      const prev = prevStatus.current[row.id];
+    const handleRow = (row: TradeRow, isInsert: boolean, source: TradeNotifSource) => {
+      const prev = prevStatus.current[row.id] ?? null;
       const prevResp = prevResponder.current[row.id];
       prevStatus.current[row.id] = row.status;
       prevResponder.current[row.id] = row.responder_id;
 
       const isInitiator = row.initiator_id === user.id;
       const isResponder = row.responder_id === user.id;
+      const ctxBase = { tradeId: row.id, tier: row.tier_label, source, prevStatus: prev, nextStatus: row.status };
 
       // Skip emitting on the very first sync (we're just hydrating state).
-      if (!initialized.current && !isInsert) return;
+      if (!initialized.current && !isInsert) {
+        logTradeNotif({
+          ...ctxBase, kind: "skipped-init", dedupKey: null, fired: false,
+          note: "hydration tick — no toast emitted",
+        });
+        return;
+      }
 
       // New incoming trade request (responder explicitly assigned).
       if (isInsert && isResponder && row.status === "pending") {
-        fireOnce(`trade-incoming:${row.id}`, () => {
+        const key = `trade-incoming:${row.id}`;
+        fireOnce(key, "incoming", ctxBase, () => {
           toast.info("Trade Request Masuk", {
             description: `Tier ${row.tier_label} — buka untuk merespons.`,
             duration: 8000,
@@ -81,32 +104,40 @@ export const useTradeNotifications = () => {
             title: "Trade request masuk",
             description: `Permintaan trade Tier ${row.tier_label}.`,
             href: `/trade/req/${row.token}`,
-            dedupKey: `trade-incoming:${row.id}`,
+            dedupKey: key,
           });
         });
         return;
       }
 
-      const statusChanged = prev !== undefined && prev !== row.status;
+      const statusChanged = prev !== null && prev !== row.status;
       const responderClaimed = prevResp === null && row.responder_id !== null;
 
       // Initiator gets pinged when someone claims their open link.
       if (isInitiator && responderClaimed && row.status === "pending") {
-        fireOnce(`trade-claimed:${row.id}`, () => {
+        const key = `trade-claimed:${row.id}`;
+        fireOnce(key, "claimed", ctxBase, () => {
           push({
             kind: "info",
             title: "Partner trade ditemukan",
             description: `Seseorang mengklaim trade link Tier ${row.tier_label}.`,
             href: `/trade/req/${row.token}`,
-            dedupKey: `trade-claimed:${row.id}`,
+            dedupKey: key,
           });
         });
       }
 
-      if (!statusChanged) return;
+      if (!statusChanged) {
+        logTradeNotif({
+          ...ctxBase, kind: "skipped-no-change", dedupKey: null, fired: false,
+          note: `prev=${prev ?? "null"} → next=${row.status}`,
+        });
+        return;
+      }
 
       if (row.status === "accepted") {
-        fireOnce(`trade-accepted:${row.id}`, () => {
+        const key = `trade-accepted:${row.id}`;
+        fireOnce(key, "accepted", ctxBase, () => {
           toast.success("Trade Berhasil ✓", {
             description: `Pertukaran Tier ${row.tier_label} selesai.`,
             duration: 8000,
@@ -116,34 +147,37 @@ export const useTradeNotifications = () => {
             title: "Trade selesai",
             description: `Pertukaran Tier ${row.tier_label} berhasil dieksekusi.`,
             href: `/inventory`,
-            dedupKey: `trade-accepted:${row.id}`,
+            dedupKey: key,
           });
         });
       } else if (row.status === "rejected") {
-        fireOnce(`trade-rejected:${row.id}`, () =>
+        const key = `trade-rejected:${row.id}`;
+        fireOnce(key, "rejected", ctxBase, () =>
           push({
             kind: "warning",
             title: "Trade ditolak",
             description: `Permintaan trade Tier ${row.tier_label} ditolak.`,
-            dedupKey: `trade-rejected:${row.id}`,
+            dedupKey: key,
           }),
         );
       } else if (row.status === "cancelled") {
-        fireOnce(`trade-cancelled:${row.id}`, () =>
+        const key = `trade-cancelled:${row.id}`;
+        fireOnce(key, "cancelled", ctxBase, () =>
           push({
             kind: "warning",
             title: "Trade dibatalkan",
             description: `Trade Tier ${row.tier_label} dibatalkan.`,
-            dedupKey: `trade-cancelled:${row.id}`,
+            dedupKey: key,
           }),
         );
       } else if (row.status === "expired") {
-        fireOnce(`trade-expired:${row.id}`, () =>
+        const key = `trade-expired:${row.id}`;
+        fireOnce(key, "expired", ctxBase, () =>
           push({
             kind: "warning",
             title: "Trade kedaluwarsa",
             description: `Trade Tier ${row.tier_label} sudah lewat 24 jam.`,
-            dedupKey: `trade-expired:${row.id}`,
+            dedupKey: key,
           }),
         );
       }
