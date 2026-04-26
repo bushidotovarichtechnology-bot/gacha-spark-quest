@@ -134,6 +134,36 @@ const TradeRequest = () => {
     hasSecurityPin().then(setPinReady).catch(() => setPinReady(false));
   }, [user]);
 
+  // Live countdown to expiry — ticks every 1s while trade is pending.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (trade?.status !== "pending") return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [trade?.status]);
+
+  const countdown = useMemo(() => {
+    if (!trade?.expires_at) return null;
+    const expMs = new Date(trade.expires_at).getTime();
+    const diff = expMs - now;
+    const expired = diff <= 0;
+    const totalSec = Math.max(0, Math.floor(diff / 1000));
+    const hours = Math.floor(totalSec / 3600);
+    const minutes = Math.floor((totalSec % 3600) / 60);
+    const seconds = totalSec % 60;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const formatted = hours > 0
+      ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+      : `${pad(minutes)}:${pad(seconds)}`;
+    // Severity tiers: critical <60s, warning <5min, normal otherwise.
+    const severity: "critical" | "warning" | "normal" = expired
+      ? "critical"
+      : diff < 60_000 ? "critical"
+      : diff < 5 * 60_000 ? "warning"
+      : "normal";
+    return { expired, totalSec, formatted, severity, diffMs: diff };
+  }, [trade?.expires_at, now]);
+
   const responderItemMeta = useMemo(
     () => items.filter((it) => responderItems.has(it.id)),
     [items, responderItems],
