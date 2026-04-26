@@ -49,6 +49,13 @@
     --sidebar-accent-foreground: 60 20% 95%;
     --sidebar-border: 270 20% 18%;
     --sidebar-ring: 270 80% 60%;
+
+    /* P2P Trading — hacker palette */
+    --hacker-green: 120 100% 50%;        /* #00ff00 */
+    --hacker-green-dim: 120 70% 35%;
+    --hacker-bg: 220 15% 6%;
+    --hacker-surface: 220 15% 9%;
+    --hacker-border: 120 50% 25%;
   }
 }
 
