@@ -24,6 +24,7 @@ export interface TradeRow {
   token: string;
   initiator_id: string;
   responder_id: string | null;
+  recipient_id: string | null;
   initiator_items: string[];
   responder_items: string[];
   tier_label: TradableTier;
