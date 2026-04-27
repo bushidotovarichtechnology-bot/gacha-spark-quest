@@ -226,7 +226,7 @@ const CampaignDetail = () => {
           auto_refill: p.auto_refill,
           remaining: availMap.get(p.id) ? 0 : (p.total ?? 1),
           total: p.total ?? 1,
-          probability_weight: 1,
+          probability_weight: Number(p.probability_weight ?? 1),
         })),
       }));
 
