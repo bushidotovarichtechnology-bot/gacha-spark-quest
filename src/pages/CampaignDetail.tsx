@@ -904,10 +904,6 @@ const CampaignDetail = () => {
           setShowResult(false);
           // Draw flow is complete — drop persisted recovery state.
           if (user) clearDrawState(user.id, campaignId);
-          // Show pity popup after reveal closes (only if meter changed or reset)
-          if (pityEnabled && (pityPopup.after !== pityPopup.before || pityPopup.wasReset)) {
-            setTimeout(() => setPityPopup((p) => ({ ...p, open: true })), 250);
-          }
         }}
         prizes={drawnPrizes}
         drawCount={drawCount}
