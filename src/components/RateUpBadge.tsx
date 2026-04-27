@@ -15,9 +15,13 @@ interface RateUpBadgeProps {
  * - Tampil sebagai pill kecil "Rate Normal" jika tidak berhak (opsional).
  */
 const RateUpBadge = ({ className, showNormal = true }: RateUpBadgeProps) => {
-  const { is_rate_up, multiplier, user_index, limit, loading } = useRateUpStatus();
+  const { is_rate_up, multiplier, user_index, limit, ends_at, loading } = useRateUpStatus();
 
   if (loading) return null;
+
+  const endsLabel = ends_at
+    ? new Date(ends_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+    : null;
 
   if (is_rate_up) {
     return (
@@ -25,7 +29,7 @@ const RateUpBadge = ({ className, showNormal = true }: RateUpBadgeProps) => {
         initial={{ opacity: 0, y: -8, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         className={cn(
-          "relative inline-flex items-center gap-2 rounded-full border border-accent/40",
+          "relative inline-flex flex-wrap items-center gap-2 rounded-full border border-accent/40",
           "bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20",
           "px-3 py-1.5 text-xs font-bold uppercase tracking-wider",
           "shadow-[0_0_20px_hsl(var(--accent)/0.4)]",
@@ -49,6 +53,11 @@ const RateUpBadge = ({ className, showNormal = true }: RateUpBadgeProps) => {
         {user_index ? (
           <span className="hidden text-[10px] font-medium text-muted-foreground sm:inline">
             #{user_index}/{limit}
+          </span>
+        ) : null}
+        {endsLabel ? (
+          <span className="text-[10px] font-medium normal-case tracking-normal text-muted-foreground">
+            • s/d {endsLabel}
           </span>
         ) : null}
       </motion.div>
