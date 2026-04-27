@@ -31,6 +31,9 @@ const UsernameSetupCard = () => {
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const suggestionReqId = useRef(0);
 
   // Fetch existing username on mount
   useEffect(() => {
@@ -51,12 +54,30 @@ const UsernameSetupCard = () => {
     };
   }, [user]);
 
-  // Live availability check (debounced)
+  // Generate alternative username candidates from a base
+  const generateCandidates = (base: string): string[] => {
+    const cleaned = base.replace(/[^a-z0-9_]/g, "").slice(0, 16) || "user";
+    const padded = cleaned.length < 3 ? (cleaned + "___").slice(0, 3) : cleaned;
+    const out = new Set<string>();
+    // Numeric suffixes
+    for (let i = 0; i < 4; i++) {
+      const n = Math.floor(Math.random() * 9000) + 100;
+      out.add(`${padded}${n}`.slice(0, 20));
+    }
+    // Year-ish + underscore variants
+    out.add(`${padded}_${Math.floor(Math.random() * 99) + 1}`.slice(0, 20));
+    out.add(`the_${padded}`.slice(0, 20));
+    out.add(`${padded}_id`.slice(0, 20));
+    return Array.from(out).filter((s) => USERNAME_RE.test(s));
+  };
+
+  // Live availability check (debounced) + auto-suggest when taken
   useEffect(() => {
     if (currentUsername) return; // already locked
     const normalized = input.trim().toLowerCase();
     if (!normalized || !USERNAME_RE.test(normalized)) {
       setAvailable(null);
+      setSuggestions([]);
       return;
     }
     setChecking(true);
@@ -64,7 +85,29 @@ const UsernameSetupCard = () => {
       const { data, error } = await supabase.rpc("is_username_available", {
         _username: normalized,
       });
-      if (!error) setAvailable(Boolean(data));
+      if (!error) {
+        const isAvailable = Boolean(data);
+        setAvailable(isAvailable);
+        if (!isAvailable) {
+          // Generate & verify alternative suggestions
+          const reqId = ++suggestionReqId.current;
+          setLoadingSuggestions(true);
+          setSuggestions([]);
+          const candidates = generateCandidates(normalized);
+          const checks = await Promise.all(
+            candidates.map(async (c) => {
+              const { data: ok } = await supabase.rpc("is_username_available", { _username: c });
+              return ok ? c : null;
+            }),
+          );
+          if (reqId === suggestionReqId.current) {
+            setSuggestions(checks.filter((c): c is string => Boolean(c)).slice(0, 4));
+            setLoadingSuggestions(false);
+          }
+        } else {
+          setSuggestions([]);
+        }
+      }
       setChecking(false);
     }, 350);
     return () => {
