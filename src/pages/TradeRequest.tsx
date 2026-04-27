@@ -194,16 +194,24 @@ const TradeRequest = () => {
     manualRetryRef.current = () => { void refetchWithBackoff(); };
 
     // Per-(trade,status) debounce lock — realtime + polling + manual refetch
-    // can deliver the same transition multiple times within a few hundred ms.
-    // We suppress duplicate toasts (and duplicate inventory refreshes) when the
-    // same target status fires again within DEBOUNCE_MS.
+    // can deliver the same transition multiple times within a few hundred ms
+    // (realtime replay on reconnect, poll race, manual retry). We suppress
+    // duplicate toasts (and duplicate inventory refreshes) when the same
+    // target status fires again within DEBOUNCE_MS.
+    //
+    // Terminal statuses (accepted/rejected/cancelled/expired) get a much
+    // longer TTL: once a trade lands in a final state it must NEVER re-toast,
+    // even if a delayed realtime replay arrives minutes later.
     const DEBOUNCE_MS = 1500;
+    const TERMINAL_TTL_MS = 24 * 60 * 60 * 1000; // 24h — effectively "forever" for this session
+    const TERMINAL_STATUSES = new Set(["accepted", "rejected", "cancelled", "expired"]);
     const lastFiredAt = new Map<string, number>();
     const tryClaimTransition = (statusKey: string) => {
       const now = Date.now();
       const key = `${tradeId}:${statusKey}`;
       const last = lastFiredAt.get(key) ?? 0;
-      if (now - last < DEBOUNCE_MS) return false;
+      const ttl = TERMINAL_STATUSES.has(statusKey) ? TERMINAL_TTL_MS : DEBOUNCE_MS;
+      if (now - last < ttl) return false;
       lastFiredAt.set(key, now);
       return true;
     };
