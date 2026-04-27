@@ -1336,6 +1336,7 @@ export type Database = {
           label: string | null
           name: string | null
           sort_order: number | null
+          total: number | null
         }
         Insert: {
           campaign_id?: string | null
@@ -1345,6 +1346,7 @@ export type Database = {
           label?: string | null
           name?: string | null
           sort_order?: number | null
+          total?: number | null
         }
         Update: {
           campaign_id?: string | null
@@ -1354,6 +1356,7 @@ export type Database = {
           label?: string | null
           name?: string | null
           sort_order?: number | null
+          total?: number | null
         }
         Relationships: [
           {
@@ -1373,10 +1376,12 @@ export type Database = {
           description: string | null
           id: string | null
           image_url: string | null
+          is_digital: boolean | null
           is_sold_out: boolean | null
           name: string | null
           sort_order: number | null
           tier_id: string | null
+          total: number | null
           weight_grams: number | null
         }
         Insert: {
@@ -1386,10 +1391,12 @@ export type Database = {
           description?: string | null
           id?: string | null
           image_url?: string | null
+          is_digital?: boolean | null
           is_sold_out?: never
           name?: string | null
           sort_order?: number | null
           tier_id?: string | null
+          total?: number | null
           weight_grams?: number | null
         }
         Update: {
@@ -1399,10 +1406,12 @@ export type Database = {
           description?: string | null
           id?: string | null
           image_url?: string | null
+          is_digital?: boolean | null
           is_sold_out?: never
           name?: string | null
           sort_order?: number | null
           tier_id?: string | null
+          total?: number | null
           weight_grams?: number | null
         }
         Relationships: [
