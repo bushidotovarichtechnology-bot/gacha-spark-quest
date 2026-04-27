@@ -448,7 +448,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                     />
                   </div>
                 ) : (
-                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} ${prize.tier === "S" ? "box-glow-gold-strong" : prize.tier === "A" ? "box-glow-purple-strong" : ""}`}>
+                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl ${config.gradient} ${config.glow}`}>
                     <span className="text-4xl">{config.emoji}</span>
                   </div>
                 )}
