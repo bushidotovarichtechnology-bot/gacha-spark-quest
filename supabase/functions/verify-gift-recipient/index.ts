@@ -35,42 +35,73 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { email } = await req.json();
-    const normalizedEmail = (email || "").toString().trim().toLowerCase();
+    const body = await req.json();
+    const rawEmail = (body?.email ?? "").toString().trim().toLowerCase();
+    const rawUsername = (body?.username ?? "").toString().trim().toLowerCase().replace(/^@/, "");
 
-    // Basic email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
-      return new Response(JSON.stringify({ found: false, error: "Format email tidak valid" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const usernameRegex = /^[a-z0-9_]{3,20}$/;
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    // Find receiver by email (paginate to be safe)
+    let normalizedEmail = "";
     let receiver: any = null;
-    let page = 1;
-    const perPage = 1000;
-    while (page <= 10) {
-      const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage });
-      if (error) throw error;
-      const found = data?.users?.find((u: any) => u.email?.toLowerCase() === normalizedEmail);
-      if (found) { receiver = found; break; }
-      if (!data?.users || data.users.length < perPage) break;
-      page++;
+
+    // Mode 1: lookup by username (faster, exact match via profiles)
+    if (rawUsername && usernameRegex.test(rawUsername)) {
+      const { data: profileRow } = await adminClient
+        .from("profiles")
+        .select("user_id")
+        .eq("username", rawUsername)
+        .maybeSingle();
+      if (!profileRow?.user_id) {
+        return new Response(JSON.stringify({ found: false, error: "Username tidak ditemukan" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: authUser, error: authErr } = await adminClient.auth.admin.getUserById(
+        profileRow.user_id as string,
+      );
+      if (authErr || !authUser?.user) {
+        return new Response(JSON.stringify({ found: false, error: "User tidak ditemukan" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      receiver = authUser.user;
+      normalizedEmail = (receiver.email ?? "").toLowerCase();
+    } else {
+      // Mode 2: lookup by email
+      if (!rawEmail || !emailRegex.test(rawEmail)) {
+        return new Response(JSON.stringify({ found: false, error: "Format email tidak valid" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      normalizedEmail = rawEmail;
+      let page = 1;
+      const perPage = 1000;
+      while (page <= 10) {
+        const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+        if (error) throw error;
+        const found = data?.users?.find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+        if (found) { receiver = found; break; }
+        if (!data?.users || data.users.length < perPage) break;
+        page++;
+      }
+
+      if (!receiver) {
+        return new Response(JSON.stringify({
+          found: false,
+          error: "Email tidak terdaftar di Bushido Gacha",
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
-    if (!receiver) {
-      return new Response(JSON.stringify({
-        found: false,
-        error: "Email tidak terdaftar di Bushido Gacha",
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     if (receiver.id === user.id) {
       return new Response(JSON.stringify({
