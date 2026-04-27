@@ -90,6 +90,7 @@ interface PersistedDrawState {
   drawnPrizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
   hasPityReward: boolean;
   pityPopup: { open: boolean; before: number; after: number; wasReset: boolean };
+  rateUpMultiplier?: number;
   savedAt: number;
 }
 
@@ -295,6 +296,7 @@ const CampaignDetail = () => {
   const [pendingDrawComplete, setPendingDrawComplete] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
   const [pityPopup, setPityPopup] = useState<{ open: boolean; before: number; after: number; wasReset: boolean }>({ open: false, before: 0, after: 0, wasReset: false });
+  const [drawRateUpMultiplier, setDrawRateUpMultiplier] = useState<number>(1);
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
@@ -312,6 +314,7 @@ const CampaignDetail = () => {
     setDrawnPrizes(saved.drawnPrizes);
     setHasPityReward(saved.hasPityReward);
     setPityPopup(saved.pityPopup);
+    setDrawRateUpMultiplier(saved.rateUpMultiplier ?? 1);
     setPendingDrawComplete(true);
     setIsDrawing(true); // replays the shake/glow/unbox animation
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -404,6 +407,8 @@ const CampaignDetail = () => {
 
       setDrawnPrizes(results);
       setHasPityReward(!!data.has_pity_reward);
+      const rateMult = Number((data as any).rate_up_multiplier ?? 1) || 1;
+      setDrawRateUpMultiplier(rateMult);
 
       // Compute pity meter change for popup
       let nextPityPopup = { open: false, before: 0, after: 0, wasReset: false };
@@ -429,6 +434,7 @@ const CampaignDetail = () => {
           drawnPrizes: results,
           hasPityReward: !!data.has_pity_reward,
           pityPopup: nextPityPopup,
+          rateUpMultiplier: rateMult,
         });
       }
 
@@ -912,6 +918,7 @@ const CampaignDetail = () => {
         prizes={drawnPrizes}
         drawCount={drawCount}
         hasPityReward={hasPityReward}
+        rateUpMultiplier={drawRateUpMultiplier}
       />
 
       <PityMeterPopup

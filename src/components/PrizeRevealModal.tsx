@@ -55,6 +55,8 @@ interface PrizeRevealModalProps {
   prizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
   drawCount: number;
   hasPityReward?: boolean;
+  /** Rate-up multiplier yang server pakai untuk draw ini (mis. 1.5 untuk 100 user pertama). */
+  rateUpMultiplier?: number;
 }
 
 const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof Crown; emoji: string }> = {
@@ -66,7 +68,7 @@ const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof 
 
 const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
 
-const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: PrizeRevealModalProps) => {
+const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rateUpMultiplier }: PrizeRevealModalProps) => {
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
@@ -172,9 +174,16 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
               <p className="mb-1 text-center font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 {t("drawResult", { count: drawCount })}
               </p>
-              <h2 className="mb-4 text-center font-display text-lg font-bold text-foreground">
+              <h2 className="mb-2 text-center font-display text-lg font-bold text-foreground">
                 {t("drawSummary")}
               </h2>
+              {rateUpMultiplier && rateUpMultiplier > 1 ? (
+                <div className="mb-3 flex justify-center">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_hsl(var(--accent)/0.35)]">
+                    ✦ Rate Up {rateUpMultiplier}x diterapkan
+                  </span>
+                </div>
+              ) : null}
 
               <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
                 {sorted.map((p, i) => {
@@ -397,6 +406,15 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward }: P
                   ))}
                 </div>
               )}
+
+              {/* Rate-up indicator */}
+              {rateUpMultiplier && rateUpMultiplier > 1 ? (
+                <div className="mb-2 flex justify-center">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_hsl(var(--accent)/0.35)]">
+                    ✦ Rate Up {rateUpMultiplier}x
+                  </span>
+                </div>
+              ) : null}
 
               {/* Counter + Skip */}
               {isMulti && (
