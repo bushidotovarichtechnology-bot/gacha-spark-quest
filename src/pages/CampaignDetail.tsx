@@ -748,9 +748,31 @@ const CampaignDetail = () => {
                               <span className="text-[10px] font-medium text-muted-foreground">
                                 Stok: <span className="text-foreground">{isAdmin ? p.remaining : obfuscateStock(p.remaining, p.total).remainingLabel}/{p.total}</span>
                                 {showPrizeChance && (
-                                  <span className="ml-1 text-primary/90" title="Peluang mendapatkan hadiah ini per tarikan">
-                                    ({chanceText})
-                                  </span>
+                                  <TooltipProvider delayDuration={150}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="ml-1 cursor-help text-primary/90 underline decoration-dotted underline-offset-2 hover:text-primary"
+                                        >
+                                          ({chanceText})
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-[260px] text-[11px] leading-relaxed">
+                                        <p className="font-semibold text-foreground">Rumus peluang</p>
+                                        <p className="mt-1 text-muted-foreground">
+                                          Peluang = <span className="font-mono">Peluang Tier {tier.label}</span> × (<span className="font-mono">bobot prize</span> ÷ <span className="font-mono">total bobot tier aktif</span>)
+                                        </p>
+                                        <p className="mt-1 font-mono text-foreground">
+                                          {chancePct.toFixed(2)}% × ({Number(p.probability_weight ?? 1)} ÷ {sumPrizeWeight}) = {chanceText}
+                                        </p>
+                                        <p className="mt-1 text-[10px] text-muted-foreground">
+                                          Tier {tier.label} aktif: {activePrizes.length} hadiah. Hadiah habis tidak dihitung.
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 )}
                               </span>
                             ) : (
