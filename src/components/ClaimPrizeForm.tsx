@@ -245,7 +245,10 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             <p className="text-xs text-muted-foreground">{item.campaign} · {t(`tier${item.tier}Label`)}</p>
           </div>
           <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${
-            item.tier === "S" ? "bg-accent/20 text-accent" : item.tier === "A" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+            item.tier === "S" ? "bg-tier-s/20 text-tier-s-dark" :
+            item.tier === "A" ? "bg-tier-a/20 text-tier-a-dark" :
+            item.tier === "B" ? "bg-tier-b/30 text-tier-b-dark" :
+            "bg-tier-c/20 text-tier-c-light"
           }`}>{item.tier}</span>
         </div>
 

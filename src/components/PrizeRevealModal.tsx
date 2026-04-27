@@ -59,11 +59,12 @@ interface PrizeRevealModalProps {
   rateUpMultiplier?: number;
 }
 
+// Uses global tier tokens (Diamond/Gold/Silver/Bronze) — see src/lib/tierStyles.ts.
 const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof Crown; emoji: string }> = {
-  S: { gradient: "from-accent via-yellow-400 to-accent", glow: "box-glow-gold", icon: Crown, emoji: "👑" },
-  A: { gradient: "from-primary via-purple-400 to-primary", glow: "box-glow-purple", icon: Star, emoji: "⭐" },
-  B: { gradient: "from-pink-500 via-rose-400 to-pink-500", glow: "", icon: Gift, emoji: "🎁" },
-  C: { gradient: "from-muted-foreground via-gray-400 to-muted-foreground", glow: "", icon: Award, emoji: "📦" },
+  S: { gradient: "tier-banner-s", glow: "tier-glow-s", icon: Crown, emoji: "💎" },
+  A: { gradient: "tier-banner-a", glow: "tier-glow-a", icon: Star, emoji: "🥇" },
+  B: { gradient: "tier-banner-b", glow: "tier-glow-b", icon: Gift, emoji: "🥈" },
+  C: { gradient: "tier-banner-c", glow: "tier-glow-c", icon: Award, emoji: "🥉" },
 };
 
 const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
@@ -251,8 +252,8 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
               transition={prize.tier === "S" ? { type: "spring", damping: 12, stiffness: 150, duration: 0.6 } : { type: "spring", damping: 15, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
               className={`relative w-full max-w-sm overflow-hidden rounded-2xl border bg-card p-6 text-center ${
-                prize.tier === "S" ? "border-accent border-2 box-glow-gold" :
-                prize.isPityReward ? "border-accent box-glow-gold" : `border-border ${config.glow}`
+                prize.tier === "S" ? "border-tier-s border-2 tier-glow-s" :
+                prize.isPityReward ? "border-tier-a tier-glow-a" : `border-border ${config.glow}`
               }`}
             >
               <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
@@ -285,7 +286,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-                    className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-yellow-400 px-2.5 py-1 text-[10px] font-black text-background shadow-lg"
+                    className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full tier-banner-a px-2.5 py-1 text-[10px] font-black text-tier-a-foreground shadow-lg"
                   >
                     <Star className="h-3 w-3" />
                     PITY REWARD
@@ -439,7 +440,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                 className="mx-auto mb-4"
               >
                 {prize.image ? (
-                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} p-0.5 ${prize.tier === "S" ? "box-glow-gold-strong" : prize.tier === "A" ? "box-glow-purple-strong" : ""}`}>
+                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl ${config.gradient} ${config.glow} p-0.5`}>
                     <img
                       src={prize.image}
                       alt={prize.prize}
@@ -447,7 +448,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                     />
                   </div>
                 ) : (
-                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} ${prize.tier === "S" ? "box-glow-gold-strong" : prize.tier === "A" ? "box-glow-purple-strong" : ""}`}>
+                  <div className={`inline-flex h-20 w-20 items-center justify-center rounded-2xl ${config.gradient} ${config.glow}`}>
                     <span className="text-4xl">{config.emoji}</span>
                   </div>
                 )}

@@ -56,6 +56,32 @@ export default {
           gold: "hsl(var(--neon-gold))",
           pink: "hsl(var(--neon-pink))",
         },
+        tier: {
+          s: {
+            DEFAULT: "hsl(var(--tier-s))",
+            foreground: "hsl(var(--tier-s-foreground))",
+            light: "hsl(var(--tier-s-light))",
+            dark: "hsl(var(--tier-s-dark))",
+          },
+          a: {
+            DEFAULT: "hsl(var(--tier-a))",
+            foreground: "hsl(var(--tier-a-foreground))",
+            light: "hsl(var(--tier-a-light))",
+            dark: "hsl(var(--tier-a-dark))",
+          },
+          b: {
+            DEFAULT: "hsl(var(--tier-b))",
+            foreground: "hsl(var(--tier-b-foreground))",
+            light: "hsl(var(--tier-b-light))",
+            dark: "hsl(var(--tier-b-dark))",
+          },
+          c: {
+            DEFAULT: "hsl(var(--tier-c))",
+            foreground: "hsl(var(--tier-c-foreground))",
+            light: "hsl(var(--tier-c-light))",
+            dark: "hsl(var(--tier-c-dark))",
+          },
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

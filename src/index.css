@@ -57,15 +57,27 @@
     --hacker-surface: 220 15% 9%;
     --hacker-border: 120 50% 25%;
 
-    /* Tier badges — high-contrast semantic colors per rarity. */
-    --tier-s: 45 100% 55%;          /* gold */
-    --tier-s-foreground: 270 30% 6%;
-    --tier-a: 280 90% 65%;          /* purple */
-    --tier-a-foreground: 0 0% 100%;
-    --tier-b: 200 90% 55%;          /* cyan-blue */
-    --tier-b-foreground: 0 0% 100%;
-    --tier-c: 220 8% 45%;           /* slate */
-    --tier-c-foreground: 0 0% 100%;
+    /* Tier badges — global semantic palette (Diamond / Gold / Silver / Bronze).
+       Used everywhere across all campaigns: banners, badges, glows, modals. */
+    --tier-s: 195 90% 70%;          /* Diamond — icy cyan */
+    --tier-s-foreground: 215 50% 15%;
+    --tier-s-light: 195 100% 92%;
+    --tier-s-dark: 210 80% 45%;
+
+    --tier-a: 45 95% 55%;           /* Gold */
+    --tier-a-foreground: 30 50% 12%;
+    --tier-a-light: 48 100% 75%;
+    --tier-a-dark: 38 90% 40%;
+
+    --tier-b: 220 12% 75%;          /* Silver */
+    --tier-b-foreground: 220 25% 15%;
+    --tier-b-light: 220 15% 88%;
+    --tier-b-dark: 220 10% 50%;
+
+    --tier-c: 25 70% 45%;           /* Bronze */
+    --tier-c-foreground: 30 50% 95%;
+    --tier-c-light: 28 75% 60%;
+    --tier-c-dark: 20 80% 30%;
   }
 }
 
@@ -160,5 +172,59 @@
   }
   .animate-hacker-blink {
     animation: hacker-blink 1s step-end infinite;
+  }
+
+  /* ===== Tier glow utilities — global, used across all campaigns ===== */
+  .tier-glow-s {
+    box-shadow:
+      0 0 18px hsl(var(--tier-s) / 0.55),
+      0 0 36px hsl(var(--tier-s-light) / 0.35),
+      inset 0 1px 0 hsl(var(--tier-s-light) / 0.4);
+  }
+  .tier-glow-a {
+    box-shadow:
+      0 0 16px hsl(var(--tier-a) / 0.55),
+      0 0 32px hsl(var(--tier-a) / 0.25);
+  }
+  .tier-glow-b {
+    box-shadow:
+      0 0 12px hsl(var(--tier-b) / 0.45),
+      0 0 24px hsl(var(--tier-b) / 0.2);
+  }
+  .tier-glow-c {
+    box-shadow:
+      0 0 12px hsl(var(--tier-c) / 0.45),
+      0 0 24px hsl(var(--tier-c-light) / 0.2);
+  }
+
+  .tier-text-s { color: hsl(var(--tier-s-dark)); }
+  .tier-text-a { color: hsl(var(--tier-a-dark)); }
+  .tier-text-b { color: hsl(var(--tier-b-dark)); }
+  .tier-text-c { color: hsl(var(--tier-c-light)); }
+
+  /* Banner gradients */
+  .tier-banner-s {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-s-light)) 0%,
+      hsl(0 0% 100%) 45%,
+      hsl(var(--tier-s)) 100%);
+  }
+  .tier-banner-a {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-a-light)) 0%,
+      hsl(var(--tier-a)) 50%,
+      hsl(var(--tier-a-dark)) 100%);
+  }
+  .tier-banner-b {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-b-light)) 0%,
+      hsl(var(--tier-b)) 50%,
+      hsl(var(--tier-b-dark)) 100%);
+  }
+  .tier-banner-c {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-c-light)) 0%,
+      hsl(var(--tier-c)) 50%,
+      hsl(var(--tier-c-dark)) 100%);
   }
 }

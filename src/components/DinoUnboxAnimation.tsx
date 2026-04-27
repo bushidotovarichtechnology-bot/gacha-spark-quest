@@ -25,43 +25,48 @@ interface DinoUnboxAnimationProps {
   prizeName?: string;
 }
 
-// Tier-based configuration
+// Tier-based configuration — palette aligned with global tier tokens
+// (Diamond / Gold / Silver / Bronze). See src/lib/tierStyles.ts.
 const TIER_CONFIG = {
   S: {
+    // Diamond — icy cyan/white shimmer
     isRare: true,
     explosionCount: 60,
-    explosionColors: ["#fbbf24", "#f59e0b", "#d97706", "#fcd34d", "#fff", "#f472b6", "#a78bfa"],
+    explosionColors: ["#bae6fd", "#7dd3fc", "#38bdf8", "#e0f2fe", "#ffffff", "#a5f3fc", "#67e8f9"],
     screenShakeMultiplier: 3,
-    flashColor: "#fbbf24",
-    giftBoxColor: { main: "#fbbf24", light: "#fcd34d", ribbon: "#dc2626" },
-    dinoColor: { main: "#fbbf24", dark: "#d97706" },
+    flashColor: "#bae6fd",
+    giftBoxColor: { main: "#7dd3fc", light: "#e0f2fe", ribbon: "#0284c7" },
+    dinoColor: { main: "#38bdf8", dark: "#0284c7" },
   },
   A: {
+    // Gold
     isRare: true,
     explosionCount: 50,
-    explosionColors: ["#a78bfa", "#8b5cf6", "#7c3aed", "#c4b5fd", "#fff", "#f472b6", "#60a5fa"],
+    explosionColors: ["#fbbf24", "#f59e0b", "#fcd34d", "#fde68a", "#ffffff", "#fef3c7", "#d97706"],
     screenShakeMultiplier: 2.5,
-    flashColor: "#a78bfa",
-    giftBoxColor: { main: "#8b5cf6", light: "#a78bfa", ribbon: "#fbbf24" },
-    dinoColor: { main: "#8b5cf6", dark: "#7c3aed" },
+    flashColor: "#fbbf24",
+    giftBoxColor: { main: "#f59e0b", light: "#fcd34d", ribbon: "#92400e" },
+    dinoColor: { main: "#f59e0b", dark: "#d97706" },
   },
   B: {
+    // Silver
     isRare: false,
     explosionCount: 35,
-    explosionColors: ["#f472b6", "#ec4899", "#db2777", "#fbcfe8", "#fff", "#a78bfa", "#60a5fa"],
+    explosionColors: ["#cbd5e1", "#e2e8f0", "#94a3b8", "#f1f5f9", "#ffffff", "#94a3b8", "#cbd5e1"],
     screenShakeMultiplier: 1.5,
-    flashColor: "hsl(var(--accent))",
-    giftBoxColor: { main: "#ec4899", light: "#f472b6", ribbon: "#fbbf24" },
-    dinoColor: { main: "#4ade80", dark: "#22c55e" },
+    flashColor: "#e2e8f0",
+    giftBoxColor: { main: "#94a3b8", light: "#cbd5e1", ribbon: "#475569" },
+    dinoColor: { main: "#94a3b8", dark: "#64748b" },
   },
   C: {
+    // Bronze
     isRare: false,
     explosionCount: 30,
-    explosionColors: ["#facc15", "#a855f7", "#f472b6", "#4ade80", "#38bdf8", "#fb923c", "#fff"],
+    explosionColors: ["#b45309", "#d97706", "#92400e", "#fbbf24", "#fed7aa", "#c2410c", "#78350f"],
     screenShakeMultiplier: 1,
-    flashColor: "hsl(var(--accent))",
-    giftBoxColor: { main: "#a855f7", light: "#c084fc", ribbon: "#facc15" },
-    dinoColor: { main: "#4ade80", dark: "#22c55e" },
+    flashColor: "#d97706",
+    giftBoxColor: { main: "#b45309", light: "#d97706", ribbon: "#78350f" },
+    dinoColor: { main: "#b45309", dark: "#78350f" },
   },
 };
 
@@ -247,8 +252,11 @@ const RareGlow = ({ isRare }: { isRare: boolean }) => {
 const TierBadge = ({ tier, isRare }: { tier: string; isRare: boolean }) => {
   if (!isRare) return null;
   
-  const tierEmojis: Record<string, string> = { S: "🏆", A: "⭐" };
-  const tierColors: Record<string, string> = { S: "#fbbf24", A: "#a78bfa" };
+  const tierEmojis: Record<string, string> = { S: "💎", A: "🥇" };
+  // Use global tier tokens — read CSS variables so colors stay in sync.
+  const tierVars: Record<string, string> = { S: "--tier-s", A: "--tier-a" };
+  const tierVar = tierVars[tier] || "--tier-a";
+  const tierColor = `hsl(var(${tierVar}))`;
   
   return (
     <motion.div
@@ -259,9 +267,9 @@ const TierBadge = ({ tier, isRare }: { tier: string; isRare: boolean }) => {
     >
       <div
         className="px-4 py-2 rounded-full font-bold text-white text-sm"
-        style={{ 
-          backgroundColor: tierColors[tier] || "#a78bfa",
-          boxShadow: `0 0 30px ${tierColors[tier] || "#a78bfa"}`,
+        style={{
+          backgroundColor: tierColor,
+          boxShadow: `0 0 30px ${tierColor}`,
         }}
       >
         {tierEmojis[tier]} TIER {tier} DITEMUKAN!
