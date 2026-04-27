@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useLocation, useOutlet } from "react-router-dom";
-import { Routes } from "react-router-dom";
+import { Routes, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 
 /**
