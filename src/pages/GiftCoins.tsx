@@ -418,7 +418,7 @@ const GiftCoins = () => {
                   <Button
                     className="w-full"
                     onClick={handleVerify}
-                    disabled={verifying || sending || !email || !amount}
+                    disabled={verifying || sending || !recipientInput || !amount}
                   >
                     {verifying ? (
                       <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Memverifikasi...</span>
