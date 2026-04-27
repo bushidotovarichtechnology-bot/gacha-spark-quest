@@ -37,6 +37,8 @@ const tierMeta: Record<string, { color: string; icon: typeof Crown; gradient: st
 const Inventory = () => {
   const { items, totalCoins, drawsSinceTierA, recycleItem, pityThreshold } = useGacha();
   const { t } = useI18n();
+  const location = useLocation();
+  const isTradeActive = location.pathname.startsWith("/trade");
   const [filter, setFilter] = useState<"all" | "S" | "A" | "B" | "C" | "digital">("all");
   const [sortBy, setSortBy] = useState<"newest" | "coin_high" | "coin_low">("newest");
   const [copiedCodes, setCopiedCodes] = useState<Set<string>>(() => getCopiedCodes());
