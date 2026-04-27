@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -343,7 +344,6 @@ const TradeRequest = () => {
         </div>
       </div>
     );
-  }
   }
 
   if (!trade) {
