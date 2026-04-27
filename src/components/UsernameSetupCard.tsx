@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { AtSign, Check, Loader2, ShieldCheck, Lock, AlertTriangle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AtSign, Check, Loader2, ShieldCheck, Lock, AlertTriangle, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,9 @@ const UsernameSetupCard = () => {
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const suggestionReqId = useRef(0);
 
   // Fetch existing username on mount
   useEffect(() => {
@@ -51,12 +54,30 @@ const UsernameSetupCard = () => {
     };
   }, [user]);
 
-  // Live availability check (debounced)
+  // Generate alternative username candidates from a base
+  const generateCandidates = (base: string): string[] => {
+    const cleaned = base.replace(/[^a-z0-9_]/g, "").slice(0, 16) || "user";
+    const padded = cleaned.length < 3 ? (cleaned + "___").slice(0, 3) : cleaned;
+    const out = new Set<string>();
+    // Numeric suffixes
+    for (let i = 0; i < 4; i++) {
+      const n = Math.floor(Math.random() * 9000) + 100;
+      out.add(`${padded}${n}`.slice(0, 20));
+    }
+    // Year-ish + underscore variants
+    out.add(`${padded}_${Math.floor(Math.random() * 99) + 1}`.slice(0, 20));
+    out.add(`the_${padded}`.slice(0, 20));
+    out.add(`${padded}_id`.slice(0, 20));
+    return Array.from(out).filter((s) => USERNAME_RE.test(s));
+  };
+
+  // Live availability check (debounced) + auto-suggest when taken
   useEffect(() => {
     if (currentUsername) return; // already locked
     const normalized = input.trim().toLowerCase();
     if (!normalized || !USERNAME_RE.test(normalized)) {
       setAvailable(null);
+      setSuggestions([]);
       return;
     }
     setChecking(true);
@@ -64,7 +85,29 @@ const UsernameSetupCard = () => {
       const { data, error } = await supabase.rpc("is_username_available", {
         _username: normalized,
       });
-      if (!error) setAvailable(Boolean(data));
+      if (!error) {
+        const isAvailable = Boolean(data);
+        setAvailable(isAvailable);
+        if (!isAvailable) {
+          // Generate & verify alternative suggestions
+          const reqId = ++suggestionReqId.current;
+          setLoadingSuggestions(true);
+          setSuggestions([]);
+          const candidates = generateCandidates(normalized);
+          const checks = await Promise.all(
+            candidates.map(async (c) => {
+              const { data: ok } = await supabase.rpc("is_username_available", { _username: c });
+              return ok ? c : null;
+            }),
+          );
+          if (reqId === suggestionReqId.current) {
+            setSuggestions(checks.filter((c): c is string => Boolean(c)).slice(0, 4));
+            setLoadingSuggestions(false);
+          }
+        } else {
+          setSuggestions([]);
+        }
+      }
       setChecking(false);
     }, 350);
     return () => {
@@ -203,7 +246,39 @@ const UsernameSetupCard = () => {
             </p>
           )}
           {formatValid && available === false && (
-            <p className="mt-1 text-xs text-destructive">Username sudah dipakai user lain.</p>
+            <div className="mt-2 space-y-2">
+              <p className="text-xs text-destructive">
+                Username <span className="font-mono">@{normalized}</span> sudah dipakai user lain.
+              </p>
+              <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-primary">
+                  <Sparkles className="h-3 w-3" /> Saran username yang tersedia:
+                </p>
+                {loadingSuggestions ? (
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> mencari alternatif…
+                  </div>
+                ) : suggestions.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setInput(s)}
+                        disabled={submitting}
+                        className="rounded-full border border-primary/40 bg-background px-2.5 py-1 font-mono text-[11px] text-foreground transition hover:border-primary hover:bg-primary/10 disabled:opacity-50"
+                      >
+                        @{s}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    Tidak ada saran tersedia, coba variasi lain.
+                  </p>
+                )}
+              </div>
+            </div>
           )}
           {formatValid && available === true && (
             <p className="mt-1 flex items-center gap-1 text-xs text-green-500">
