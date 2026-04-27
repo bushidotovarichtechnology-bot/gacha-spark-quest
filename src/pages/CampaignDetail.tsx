@@ -556,20 +556,17 @@ const CampaignDetail = () => {
                       clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)",
                     }}
                   >
-                    {/* Diamond (S): brilliant shimmer + dual sweeping shine */}
+                    {/* Diamond (S): brilliant shimmer + sweeping shine.
+                        Uses transform-only animations (composite layer) for
+                        smooth performance on mid-range mobile GPUs. */}
                     {isGrand && (
                       <>
                         <div
-                          className="pointer-events-none absolute inset-0 animate-shimmer opacity-90"
-                          style={{
-                            backgroundImage:
-                              "linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.95) 50%, transparent 80%)",
-                            backgroundSize: "200% 100%",
-                          }}
+                          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 animate-shimmer bg-gradient-to-r from-transparent via-white/90 to-transparent opacity-90"
                         />
-                        <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-shine-sweep bg-gradient-to-r from-transparent via-white to-transparent blur-sm" />
                         <div
-                          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/4 animate-shine-sweep bg-gradient-to-r from-transparent via-cyan-100 to-transparent blur-md"
+                          data-fx="secondary"
+                          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/4 animate-shine-sweep bg-gradient-to-r from-transparent via-cyan-100/80 to-transparent blur-[2px]"
                           style={{ animationDelay: "1.2s" }}
                         />
                       </>
@@ -578,39 +575,24 @@ const CampaignDetail = () => {
                     {/* Gold (A): warm shimmer */}
                     {isRare && (
                       <div
-                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-40"
-                        style={{
-                          backgroundImage:
-                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)",
-                          backgroundSize: "200% 100%",
-                          animationDuration: "5s",
-                        }}
+                        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 animate-shimmer bg-gradient-to-r from-transparent via-white/55 to-transparent opacity-80"
+                        style={{ animationDuration: "5s" }}
                       />
                     )}
 
                     {/* Silver (B): cool subtle shimmer */}
                     {isSilver && (
                       <div
-                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-30"
-                        style={{
-                          backgroundImage:
-                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%)",
-                          backgroundSize: "200% 100%",
-                          animationDuration: "6s",
-                        }}
+                        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 animate-shimmer bg-gradient-to-r from-transparent via-white/45 to-transparent opacity-70"
+                        style={{ animationDuration: "6s" }}
                       />
                     )}
 
                     {/* Bronze (C): warm copper shimmer */}
                     {isBronze && (
                       <div
-                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-25"
-                        style={{
-                          backgroundImage:
-                            "linear-gradient(110deg, transparent 35%, rgba(255,220,180,0.45) 50%, transparent 65%)",
-                          backgroundSize: "200% 100%",
-                          animationDuration: "7s",
-                        }}
+                        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 animate-shimmer bg-gradient-to-r from-transparent via-orange-100/50 to-transparent opacity-60"
+                        style={{ animationDuration: "7s" }}
                       />
                     )}
 
