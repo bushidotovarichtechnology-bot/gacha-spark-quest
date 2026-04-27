@@ -1,9 +1,14 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader2, GitMerge, AlertTriangle, ShieldCheck, Terminal, ArrowLeftRight, Clock, CheckCircle2, XCircle, Ban, Hourglass, CircleDot, Timer, User, Package } from "lucide-react";
+import {
+  Loader2, ArrowLeftRight, AlertTriangle, ShieldCheck, Clock,
+  CheckCircle2, XCircle, Ban, Hourglass, CircleDot, Timer, User, Package,
+} from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
@@ -12,14 +17,11 @@ import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
 import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
 import { supabaseImg } from "@/lib/imageTransform";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-/**
- * Map a tier label (S/A/B/C, case-insensitive) to a high-contrast badge
- * className using semantic tokens defined in index.css. Falls back to a
- * neutral muted style for unknown labels.
- */
 const tierBadgeClass = (label: string) => {
   const t = label?.trim().toUpperCase();
   if (t === "S") return "bg-[hsl(var(--tier-s))] text-[hsl(var(--tier-s-foreground))] border-[hsl(var(--tier-s))]";
@@ -50,6 +52,8 @@ const TradeRequest = () => {
     | null
   >(null);
 
+  const pinPanelRef = useRef<HTMLDivElement | null>(null);
+
   const isInitiator = !!user && trade?.initiator_id === user.id;
   const isResponder = !!user && trade?.responder_id === user.id;
 
@@ -72,9 +76,6 @@ const TradeRequest = () => {
   }, [token]);
 
   // Realtime auto-refresh + fallback reconcile.
-  // Subscribes to trade row UPDATEs so status badge, timeline, and exchange
-  // table refresh without manual reload. Adds a 30s poll + visibility/online
-  // listeners as a safety net for missed realtime events (reconnects, etc.).
   useEffect(() => {
     if (!trade?.id) return;
     const tradeId = trade.id;
@@ -85,9 +86,7 @@ const TradeRequest = () => {
       try {
         const fresh = await fetchTradeByToken(tradeToken);
         if (!cancelled && fresh) setTrade(fresh);
-      } catch {
-        /* ignore — next tick will retry */
-      }
+      } catch { /* ignore */ }
     };
 
     const channel = supabase
@@ -114,7 +113,6 @@ const TradeRequest = () => {
     };
   }, [trade?.id, trade?.token]);
 
-  // Fetch initiator item metadata (image, name, coin_value) — viewer may not own them.
   useEffect(() => {
     if (!trade?.initiator_items?.length) { setInitiatorItemMeta([]); return; }
     let cancelled = false;
@@ -131,7 +129,6 @@ const TradeRequest = () => {
     return () => { cancelled = true; };
   }, [trade?.initiator_items]);
 
-  // Fetch responder item metadata once trade has them locked in (post-merge or in-flight).
   useEffect(() => {
     if (!trade?.responder_items?.length) { setResponderItemMetaRemote([]); return; }
     let cancelled = false;
@@ -148,13 +145,11 @@ const TradeRequest = () => {
     return () => { cancelled = true; };
   }, [trade?.responder_items]);
 
-  // PIN check on mount (only relevant if user is logged in & not initiator's own preview).
   useEffect(() => {
     if (!user) return;
     hasSecurityPin().then(setPinReady).catch(() => setPinReady(false));
   }, [user]);
 
-  // Live countdown to expiry — ticks every 1s while trade is pending.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (trade?.status !== "pending") return;
@@ -175,7 +170,6 @@ const TradeRequest = () => {
     const formatted = hours > 0
       ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
       : `${pad(minutes)}:${pad(seconds)}`;
-    // Severity tiers: critical <60s, warning <5min, normal otherwise.
     const severity: "critical" | "warning" | "normal" = expired
       ? "critical"
       : diff < 60_000 ? "critical"
@@ -199,7 +193,7 @@ const TradeRequest = () => {
     }
 
     setSubmitting(true);
-    toast.loading("Initiating handshake… verifying SHA-256…", { id: "trade-exec" });
+    toast.loading("Memproses trade…", { id: "trade-exec" });
     try {
       const { data, error } = await supabase.functions.invoke("trade-execute", {
         body: {
@@ -210,9 +204,9 @@ const TradeRequest = () => {
       });
       if (error) throw error;
       if ((data as { success?: boolean })?.success) {
-        toast.success("Merge Successful · Gas Fee Incurred", {
+        toast.success("Trade berhasil!", {
           id: "trade-exec",
-          description: `Trade berhasil. -${TRADE_GAS_FEE} koin (gas fee).`,
+          description: `Item sudah berpindah tangan. -${TRADE_GAS_FEE} koin (gas fee).`,
         });
         await Promise.all([refreshInventory(), refreshCoins()]);
         const updated = await fetchTradeByToken(token);
@@ -236,7 +230,7 @@ const TradeRequest = () => {
         trade_not_found: "Trade tidak ditemukan.",
       };
       const friendly = Object.keys(map).find((k) => raw.includes(k));
-      toast.error(friendly ? map[friendly] : "Merge gagal", { id: "trade-exec", description: raw });
+      toast.error(friendly ? map[friendly] : "Trade gagal", { id: "trade-exec", description: raw });
     } finally {
       setSubmitting(false);
     }
@@ -266,16 +260,12 @@ const TradeRequest = () => {
     }
   };
 
-  const scrollToMergeAction = () => {
-    document.getElementById("trade-action-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-hacker-bg scanline">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 pt-24 font-mono-hacker text-hacker-green">
-          <Loader2 className="inline h-4 w-4 animate-spin" /> resolving trade/{token}…
+        <div className="container mx-auto px-4 pt-24 text-muted-foreground">
+          <Loader2 className="inline h-4 w-4 animate-spin" /> Memuat trade…
         </div>
       </div>
     );
@@ -283,16 +273,16 @@ const TradeRequest = () => {
 
   if (!trade) {
     return (
-      <div className="min-h-screen bg-hacker-bg scanline">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto max-w-xl px-4 pt-24 font-mono-hacker">
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-center text-destructive">
+        <div className="container mx-auto max-w-xl px-4 pt-24">
+          <Card className="border-destructive/40 bg-destructive/10 p-4 text-center text-destructive">
             <AlertTriangle className="mx-auto mb-2 h-6 w-6" />
             <p className="text-sm">Trade tidak ditemukan atau kamu tidak punya akses.</p>
             <Button variant="outline" className="mt-3" onClick={() => navigate("/inventory")}>
-              ← back to /inventory
+              ← Kembali ke Inventory
             </Button>
-          </div>
+          </Card>
         </div>
       </div>
     );
@@ -308,46 +298,37 @@ const TradeRequest = () => {
     } catch { return iso; }
   };
 
-  const statusMeta: Record<TradeRow["status"], { label: string; cls: string; panelCls: string; Icon: typeof CircleDot; description: string }> = {
+  const statusMeta: Record<TradeRow["status"], { label: string; variant: "default" | "secondary" | "destructive" | "outline"; Icon: typeof CircleDot; description: string }> = {
     pending: {
-      label: "● waiting", cls: "text-hacker-green border-hacker",
-      panelCls: "border-hacker bg-hacker-surface",
+      label: "Menunggu", variant: "secondary",
       Icon: Hourglass,
-      description: "Menunggu responder memilih item & menyetujui merge.",
+      description: "Menunggu responder memilih item & menyetujui trade.",
     },
     accepted: {
-      label: "✓ completed", cls: "text-hacker-green border-hacker text-glow-hacker",
-      panelCls: "border-hacker bg-hacker-green/5",
+      label: "Selesai", variant: "default",
       Icon: CheckCircle2,
-      description: "Merge berhasil. Item telah berpindah tangan.",
+      description: "Trade berhasil. Item telah berpindah tangan.",
     },
     rejected: {
-      label: "✗ rejected", cls: "text-destructive border-destructive/40",
-      panelCls: "border-destructive/40 bg-destructive/5",
+      label: "Ditolak", variant: "destructive",
       Icon: XCircle,
       description: "Trade ditolak oleh responder.",
     },
     cancelled: {
-      label: "⊘ cancelled", cls: "text-muted-foreground border-border",
-      panelCls: "border-border bg-hacker-surface",
+      label: "Dibatalkan", variant: "outline",
       Icon: Ban,
       description: "Trade dibatalkan oleh inisiator.",
     },
     expired: {
-      label: "⏱ expired", cls: "text-muted-foreground border-border",
-      panelCls: "border-border bg-hacker-surface",
+      label: "Kedaluwarsa", variant: "outline",
       Icon: Clock,
       description: "Trade kedaluwarsa sebelum diselesaikan.",
     },
   };
   const sMeta = statusMeta[trade.status];
-  const statusBadge = (
-    <span className={cn("rounded border px-2 py-0.5 text-[10px] uppercase", sMeta.cls)}>{sMeta.label}</span>
-  );
 
   const canExecute = trade.status === "pending" && !!user && !isInitiator;
 
-  // Timeline events (chronological) — enriched with actor + items for detail modal.
   type TimelineKind = "created" | "accepted" | "rejected" | "cancelled" | "expired" | "expiring";
   type TimelineEvent = {
     ts: string;
@@ -370,7 +351,7 @@ const TradeRequest = () => {
       ts: trade.created_at,
       label: "Trade dibuat oleh inisiator",
       done: true,
-      Icon: GitMerge,
+      Icon: ArrowLeftRight,
       kind: "created",
       actor: initiatorActor,
       actorRole: "initiator",
@@ -381,7 +362,7 @@ const TradeRequest = () => {
   ];
   if (trade.responded_at) {
     const respLabelMap: Record<string, string> = {
-      accepted: "Merge diselesaikan oleh responder",
+      accepted: "Trade diselesaikan oleh responder",
       rejected: "Trade ditolak oleh responder",
       cancelled: "Trade dibatalkan",
       expired: "Trade kedaluwarsa",
@@ -416,49 +397,47 @@ const TradeRequest = () => {
       actorRole: "system",
       items: [],
       itemsLabel: "Belum ada item yang berpindah tangan.",
-      detailNote: "Trade otomatis di-expire bila responder tidak merespons sebelum waktu ini.",
+      detailNote: "Trade otomatis dibatalkan bila responder tidak merespons sebelum waktu ini.",
     });
   }
 
   const selectedEvent = selectedEventIdx !== null ? timeline[selectedEventIdx] ?? null : null;
 
   return (
-    <div className="min-h-screen bg-hacker-bg pb-12 scanline">
+    <div className="min-h-screen bg-background pb-12">
       <Navbar />
-      <div className="container mx-auto max-w-4xl px-4 pt-24 font-mono-hacker">
+      <div className="container mx-auto max-w-4xl px-4 pt-24">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-xs uppercase text-hacker-green text-glow-hacker">
-              <Terminal className="h-3 w-3" />
-              <span>/trade/req/{token.slice(0, 8)}…</span>
-              {statusBadge}
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
+              <ArrowLeftRight className="h-3 w-3" />
+              <span>Trade Request</span>
+              <Badge variant={sMeta.variant} className="text-[10px]">{sMeta.label}</Badge>
             </div>
-            <h1 className="mt-1 text-xl font-bold text-hacker-green text-glow-hacker">
-              <GitMerge className="mr-1 inline h-5 w-5" /> Pull Request: tier {trade.tier_label}
+            <h1 className="mt-1 font-display text-xl font-bold text-foreground sm:text-2xl">
+              Tukar Item Tier {trade.tier_label}
             </h1>
           </div>
         </div>
 
         {trade.message && (
-          <div className="mb-4 rounded-md border border-border bg-hacker-surface p-3 text-xs text-muted-foreground">
-            <span className="text-hacker-green">// message:</span> {trade.message}
-          </div>
+          <Card className="mb-4 bg-muted/40 p-3 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Pesan:</span> {trade.message}
+          </Card>
         )}
 
-        {/* Status panel — clear status, timeline, & exchange summary */}
-        <div className={cn("mb-4 rounded-lg border p-4", sMeta.panelCls)}>
+        {/* Status panel */}
+        <Card className="mb-4 p-4">
           <div className="flex items-start gap-3">
-            <sMeta.Icon className={cn("h-5 w-5 shrink-0 mt-0.5", sMeta.cls.split(" ")[0])} />
-            <div className="flex-1 min-w-0">
+            <sMeta.Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className={cn("text-sm font-bold uppercase tracking-wider", sMeta.cls.split(" ")[0])}>
-                  status: {trade.status}
+                <h2 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
+                  Status: {sMeta.label}
                 </h2>
-                {statusBadge}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{sMeta.description}</p>
 
-              {/* Live countdown — only while pending */}
               {trade.status === "pending" && countdown && (
                 <div
                   role={countdown.severity === "critical" ? "alert" : undefined}
@@ -467,7 +446,7 @@ const TradeRequest = () => {
                     "mt-3 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs",
                     countdown.severity === "critical" && "border-destructive/60 bg-destructive/10 text-destructive animate-pulse",
                     countdown.severity === "warning" && "border-accent/60 bg-accent/10 text-accent",
-                    countdown.severity === "normal" && "border-border bg-hacker-bg/40 text-hacker-green",
+                    countdown.severity === "normal" && "border-border bg-muted/40 text-muted-foreground",
                   )}
                 >
                   <div className="flex items-center gap-2">
@@ -478,46 +457,42 @@ const TradeRequest = () => {
                         : <Clock className="h-4 w-4 shrink-0" />}
                     <span className="uppercase tracking-wider">
                       {countdown.expired
-                        ? "trade expired"
+                        ? "Trade kedaluwarsa"
                         : countdown.severity === "critical"
-                          ? "expiring NOW"
+                          ? "Hampir kedaluwarsa"
                           : countdown.severity === "warning"
-                            ? "expires soon"
-                            : "expires in"}
+                            ? "Segera kedaluwarsa"
+                            : "Kedaluwarsa dalam"}
                     </span>
                   </div>
-                  <span className={cn(
-                    "font-mono-hacker tabular-nums text-sm font-bold",
-                    countdown.severity === "critical" && "text-glow-destructive",
-                    countdown.severity === "normal" && "text-glow-hacker",
-                  )}>
+                  <span className="text-sm font-bold tabular-nums text-foreground">
                     {countdown.expired ? "00:00" : countdown.formatted}
                   </span>
                 </div>
               )}
 
-              {/* Timeline — each row is clickable for detail modal */}
-              <div className="mt-3 space-y-1.5 border-l border-border/50 pl-3">
+              {/* Timeline */}
+              <div className="mt-3 space-y-1.5 border-l border-border pl-3">
                 {timeline.map((ev, idx) => (
                   <button
                     type="button"
                     key={idx}
                     onClick={() => setSelectedEventIdx(idx)}
                     aria-label={`Detail langkah: ${ev.label}`}
-                    className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-hacker-green/10 focus-visible:bg-hacker-green/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hacker-green/60"
+                    className="group flex w-full items-start gap-2 rounded-md px-1.5 py-1 text-left text-xs transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <ev.Icon className={cn(
-                      "h-3 w-3 shrink-0 mt-0.5",
-                      ev.done ? "text-hacker-green" : "text-muted-foreground",
+                      "mt-0.5 h-3 w-3 shrink-0",
+                      ev.done ? "text-primary" : "text-muted-foreground",
                     )} />
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className={cn(
                         "flex items-center gap-1",
                         ev.done ? "text-foreground" : "text-muted-foreground",
                       )}>
                         <span className="truncate">{ev.label}</span>
-                        <span className="text-[9px] uppercase text-hacker-green opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                          [details]
+                        <span className="text-[10px] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                          [detail]
                         </span>
                       </div>
                       <div className="text-muted-foreground/70">{fmtTs(ev.ts)}</div>
@@ -527,29 +502,28 @@ const TradeRequest = () => {
               </div>
 
               {/* Exchange summary */}
-              <div className="mt-3 grid grid-cols-3 gap-2 rounded-md border border-border/50 bg-hacker-bg/40 p-2 text-[11px]">
+              <div className="mt-3 grid grid-cols-3 gap-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
                 <div>
-                  <div className="text-muted-foreground">items_offered</div>
-                  <div className="text-hacker-green">{trade.initiator_items?.length ?? 0} item</div>
+                  <div className="text-muted-foreground">Ditawarkan</div>
+                  <div className="font-semibold text-foreground">{trade.initiator_items?.length ?? 0} item</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-muted-foreground">tier</div>
-                  <div className="text-hacker-green">{trade.tier_label}</div>
+                  <div className="text-muted-foreground">Tier</div>
+                  <div className="font-semibold text-foreground">{trade.tier_label}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-muted-foreground">items_received</div>
-                  <div className="text-hacker-green">{trade.responder_items?.length ?? 0} item</div>
+                  <div className="text-muted-foreground">Diterima</div>
+                  <div className="font-semibold text-foreground">{trade.responder_items?.length ?? 0} item</div>
                 </div>
               </div>
 
-              {/* Compact items table — name + tier + small icon per item */}
               {(initiatorItemMeta.length > 0 || responderItemMetaRemote.length > 0) && (
-                <div className="mt-3 overflow-hidden rounded-md border border-border/50 bg-hacker-bg/40">
-                  <div className="grid grid-cols-[auto_1fr_auto_auto] gap-x-2 border-b border-border/50 bg-hacker-bg/60 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <span>side</span>
-                    <span>item</span>
-                    <span>tier</span>
-                    <span className="text-right">coin</span>
+                <div className="mt-3 overflow-hidden rounded-md border border-border bg-muted/20">
+                  <div className="grid grid-cols-[auto_1fr_auto_auto] gap-x-2 border-b border-border bg-muted/40 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>Asal</span>
+                    <span>Item</span>
+                    <span>Tier</span>
+                    <span className="text-right">Coin</span>
                   </div>
                   <div className="max-h-48 overflow-y-auto">
                     {initiatorItemMeta.map((it) => (
@@ -557,13 +531,13 @@ const TradeRequest = () => {
                         key={`i-${it.id}`}
                         type="button"
                         onClick={() => setItemDetail({ ...it, side: "initiator" })}
-                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-left text-[11px] transition-colors last:border-b-0 hover:bg-hacker-bg/60 focus:bg-hacker-bg/60 focus:outline-none"
+                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/60 px-2 py-1 text-left text-xs transition-colors last:border-b-0 hover:bg-muted/60 focus:bg-muted/60 focus:outline-none"
                         aria-label={`Detail item ${it.prize}`}
                       >
                         <div className="flex items-center gap-1.5">
                           <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
-                            className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
-                          <span className="text-[9px] text-muted-foreground">A→B</span>
+                            className="h-6 w-6 rounded-sm border border-border bg-muted object-contain" />
+                          <span className="text-[10px] text-muted-foreground">A→B</span>
                         </div>
                         <span className="truncate text-foreground">{it.prize}</span>
                         <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", tierBadgeClass(trade.tier_label))}>{trade.tier_label}</span>
@@ -575,13 +549,13 @@ const TradeRequest = () => {
                         key={`r-${it.id}`}
                         type="button"
                         onClick={() => setItemDetail({ ...it, side: "responder" })}
-                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/30 px-2 py-1 text-left text-[11px] transition-colors last:border-b-0 hover:bg-hacker-bg/60 focus:bg-hacker-bg/60 focus:outline-none"
+                        className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-x-2 border-b border-border/60 px-2 py-1 text-left text-xs transition-colors last:border-b-0 hover:bg-muted/60 focus:bg-muted/60 focus:outline-none"
                         aria-label={`Detail item ${it.prize}`}
                       >
                         <div className="flex items-center gap-1.5">
                           <img src={supabaseImg(it.image, 64)} alt="" loading="lazy"
-                            className="h-6 w-6 rounded-sm border border-border/50 bg-black/40 object-contain" />
-                          <span className="text-[9px] text-muted-foreground">B→A</span>
+                            className="h-6 w-6 rounded-sm border border-border bg-muted object-contain" />
+                          <span className="text-[10px] text-muted-foreground">B→A</span>
                         </div>
                         <span className="truncate text-foreground">{it.prize}</span>
                         <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", tierBadgeClass(trade.tier_label))}>{trade.tier_label}</span>
@@ -593,163 +567,132 @@ const TradeRequest = () => {
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
-
-        {/* Git-merge two-branch view */}
+        {/* Two-side view */}
         <div className="grid gap-3 md:grid-cols-2">
-          {/* Their branch (initiator) */}
-          <div className="rounded-lg border-hacker border bg-hacker-surface p-3">
-            <div className="mb-2 flex items-center justify-between text-xs">
-              <span className="text-hacker-green">branch: their_offer</span>
-              <span className="rounded bg-hacker-bg px-1.5 py-0.5 text-[10px] text-hacker-green">tier {trade.tier_label}</span>
+          <Card className="p-3">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="font-semibold text-foreground">Ditawarkan oleh Initiator</span>
+              <Badge variant="secondary" className="text-[10px]">Tier {trade.tier_label}</Badge>
             </div>
             {initiatorItemMeta.length === 0 ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">// loading…</div>
+              <div className="py-6 text-center text-xs text-muted-foreground">Memuat…</div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 {initiatorItemMeta.map((it) => (
-                  <div key={it.id} className="rounded-md border border-border bg-hacker-bg p-2">
-                    <div className="aspect-square overflow-hidden rounded-sm bg-black/40">
+                  <div key={it.id} className="rounded-md border border-border bg-muted/30 p-2">
+                    <div className="aspect-square overflow-hidden rounded-sm bg-muted">
                       <img src={supabaseImg(it.image, 200)} alt={it.prize} loading="lazy"
                         className="h-full w-full object-contain" />
                     </div>
-                    <div className="mt-1 truncate text-[10px] text-foreground">{it.prize}</div>
+                    <div className="mt-1 truncate text-xs text-foreground">{it.prize}</div>
                     <div className="text-[10px] text-accent">+{it.coin_value} coin</div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </Card>
 
-          {/* Your branch (responder picker) */}
-          <div className="rounded-lg border-hacker border bg-hacker-surface p-3">
-            <div className="mb-2 flex items-center justify-between text-xs">
-              <span className="text-hacker-green">branch: your_offer</span>
-              <ArrowLeftRight className="h-3 w-3 text-hacker-green" />
+          <Card className="p-3">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="font-semibold text-foreground">Tawaran Kamu</span>
+              <ArrowLeftRight className="h-4 w-4 text-primary" />
             </div>
             {!user ? (
               <div className="py-6 text-center text-xs text-muted-foreground">
-                // login dulu untuk merespons trade ini
+                Login dulu untuk merespons trade ini.
                 <div className="mt-2">
                   <Button size="sm" onClick={() => navigate("/login")}>Login</Button>
                 </div>
               </div>
             ) : isInitiator ? (
               <div className="py-6 text-center text-xs text-muted-foreground">
-                // ini trade kamu sendiri — share link-nya ke partner
+                Ini trade kamu sendiri — bagikan link-nya ke partner.
               </div>
             ) : trade.status !== "pending" ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">// trade sudah {trade.status}</div>
+              <div className="py-6 text-center text-xs text-muted-foreground">Trade sudah {sMeta.label.toLowerCase()}.</div>
             ) : (
               <InventoryItemPicker
                 lockedTier={trade.tier_label}
                 selectedIds={responderItems}
                 onChange={setResponderItems}
-                emptyMessage={`// kamu tidak punya item Tier ${trade.tier_label}`}
+                emptyMessage={`Kamu tidak punya item Tier ${trade.tier_label}.`}
               />
             )}
-          </div>
+          </Card>
         </div>
 
-        {/* Contextual quick actions for responder while waiting */}
-        {trade.status === "pending" && !!user && !isInitiator && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              onClick={scrollToMergeAction}
-              className="bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase tracking-wider"
-            >
-              <CheckCircle2 className="mr-1 h-4 w-4" /> accept &amp; merge
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleReject}
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 font-mono-hacker text-xs uppercase tracking-wider"
-            >
-              <XCircle className="mr-1 h-4 w-4" /> reject trade
-            </Button>
-          </div>
-        )}
-
-        {/* Action area */}
+        {/* Action area — single Accept & Merge flow */}
         {canExecute && (
-          <div id="trade-action-panel" className="mt-4 rounded-lg border-hacker border bg-hacker-surface p-4">
-            <div className="mb-3 flex items-center gap-2 text-xs text-hacker-green">
-              <ShieldCheck className="h-4 w-4" />
-              $ enter security PIN to merge
+          <Card ref={pinPanelRef} className="mt-4 p-4">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              Masukkan PIN keamanan untuk menyelesaikan trade
             </div>
             <div className="flex justify-center">
               <InputOTP maxLength={6} value={pin} onChange={setPin} disabled={submitting}>
                 <InputOTPGroup>
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <InputOTPSlot key={i} index={i}
-                      className="border-hacker bg-hacker-bg font-mono-hacker text-hacker-green" />
+                    <InputOTPSlot key={i} index={i} />
                   ))}
                 </InputOTPGroup>
               </InputOTP>
             </div>
-            <div className="mt-3 rounded-md border border-border bg-hacker-bg p-2 text-[11px] text-muted-foreground">
-              <span className="text-hacker-green">⚡ gas_fee:</span> -{TRADE_GAS_FEE} koin (kedua belah pihak)
-              <br />
-              <span className="text-hacker-green">⇄ swap:</span> {initiatorItemMeta.length} ↔ {responderItemMeta.length} item
+            <div className="mt-3 rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+              <div>
+                <span className="font-semibold text-primary">Gas fee:</span> {TRADE_GAS_FEE} koin (kedua belah pihak)
+              </div>
+              <div>
+                <span className="font-semibold text-primary">Pertukaran:</span> {initiatorItemMeta.length} ↔ {responderItemMeta.length} item
+              </div>
             </div>
             <Button
               onClick={handleExecute}
               disabled={submitting || pin.length !== 6 || responderItems.size === 0}
-              className="mt-3 w-full bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase tracking-wider"
+              className="mt-3 w-full"
+              size="lg"
             >
               {submitting ? (
-                <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> verifying SHA-256…</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memproses…</>
               ) : (
-                <>git merge --no-ff trade/{trade.tier_label} →</>
+                <><CheckCircle2 className="mr-2 h-4 w-4" /> Terima &amp; Tukar</>
               )}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleReject}
-              className="mt-2 w-full border-destructive/40 text-destructive hover:bg-destructive/10 font-mono-hacker text-xs uppercase tracking-wider"
+              className="mt-2 w-full text-destructive hover:bg-destructive/10"
             >
-              <XCircle className="mr-1 h-4 w-4" /> reject trade
+              <XCircle className="mr-1 h-4 w-4" /> Tolak Trade
             </Button>
-          </div>
+          </Card>
         )}
 
         {isInitiator && trade.status === "pending" && (
           <div className="mt-3 text-right">
-            <Button variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10"
+            <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10"
               onClick={handleCancel}>
-              git revert (cancel)
+              Batalkan Trade
             </Button>
           </div>
         )}
 
-        {/* Final-state back button */}
         {(trade.status === "accepted" || trade.status === "rejected" || trade.status === "cancelled" || trade.status === "expired") && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-hacker-surface p-3">
+          <Card className="mt-4 flex flex-wrap items-center justify-between gap-2 p-3">
             <div className="text-xs text-muted-foreground">
-              <span className="text-hacker-green">// session_closed:</span> trade sudah {trade.status}
+              Trade sudah {sMeta.label.toLowerCase()}.
             </div>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => navigate("/inventory")}
-                className="font-mono-hacker text-xs uppercase tracking-wider"
-              >
-                ← back to /inventory
+              <Button size="sm" variant="outline" onClick={() => navigate("/inventory")}>
+                ← Inventory
               </Button>
-              <Button
-                size="sm"
-                onClick={() => navigate("/trade/new")}
-                className="bg-hacker-green text-hacker-bg hover:bg-hacker-green/90 font-mono-hacker text-xs uppercase tracking-wider"
-              >
-                <GitMerge className="mr-1 h-4 w-4" /> new trade
+              <Button size="sm" onClick={() => navigate("/trade/new")}>
+                <ArrowLeftRight className="mr-1 h-4 w-4" /> Trade Baru
               </Button>
             </div>
-          </div>
+          </Card>
         )}
       </div>
 
@@ -757,60 +700,56 @@ const TradeRequest = () => {
 
       {/* Timeline event detail modal */}
       <Dialog open={selectedEvent !== null} onOpenChange={(o) => !o && setSelectedEventIdx(null)}>
-        <DialogContent className="border-hacker bg-hacker-surface font-mono-hacker text-foreground sm:max-w-md">
+        <DialogContent className="sm:max-w-md">
           {selectedEvent && (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-sm uppercase tracking-wider text-hacker-green text-glow-hacker">
-                  <selectedEvent.Icon className="h-4 w-4" />
+                <DialogTitle className="flex items-center gap-2 text-sm uppercase tracking-wider">
+                  <selectedEvent.Icon className="h-4 w-4 text-primary" />
                   {selectedEvent.label}
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">
+                <DialogDescription className="text-xs">
                   Detail langkah trade · event #{(selectedEventIdx ?? 0) + 1}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-3 text-xs">
-                <div className="grid grid-cols-[80px_1fr] gap-2 rounded-md border border-border/50 bg-hacker-bg/40 p-2">
-                  <span className="text-muted-foreground">// actor</span>
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-[80px_1fr] gap-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
+                  <span className="text-muted-foreground">Aktor</span>
                   <span className="flex items-center gap-1.5 text-foreground">
-                    <User className="h-3 w-3 text-hacker-green" />
+                    <User className="h-3 w-3 text-primary" />
                     <span>{selectedEvent.actor}</span>
-                    <span className="rounded border border-border px-1 py-0 text-[9px] uppercase text-muted-foreground">
-                      {selectedEvent.actorRole}
-                    </span>
+                    <Badge variant="outline" className="text-[9px]">{selectedEvent.actorRole}</Badge>
                   </span>
 
-                  <span className="text-muted-foreground">// when</span>
+                  <span className="text-muted-foreground">Waktu</span>
                   <span className="text-foreground">
                     {fmtTs(selectedEvent.ts)}
                     <div className="text-[10px] text-muted-foreground/70">{selectedEvent.ts}</div>
                   </span>
 
-                  <span className="text-muted-foreground">// status</span>
+                  <span className="text-muted-foreground">Status</span>
                   <span>
-                    <span className={cn("rounded border px-1.5 py-0.5 text-[10px] uppercase", sMeta.cls)}>
-                      {selectedEvent.kind}
-                    </span>
+                    <Badge variant={sMeta.variant} className="text-[10px]">{selectedEvent.kind}</Badge>
                   </span>
                 </div>
 
-                <div className="rounded-md border border-border/50 bg-hacker-bg/40 p-2">
+                <div className="rounded-md border border-border bg-muted/30 p-2 text-xs">
                   <div className="mb-1.5 flex items-center gap-1.5 text-muted-foreground">
-                    <Package className="h-3 w-3 text-hacker-green" />
-                    <span>// items</span>
+                    <Package className="h-3 w-3 text-primary" />
+                    <span>Item</span>
                   </div>
                   <p className="text-foreground">{selectedEvent.itemsLabel}</p>
 
                   {selectedEvent.items.length > 0 && (
                     <div className="mt-2 grid grid-cols-2 gap-1.5">
                       {selectedEvent.items.map((it) => (
-                        <div key={it.id} className="flex items-center gap-1.5 rounded border border-border/40 bg-hacker-bg/60 p-1.5">
+                        <div key={it.id} className="flex items-center gap-1.5 rounded border border-border bg-muted/40 p-1.5">
                           <img
                             src={supabaseImg(it.image, 64)}
                             alt=""
                             loading="lazy"
-                            className="h-7 w-7 shrink-0 rounded-sm border border-border/40 bg-black/40 object-contain"
+                            className="h-7 w-7 shrink-0 rounded-sm border border-border bg-muted object-contain"
                           />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-[10px] text-foreground">{it.prize}</div>
@@ -823,20 +762,15 @@ const TradeRequest = () => {
                 </div>
 
                 {selectedEvent.detailNote && (
-                  <div className="rounded-md border border-border/50 bg-hacker-bg/40 p-2 text-muted-foreground">
-                    <span className="text-hacker-green">// note:</span> {selectedEvent.detailNote}
+                  <div className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">Catatan:</span> {selectedEvent.detailNote}
                   </div>
                 )}
               </div>
 
               <DialogFooter>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedEventIdx(null)}
-                  className="font-mono-hacker text-xs uppercase tracking-wider"
-                >
-                  close
+                <Button variant="outline" size="sm" onClick={() => setSelectedEventIdx(null)}>
+                  Tutup
                 </Button>
               </DialogFooter>
             </>
@@ -844,58 +778,49 @@ const TradeRequest = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Item detail modal — opened via thumbnail/row click in the compact items table. */}
+      {/* Item detail modal */}
       <Dialog open={!!itemDetail} onOpenChange={(o) => !o && setItemDetail(null)}>
-        <DialogContent className="border-hacker bg-hacker-surface font-mono-hacker max-w-sm">
+        <DialogContent className="max-w-sm">
           {itemDetail && trade && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-hacker-green text-sm uppercase tracking-wider">
-                  // item_detail
-                </DialogTitle>
-                <DialogDescription className="text-[11px] text-muted-foreground">
+                <DialogTitle className="text-sm uppercase tracking-wider">Detail Item</DialogTitle>
+                <DialogDescription className="text-xs">
                   Asal: {itemDetail.side === "initiator" ? "Initiator (A→B)" : "Responder (B→A)"}
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col items-center gap-3">
-                <div className="aspect-square w-40 overflow-hidden rounded-md border border-border bg-black/40">
+                <div className="aspect-square w-40 overflow-hidden rounded-md border border-border bg-muted">
                   <img
                     src={supabaseImg(itemDetail.image, 320)}
                     alt={itemDetail.prize}
                     className="h-full w-full object-contain"
                   />
                 </div>
-                <div className="w-full space-y-1.5 text-xs">
-                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
-                    <span className="text-muted-foreground">name</span>
+                <div className="w-full space-y-1.5 text-sm">
+                  <div className="flex justify-between gap-2 border-b border-border pb-1">
+                    <span className="text-muted-foreground">Nama</span>
                     <span className="text-right text-foreground">{itemDetail.prize}</span>
                   </div>
-                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
-                    <span className="text-muted-foreground">tier</span>
-                    <span className="rounded border border-hacker/50 px-1.5 text-[10px] text-hacker-green">
-                      {trade.tier_label}
-                    </span>
+                  <div className="flex justify-between gap-2 border-b border-border pb-1">
+                    <span className="text-muted-foreground">Tier</span>
+                    <Badge variant="secondary">{trade.tier_label}</Badge>
                   </div>
-                  <div className="flex justify-between gap-2 border-b border-border/40 pb-1">
-                    <span className="text-muted-foreground">coin_value</span>
+                  <div className="flex justify-between gap-2 border-b border-border pb-1">
+                    <span className="text-muted-foreground">Coin Value</span>
                     <span className="text-accent">+{itemDetail.coin_value}</span>
                   </div>
                   <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">origin</span>
+                    <span className="text-muted-foreground">Asal</span>
                     <span className="text-right text-foreground">
-                      {itemDetail.side === "initiator" ? "branch: their_offer" : "branch: your_offer"}
+                      {itemDetail.side === "initiator" ? "Initiator" : "Responder"}
                     </span>
                   </div>
                 </div>
               </div>
               <DialogFooter>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setItemDetail(null)}
-                  className="font-mono-hacker text-xs uppercase tracking-wider"
-                >
-                  close
+                <Button variant="outline" size="sm" onClick={() => setItemDetail(null)}>
+                  Tutup
                 </Button>
               </DialogFooter>
             </>
