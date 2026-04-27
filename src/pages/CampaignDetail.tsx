@@ -657,23 +657,25 @@ const CampaignDetail = () => {
                       0
                     );
                     const prizeChance = (p: any) => {
-                      if (tier.label === "S") return 0;
                       if (sumPrizeWeight <= 0) return 0;
                       const isActive = p.remaining > 0 || p.auto_refill;
                       if (!isActive) return 0;
                       const share = Number(p.probability_weight ?? 1) / sumPrizeWeight;
                       return chancePct * share;
                     };
+                    const formatChance = (v: number) => {
+                      if (v <= 0) return "0%";
+                      if (v >= 10) return `${v.toFixed(2)}%`;
+                      if (v >= 1) return `${v.toFixed(3)}%`;
+                      if (v >= 0.1) return `${v.toFixed(4)}%`;
+                      return `${v.toFixed(5)}%`;
+                    };
                     return tier.prizes.map((p: any) => {
                     const isOut = p.remaining <= 0;
                     const coinVal = p.coin_value > 0 ? p.coin_value : (coinValues[tier.label] || 15);
                     const pChance = prizeChance(p);
-                    const showPrizeChance = !isOut && tier.label !== "S" && pChance > 0;
-                    const chanceText = pChance >= 10
-                      ? `${pChance.toFixed(0)}%`
-                      : pChance >= 1
-                        ? `${pChance.toFixed(1)}%`
-                        : `${pChance.toFixed(2)}%`;
+                    const showPrizeChance = !isOut && pChance > 0;
+                    const chanceText = formatChance(pChance);
                     return (
                       <motion.div
                         key={p.id}
@@ -741,17 +743,14 @@ const CampaignDetail = () => {
                               <Coins className="h-2.5 w-2.5" />
                               {coinVal.toLocaleString()}
                             </span>
-                            {showPrizeChance && (
-                              <span
-                                className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary ring-1 ring-primary/20"
-                                title="Peluang mendapatkan hadiah ini per tarikan"
-                              >
-                                {chanceText}
-                              </span>
-                            )}
                             {!isOut ? (
                               <span className="text-[10px] font-medium text-muted-foreground">
                                 Stok: <span className="text-foreground">{isAdmin ? p.remaining : obfuscateStock(p.remaining, p.total).remainingLabel}/{p.total}</span>
+                                {showPrizeChance && (
+                                  <span className="ml-1 text-primary/90" title="Peluang mendapatkan hadiah ini per tarikan">
+                                    ({chanceText})
+                                  </span>
+                                )}
                               </span>
                             ) : (
                               <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">HABIS</span>
