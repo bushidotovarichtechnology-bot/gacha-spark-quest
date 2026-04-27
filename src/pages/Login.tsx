@@ -7,7 +7,7 @@ import { useI18n } from "@/context/I18nContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Coins, Mail, Lock, Eye, EyeOff, ArrowLeftRight, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
@@ -84,6 +84,32 @@ const Login = () => {
             <CardDescription>{t("loginDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
+            {redirectParam && safeRedirect !== "/" && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="mb-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs text-foreground"
+              >
+                {safeRedirect.startsWith("/trade/req/") ? (
+                  <ArrowLeftRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                ) : (
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                )}
+                <div className="min-w-0">
+                  <p className="font-semibold text-primary">
+                    {safeRedirect.startsWith("/trade/req/")
+                      ? "Kamu akan kembali ke halaman trade"
+                      : "Kamu akan diarahkan setelah login"}
+                  </p>
+                  <p className="mt-0.5 text-muted-foreground">
+                    Setelah login berhasil, kami akan otomatis membuka{" "}
+                    <span className="break-all font-mono text-foreground">{safeRedirect}</span>.
+                    {safeRedirect.startsWith("/trade/req/") &&
+                      " Pastikan kamu login pakai email yang dituju oleh pengirim trade."}
+                  </p>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
