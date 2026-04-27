@@ -138,6 +138,11 @@ const TradeRequest = () => {
     const tradeToken = trade.token;
     let cancelled = false;
 
+    // Forward-declared so refetch() can route fresh rows through the same
+    // toast/dedup pipeline as realtime — keeps `lastStatusRef` and the
+    // debounce map in lockstep no matter which path delivers the change.
+    let handleIncomingFn: ((row: TradeRow) => void) | null = null;
+
     // Exponential-backoff retry loop. `refetch` returns a boolean so the
     // caller can decide whether to schedule another attempt. New triggers
     // (manual retry, online event, poll tick) cancel any in-flight retry
@@ -152,7 +157,12 @@ const TradeRequest = () => {
       try {
         const fresh = await fetchTradeByToken(tradeToken);
         if (cancelled) return true;
-        if (fresh) setTrade(fresh);
+        if (fresh) {
+          // Route through handleIncoming so dedup + role-aware toasts fire
+          // exactly once even when poll wins the race against realtime.
+          if (handleIncomingFn) handleIncomingFn(fresh);
+          else setTrade(fresh);
+        }
         setSyncState("idle");
         setSyncAttempt(0);
         setLastSyncError(null);
@@ -194,16 +204,24 @@ const TradeRequest = () => {
     manualRetryRef.current = () => { void refetchWithBackoff(); };
 
     // Per-(trade,status) debounce lock — realtime + polling + manual refetch
-    // can deliver the same transition multiple times within a few hundred ms.
-    // We suppress duplicate toasts (and duplicate inventory refreshes) when the
-    // same target status fires again within DEBOUNCE_MS.
+    // can deliver the same transition multiple times within a few hundred ms
+    // (realtime replay on reconnect, poll race, manual retry). We suppress
+    // duplicate toasts (and duplicate inventory refreshes) when the same
+    // target status fires again within DEBOUNCE_MS.
+    //
+    // Terminal statuses (accepted/rejected/cancelled/expired) get a much
+    // longer TTL: once a trade lands in a final state it must NEVER re-toast,
+    // even if a delayed realtime replay arrives minutes later.
     const DEBOUNCE_MS = 1500;
+    const TERMINAL_TTL_MS = 24 * 60 * 60 * 1000; // 24h — effectively "forever" for this session
+    const TERMINAL_STATUSES = new Set(["accepted", "rejected", "cancelled", "expired"]);
     const lastFiredAt = new Map<string, number>();
     const tryClaimTransition = (statusKey: string) => {
       const now = Date.now();
       const key = `${tradeId}:${statusKey}`;
       const last = lastFiredAt.get(key) ?? 0;
-      if (now - last < DEBOUNCE_MS) return false;
+      const ttl = TERMINAL_STATUSES.has(statusKey) ? TERMINAL_TTL_MS : DEBOUNCE_MS;
+      if (now - last < ttl) return false;
       lastFiredAt.set(key, now);
       return true;
     };
@@ -304,8 +322,14 @@ const TradeRequest = () => {
       setTrade(next);
     };
 
+    // Wire the holder so refetch() can dispatch through the same pipeline.
+    handleIncomingFn = handleIncoming;
+
     // Seed last status so we don't fire a notification on first mount.
     lastStatusRef.current = trade.status;
+    // Also seed the dedup map for the current status so any echo of the same
+    // status that arrives right after mount is suppressed.
+    lastFiredAt.set(`${tradeId}:${trade.status}`, Date.now());
 
     const channel = supabase
       .channel(`trade-${tradeId}`)
