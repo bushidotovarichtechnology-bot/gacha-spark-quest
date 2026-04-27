@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { pageVariants, duration, easing } from "@/lib/motion";
+import { pageVariants, duration, easing, getPageVariantsFor } from "@/lib/motion";
 import DinoChaseLoader from "./DinoChaseLoader";
 
 const isLowEndDevice = (() => {
