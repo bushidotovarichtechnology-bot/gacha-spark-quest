@@ -51,6 +51,8 @@ export function useRateUpStatus() {
             user_index: d.user_index ?? null,
             multiplier: Number(d.multiplier ?? 1.0),
             limit: Number(d.limit ?? 100),
+            ends_at: d.ends_at ?? null,
+            expired: !!d.expired,
           });
         }
         setLoading(false);
