@@ -977,17 +977,27 @@ const CampaignDetail = () => {
                     variant="neon"
                     onClick={() => handleDraw(1)}
                     disabled={isDrawing}
-                    className="gap-1.5 px-5"
+                    className="relative gap-1.5 px-5"
                   >
                     <Zap className="h-4 w-4" /> {t("draw1x")}
+                    {isRateUp && (
+                      <span className="absolute -right-1.5 -top-2 rounded-full border border-accent/60 bg-gradient-to-r from-accent to-yellow-400 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-background shadow-[0_0_8px_hsl(var(--accent)/0.6)]">
+                        {rateUpMult}x
+                      </span>
+                    )}
                   </Button>
                   <Button
                     variant="gold"
                     onClick={() => handleDraw(10)}
                     disabled={isDrawing}
-                    className="gap-1.5 px-5"
+                    className="relative gap-1.5 px-5"
                   >
                     <Sparkles className="h-4 w-4" /> {t("draw10x")}
+                    {isRateUp && (
+                      <span className="absolute -right-1.5 -top-2 rounded-full border border-background/60 bg-gradient-to-r from-primary to-accent px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-background shadow-[0_0_8px_hsl(var(--primary)/0.6)]">
+                        {rateUpMult}x
+                      </span>
+                    )}
                   </Button>
                 </>
               )}
