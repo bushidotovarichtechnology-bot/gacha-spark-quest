@@ -262,9 +262,9 @@ const TierBadge = ({ tier, isRare }: { tier: string; isRare: boolean }) => {
     >
       <div
         className="px-4 py-2 rounded-full font-bold text-white text-sm"
-        style={{ 
-          backgroundColor: tierColors[tier] || "#a78bfa",
-          boxShadow: `0 0 30px ${tierColors[tier] || "#a78bfa"}`,
+        style={{
+          backgroundColor: tierColor,
+          boxShadow: `0 0 30px ${tierColor}`,
         }}
       >
         {tierEmojis[tier]} TIER {tier} DITEMUKAN!
