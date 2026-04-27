@@ -82,7 +82,12 @@ const Login = () => {
         variant: "destructive",
       });
     } else {
-      toast({ title: t("loginSuccess") });
+      const description = safeRedirect.startsWith("/trade/req/")
+        ? `Mengarahkan kamu kembali ke halaman trade (${safeRedirect}).`
+        : safeRedirect !== "/"
+          ? `Mengarahkan kamu ke ${safeRedirect}.`
+          : "Mengarahkan kamu ke halaman utama.";
+      toast({ title: t("loginSuccess"), description });
       navigate(safeRedirect);
     }
     setLoading(false);
