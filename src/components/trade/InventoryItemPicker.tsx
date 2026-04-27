@@ -24,19 +24,18 @@ interface Props {
  */
 const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, emptyMessage }: Props) => {
   const { items } = useGacha();
-  const [tierFilter, setTierFilter] = useState<TradableTier | "all">(lockedTier ?? "all");
+  const [tierFilter, setTierFilter] = useState<TradableTier>(lockedTier ?? "S");
 
-  // Show tradable items + Tier C (disabled) so users see why they can't pick C.
+  // Only show tradable items (Tier S/A/B). Tier C is hidden entirely.
   const visible = useMemo(() => {
     return items.filter((it) => {
       if (hideIds?.has(it.id)) return false;
-      if (lockedTier) return true; // show all (locked-tier highlight handled per-cell)
-      if (tierFilter !== "all" && it.tier !== tierFilter) return false;
+      if (!isTradableTier(it.tier)) return false;
+      if (lockedTier) return true; // locked-tier highlight handled per-cell
+      if (it.tier !== tierFilter) return false;
       return true;
     });
   }, [items, lockedTier, tierFilter, hideIds]);
-
-  const tierCCount = items.filter((i) => i.tier === "C").length;
 
   const isSelectable = (it: InventoryItem): { ok: boolean; reason?: string } => {
     if (!isTradableTier(it.tier)) {
