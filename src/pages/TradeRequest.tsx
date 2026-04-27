@@ -142,6 +142,9 @@ const TradeRequest = () => {
       const role: "initiator" | "responder" | "viewer" =
         meIsInitiator ? "initiator" : meIsResponder ? "responder" : "viewer";
 
+      // Flash the "updating" indicator on every real status transition.
+      if (prev && prev !== next.status) markStatusUpdating();
+
       // Notify on real status transitions caused by the OTHER party.
       // Messages are tailored per role so each user sees the right call-to-action.
       if (prev && prev !== next.status) {
