@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
   const { data: result, error: rpcErr } = await admin.rpc("_internal_execute_trade", {
     _trade_id: payload.trade_id,
     _caller_id: callerId,
+    _action: payload.action,
     _responder_items: payload.responder_items ?? null,
     _caller_ip: ip,
     _user_agent: userAgent,
@@ -118,6 +119,8 @@ Deno.serve(async (req) => {
       "items_ownership_failed",
       "insufficient_gas_fee",
       "self_trade_forbidden",
+      "invalid_action",
+      "review_window_expired",
     ];
     if (known.some((k) => code.includes(k))) {
       return json(400, { error: code });
