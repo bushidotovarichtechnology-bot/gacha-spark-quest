@@ -290,7 +290,7 @@ const AdminPromoBanners = () => {
               <div className="mt-2 space-y-2">
                 {form.image_url && (
                   <div className="aspect-[16/7] overflow-hidden rounded-lg border border-border">
-                    <img src={form.image_url} alt="preview" className="h-full w-full object-cover" />
+                    <img src={form.image_url} alt="preview" className="h-full w-full object-contain" />
                   </div>
                 )}
                 <Input
