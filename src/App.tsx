@@ -68,7 +68,7 @@ const AdminGiftAudit = lazy(() => import("./pages/admin/AdminGiftAudit.tsx"));
 
 const queryClient = new QueryClient();
 
-const RouteFallback = () => <DinoChaseLoader />;
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
