@@ -36,6 +36,8 @@ interface VerifiedRecipient {
   masked_email: string;
   display_name: string;
   avatar_url: string;
+  username: string | null;
+  resolved_email: string;
 }
 
 const GiftCoins = () => {
