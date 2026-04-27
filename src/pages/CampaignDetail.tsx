@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { supabaseImg } from "@/lib/imageTransform";
 import { obfuscateStock } from "@/lib/obfuscateStock";
 import { resolveCanonicalCampaignPath } from "@/lib/campaignRedirect";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 
