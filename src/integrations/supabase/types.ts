@@ -1102,6 +1102,7 @@ export type Database = {
           responded_at: string | null
           responder_id: string | null
           responder_items: Json
+          review_expires_at: string | null
           status: string
           tier_label: string
           token: string
@@ -1120,6 +1121,7 @@ export type Database = {
           responded_at?: string | null
           responder_id?: string | null
           responder_items?: Json
+          review_expires_at?: string | null
           status?: string
           tier_label: string
           token: string
@@ -1138,6 +1140,7 @@ export type Database = {
           responded_at?: string | null
           responder_id?: string | null
           responder_items?: Json
+          review_expires_at?: string | null
           status?: string
           tier_label?: string
           token?: string
@@ -1468,6 +1471,7 @@ export type Database = {
     Functions: {
       _internal_execute_trade: {
         Args: {
+          _action: string
           _caller_id: string
           _caller_ip: string
           _responder_items: Json
