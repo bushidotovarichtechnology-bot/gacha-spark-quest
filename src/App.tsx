@@ -135,7 +135,7 @@ const App = () => (
                 <Route path="gift-audit" element={<AdminGiftAudit />} />
               </Route>
               <Route path="*" element={<NotFound />} />
-            </Routes>
+            </AnimatedRoutes>
           </Suspense>
           </MaintenanceGate>
         </BrowserRouter>
