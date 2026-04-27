@@ -135,6 +135,21 @@ const TradeRequest = () => {
       } catch { /* ignore */ }
     };
 
+    // Per-(trade,status) debounce lock — realtime + polling + manual refetch
+    // can deliver the same transition multiple times within a few hundred ms.
+    // We suppress duplicate toasts (and duplicate inventory refreshes) when the
+    // same target status fires again within DEBOUNCE_MS.
+    const DEBOUNCE_MS = 1500;
+    const lastFiredAt = new Map<string, number>();
+    const tryClaimTransition = (statusKey: string) => {
+      const now = Date.now();
+      const key = `${tradeId}:${statusKey}`;
+      const last = lastFiredAt.get(key) ?? 0;
+      if (now - last < DEBOUNCE_MS) return false;
+      lastFiredAt.set(key, now);
+      return true;
+    };
+
     const handleIncoming = (next: TradeRow) => {
       const prev = lastStatusRef.current;
       const meIsInitiator = !!user && next.initiator_id === user.id;
@@ -147,7 +162,9 @@ const TradeRequest = () => {
 
       // Notify on real status transitions caused by the OTHER party.
       // Messages are tailored per role so each user sees the right call-to-action.
-      if (prev && prev !== next.status) {
+      // Debounce-locked per (tradeId,status) so back-to-back deliveries (realtime
+      // replay, poll race, manual refetch) only emit one toast per transition.
+      if (prev && prev !== next.status && tryClaimTransition(next.status)) {
         const tid = `trade-rt-${tradeId}`;
 
         if (next.status === "awaiting_initiator") {
