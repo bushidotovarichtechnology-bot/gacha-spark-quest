@@ -339,6 +339,7 @@ const TradeRequest = () => {
     }
 
     setSubmitting(true);
+    markStatusUpdating(2500);
     const loadingMsg =
       action === "submit" ? "Mengirim tawaran ke initiator…" :
       action === "approve" ? "Menyetujui & menukar item…" :
