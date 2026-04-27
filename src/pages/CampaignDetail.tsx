@@ -407,6 +407,8 @@ const CampaignDetail = () => {
 
       setDrawnPrizes(results);
       setHasPityReward(!!data.has_pity_reward);
+      const rateMult = Number((data as any).rate_up_multiplier ?? 1) || 1;
+      setDrawRateUpMultiplier(rateMult);
 
       // Compute pity meter change for popup
       let nextPityPopup = { open: false, before: 0, after: 0, wasReset: false };
@@ -432,6 +434,7 @@ const CampaignDetail = () => {
           drawnPrizes: results,
           hasPityReward: !!data.has_pity_reward,
           pityPopup: nextPityPopup,
+          rateUpMultiplier: rateMult,
         });
       }
 
