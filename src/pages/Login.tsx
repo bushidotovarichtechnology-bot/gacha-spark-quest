@@ -19,11 +19,45 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get("redirect");
-  // Only allow internal paths to prevent open-redirect.
-  const safeRedirect =
-    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-      ? redirectParam
-      : "/";
+
+  // Allowlist of internal route prefixes that login is allowed to redirect to.
+  // Anything outside this list (including absolute URLs, protocol-relative
+  // paths "//evil.com", or unknown app routes) is rejected to prevent
+  // open-redirect attacks and to avoid sending users to broken URLs.
+  const ALLOWED_REDIRECT_PREFIXES = [
+    "/trade/req/",
+    "/inventory",
+    "/profile",
+    "/topup",
+    "/transactions",
+    "/claim-history",
+    "/draw-history",
+    "/leaderboard",
+    "/redeem-store",
+    "/gift-coins",
+    "/campaign/",
+  ];
+
+  const validateRedirect = (raw: string | null): { safe: string; rejected: boolean } => {
+    if (!raw) return { safe: "/", rejected: false };
+    // Must be a relative path, not protocol-relative, no scheme.
+    if (!raw.startsWith("/") || raw.startsWith("//")) {
+      return { safe: "/", rejected: true };
+    }
+    // Reject anything that looks like a full URL slipped into the path.
+    if (/^\/?https?:/i.test(raw) || raw.includes("://")) {
+      return { safe: "/", rejected: true };
+    }
+    // Strip query/hash before matching prefix.
+    const pathOnly = raw.split(/[?#]/)[0];
+    const allowed = ALLOWED_REDIRECT_PREFIXES.some((p) =>
+      p.endsWith("/") ? pathOnly.startsWith(p) : pathOnly === p || pathOnly.startsWith(`${p}/`),
+    );
+    if (!allowed) return { safe: "/", rejected: true };
+    return { safe: raw, rejected: false };
+  };
+
+  const { safe: safeRedirect, rejected: redirectRejected } = validateRedirect(redirectParam);
 
   useEffect(() => {
     if (!authLoading && user) {
