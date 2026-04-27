@@ -684,16 +684,37 @@ const TradeRequest = () => {
         )}
 
         {/* Status panel */}
-        <Card className="mb-4 p-4">
+        <Card className={cn("relative mb-4 p-4 overflow-hidden transition-shadow", statusUpdating && "ring-1 ring-primary/40")}>
+          {statusUpdating && (
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden bg-muted"
+              role="progressbar"
+              aria-label="Memperbarui status trade"
+            >
+              <div className="h-full w-1/3 animate-[loading_1.2s_ease-in-out_infinite] bg-primary" />
+            </div>
+          )}
           <div className="flex items-start gap-3">
-            <sMeta.Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <sMeta.Icon className={cn("mt-0.5 h-5 w-5 shrink-0 text-primary", statusUpdating && "animate-pulse")} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
                   Status: {sMeta.label}
                 </h2>
+                {statusUpdating && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary"
+                    aria-live="polite"
+                  >
+                    <Loader2 className="h-3 w-3 animate-spin" /> sync…
+                  </span>
+                )}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{sMeta.description}</p>
+              {statusUpdating ? (
+                <Skeleton className="mt-1 h-3 w-3/4" />
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">{sMeta.description}</p>
+              )}
 
               {trade.status === "pending" && countdown && (
                 <div
