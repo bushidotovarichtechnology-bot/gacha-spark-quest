@@ -173,7 +173,7 @@ const DinoChaseLoader = ({ label }: { label?: string }) => {
       </div>
 
       <div className="flex items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground">
-        <span>{label}</span>
+        <span className="text-foreground">{title}</span>
         <span style={{ animation: "loading-dots 1.2s infinite", animationDelay: "0s" }}>.</span>
         <span style={{ animation: "loading-dots 1.2s infinite", animationDelay: "0.2s" }}>.</span>
         <span style={{ animation: "loading-dots 1.2s infinite", animationDelay: "0.4s" }}>.</span>
