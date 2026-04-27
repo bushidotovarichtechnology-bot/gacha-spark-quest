@@ -181,6 +181,20 @@ const UsernameSetupCard = () => {
             Bagikan username ini ke teman supaya mereka mudah mengirim <strong>gift coin</strong> atau
             <strong> trade prize</strong> ke kamu tanpa harus tahu emailmu.
           </p>
+          <details className="group rounded-md border border-border/60 bg-muted/30 p-2 text-xs">
+            <summary className="flex cursor-pointer items-center gap-1.5 font-medium text-primary hover:underline marker:hidden [&::-webkit-details-marker]:hidden">
+              <Lock className="h-3 w-3" />
+              Ubah? <span className="text-destructive">tidak bisa</span>
+              <span className="ml-auto text-[10px] text-muted-foreground transition group-open:rotate-180">▾</span>
+            </summary>
+            <p className="mt-2 leading-relaxed text-muted-foreground">
+              Username bersifat <strong className="text-foreground">permanen</strong> demi keamanan
+              transaksi <strong>gift coin</strong> & <strong>trade prize</strong>. Kalau bisa diubah,
+              user lain berisiko salah kirim ke alamat lama. Sistem mengunci field ini di level
+              database (trigger immutable) — bahkan admin tidak bisa mengubahnya tanpa intervensi
+              manual. Pilih dengan bijak sejak awal. 🔒
+            </p>
+          </details>
         </CardContent>
       </Card>
     );
