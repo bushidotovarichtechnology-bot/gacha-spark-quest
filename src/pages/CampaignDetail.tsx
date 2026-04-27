@@ -11,6 +11,7 @@ import PityMeterPopup from "@/components/PityMeterPopup";
 const DinoUnboxAnimation = lazy(() => import("@/components/DinoUnboxAnimation"));
 import PrizeImagePreview from "@/components/PrizeImagePreview";
 import RateUpBadge from "@/components/RateUpBadge";
+import { useRateUpStatus } from "@/hooks/use-rate-up-status";
 import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
@@ -301,6 +302,8 @@ const CampaignDetail = () => {
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
   const pityGuaranteedTier = pitySettings?.guaranteed_tier ?? "A";
+
+  const { is_rate_up: isRateUp, multiplier: rateUpMult } = useRateUpStatus();
 
   // Restore in-progress draw animation after page refresh.
   // Runs once per (user, campaign) when both are known.
@@ -981,17 +984,27 @@ const CampaignDetail = () => {
                     variant="neon"
                     onClick={() => handleDraw(1)}
                     disabled={isDrawing}
-                    className="gap-1.5 px-5"
+                    className="relative gap-1.5 px-5"
                   >
                     <Zap className="h-4 w-4" /> {t("draw1x")}
+                    {isRateUp && (
+                      <span className="absolute -right-1.5 -top-2 rounded-full border border-accent/60 bg-gradient-to-r from-accent to-yellow-400 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-background shadow-[0_0_8px_hsl(var(--accent)/0.6)]">
+                        {rateUpMult}x
+                      </span>
+                    )}
                   </Button>
                   <Button
                     variant="gold"
                     onClick={() => handleDraw(10)}
                     disabled={isDrawing}
-                    className="gap-1.5 px-5"
+                    className="relative gap-1.5 px-5"
                   >
                     <Sparkles className="h-4 w-4" /> {t("draw10x")}
+                    {isRateUp && (
+                      <span className="absolute -right-1.5 -top-2 rounded-full border border-background/60 bg-gradient-to-r from-primary to-accent px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-background shadow-[0_0_8px_hsl(var(--primary)/0.6)]">
+                        {rateUpMult}x
+                      </span>
+                    )}
                   </Button>
                 </>
               )}
