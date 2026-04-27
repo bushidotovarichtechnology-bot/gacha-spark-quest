@@ -136,7 +136,6 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </AnimatedRoutes>
-          </Suspense>
           </MaintenanceGate>
         </BrowserRouter>
       </GachaProvider>
