@@ -40,9 +40,45 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
     ? `${base}?width=320&quality=68&resize=contain 320w, ${base}?width=420&quality=70&resize=contain 420w, ${base}?width=640&quality=70&resize=contain 640w`
     : undefined;
 
+  // Map remaining % to a tier-themed visual: high=Diamond, mid=Gold, low=Silver, almost out=Bronze
+  // Keeps landing cards visually consistent with the new tier banner palette.
+  const stockTier: "S" | "A" | "B" | "C" = isSoldOut
+    ? "C"
+    : percentage > 66
+    ? "S"
+    : percentage > 33
+    ? "A"
+    : percentage > 10
+    ? "B"
+    : "C";
+
+  const tierGlowClass = {
+    S: "group-hover:tier-glow-s group-hover:border-tier-s/60",
+    A: "group-hover:tier-glow-a group-hover:border-tier-a/60",
+    B: "group-hover:tier-glow-b group-hover:border-tier-b/60",
+    C: "group-hover:tier-glow-c group-hover:border-tier-c/60",
+  }[stockTier];
+
+  const tierBarClass = {
+    S: "tier-banner-s",
+    A: "tier-banner-a",
+    B: "tier-banner-b",
+    C: "tier-banner-c",
+  }[stockTier];
+
+  const flashGlow = "border-tier-a/80 tier-glow-a";
+
   return (
     <Link to={`/campaign/${slug || id}`} className="group block transition-transform duration-300 hover:-translate-y-1">
-      <div className={`gradient-card overflow-hidden rounded-xl border transition-all duration-300 ${isSoldOut ? "border-border/30 opacity-60 grayscale" : flash ? "border-accent/80 box-glow-gold" : "border-border/50 group-hover:border-primary/50 group-hover:box-glow-purple"}`}>
+      <div className={`gradient-card relative overflow-hidden rounded-xl border transition-all duration-300 ${isSoldOut ? "border-border/30 opacity-60 grayscale" : flash ? flashGlow : `border-border/50 ${tierGlowClass}`}`}>
+        {/* Tier shard sweep — only on hover, hidden on small screens via [data-fx=secondary] */}
+        {!isSoldOut && (
+          <div
+            data-fx="secondary"
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 opacity-0 transition-opacity duration-300 group-hover:opacity-60 group-hover:animate-shine-sweep bg-gradient-to-r from-transparent via-white/40 to-transparent blur-sm"
+          />
+        )}
         <div className="relative aspect-square overflow-hidden">
           <img
             src={src}
@@ -64,12 +100,12 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
             </div>
           )}
           {!isSoldOut && hot && (
-            <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-destructive/90 px-2.5 py-1 text-xs font-bold text-destructive-foreground backdrop-blur-sm">
+            <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full tier-banner-a px-2.5 py-1 text-xs font-bold text-tier-a-foreground backdrop-blur-sm tier-glow-a">
               <Flame className="h-3 w-3" /> {t("hot")}
             </div>
           )}
           {isLow && (
-            <div className="absolute right-3 top-3 rounded-full bg-accent/90 px-2.5 py-1 text-xs font-bold text-accent-foreground backdrop-blur-sm animate-pulse-glow">
+            <div className="absolute right-3 top-3 rounded-full tier-banner-c px-2.5 py-1 text-xs font-bold text-tier-c-foreground backdrop-blur-sm tier-glow-c animate-pulse-glow">
               {t("almostGone")}
             </div>
           )}
@@ -96,7 +132,7 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-secondary">
               <div
-                className={`h-full rounded-full transition-[width,background-color] duration-700 ease-out ${flash ? "bg-accent" : isLow ? "bg-destructive" : "bg-primary"}`}
+                className={`h-full rounded-full transition-[width] duration-700 ease-out ${flash ? "tier-banner-a" : tierBarClass}`}
                 style={{ width: `${percentage}%` }}
               />
             </div>
