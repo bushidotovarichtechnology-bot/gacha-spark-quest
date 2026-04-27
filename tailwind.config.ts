@@ -122,6 +122,10 @@ export default {
           "60%": { transform: "translate(1px, 0) scale(1.18)" },
           "75%": { transform: "translate(-1px, 0) scale(1.12)" },
         },
+        "status-bar": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(400%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -135,6 +139,7 @@ export default {
         "scale-in": "scale-in 0.4s ease-out 0.3s both",
         "bounce-slow": "bounce-slow 2s ease-in-out infinite",
         "badge-shake": "badge-shake 0.6s ease-in-out",
+        "status-bar": "status-bar 1.2s ease-in-out infinite",
       },
     },
   },
