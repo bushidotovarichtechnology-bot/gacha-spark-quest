@@ -705,7 +705,7 @@ const CampaignDetail = () => {
                       >
                         {/* Tier corner ribbon */}
                         <div
-                          className={`absolute right-0 top-0 ${tierStyle.bannerClass} px-2 py-0.5 text-[9px] font-black ${tierStyle.isLightBanner ? "text-foreground" : "text-white"} shadow-md`}
+                          className={`absolute right-0 top-0 ${tierStyle.bannerClass} px-2 py-0.5 text-[9px] font-black ${tierStyle.isLightBanner ? "text-background" : "text-white"} shadow-md`}
                           style={{ clipPath: "polygon(12px 0, 100% 0, 100% 100%, 0 100%)" }}
                         >
                           {tier.label}
