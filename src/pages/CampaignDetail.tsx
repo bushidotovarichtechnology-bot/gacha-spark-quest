@@ -64,11 +64,12 @@ const tierGlowMap: Record<string, string> = {
 };
 
 // Banner gradients per tier — kitakuji-inspired chevron banner
+// S = Diamond (icy white-cyan), A = Gold, B = Silver, C = Bronze
 const tierBannerMap: Record<string, string> = {
-  S: "from-amber-300 via-yellow-400 to-orange-500", // Gold
-  A: "from-fuchsia-500 via-purple-500 to-indigo-500", // Purple
-  B: "from-pink-400 via-rose-400 to-red-400", // Pink
-  C: "from-slate-400 via-slate-500 to-slate-600", // Silver
+  S: "from-cyan-200 via-white to-sky-300", // Diamond — icy shiny
+  A: "from-yellow-300 via-amber-400 to-yellow-600", // Gold
+  B: "from-slate-200 via-slate-300 to-slate-500", // Silver
+  C: "from-amber-700 via-orange-700 to-yellow-900", // Bronze
 };
 
 const tierLabelMap: Record<string, string> = {
