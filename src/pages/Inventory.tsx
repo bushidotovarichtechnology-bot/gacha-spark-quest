@@ -154,7 +154,7 @@ const Inventory = () => {
             >
               <Link to="/trade/new" aria-label="Buka P2P Trade Hub">
                 <ArrowLeftRight className="h-3.5 w-3.5" />
-                <span>Trade Item</span>
+                <span>Trade Prize</span>
               </Link>
             </Button>
           )}
