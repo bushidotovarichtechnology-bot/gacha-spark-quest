@@ -666,7 +666,7 @@ const CampaignDetail = () => {
                 {/* Progress bar */}
                 <div className="h-1 overflow-hidden rounded-full bg-secondary/60">
                   <motion.div
-                    className={`h-full rounded-full bg-gradient-to-r ${bannerGradient}`}
+                    className={`h-full rounded-full ${tierStyle.bannerClass}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
                     transition={{ duration: 1, ease: "easeOut", delay: i * 0.15 }}
