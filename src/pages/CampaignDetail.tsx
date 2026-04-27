@@ -918,6 +918,7 @@ const CampaignDetail = () => {
         prizes={drawnPrizes}
         drawCount={drawCount}
         hasPityReward={hasPityReward}
+        rateUpMultiplier={drawRateUpMultiplier}
       />
 
       <PityMeterPopup
