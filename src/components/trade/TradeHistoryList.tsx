@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Loader2, ArrowLeftRight, Coins, CheckCircle2, XCircle, Clock, Ban, RefreshCw } from "lucide-react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { Loader2, ArrowLeftRight, Coins, CheckCircle2, XCircle, Clock, Ban, RefreshCw, Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface TradeRow {
   id: string;
