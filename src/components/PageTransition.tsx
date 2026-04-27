@@ -92,10 +92,11 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
   const prefersReducedMotion = useReducedMotion();
 
   const variants = useMemo(() => {
+    // Reduced-motion & low-end overrides take priority over per-route flair.
     if (prefersReducedMotion) return reducedMotionVariants;
     if (isLowEndDevice) return lightPageVariants;
-    return pageVariants;
-  }, [prefersReducedMotion]);
+    return getPageVariantsFor(location.pathname);
+  }, [prefersReducedMotion, location.pathname]);
 
   const willChange = prefersReducedMotion
     ? "opacity"
