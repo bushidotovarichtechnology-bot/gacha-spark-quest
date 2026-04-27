@@ -1333,8 +1333,10 @@ export type Database = {
           created_at: string | null
           id: string | null
           image_url: string | null
+          is_sold_out: boolean | null
           label: string | null
           name: string | null
+          probability_weight: number | null
           sort_order: number | null
           total: number | null
         }
@@ -1343,8 +1345,10 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           image_url?: string | null
+          is_sold_out?: never
           label?: string | null
           name?: string | null
+          probability_weight?: number | null
           sort_order?: number | null
           total?: number | null
         }
@@ -1353,8 +1357,10 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           image_url?: string | null
+          is_sold_out?: never
           label?: string | null
           name?: string | null
+          probability_weight?: number | null
           sort_order?: number | null
           total?: number | null
         }
@@ -1376,9 +1382,9 @@ export type Database = {
           description: string | null
           id: string | null
           image_url: string | null
-          is_digital: boolean | null
           is_sold_out: boolean | null
           name: string | null
+          probability_weight: number | null
           sort_order: number | null
           tier_id: string | null
           total: number | null
@@ -1391,9 +1397,9 @@ export type Database = {
           description?: string | null
           id?: string | null
           image_url?: string | null
-          is_digital?: boolean | null
           is_sold_out?: never
           name?: string | null
+          probability_weight?: number | null
           sort_order?: number | null
           tier_id?: string | null
           total?: number | null
@@ -1406,9 +1412,9 @@ export type Database = {
           description?: string | null
           id?: string | null
           image_url?: string | null
-          is_digital?: boolean | null
           is_sold_out?: never
           name?: string | null
+          probability_weight?: number | null
           sort_order?: number | null
           tier_id?: string | null
           total?: number | null
