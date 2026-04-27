@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { History, Crown, Star, Gift, Award, ExternalLink, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import RateUpBadge from "@/components/RateUpBadge";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { format } from "date-fns";
@@ -38,6 +39,9 @@ const DrawHistory = () => {
             {t("drawHistory")}
           </h1>
           <p className="text-sm text-muted-foreground">{t("drawHistoryDesc")}</p>
+          <div className="mt-3">
+            <RateUpBadge />
+          </div>
         </div>
 
         {/* Summary stats */}
