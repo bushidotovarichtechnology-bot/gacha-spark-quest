@@ -16,6 +16,8 @@ import { useGacha } from "@/context/GachaContext";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
 import RecipientPicker, { type ResolvedRecipient } from "@/components/trade/RecipientPicker";
+import TradeHistoryList from "@/components/trade/TradeHistoryList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   createTrade,
   hasSecurityPin,
