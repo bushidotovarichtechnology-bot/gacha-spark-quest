@@ -536,10 +536,10 @@ const CampaignDetail = () => {
             const isSilver = tier.label === "B";
             const isBronze = tier.label === "C";
             const TierIcon = tier.icon;
-            // All tier banners use a light gradient → dark text/icon for legibility.
-            // Bronze is the only darker banner → use white text.
-            const onBannerText = tierStyle.isLightBanner ? "text-foreground/90" : "text-white";
-            const onBannerTextMuted = tierStyle.isLightBanner ? "text-foreground/70" : "text-white/80";
+            // Light banners (Diamond/Gold/Silver) need dark text; Bronze needs white.
+            // `text-background` resolves to the dark base color of the dark theme.
+            const onBannerText = tierStyle.isLightBanner ? "text-background" : "text-white";
+            const onBannerTextMuted = tierStyle.isLightBanner ? "text-background/75" : "text-white/80";
             return (
               <motion.div
                 key={tier.id}
