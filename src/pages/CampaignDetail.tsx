@@ -545,6 +545,8 @@ const CampaignDetail = () => {
             const tierLabel = tierLabelMap[tier.label] || tier.name;
             const isGrand = tier.label === "S";
             const isRare = tier.label === "A";
+            const isSilver = tier.label === "B";
+            const isBronze = tier.label === "C";
             const TierIcon = tier.icon;
             return (
               <motion.div
@@ -557,35 +559,75 @@ const CampaignDetail = () => {
                 {/* Kitakuji-style chevron banner */}
                 <div className="relative">
                   <div
-                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${isGrand ? "shadow-[0_0_25px_rgba(251,191,36,0.6)]" : isRare ? "shadow-[0_0_15px_rgba(168,85,247,0.45)]" : ""}`}
+                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${
+                      isGrand
+                        ? "shadow-[0_0_28px_rgba(186,230,253,0.85)] ring-1 ring-white/60"
+                        : isRare
+                        ? "shadow-[0_0_18px_rgba(250,204,21,0.55)]"
+                        : isSilver
+                        ? "shadow-[0_0_12px_rgba(203,213,225,0.45)]"
+                        : isBronze
+                        ? "shadow-[0_0_12px_rgba(180,83,9,0.45)]"
+                        : ""
+                    }`}
                     style={{
                       clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)",
                     }}
                   >
-                    {/* Grand Prize: shimmering gradient overlay + sweeping shine */}
+                    {/* Grand Prize (Diamond): brilliant shimmer + dual sweeping shine */}
                     {isGrand && (
                       <>
                         <div
-                          className="pointer-events-none absolute inset-0 animate-shimmer opacity-70"
+                          className="pointer-events-none absolute inset-0 animate-shimmer opacity-90"
                           style={{
                             backgroundImage:
-                              "linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%)",
+                              "linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.95) 50%, transparent 80%)",
                             backgroundSize: "200% 100%",
                           }}
                         />
-                        <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-shine-sweep bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
+                        <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-shine-sweep bg-gradient-to-r from-transparent via-white to-transparent blur-sm" />
+                        <div
+                          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/4 animate-shine-sweep bg-gradient-to-r from-transparent via-cyan-100 to-transparent blur-md"
+                          style={{ animationDelay: "1.2s" }}
+                        />
                       </>
                     )}
 
-                    {/* Tier A: subtle shimmer only — no sweeping shine */}
+                    {/* Tier A (Gold): warm shimmer */}
                     {isRare && (
+                      <div
+                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-40"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)",
+                          backgroundSize: "200% 100%",
+                          animationDuration: "5s",
+                        }}
+                      />
+                    )}
+
+                    {/* Tier B (Silver): cool subtle shimmer */}
+                    {isSilver && (
                       <div
                         className="pointer-events-none absolute inset-0 animate-shimmer opacity-30"
                         style={{
                           backgroundImage:
-                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.35) 50%, transparent 65%)",
+                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%)",
                           backgroundSize: "200% 100%",
-                          animationDuration: "5s",
+                          animationDuration: "6s",
+                        }}
+                      />
+                    )}
+
+                    {/* Tier C (Bronze): warm copper shimmer */}
+                    {isBronze && (
+                      <div
+                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-25"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(110deg, transparent 35%, rgba(255,220,180,0.45) 50%, transparent 65%)",
+                          backgroundSize: "200% 100%",
+                          animationDuration: "7s",
                         }}
                       />
                     )}
