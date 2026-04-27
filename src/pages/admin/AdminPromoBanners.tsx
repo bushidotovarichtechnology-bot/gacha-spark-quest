@@ -348,21 +348,53 @@ const AdminPromoBanners = () => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label>Mulai Tampil</Label>
-                <Input
-                  type="datetime-local"
-                  value={toLocalDT(form.starts_at)}
-                  onChange={(e) => setForm({ ...form, starts_at: fromLocalDT(e.target.value) })}
-                />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                  <div>
+                    <Label className="cursor-pointer">Tampilkan sekarang</Label>
+                    <p className="text-xs text-muted-foreground">Tanpa jadwal mulai</p>
+                  </div>
+                  <Switch
+                    checked={form.starts_at === null}
+                    onCheckedChange={(v) =>
+                      setForm({ ...form, starts_at: v ? null : new Date().toISOString() })
+                    }
+                  />
+                </div>
+                {form.starts_at !== null && (
+                  <div>
+                    <Label>Mulai Tampil</Label>
+                    <Input
+                      type="datetime-local"
+                      value={toLocalDT(form.starts_at)}
+                      onChange={(e) => setForm({ ...form, starts_at: fromLocalDT(e.target.value) })}
+                    />
+                  </div>
+                )}
               </div>
-              <div>
-                <Label>Berakhir</Label>
-                <Input
-                  type="datetime-local"
-                  value={toLocalDT(form.ends_at)}
-                  onChange={(e) => setForm({ ...form, ends_at: fromLocalDT(e.target.value) })}
-                />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                  <div>
+                    <Label className="cursor-pointer">Tanpa batas waktu</Label>
+                    <p className="text-xs text-muted-foreground">Tampil selamanya</p>
+                  </div>
+                  <Switch
+                    checked={form.ends_at === null}
+                    onCheckedChange={(v) =>
+                      setForm({ ...form, ends_at: v ? null : new Date(Date.now() + 7 * 86400000).toISOString() })
+                    }
+                  />
+                </div>
+                {form.ends_at !== null && (
+                  <div>
+                    <Label>Berakhir</Label>
+                    <Input
+                      type="datetime-local"
+                      value={toLocalDT(form.ends_at)}
+                      onChange={(e) => setForm({ ...form, ends_at: fromLocalDT(e.target.value) })}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
