@@ -182,14 +182,14 @@ const TradeRequest = () => {
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (trade?.status !== "pending") return;
+    if (trade?.status !== "pending" && trade?.status !== "awaiting_initiator") return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [trade?.status]);
 
-  const countdown = useMemo(() => {
-    if (!trade?.expires_at) return null;
-    const expMs = new Date(trade.expires_at).getTime();
+  const fmtCountdown = (deadlineIso: string | null | undefined) => {
+    if (!deadlineIso) return null;
+    const expMs = new Date(deadlineIso).getTime();
     const diff = expMs - now;
     const expired = diff <= 0;
     const totalSec = Math.max(0, Math.floor(diff / 1000));
@@ -206,7 +206,13 @@ const TradeRequest = () => {
       : diff < 5 * 60_000 ? "warning"
       : "normal";
     return { expired, totalSec, formatted, severity, diffMs: diff };
-  }, [trade?.expires_at, now]);
+  };
+
+  const countdown = useMemo(() => fmtCountdown(trade?.expires_at), [trade?.expires_at, now]);
+  const reviewCountdown = useMemo(
+    () => trade?.status === "awaiting_initiator" ? fmtCountdown(trade?.review_expires_at) : null,
+    [trade?.status, trade?.review_expires_at, now],
+  );
 
   const responderItemMeta = useMemo(
     () => items.filter((it) => responderItems.has(it.id)),
