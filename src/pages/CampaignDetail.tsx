@@ -314,6 +314,7 @@ const CampaignDetail = () => {
     setDrawnPrizes(saved.drawnPrizes);
     setHasPityReward(saved.hasPityReward);
     setPityPopup(saved.pityPopup);
+    setDrawRateUpMultiplier(saved.rateUpMultiplier ?? 1);
     setPendingDrawComplete(true);
     setIsDrawing(true); // replays the shake/glow/unbox animation
     // eslint-disable-next-line react-hooks/exhaustive-deps
