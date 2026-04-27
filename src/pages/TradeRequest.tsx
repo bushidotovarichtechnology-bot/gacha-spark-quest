@@ -691,7 +691,7 @@ const TradeRequest = () => {
               role="progressbar"
               aria-label="Memperbarui status trade"
             >
-              <div className="h-full w-1/3 animate-[loading_1.2s_ease-in-out_infinite] bg-primary" />
+              <div className="h-full w-1/4 animate-status-bar bg-primary" />
             </div>
           )}
           <div className="flex items-start gap-3">
