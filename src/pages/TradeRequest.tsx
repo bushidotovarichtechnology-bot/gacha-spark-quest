@@ -436,9 +436,14 @@ const TradeRequest = () => {
 
   const statusMeta: Record<TradeRow["status"], { label: string; variant: "default" | "secondary" | "destructive" | "outline"; Icon: typeof CircleDot; description: string }> = {
     pending: {
-      label: "Menunggu", variant: "secondary",
+      label: "Menunggu Responder", variant: "secondary",
       Icon: Hourglass,
-      description: "Menunggu responder memilih item & menyetujui trade.",
+      description: "Menunggu responder memilih item & memverifikasi (PIN tahap 1).",
+    },
+    awaiting_initiator: {
+      label: "Menunggu Verifikasi Initiator", variant: "secondary",
+      Icon: ShieldCheck,
+      description: "Responder sudah memilih item & memverifikasi. Initiator harus meninjau & menyetujui (PIN tahap 2) dalam 1 jam.",
     },
     accepted: {
       label: "Selesai", variant: "default",
@@ -448,7 +453,7 @@ const TradeRequest = () => {
     rejected: {
       label: "Ditolak", variant: "destructive",
       Icon: XCircle,
-      description: "Trade ditolak oleh responder.",
+      description: "Trade ditolak.",
     },
     cancelled: {
       label: "Dibatalkan", variant: "outline",
@@ -463,7 +468,10 @@ const TradeRequest = () => {
   };
   const sMeta = statusMeta[trade.status];
 
-  const canExecute = trade.status === "pending" && !!user && !isInitiator;
+  // Step 1: Responder picks items + PIN
+  const canResponderSubmit = trade.status === "pending" && !!user && !isInitiator;
+  // Step 2: Initiator reviews + approves or rejects with PIN
+  const canInitiatorReview = trade.status === "awaiting_initiator" && !!user && isInitiator;
 
   type TimelineKind = "created" | "accepted" | "rejected" | "cancelled" | "expired" | "expiring";
   type TimelineEvent = {
