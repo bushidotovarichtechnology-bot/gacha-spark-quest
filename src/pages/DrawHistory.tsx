@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { History, Crown, Star, Gift, Award, ExternalLink, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import RateUpBadge from "@/components/RateUpBadge";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { format } from "date-fns";
