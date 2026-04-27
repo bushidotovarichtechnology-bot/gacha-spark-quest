@@ -144,11 +144,11 @@ const GiftCoins = () => {
     };
   }, [user, toast, refreshCoins, pushNotification, markAllRead]);
 
-  // Reset verified recipient if email changes
+  // Reset verified recipient if input changes
   useEffect(() => {
     if (recipient) setRecipient(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email]);
+  }, [recipientInput]);
 
   const coinAmountNum = parseInt(amount) || 0;
 
@@ -167,8 +167,10 @@ const GiftCoins = () => {
     return out;
   })();
 
+  const usernameRe = /^[a-z0-9_]{3,20}$/;
+
   const handleVerify = async () => {
-    if (!user || !email || !amount) return;
+    if (!user || !recipientInput || !amount) return;
     if (coinAmountNum < 1) {
       toast({ title: "Error", description: "Jumlah koin minimal 1", variant: "destructive" });
       return;
@@ -182,21 +184,34 @@ const GiftCoins = () => {
       return;
     }
 
+    // Detect mode: @username, bare username, or email
+    const trimmed = recipientInput.trim();
+    const isUsernameMode =
+      trimmed.startsWith("@") ||
+      (!trimmed.includes("@") && usernameRe.test(trimmed.toLowerCase()));
+    const payload = isUsernameMode
+      ? { username: trimmed.replace(/^@/, "").toLowerCase() }
+      : { email: trimmed.toLowerCase() };
+
     setVerifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-gift-recipient", {
-        body: { email },
+        body: payload,
       });
       if (error) throw new Error(error.message || "Gagal verifikasi");
       if (!data?.found) {
         toast({
-          title: "Email tidak terdaftar",
-          description: data?.error || "Pastikan email penerima sudah terdaftar di Bushido Gacha",
+          title: isUsernameMode ? "Username tidak ditemukan" : "Email tidak terdaftar",
+          description: data?.error || "Pastikan penerima sudah terdaftar di Bushido Gacha",
           variant: "destructive",
         });
         return;
       }
-      setRecipient(data.receiver);
+      // Merge resolved_email into the receiver object so we can call send-gift-coins reliably
+      setRecipient({
+        ...data.receiver,
+        resolved_email: (data.resolved_email as string) || data.receiver.masked_email,
+      });
       setConfirmText("");
       setConfirmOpen(true);
     } catch (err: any) {
@@ -222,7 +237,12 @@ const GiftCoins = () => {
           : `gift_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
       const { data, error } = await supabase.functions.invoke("send-gift-coins", {
-        body: { receiver_email: email, amount: coinAmountNum, message, request_id: requestId },
+        body: {
+          receiver_email: recipient.resolved_email,
+          amount: coinAmountNum,
+          message,
+          request_id: requestId,
+        },
       });
 
       if (error || !data?.success) {
@@ -247,7 +267,7 @@ const GiftCoins = () => {
         .order("created_at", { ascending: false });
       setGifts((newGifts as unknown as GiftRecord[]) || []);
 
-      setEmail("");
+      setRecipientInput("");
       setAmount("");
       setMessage("");
       setRecipient(null);
