@@ -637,7 +637,7 @@ const CampaignDetail = () => {
 
                   {/* Tier A: subtle sparkle — fewer, smaller, dimmer (purple) */}
                   {isRare && (
-                    <div className="pointer-events-none absolute inset-0 overflow-visible">
+                    <div data-fx="secondary" className="pointer-events-none absolute inset-0 overflow-visible">
                       <Sparkles className="absolute left-[15%] top-1.5 h-2 w-2 animate-sparkle-twinkle text-purple-200/80 drop-shadow-[0_0_3px_rgba(216,180,254,0.7)]" style={{ animationDelay: "0.4s", animationDuration: "3s" }} />
                       <Sparkles className="absolute left-[60%] top-5 h-2 w-2 animate-sparkle-twinkle text-fuchsia-200/80 drop-shadow-[0_0_3px_rgba(240,171,252,0.7)]" style={{ animationDelay: "1.5s", animationDuration: "3s" }} />
                       <Sparkles className="absolute left-[82%] top-1 h-1.5 w-1.5 animate-sparkle-twinkle text-purple-100/70 drop-shadow-[0_0_2px_rgba(233,213,255,0.6)]" style={{ animationDelay: "2.2s", animationDuration: "3s" }} />
