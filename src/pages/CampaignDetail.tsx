@@ -213,7 +213,7 @@ const CampaignDetail = () => {
         // unless every prize in the tier is sold out. Sold-out flag still works.
         remaining: t.total ?? 1,
         total: t.total ?? 1,
-        probability_weight: 1,
+        probability_weight: Number(t.probability_weight ?? 1),
         tier_prizes: (t.tier_prizes_public || []).map((p: any) => ({
           id: p.id,
           tier_id: p.tier_id,
@@ -226,7 +226,7 @@ const CampaignDetail = () => {
           auto_refill: p.auto_refill,
           remaining: availMap.get(p.id) ? 0 : (p.total ?? 1),
           total: p.total ?? 1,
-          probability_weight: 1,
+          probability_weight: Number(p.probability_weight ?? 1),
         })),
       }));
 
