@@ -314,16 +314,24 @@ const TradeRequest = () => {
         { event: "UPDATE", schema: "public", table: "trades", filter: `id=eq.${tradeId}` },
         (payload) => handleIncoming(payload.new as unknown as TradeRow),
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Channel hiccup — kick a backoff-driven reconcile so we self-heal.
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          void refetchWithBackoff();
+        }
+      });
 
-    const interval = window.setInterval(refetch, 30_000);
-    const onVisible = () => { if (document.visibilityState === "visible") refetch(); };
-    const onOnline = () => refetch();
+    const interval = window.setInterval(() => { void refetchWithBackoff(); }, 30_000);
+    const onVisible = () => { if (document.visibilityState === "visible") void refetchWithBackoff(); };
+    const onOnline = () => { void refetchWithBackoff(); };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onOnline);
 
     return () => {
       cancelled = true;
+      retryToken++;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+      manualRetryRef.current = null;
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
