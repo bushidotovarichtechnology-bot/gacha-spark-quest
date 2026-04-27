@@ -44,16 +44,15 @@ describe("RLS: stock tables are protected from anon", () => {
     expect(Array.isArray(data)).toBe(true);
   });
 
-  it("public view tier_prizes_public is readable and omits sensitive columns", async () => {
+  it("public view tier_prizes_public exposes total but hides remaining/probability_weight", async () => {
     const { data, error } = await anon
       .from("tier_prizes_public" as any)
-      .select("id, name, is_sold_out")
+      .select("id, name, is_sold_out, total")
       .limit(1);
     expect(error).toBeNull();
     expect(Array.isArray(data)).toBe(true);
     if (data && data[0]) {
       expect((data[0] as any).remaining).toBeUndefined();
-      expect((data[0] as any).total).toBeUndefined();
       expect((data[0] as any).probability_weight).toBeUndefined();
     }
   });
