@@ -296,6 +296,7 @@ const CampaignDetail = () => {
   const [pendingDrawComplete, setPendingDrawComplete] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
   const [pityPopup, setPityPopup] = useState<{ open: boolean; before: number; after: number; wasReset: boolean }>({ open: false, before: 0, after: 0, wasReset: false });
+  const [drawRateUpMultiplier, setDrawRateUpMultiplier] = useState<number>(1);
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
