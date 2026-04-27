@@ -108,7 +108,7 @@ const TradeNew = () => {
   };
 
   const tradeUrl = generatedToken
-    ? `${window.location.origin}/trade/req/${generatedToken}`
+    ? `https://bushidogacha.com/trade/req/${generatedToken}`
     : "";
 
   const handleCopy = async () => {
