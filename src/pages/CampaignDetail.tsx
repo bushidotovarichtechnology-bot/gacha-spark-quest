@@ -64,21 +64,8 @@ const tierGlowMap: Record<string, string> = {
   "text-muted-foreground": "",
 };
 
-// Banner gradients per tier — kitakuji-inspired chevron banner
-// S = Diamond (icy white-cyan), A = Gold, B = Silver, C = Bronze
-const tierBannerMap: Record<string, string> = {
-  S: "from-cyan-200 via-white to-sky-300", // Diamond — icy shiny
-  A: "from-yellow-300 via-amber-400 to-yellow-600", // Gold
-  B: "from-slate-200 via-slate-300 to-slate-500", // Silver
-  C: "from-amber-700 via-orange-700 to-yellow-900", // Bronze
-};
-
-const tierLabelMap: Record<string, string> = {
-  S: "Grand Prize",
-  A: "Gold",
-  B: "Silver",
-  C: "Bronze",
-};
+// Tier visuals come from the global token system (Diamond/Gold/Silver/Bronze).
+// See src/lib/tierStyles.ts and src/index.css.
 
 const coinValues: Record<string, number> = { S: 1000, A: 200, B: 80, C: 15 };
 
