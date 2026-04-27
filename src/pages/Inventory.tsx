@@ -150,25 +150,45 @@ const Inventory = () => {
             <p className="text-sm text-muted-foreground">{t("yourCollection")} — kelola & trade prize hasil gacha kamu</p>
           </div>
           {(tierCounts.S + tierCounts.A + tierCounts.B) > 0 && (
-            <TooltipProvider delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    asChild
-                    size="sm"
-                    className="shrink-0 gap-1.5 border border-[hsl(var(--hacker-green)/0.4)] bg-[hsl(var(--hacker-bg))] font-mono-hacker text-xs text-[hsl(var(--hacker-green))] shadow-[0_0_12px_hsl(var(--hacker-green)/0.25)] hover:bg-[hsl(var(--hacker-green)/0.1)] hover:text-[hsl(var(--hacker-green))]"
+            <div className="flex shrink-0 items-center gap-1.5">
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      asChild
+                      size="sm"
+                      className="shrink-0 gap-1.5 border border-[hsl(var(--hacker-green)/0.4)] bg-[hsl(var(--hacker-bg))] font-mono-hacker text-xs text-[hsl(var(--hacker-green))] shadow-[0_0_12px_hsl(var(--hacker-green)/0.25)] hover:bg-[hsl(var(--hacker-green)/0.1)] hover:text-[hsl(var(--hacker-green))]"
+                    >
+                      <Link to="/trade/new" aria-label="Buka P2P Trade Hub">
+                        <ArrowLeftRight className="h-3.5 w-3.5" />
+                        <span>Trade Prize</span>
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+                    Tukar prize hasil gacha kamu dengan pemain lain. Membuka P2P Trade Hub.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {/* Info popover — works on tap (mobile) where hover tooltip doesn't trigger */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Apa itu Trade Prize?"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
-                    <Link to="/trade/new" aria-label="Buka P2P Trade Hub">
-                      <ArrowLeftRight className="h-3.5 w-3.5" />
-                      <span>Trade Prize</span>
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[220px] text-xs">
-                  Tukar prize hasil gacha kamu dengan pemain lain. Membuka P2P Trade Hub (/trade/new).
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="end" className="max-w-[260px] text-xs leading-relaxed">
+                  <p className="font-semibold text-foreground">Trade Prize</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Tukar prize hasil gacha kamu dengan pemain lain. Tombol ini membuka P2P Trade Hub di <code className="text-foreground">/trade/new</code>.
+                  </p>
+                </PopoverContent>
+              </Popover>
+            </div>
           )}
         </div>
 
