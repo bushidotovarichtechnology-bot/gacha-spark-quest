@@ -1573,6 +1573,17 @@ export type Database = {
           total_draws: number
         }[]
       }
+      get_trade_item_details: {
+        Args: { _trade_id: string }
+        Returns: {
+          coin_value: number
+          image_url: string
+          item_id: string
+          prize_name: string
+          side: string
+          tier_label: string
+        }[]
+      }
       get_user_ticket_balance: {
         Args: { _user_id: string }
         Returns: {
