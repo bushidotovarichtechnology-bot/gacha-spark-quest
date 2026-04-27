@@ -252,8 +252,8 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
               transition={prize.tier === "S" ? { type: "spring", damping: 12, stiffness: 150, duration: 0.6 } : { type: "spring", damping: 15, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
               className={`relative w-full max-w-sm overflow-hidden rounded-2xl border bg-card p-6 text-center ${
-                prize.tier === "S" ? "border-accent border-2 box-glow-gold" :
-                prize.isPityReward ? "border-accent box-glow-gold" : `border-border ${config.glow}`
+                prize.tier === "S" ? "border-tier-s border-2 tier-glow-s" :
+                prize.isPityReward ? "border-tier-a tier-glow-a" : `border-border ${config.glow}`
               }`}
             >
               <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
