@@ -213,32 +213,50 @@ const TradeRequest = () => {
     [items, responderItems],
   );
 
-  const handleExecute = async () => {
+  /**
+   * Two-step flow:
+   * - Responder calls with action='submit' + responder_items + PIN -> trade enters 'awaiting_initiator'
+   * - Initiator calls with action='approve' + PIN -> swap executes
+   * - Initiator calls with action='reject' + PIN -> trade cancelled
+   */
+  const callTradeExecute = async (action: "submit" | "approve" | "reject") => {
     if (!trade || !user) return;
     if (pinReady === false) { setShowPinSetup(true); return; }
     if (pin.length !== 6) { toast.error("Masukkan PIN 6 digit"); return; }
-    if (!isInitiator && !isResponder && responderItems.size === 0) {
+    if (action === "submit" && responderItems.size === 0) {
       toast.error("Pilih minimal 1 item Tier " + trade.tier_label + " untuk ditukar");
       return;
     }
 
     setSubmitting(true);
-    toast.loading("Memproses trade…", { id: "trade-exec" });
+    const loadingMsg =
+      action === "submit" ? "Mengirim tawaran ke initiator…" :
+      action === "approve" ? "Menyetujui & menukar item…" :
+      "Menolak trade…";
+    toast.loading(loadingMsg, { id: "trade-exec" });
     try {
       const { data, error } = await supabase.functions.invoke("trade-execute", {
         body: {
           trade_id: trade.id,
           pin,
-          responder_items: Array.from(responderItems),
+          action,
+          responder_items: action === "submit" ? Array.from(responderItems) : undefined,
         },
       });
       if (error) throw error;
       if ((data as { success?: boolean })?.success) {
-        toast.success("Trade berhasil!", {
-          id: "trade-exec",
-          description: `Item sudah berpindah tangan. -${TRADE_GAS_FEE} koin (gas fee).`,
-        });
-        await Promise.all([refreshInventory(), refreshCoins()]);
+        const successMsg =
+          action === "submit" ? "Tawaran terkirim! Menunggu verifikasi initiator." :
+          action === "approve" ? "Trade berhasil! Item sudah berpindah tangan." :
+          "Trade ditolak.";
+        const successDesc =
+          action === "submit" ? "Initiator punya 1 jam untuk meninjau & menyetujui." :
+          action === "approve" ? `-${TRADE_GAS_FEE} koin (gas fee).` :
+          "Responder harus membuat ulang trade jika ingin mencoba lagi.";
+        toast.success(successMsg, { id: "trade-exec", description: successDesc });
+        if (action === "approve") {
+          await Promise.all([refreshInventory(), refreshCoins()]);
+        }
         const updated = await fetchTradeByToken(token);
         setTrade(updated);
         setPin("");
@@ -250,14 +268,16 @@ const TradeRequest = () => {
       const map: Record<string, string> = {
         invalid_pin: "PIN salah.",
         invalid_pin_format: "Format PIN tidak valid.",
+        invalid_action: "Aksi tidak valid.",
         tier_mismatch: "Tier item kedua belah pihak tidak sama.",
         tier_locked: "Tier C tidak boleh ditrade.",
         items_ownership_failed: "Salah satu item bukan milik kamu lagi.",
         insufficient_gas_fee: `Saldo koin tidak cukup untuk gas fee (${TRADE_GAS_FEE} koin).`,
         missing_responder_items: "Responder belum memilih item.",
         self_trade_forbidden: "Tidak bisa trade dengan diri sendiri.",
-        trade_not_pending: "Trade sudah tidak aktif.",
+        trade_not_pending: "Trade sudah tidak aktif / sudah masuk tahap berikutnya.",
         trade_not_found: "Trade tidak ditemukan.",
+        review_window_expired: "Window review 1 jam sudah lewat — trade kedaluwarsa.",
       };
       const friendly = Object.keys(map).find((k) => raw.includes(k));
       toast.error(friendly ? map[friendly] : "Trade gagal", { id: "trade-exec", description: raw });
