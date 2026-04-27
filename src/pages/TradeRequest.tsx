@@ -122,6 +122,16 @@ const TradeRequest = () => {
   // When the OTHER party changes the trade status (submit / approve / reject),
   // we surface a toast so this user knows immediately without refreshing.
   const lastStatusRef = useRef<string | null>(null);
+
+  // Sync health for the realtime + refetch loop. When refetch fails (offline,
+  // 5xx, channel error), we retry with exponential backoff and surface a
+  // "Sync gagal" banner with a manual retry button so the user is never stuck.
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "error">("idle");
+  const [syncAttempt, setSyncAttempt] = useState(0);
+  const [lastSyncError, setLastSyncError] = useState<string | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const manualRetryRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (!trade?.id) return;
     const tradeId = trade.id;
