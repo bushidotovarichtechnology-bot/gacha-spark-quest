@@ -95,24 +95,46 @@ const SecurityPinDialog = ({ open, onOpenChange, onReady, title }: Props) => {
 
           <div className="flex justify-center">
             {step === "enter" ? (
-              <InputOTP maxLength={6} value={pin} onChange={setPin} disabled={submitting}>
+              <InputOTP
+                maxLength={6}
+                value={pin}
+                onChange={setPin}
+                disabled={submitting}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                aria-label="Security PIN baru"
+                name="security-pin-new"
+              >
                 <InputOTPGroup>
                   {Array.from({ length: 6 }).map((_, i) => (
                     <InputOTPSlot
                       key={i}
                       index={i}
+                      masked
                       className="border-hacker bg-hacker-bg font-mono-hacker text-hacker-green"
                     />
                   ))}
                 </InputOTPGroup>
               </InputOTP>
             ) : (
-              <InputOTP maxLength={6} value={confirmPin} onChange={setConfirmPin} disabled={submitting}>
+              <InputOTP
+                maxLength={6}
+                value={confirmPin}
+                onChange={setConfirmPin}
+                disabled={submitting}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                aria-label="Konfirmasi Security PIN"
+                name="security-pin-confirm"
+              >
                 <InputOTPGroup>
                   {Array.from({ length: 6 }).map((_, i) => (
                     <InputOTPSlot
                       key={i}
                       index={i}
+                      masked
                       className="border-hacker bg-hacker-bg font-mono-hacker text-hacker-green"
                     />
                   ))}
