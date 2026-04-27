@@ -122,18 +122,76 @@ const TradeRequest = () => {
   // When the OTHER party changes the trade status (submit / approve / reject),
   // we surface a toast so this user knows immediately without refreshing.
   const lastStatusRef = useRef<string | null>(null);
+
+  // Sync health for the realtime + refetch loop. When refetch fails (offline,
+  // 5xx, channel error), we retry with exponential backoff and surface a
+  // "Sync gagal" banner with a manual retry button so the user is never stuck.
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "error">("idle");
+  const [syncAttempt, setSyncAttempt] = useState(0);
+  const [lastSyncError, setLastSyncError] = useState<string | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const manualRetryRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (!trade?.id) return;
     const tradeId = trade.id;
     const tradeToken = trade.token;
     let cancelled = false;
 
-    const refetch = async () => {
+    // Exponential-backoff retry loop. `refetch` returns a boolean so the
+    // caller can decide whether to schedule another attempt. New triggers
+    // (manual retry, online event, poll tick) cancel any in-flight retry
+    // chain via `retryToken` so timers never stack.
+    const BACKOFF_BASE_MS = 1_000;
+    const BACKOFF_MAX_MS = 30_000;
+    const BACKOFF_MAX_ATTEMPTS = 6; // ~1 minute total
+    let retryToken = 0;
+    let retryTimer: number | null = null;
+
+    const refetch = async (): Promise<boolean> => {
       try {
         const fresh = await fetchTradeByToken(tradeToken);
-        if (!cancelled && fresh) setTrade(fresh);
-      } catch { /* ignore */ }
+        if (cancelled) return true;
+        if (fresh) setTrade(fresh);
+        setSyncState("idle");
+        setSyncAttempt(0);
+        setLastSyncError(null);
+        setLastSyncedAt(Date.now());
+        return true;
+      } catch (err) {
+        if (cancelled) return true;
+        setLastSyncError(err instanceof Error ? err.message : "Tidak dapat menjangkau server");
+        return false;
+      }
     };
+
+    const refetchWithBackoff = async () => {
+      const myToken = ++retryToken;
+      if (retryTimer !== null) {
+        window.clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+      setSyncState("syncing");
+      for (let attempt = 0; attempt < BACKOFF_MAX_ATTEMPTS; attempt++) {
+        if (cancelled || myToken !== retryToken) return;
+        setSyncAttempt(attempt + 1);
+        const ok = await refetch();
+        if (ok || cancelled || myToken !== retryToken) return;
+        const exp = Math.min(BACKOFF_BASE_MS * 2 ** attempt, BACKOFF_MAX_MS);
+        const delay = Math.floor(Math.random() * exp); // full jitter
+        await new Promise<void>((resolve) => {
+          retryTimer = window.setTimeout(() => {
+            retryTimer = null;
+            resolve();
+          }, delay);
+        });
+      }
+      // Exhausted attempts — surface error state, keep manual retry available.
+      if (!cancelled && myToken === retryToken) setSyncState("error");
+    };
+
+    // Expose manual retry to the banner button.
+    manualRetryRef.current = () => { void refetchWithBackoff(); };
 
     // Per-(trade,status) debounce lock — realtime + polling + manual refetch
     // can deliver the same transition multiple times within a few hundred ms.
@@ -256,16 +314,24 @@ const TradeRequest = () => {
         { event: "UPDATE", schema: "public", table: "trades", filter: `id=eq.${tradeId}` },
         (payload) => handleIncoming(payload.new as unknown as TradeRow),
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Channel hiccup — kick a backoff-driven reconcile so we self-heal.
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          void refetchWithBackoff();
+        }
+      });
 
-    const interval = window.setInterval(refetch, 30_000);
-    const onVisible = () => { if (document.visibilityState === "visible") refetch(); };
-    const onOnline = () => refetch();
+    const interval = window.setInterval(() => { void refetchWithBackoff(); }, 30_000);
+    const onVisible = () => { if (document.visibilityState === "visible") void refetchWithBackoff(); };
+    const onOnline = () => { void refetchWithBackoff(); };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onOnline);
 
     return () => {
       cancelled = true;
+      retryToken++;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+      manualRetryRef.current = null;
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
@@ -699,6 +765,51 @@ const TradeRequest = () => {
             <span className="font-semibold text-foreground">Pesan:</span> {trade.message}
           </Card>
         )}
+
+        {/* Sync health banner — auto-retry with backoff + manual retry button. */}
+        {(syncState === "syncing" && syncAttempt > 1) || syncState === "error" ? (
+          <Card
+            className={cn(
+              "mb-4 border-l-4 p-3 transition-colors",
+              syncState === "error"
+                ? "border-destructive/60 bg-destructive/10 text-destructive"
+                : "border-accent/60 bg-accent/10 text-accent",
+            )}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-start gap-2">
+                {syncState === "syncing"
+                  ? <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" />
+                  : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wider">
+                    {syncState === "syncing"
+                      ? `Mencoba menyinkronkan ulang… (percobaan ${syncAttempt})`
+                      : "Sinkronisasi gagal"}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-foreground/80">
+                    {syncState === "syncing"
+                      ? "Koneksi sedang dipulihkan. Halaman akan otomatis ter-update."
+                      : (lastSyncError ?? "Tidak dapat menjangkau server.") + " Tekan Coba lagi untuk sinkron manual."}
+                  </p>
+                </div>
+              </div>
+              {syncState === "error" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1.5"
+                  onClick={() => manualRetryRef.current?.()}
+                >
+                  <Loader2 className="h-3.5 w-3.5" />
+                  Coba lagi
+                </Button>
+              )}
+            </div>
+          </Card>
+        ) : null}
 
         {/* Role-aware CTA banner — updates live on realtime status changes */}
         {(() => {
