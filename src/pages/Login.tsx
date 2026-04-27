@@ -7,7 +7,7 @@ import { useI18n } from "@/context/I18nContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Mail, Lock, Eye, EyeOff, ArrowLeftRight, Info } from "lucide-react";
+import { Coins, Mail, Lock, Eye, EyeOff, ArrowLeftRight, Info, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
@@ -19,11 +19,45 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get("redirect");
-  // Only allow internal paths to prevent open-redirect.
-  const safeRedirect =
-    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-      ? redirectParam
-      : "/";
+
+  // Allowlist of internal route prefixes that login is allowed to redirect to.
+  // Anything outside this list (including absolute URLs, protocol-relative
+  // paths "//evil.com", or unknown app routes) is rejected to prevent
+  // open-redirect attacks and to avoid sending users to broken URLs.
+  const ALLOWED_REDIRECT_PREFIXES = [
+    "/trade/req/",
+    "/inventory",
+    "/profile",
+    "/topup",
+    "/transactions",
+    "/claim-history",
+    "/draw-history",
+    "/leaderboard",
+    "/redeem-store",
+    "/gift-coins",
+    "/campaign/",
+  ];
+
+  const validateRedirect = (raw: string | null): { safe: string; rejected: boolean } => {
+    if (!raw) return { safe: "/", rejected: false };
+    // Must be a relative path, not protocol-relative, no scheme.
+    if (!raw.startsWith("/") || raw.startsWith("//")) {
+      return { safe: "/", rejected: true };
+    }
+    // Reject anything that looks like a full URL slipped into the path.
+    if (/^\/?https?:/i.test(raw) || raw.includes("://")) {
+      return { safe: "/", rejected: true };
+    }
+    // Strip query/hash before matching prefix.
+    const pathOnly = raw.split(/[?#]/)[0];
+    const allowed = ALLOWED_REDIRECT_PREFIXES.some((p) =>
+      p.endsWith("/") ? pathOnly.startsWith(p) : pathOnly === p || pathOnly.startsWith(`${p}/`),
+    );
+    if (!allowed) return { safe: "/", rejected: true };
+    return { safe: raw, rejected: false };
+  };
+
+  const { safe: safeRedirect, rejected: redirectRejected } = validateRedirect(redirectParam);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -84,7 +118,28 @@ const Login = () => {
             <CardDescription>{t("loginDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            {redirectParam && safeRedirect !== "/" && (
+            {redirectRejected && (
+              <div
+                role="alert"
+                aria-live="polite"
+                className="mb-4 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-foreground"
+              >
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-destructive">
+                    Tujuan redirect ditolak
+                  </p>
+                  <p className="mt-0.5 text-muted-foreground">
+                    Link login berisi tujuan{" "}
+                    <span className="break-all font-mono text-foreground">{redirectParam}</span>{" "}
+                    yang tidak diizinkan (bukan halaman internal yang dikenal). Setelah login,
+                    kamu akan diarahkan ke halaman utama. Jika kamu mengikuti link dari teman,
+                    minta mereka mengirim ulang link aslinya.
+                  </p>
+                </div>
+              </div>
+            )}
+            {!redirectRejected && redirectParam && safeRedirect !== "/" && (
               <div
                 role="status"
                 aria-live="polite"
