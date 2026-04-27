@@ -781,8 +781,16 @@ const TradeRequest = () => {
                     <ShieldCheck className="h-4 w-4 shrink-0" />
                     <span className="uppercase tracking-wider">
                       {reviewCountdown.expired
-                        ? "Window review kedaluwarsa"
-                        : "Sisa waktu review (1 jam)"}
+                        ? (isInitiator
+                            ? "Window review terlewat — kamu tidak sempat approve"
+                            : isResponder
+                              ? "Initiator tidak meninjau tepat waktu"
+                              : "Window review 1 jam kedaluwarsa")
+                        : (isInitiator
+                            ? "Sisa waktu kamu untuk approve"
+                            : isResponder
+                              ? "Menunggu approval initiator dalam"
+                              : "Sisa window review (1 jam)")}
                     </span>
                   </div>
                   <span className="text-sm font-bold tabular-nums text-foreground">
