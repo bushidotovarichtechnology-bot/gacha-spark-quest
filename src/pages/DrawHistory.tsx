@@ -39,6 +39,9 @@ const DrawHistory = () => {
             {t("drawHistory")}
           </h1>
           <p className="text-sm text-muted-foreground">{t("drawHistoryDesc")}</p>
+          <div className="mt-3">
+            <RateUpBadge />
+          </div>
         </div>
 
         {/* Summary stats */}
