@@ -147,7 +147,7 @@ const Inventory = () => {
         <div className="mb-8 flex items-start justify-between gap-3">
           <div>
             <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {t("myInventory")}
+              Trade Prizes
             </h1>
             <p className="text-sm text-muted-foreground">{t("yourCollection")} — kelola & trade prize hasil gacha kamu</p>
           </div>
