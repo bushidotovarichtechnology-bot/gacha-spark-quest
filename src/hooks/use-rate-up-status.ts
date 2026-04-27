@@ -7,9 +7,18 @@ export interface RateUpStatus {
   user_index: number | null;
   multiplier: number;
   limit: number;
+  ends_at: string | null;
+  expired: boolean;
 }
 
-const DEFAULT: RateUpStatus = { is_rate_up: false, user_index: null, multiplier: 1.0, limit: 100 };
+const DEFAULT: RateUpStatus = {
+  is_rate_up: false,
+  user_index: null,
+  multiplier: 1.0,
+  limit: 100,
+  ends_at: null,
+  expired: false,
+};
 
 /**
  * Cek apakah user termasuk 100 pendaftar pertama yang berhak rate-up 1.5x.
