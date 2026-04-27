@@ -113,10 +113,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get receiver display name & avatar (best-effort)
+    // Get receiver display name, avatar & username (best-effort)
     const { data: profile } = await adminClient
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, username")
       .eq("user_id", receiver.id)
       .maybeSingle();
 
@@ -128,11 +128,15 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       found: true,
+      // Echo back which mode resolved so the client can show username chip
+      resolved_via: rawUsername ? "username" : "email",
+      resolved_email: normalizedEmail,
       receiver: {
         id: receiver.id,
         masked_email: maskedEmail,
         display_name: profile?.display_name || "Player",
         avatar_url: profile?.avatar_url || "",
+        username: profile?.username || null,
       },
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
