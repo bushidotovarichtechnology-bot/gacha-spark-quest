@@ -146,8 +146,28 @@ const Inventory = () => {
       <div className="container mx-auto px-4 pt-24">
         <div className="mb-8 flex items-start justify-between gap-3">
           <div>
-            <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Trade Prizes
+            <h1 className="mb-1 flex items-center gap-2 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <span>Trade Prizes</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Apa itu Trade Prizes?"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="start" className="max-w-[280px] text-xs leading-relaxed">
+                  <p className="font-semibold text-foreground">Apa itu Trade Prizes?</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Trade Prizes adalah prize hasil gacha kamu (tier S/A/B) yang bisa ditukar dengan pemain lain lewat P2P Trade Hub.
+                  </p>
+                  <p className="mt-2 text-muted-foreground">
+                    <span className="font-semibold text-foreground">Cara kerja:</span> pilih item, kirim link trade ke teman, mereka pilih item balasan, lalu konfirmasi dengan PIN keamanan.
+                  </p>
+                </PopoverContent>
+              </Popover>
             </h1>
             <p className="text-sm text-muted-foreground">{t("yourCollection")} — kelola & trade prize hasil gacha kamu</p>
           </div>
