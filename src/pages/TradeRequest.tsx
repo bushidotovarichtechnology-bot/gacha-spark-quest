@@ -106,6 +106,9 @@ const TradeRequest = () => {
   }, [token, authLoading]);
 
   // Realtime auto-refresh + fallback reconcile.
+  // When the OTHER party changes the trade status (submit / approve / reject),
+  // we surface a toast so this user knows immediately without refreshing.
+  const lastStatusRef = useRef<string | null>(null);
   useEffect(() => {
     if (!trade?.id) return;
     const tradeId = trade.id;
@@ -119,12 +122,52 @@ const TradeRequest = () => {
       } catch { /* ignore */ }
     };
 
+    const handleIncoming = (next: TradeRow) => {
+      const prev = lastStatusRef.current;
+      const meIsInitiator = !!user && next.initiator_id === user.id;
+      const meIsResponder = !!user && next.responder_id === user.id;
+
+      // Notify on real status transitions caused by the OTHER party.
+      if (prev && prev !== next.status) {
+        if (next.status === "awaiting_initiator" && meIsInitiator) {
+          toast.info("Responder sudah memilih item", {
+            id: `trade-rt-${tradeId}`,
+            description: "Tinjau penawaran lalu approve atau tolak (timer 1 jam).",
+          });
+        } else if (next.status === "accepted") {
+          toast.success("Trade berhasil dieksekusi", {
+            id: `trade-rt-${tradeId}`,
+            description: "Item sudah berpindah tangan.",
+          });
+          // Refresh own balances/inventory in real time.
+          Promise.all([refreshInventory(), refreshCoins()]).catch(() => {});
+        } else if (next.status === "rejected") {
+          toast.error("Trade ditolak oleh initiator", {
+            id: `trade-rt-${tradeId}`,
+            description: "Responder perlu membuat trade baru jika ingin mencoba lagi.",
+          });
+        } else if (next.status === "cancelled") {
+          toast.warning("Trade dibatalkan", { id: `trade-rt-${tradeId}` });
+        } else if (next.status === "expired") {
+          toast.error("Trade kedaluwarsa", {
+            id: `trade-rt-${tradeId}`,
+            description: "Batas waktu sudah lewat.",
+          });
+        }
+      }
+      lastStatusRef.current = next.status;
+      setTrade(next);
+    };
+
+    // Seed last status so we don't fire a notification on first mount.
+    lastStatusRef.current = trade.status;
+
     const channel = supabase
       .channel(`trade-${tradeId}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "trades", filter: `id=eq.${tradeId}` },
-        (payload) => setTrade(payload.new as unknown as TradeRow),
+        (payload) => handleIncoming(payload.new as unknown as TradeRow),
       )
       .subscribe();
 
@@ -141,7 +184,8 @@ const TradeRequest = () => {
       window.removeEventListener("online", onOnline);
       supabase.removeChannel(channel);
     };
-  }, [trade?.id, trade?.token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trade?.id, trade?.token, user?.id]);
 
   // Use SECURITY DEFINER RPC so both parties can see each other's item details.
   useEffect(() => {
