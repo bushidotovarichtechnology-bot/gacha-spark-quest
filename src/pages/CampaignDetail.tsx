@@ -21,6 +21,7 @@ import { supabaseImg } from "@/lib/imageTransform";
 import { obfuscateStock } from "@/lib/obfuscateStock";
 import { resolveCanonicalCampaignPath } from "@/lib/campaignRedirect";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getTierStyle, TIER_STYLES } from "@/lib/tierStyles";
 
 import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
 
