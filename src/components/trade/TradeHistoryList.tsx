@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Loader2, ArrowLeftRight, Coins, CheckCircle2, XCircle, Clock, Ban, RefreshCw } from "lucide-react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { Loader2, ArrowLeftRight, Coins, CheckCircle2, XCircle, Clock, Ban, RefreshCw, Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface TradeRow {
   id: string;
@@ -170,7 +171,46 @@ const TradeHistoryList = () => {
     loadInitial(user.id);
   }, [user, loadInitial]);
 
-  const handleLoadMore = async () => {
+  // --- Search state ---
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput.trim().toLowerCase()), 250);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const partnerIdOf = useCallback(
+    (row: TradeRow): string | null => {
+      if (!user) return null;
+      return row.initiator_id === user.id
+        ? row.responder_id ?? row.recipient_id
+        : row.initiator_id;
+    },
+    [user],
+  );
+
+  const matchesQuery = useCallback(
+    (row: TradeRow, q: string) => {
+      if (!q) return true;
+      const pid = partnerIdOf(row);
+      if (!pid) return false;
+      if (pid.toLowerCase().includes(q)) return true;
+      const p = profiles[pid];
+      if (!p) return false;
+      return (
+        (p.username ?? "").toLowerCase().includes(q) ||
+        (p.display_name ?? "").toLowerCase().includes(q)
+      );
+    },
+    [partnerIdOf, profiles],
+  );
+
+  const filteredTrades = useMemo(
+    () => trades.filter((r) => matchesQuery(r, searchQuery)),
+    [trades, searchQuery, matchesQuery],
+  );
+
+  const handleLoadMore = useCallback(async () => {
     if (!user || loadingMore || !hasMore || trades.length === 0) return;
     setLoadingMore(true);
     try {
@@ -186,7 +226,17 @@ const TradeHistoryList = () => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [user, loadingMore, hasMore, trades, profiles, fetchPage]);
+
+  // When searching: if filtered list is empty but more pages exist,
+  // auto-fetch next page so search keeps drilling deeper.
+  useEffect(() => {
+    if (!searchQuery) return;
+    if (loading || loadingMore) return;
+    if (filteredTrades.length > 0) return;
+    if (!hasMore) return;
+    handleLoadMore();
+  }, [searchQuery, filteredTrades.length, hasMore, loading, loadingMore, handleLoadMore]);
 
   const handleRefresh = () => {
     if (!user) return;
@@ -217,10 +267,9 @@ const TradeHistoryList = () => {
 
   const partnerLabel = (row: TradeRow) => {
     if (!user) return "—";
-    const isInitiator = row.initiator_id === user.id;
-    const partnerId = isInitiator ? row.responder_id ?? row.recipient_id : row.initiator_id;
-    if (!partnerId) return "Belum ada partner";
-    const p = profiles[partnerId];
+    const pid = partnerIdOf(row);
+    if (!pid) return "Belum ada partner";
+    const p = profiles[pid];
     if (!p) return "Pengguna";
     if (p.username) return `@${p.username}`;
     return p.display_name || "Pengguna";
@@ -230,9 +279,31 @@ const TradeHistoryList = () => {
 
   return (
     <div className="space-y-3">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Cari berdasarkan username atau ID partner…"
+          className="pl-9 pr-9"
+        />
+        {searchInput && (
+          <button
+            type="button"
+            onClick={() => setSearchInput("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+            aria-label="Hapus pencarian"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          Menampilkan {trades.length} riwayat{hasMore ? "+" : ""}
+          {searchQuery
+            ? `${filteredTrades.length} cocok dari ${trades.length} dimuat${hasMore ? "+" : ""}`
+            : `Menampilkan ${trades.length} riwayat${hasMore ? "+" : ""}`}
         </p>
         <Button size="sm" variant="ghost" onClick={handleRefresh} disabled={refreshing}>
           <RefreshCw className={`mr-1 h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
@@ -240,7 +311,13 @@ const TradeHistoryList = () => {
         </Button>
       </div>
 
-      {trades.map((row) => {
+      {filteredTrades.length === 0 && searchQuery && !hasMore && (
+        <Card className="p-6 text-center text-sm text-muted-foreground">
+          Tidak ada partner yang cocok dengan "{searchInput}".
+        </Card>
+      )}
+
+      {filteredTrades.map((row) => {
         const meta = statusMeta(row.status);
         const Icon = meta.icon;
         const isInitiator = user?.id === row.initiator_id;
@@ -296,6 +373,8 @@ const TradeHistoryList = () => {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Memuat…
               </>
+            ) : searchQuery ? (
+              "Cari lebih dalam"
             ) : (
               "Load more"
             )}
@@ -307,3 +386,4 @@ const TradeHistoryList = () => {
 };
 
 export default TradeHistoryList;
+
