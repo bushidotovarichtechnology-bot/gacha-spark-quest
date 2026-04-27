@@ -600,7 +600,7 @@ const CampaignDetail = () => {
                       <TierIcon className={`h-3.5 w-3.5 drop-shadow ${onBannerText}`} />
                     </div>
                     <span className={`relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider ${tierStyle.isLightBanner ? "drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]" : "drop-shadow-md"} ${onBannerText}`}>
-                      {tier.label} · {tierLabel}
+                      {tier.label} · {tierLabel}{isGrand ? " · GRAND PRIZE" : ""}
                     </span>
                     <span className={`relative z-10 ml-3 hidden text-xs font-bold sm:inline ${tierStyle.isLightBanner ? "" : "drop-shadow"} ${onBannerTextMuted}`}>
                       {tier.name}
