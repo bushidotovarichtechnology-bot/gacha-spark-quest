@@ -322,6 +322,9 @@ const TradeRequest = () => {
       setTrade(next);
     };
 
+    // Wire the holder so refetch() can dispatch through the same pipeline.
+    handleIncomingFn = handleIncoming;
+
     // Seed last status so we don't fire a notification on first mount.
     lastStatusRef.current = trade.status;
 
