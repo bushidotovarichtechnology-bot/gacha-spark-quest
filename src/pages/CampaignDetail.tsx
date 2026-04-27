@@ -411,7 +411,13 @@ const CampaignDetail = () => {
         const hitSorA = serverResults.some((r) => r.tier === "S" || r.tier === "A");
         const nonRareCount = serverResults.filter((r) => r.tier !== "S" && r.tier !== "A").length;
         const afterVal = hitSorA ? 0 : Math.min(beforeVal + nonRareCount, pityThreshold);
-        nextPityPopup = { open: false, before: beforeVal, after: afterVal, wasReset: hitSorA && beforeVal > 0 };
+        const shouldShow = afterVal !== beforeVal || (hitSorA && beforeVal > 0);
+        nextPityPopup = {
+          open: shouldShow,
+          before: beforeVal,
+          after: afterVal,
+          wasReset: hitSorA && beforeVal > 0,
+        };
         setPityPopup(nextPityPopup);
       }
 
