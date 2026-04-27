@@ -700,6 +700,116 @@ const TradeRequest = () => {
           </Card>
         )}
 
+        {/* Role-aware CTA banner — updates live on realtime status changes */}
+        {(() => {
+          type Tone = "info" | "success" | "warning" | "danger" | "neutral";
+          type CTA = { tone: Tone; Icon: typeof CircleDot; title: string; body: string } | null;
+          const role: "initiator" | "responder" | "viewer" =
+            isInitiator ? "initiator" : isResponder ? "responder" : "viewer";
+
+          const cta: CTA = (() => {
+            switch (trade.status) {
+              case "pending":
+                if (role === "responder") return {
+                  tone: "info", Icon: Package,
+                  title: "Giliran kamu — pilih item untuk ditukar",
+                  body: "Pilih item Tier " + trade.tier_label + " yang ingin kamu tawarkan, lalu konfirmasi dengan PIN keamanan.",
+                };
+                if (role === "initiator") return {
+                  tone: "neutral", Icon: Hourglass,
+                  title: "Menunggu responder memilih item",
+                  body: "Bagikan link trade ini ke partner. Kamu akan dapat notifikasi begitu mereka mengirim tawaran.",
+                };
+                return { tone: "neutral", Icon: ArrowLeftRight, title: "Trade terbuka", body: "Trade ini sedang menunggu responder." };
+              case "awaiting_initiator":
+                if (role === "initiator") return {
+                  tone: "warning", Icon: ShieldCheck,
+                  title: "Tinjau & approve dalam 1 jam",
+                  body: "Responder sudah mengirim item. Periksa penawaran lalu approve / reject dengan PIN sebelum window review berakhir.",
+                };
+                if (role === "responder") return {
+                  tone: "info", Icon: Hourglass,
+                  title: "Tawaran terkirim — menunggu initiator",
+                  body: "Initiator punya waktu 1 jam untuk meninjau item kamu. Halaman akan ter-update otomatis.",
+                };
+                return { tone: "neutral", Icon: ShieldCheck, title: "Menunggu review initiator", body: "Initiator sedang meninjau penawaran responder." };
+              case "accepted":
+                return {
+                  tone: "success", Icon: CheckCircle2,
+                  title: role === "responder" ? "Trade disetujui — item sudah masuk inventory" : "Trade selesai — item berpindah tangan",
+                  body: "Saldo koin & inventory sudah diperbarui otomatis. Tidak ada tindakan lebih lanjut yang dibutuhkan.",
+                };
+              case "rejected":
+                if (role === "responder") return {
+                  tone: "danger", Icon: XCircle,
+                  title: "Tawaran kamu ditolak initiator",
+                  body: "Trade ini ditutup. Kamu bisa membuat trade baru jika masih ingin menukar.",
+                };
+                if (role === "initiator") return {
+                  tone: "neutral", Icon: XCircle,
+                  title: "Kamu menolak tawaran responder",
+                  body: "Trade telah ditutup. Tidak ada item yang berpindah tangan.",
+                };
+                return { tone: "danger", Icon: XCircle, title: "Trade ditolak", body: "Tidak ada item yang ditukar." };
+              case "cancelled":
+                return {
+                  tone: "warning", Icon: Ban,
+                  title: role === "initiator" ? "Kamu membatalkan trade" : "Trade dibatalkan oleh initiator",
+                  body: "Trade ini tidak bisa dilanjutkan. Buat trade baru bila masih ingin menukar.",
+                };
+              case "expired":
+                return {
+                  tone: "danger", Icon: AlertTriangle,
+                  title: "Trade kedaluwarsa",
+                  body: role === "initiator"
+                    ? "Window review 1 jam terlewat — trade otomatis ditutup tanpa eksekusi."
+                    : role === "responder"
+                      ? "Initiator tidak meninjau tepat waktu. Buat trade baru bila ingin mencoba lagi."
+                      : "Batas waktu trade habis sebelum diselesaikan.",
+                };
+              default:
+                return null;
+            }
+          })();
+
+          if (!cta) return null;
+
+          const toneClasses: Record<Tone, string> = {
+            info: "border-primary/40 bg-primary/10 text-primary",
+            success: "border-success/40 bg-success/10 text-success",
+            warning: "border-accent/40 bg-accent/10 text-accent",
+            danger: "border-destructive/50 bg-destructive/10 text-destructive",
+            neutral: "border-border bg-muted/40 text-muted-foreground",
+          };
+
+          return (
+            <Card
+              className={cn(
+                "relative mb-4 overflow-hidden border-l-4 p-4 transition-all duration-300",
+                toneClasses[cta.tone],
+                statusUpdating && "ring-1 ring-primary/40",
+              )}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="flex items-start gap-3">
+                <cta.Icon className={cn("mt-0.5 h-5 w-5 shrink-0", statusUpdating && "animate-pulse")} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-display text-sm font-bold uppercase tracking-wider">
+                      {cta.title}
+                    </h3>
+                    <Badge variant="outline" className="text-[10px] uppercase">
+                      {role === "viewer" ? "Pengamat" : role === "initiator" ? "Initiator" : "Responder"}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-foreground/80">{cta.body}</p>
+                </div>
+              </div>
+            </Card>
+          );
+        })()}
+
         {/* Status panel */}
         <Card className={cn("relative mb-4 p-4 overflow-hidden transition-shadow", statusUpdating && "ring-1 ring-primary/40")}>
           {statusUpdating && (
