@@ -53,6 +53,19 @@ const TradeRequest = () => {
     | { id: string; prize: string; image: string; coin_value: number; side: "initiator" | "responder" }
     | null
   >(null);
+  // True briefly when realtime/local action is transitioning the trade
+  // status — drives a small skeleton on the status card + button spinners
+  // so the UI clearly shows "update is in flight".
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const statusUpdateTimerRef = useRef<number | null>(null);
+  const markStatusUpdating = (ms = 1200) => {
+    setStatusUpdating(true);
+    if (statusUpdateTimerRef.current) window.clearTimeout(statusUpdateTimerRef.current);
+    statusUpdateTimerRef.current = window.setTimeout(() => setStatusUpdating(false), ms);
+  };
+  useEffect(() => () => {
+    if (statusUpdateTimerRef.current) window.clearTimeout(statusUpdateTimerRef.current);
+  }, []);
 
   const pinPanelRef = useRef<HTMLDivElement | null>(null);
 
