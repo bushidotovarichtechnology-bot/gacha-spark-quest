@@ -82,12 +82,17 @@ const Login = () => {
         variant: "destructive",
       });
     } else {
-      const description = safeRedirect.startsWith("/trade/req/")
-        ? `Mengarahkan kamu kembali ke halaman trade (${safeRedirect}).`
+      const isTrade = safeRedirect.startsWith("/trade/req/");
+      const title = isTrade
+        ? "Kamu akan kembali ke halaman trade"
         : safeRedirect !== "/"
-          ? `Mengarahkan kamu ke ${safeRedirect}.`
+          ? "Kamu akan diarahkan setelah login"
+          : t("loginSuccess");
+      const description =
+        safeRedirect !== "/"
+          ? `Membuka ${safeRedirect}.${isTrade ? " Pastikan kamu login pakai email yang dituju oleh pengirim trade." : ""}`
           : "Mengarahkan kamu ke halaman utama.";
-      toast({ title: t("loginSuccess"), description });
+      toast({ title, description });
       navigate(safeRedirect);
     }
     setLoading(false);
