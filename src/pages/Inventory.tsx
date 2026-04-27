@@ -159,9 +159,20 @@ const Inventory = () => {
                     <Button
                       asChild
                       size="sm"
-                      className="shrink-0 gap-1.5 border border-[hsl(var(--hacker-green)/0.4)] bg-[hsl(var(--hacker-bg))] font-mono-hacker text-xs text-[hsl(var(--hacker-green))] shadow-[0_0_12px_hsl(var(--hacker-green)/0.25)] hover:bg-[hsl(var(--hacker-green)/0.1)] hover:text-[hsl(var(--hacker-green))]"
+                      aria-current={isTradeActive ? "page" : undefined}
+                      className={
+                        isTradeActive
+                          ? "shrink-0 gap-1.5 border-2 border-[hsl(var(--hacker-green))] bg-[hsl(var(--hacker-green)/0.18)] font-mono-hacker text-xs text-[hsl(var(--hacker-green))] shadow-[0_0_18px_hsl(var(--hacker-green)/0.55)] ring-2 ring-[hsl(var(--hacker-green)/0.35)] ring-offset-2 ring-offset-background animate-pulse hover:bg-[hsl(var(--hacker-green)/0.25)] hover:text-[hsl(var(--hacker-green))]"
+                          : "shrink-0 gap-1.5 border border-[hsl(var(--hacker-green)/0.4)] bg-[hsl(var(--hacker-bg))] font-mono-hacker text-xs text-[hsl(var(--hacker-green))] shadow-[0_0_12px_hsl(var(--hacker-green)/0.25)] hover:bg-[hsl(var(--hacker-green)/0.1)] hover:text-[hsl(var(--hacker-green))]"
+                      }
                     >
                       <Link to="/trade/new" aria-label="Buka P2P Trade Hub">
+                        {isTradeActive && (
+                          <span className="relative mr-0.5 flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[hsl(var(--hacker-green))] opacity-75" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-[hsl(var(--hacker-green))]" />
+                          </span>
+                        )}
                         <ArrowLeftRight className="h-3.5 w-3.5" />
                         <span>Trade Prize</span>
                       </Link>
