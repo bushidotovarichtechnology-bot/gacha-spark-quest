@@ -111,13 +111,15 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.6" },
         },
+        // GPU-friendly: animate transform of an overlay element instead of
+        // background-position, which forces a paint every frame.
         shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
         },
         "shine-sweep": {
-          "0%": { transform: "translateX(-150%) skewX(-20deg)" },
-          "100%": { transform: "translateX(350%) skewX(-20deg)" },
+          "0%": { transform: "translate3d(-150%, 0, 0) skewX(-20deg)" },
+          "100%": { transform: "translate3d(350%, 0, 0) skewX(-20deg)" },
         },
         "sparkle-twinkle": {
           "0%, 100%": { opacity: "0", transform: "scale(0.4) rotate(0deg)" },
