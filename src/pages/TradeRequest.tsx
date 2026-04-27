@@ -143,37 +143,27 @@ const TradeRequest = () => {
     };
   }, [trade?.id, trade?.token]);
 
+  // Use SECURITY DEFINER RPC so both parties can see each other's item details.
   useEffect(() => {
-    if (!trade?.initiator_items?.length) { setInitiatorItemMeta([]); return; }
+    if (!trade?.id) { setInitiatorItemMeta([]); setResponderItemMetaRemote([]); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("user_inventory")
-        .select("id, prize_name, image_url, coin_value")
-        .in("id", trade.initiator_items);
+      const { data } = await supabase.rpc("get_trade_item_details", { _trade_id: trade.id });
       if (cancelled || !data) return;
+      const rows = data as Array<{ item_id: string; side: string; prize_name: string; image_url: string; coin_value: number }>;
       setInitiatorItemMeta(
-        data.map((r) => ({ id: r.id, prize: r.prize_name, image: r.image_url, coin_value: r.coin_value })),
+        rows.filter((r) => r.side === "initiator").map((r) => ({
+          id: r.item_id, prize: r.prize_name, image: r.image_url, coin_value: r.coin_value,
+        })),
       );
-    })();
-    return () => { cancelled = true; };
-  }, [trade?.initiator_items]);
-
-  useEffect(() => {
-    if (!trade?.responder_items?.length) { setResponderItemMetaRemote([]); return; }
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("user_inventory")
-        .select("id, prize_name, image_url, coin_value")
-        .in("id", trade.responder_items);
-      if (cancelled || !data) return;
       setResponderItemMetaRemote(
-        data.map((r) => ({ id: r.id, prize: r.prize_name, image: r.image_url, coin_value: r.coin_value })),
+        rows.filter((r) => r.side === "responder").map((r) => ({
+          id: r.item_id, prize: r.prize_name, image: r.image_url, coin_value: r.coin_value,
+        })),
       );
     })();
     return () => { cancelled = true; };
-  }, [trade?.responder_items]);
+  }, [trade?.id, trade?.responder_items, trade?.initiator_items, trade?.updated_at]);
 
   useEffect(() => {
     if (!user) return;
