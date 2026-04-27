@@ -36,6 +36,8 @@ interface VerifiedRecipient {
   masked_email: string;
   display_name: string;
   avatar_url: string;
+  username: string | null;
+  resolved_email: string;
 }
 
 const GiftCoins = () => {
@@ -51,7 +53,7 @@ const GiftCoins = () => {
     markAllRead();
   }, [markAllRead]);
 
-  const [email, setEmail] = useState("");
+  const [recipientInput, setRecipientInput] = useState("");
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -142,11 +144,11 @@ const GiftCoins = () => {
     };
   }, [user, toast, refreshCoins, pushNotification, markAllRead]);
 
-  // Reset verified recipient if email changes
+  // Reset verified recipient if input changes
   useEffect(() => {
     if (recipient) setRecipient(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email]);
+  }, [recipientInput]);
 
   const coinAmountNum = parseInt(amount) || 0;
 
@@ -165,8 +167,10 @@ const GiftCoins = () => {
     return out;
   })();
 
+  const usernameRe = /^[a-z0-9_]{3,20}$/;
+
   const handleVerify = async () => {
-    if (!user || !email || !amount) return;
+    if (!user || !recipientInput || !amount) return;
     if (coinAmountNum < 1) {
       toast({ title: "Error", description: "Jumlah koin minimal 1", variant: "destructive" });
       return;
@@ -180,21 +184,34 @@ const GiftCoins = () => {
       return;
     }
 
+    // Detect mode: @username, bare username, or email
+    const trimmed = recipientInput.trim();
+    const isUsernameMode =
+      trimmed.startsWith("@") ||
+      (!trimmed.includes("@") && usernameRe.test(trimmed.toLowerCase()));
+    const payload = isUsernameMode
+      ? { username: trimmed.replace(/^@/, "").toLowerCase() }
+      : { email: trimmed.toLowerCase() };
+
     setVerifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-gift-recipient", {
-        body: { email },
+        body: payload,
       });
       if (error) throw new Error(error.message || "Gagal verifikasi");
       if (!data?.found) {
         toast({
-          title: "Email tidak terdaftar",
-          description: data?.error || "Pastikan email penerima sudah terdaftar di Bushido Gacha",
+          title: isUsernameMode ? "Username tidak ditemukan" : "Email tidak terdaftar",
+          description: data?.error || "Pastikan penerima sudah terdaftar di Bushido Gacha",
           variant: "destructive",
         });
         return;
       }
-      setRecipient(data.receiver);
+      // Merge resolved_email into the receiver object so we can call send-gift-coins reliably
+      setRecipient({
+        ...data.receiver,
+        resolved_email: (data.resolved_email as string) || data.receiver.masked_email,
+      });
       setConfirmText("");
       setConfirmOpen(true);
     } catch (err: any) {
@@ -220,7 +237,12 @@ const GiftCoins = () => {
           : `gift_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
       const { data, error } = await supabase.functions.invoke("send-gift-coins", {
-        body: { receiver_email: email, amount: coinAmountNum, message, request_id: requestId },
+        body: {
+          receiver_email: recipient.resolved_email,
+          amount: coinAmountNum,
+          message,
+          request_id: requestId,
+        },
       });
 
       if (error || !data?.success) {
@@ -245,7 +267,7 @@ const GiftCoins = () => {
         .order("created_at", { ascending: false });
       setGifts((newGifts as unknown as GiftRecord[]) || []);
 
-      setEmail("");
+      setRecipientInput("");
       setAmount("");
       setMessage("");
       setRecipient(null);
@@ -301,12 +323,12 @@ const GiftCoins = () => {
               <Card className="border-border/50">
                 <CardContent className="space-y-4 pt-6">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">Email Penerima</label>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Penerima (@username atau Email)</label>
                     <Input
-                      type="email"
-                      placeholder="teman@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      type="text"
+                      placeholder="@username atau teman@email.com"
+                      value={recipientInput}
+                      onChange={(e) => setRecipientInput(e.target.value)}
                       className="bg-secondary"
                       list="gift-recent-recipients"
                       autoComplete="off"
@@ -396,7 +418,7 @@ const GiftCoins = () => {
                   <Button
                     className="w-full"
                     onClick={handleVerify}
-                    disabled={verifying || sending || !email || !amount}
+                    disabled={verifying || sending || !recipientInput || !amount}
                   >
                     {verifying ? (
                       <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Memverifikasi...</span>
@@ -564,10 +586,10 @@ const GiftCoins = () => {
                 </div>
               )}
 
-              {/* Email match check */}
+              {/* Recipient input echo */}
               <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
                 <p className="text-xs text-amber-200/90">
-                  Email yang kamu input: <strong className="text-foreground">{email}</strong>
+                  Penerima yang kamu input: <strong className="text-foreground">{recipientInput}</strong>
                 </p>
                 <p className="mt-1 text-xs text-amber-200/70">
                   Jika ini bukan penerima yang dimaksud, batalkan dan periksa kembali.

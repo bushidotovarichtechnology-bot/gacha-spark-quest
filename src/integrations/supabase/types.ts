@@ -702,6 +702,7 @@ export type Database = {
           recipient_name: string
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           address?: string
@@ -716,6 +717,7 @@ export type Database = {
           recipient_name?: string
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           address?: string
@@ -730,6 +732,7 @@ export type Database = {
           recipient_name?: string
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -1507,6 +1510,7 @@ export type Database = {
       expire_stale_trades: { Args: never; Returns: number }
       expire_unpaid_claims: { Args: never; Returns: number }
       find_user_id_by_email: { Args: { _email: string }; Returns: string }
+      find_user_id_by_username: { Args: { _username: string }; Returns: string }
       generate_trade_token: { Args: never; Returns: string }
       get_admin_stats: { Args: never; Returns: Json }
       get_all_users_admin: {
@@ -1599,6 +1603,7 @@ export type Database = {
         Returns: boolean
       }
       has_security_pin: { Args: never; Returns: boolean }
+      is_username_available: { Args: { _username: string }; Returns: boolean }
       recycle_inventory_item: { Args: { _item_id: string }; Returns: Json }
       redeem_coupon_atomic: { Args: { _code: string }; Returns: Json }
       redeem_reward: { Args: { _reward_id: string }; Returns: Json }
@@ -1607,6 +1612,7 @@ export type Database = {
         Returns: Json
       }
       set_security_pin: { Args: { _pin: string }; Returns: Json }
+      set_username: { Args: { _username: string }; Returns: Json }
       slugify: { Args: { _input: string }; Returns: string }
       transfer_gift_coins: {
         Args: { _amount: number; _receiver_id: string }

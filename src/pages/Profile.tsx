@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent, Camera, Upload, Bell } from "lucide-react";
+import { ArrowLeft, User, Lock, MapPin, MessageCircle, Save, Loader2, Check, Phone, Ticket, Gift, Coins, Gamepad2, Percent, Camera, Upload, Bell, AtSign } from "lucide-react";
+import UsernameSetupCard from "@/components/UsernameSetupCard";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -293,14 +294,23 @@ const Profile = () => {
 
         <div className="mx-auto max-w-lg">
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 gap-1 sm:grid-cols-6">
+            <TabsList className="grid w-full grid-cols-3 gap-1 sm:grid-cols-7">
               <TabsTrigger value="avatar" className="gap-1 text-xs"><Camera className="h-3.5 w-3.5" /> Foto</TabsTrigger>
+              <TabsTrigger value="username" className="gap-1 text-xs"><AtSign className="h-3.5 w-3.5" /> User</TabsTrigger>
               <TabsTrigger value="address" className="gap-1 text-xs"><MapPin className="h-3.5 w-3.5" /> Alamat</TabsTrigger>
               <TabsTrigger value="coupon" className="gap-1 text-xs"><Ticket className="h-3.5 w-3.5" /> Kupon</TabsTrigger>
               <TabsTrigger value="notif" className="gap-1 text-xs"><Bell className="h-3.5 w-3.5" /> Notif</TabsTrigger>
               <TabsTrigger value="password" className="gap-1 text-xs"><Lock className="h-3.5 w-3.5" /> Password</TabsTrigger>
               <TabsTrigger value="help" className="gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" /> Bantuan</TabsTrigger>
             </TabsList>
+
+            {/* Username Tab */}
+            <TabsContent value="username">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <UsernameSetupCard />
+              </motion.div>
+            </TabsContent>
+
 
             {/* Avatar Tab */}
             <TabsContent value="avatar">
