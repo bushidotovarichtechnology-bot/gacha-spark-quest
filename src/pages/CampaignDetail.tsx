@@ -529,13 +529,17 @@ const CampaignDetail = () => {
               const pct = tierTotal > 0 ? (tierRemaining / tierTotal) * 100 : 0;
               const chancePct = tier.label !== "S" ? chanceFor(tier.id) : 0;
               const showChance = tier.label !== "S" && tierRemaining > 0;
-            const bannerGradient = tierBannerMap[tier.label] || tierBannerMap.C;
-            const tierLabel = tierLabelMap[tier.label] || tier.name;
+            const tierStyle = getTierStyle(tier.label);
+            const tierLabel = tierStyle.name;
             const isGrand = tier.label === "S";
             const isRare = tier.label === "A";
             const isSilver = tier.label === "B";
             const isBronze = tier.label === "C";
             const TierIcon = tier.icon;
+            // All tier banners use a light gradient → dark text/icon for legibility.
+            // Bronze is the only darker banner → use white text.
+            const onBannerText = tierStyle.isLightBanner ? "text-foreground/90" : "text-white";
+            const onBannerTextMuted = tierStyle.isLightBanner ? "text-foreground/70" : "text-white/80";
             return (
               <motion.div
                 key={tier.id}
@@ -544,25 +548,15 @@ const CampaignDetail = () => {
                 transition={{ delay: i * 0.08 }}
                 className="space-y-3"
               >
-                {/* Kitakuji-style chevron banner */}
+                {/* Kitakuji-style chevron banner — uses global tier tokens */}
                 <div className="relative">
                   <div
-                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${
-                      isGrand
-                        ? "shadow-[0_0_28px_rgba(186,230,253,0.85)] ring-1 ring-white/60"
-                        : isRare
-                        ? "shadow-[0_0_18px_rgba(250,204,21,0.55)]"
-                        : isSilver
-                        ? "shadow-[0_0_12px_rgba(203,213,225,0.45)]"
-                        : isBronze
-                        ? "shadow-[0_0_12px_rgba(180,83,9,0.45)]"
-                        : ""
-                    }`}
+                    className={`relative flex h-10 items-center overflow-hidden ${tierStyle.bannerClass} ${tierStyle.glowClass} pl-3 pr-10 shadow-lg ${isGrand ? "ring-1 ring-white/60" : ""}`}
                     style={{
                       clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)",
                     }}
                   >
-                    {/* Grand Prize (Diamond): brilliant shimmer + dual sweeping shine */}
+                    {/* Diamond (S): brilliant shimmer + dual sweeping shine */}
                     {isGrand && (
                       <>
                         <div
@@ -581,7 +575,7 @@ const CampaignDetail = () => {
                       </>
                     )}
 
-                    {/* Tier A (Gold): warm shimmer */}
+                    {/* Gold (A): warm shimmer */}
                     {isRare && (
                       <div
                         className="pointer-events-none absolute inset-0 animate-shimmer opacity-40"
@@ -594,7 +588,7 @@ const CampaignDetail = () => {
                       />
                     )}
 
-                    {/* Tier B (Silver): cool subtle shimmer */}
+                    {/* Silver (B): cool subtle shimmer */}
                     {isSilver && (
                       <div
                         className="pointer-events-none absolute inset-0 animate-shimmer opacity-30"
@@ -607,7 +601,7 @@ const CampaignDetail = () => {
                       />
                     )}
 
-                    {/* Tier C (Bronze): warm copper shimmer */}
+                    {/* Bronze (C): warm copper shimmer */}
                     {isBronze && (
                       <div
                         className="pointer-events-none absolute inset-0 animate-shimmer opacity-25"
@@ -620,25 +614,25 @@ const CampaignDetail = () => {
                       />
                     )}
 
-                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full backdrop-blur-sm ring-2 ${isGrand ? "bg-sky-500/30 ring-sky-400/60 animate-pulse-glow" : "bg-white/25 ring-white/40"}`}>
-                      <TierIcon className={`h-3.5 w-3.5 drop-shadow ${isGrand ? "text-sky-900" : "text-white"}`} />
+                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full backdrop-blur-sm ring-2 ${tierStyle.isLightBanner ? "bg-foreground/15 ring-foreground/25" : "bg-white/25 ring-white/40"} ${isGrand ? "animate-pulse-glow" : ""}`}>
+                      <TierIcon className={`h-3.5 w-3.5 drop-shadow ${onBannerText}`} />
                     </div>
-                    <span className={`relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider drop-shadow-md ${isGrand ? "text-sky-900" : "text-white"}`}>
+                    <span className={`relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider drop-shadow-md ${onBannerText}`}>
                       {tier.label} · {tierLabel}
                     </span>
-                    <span className={`relative z-10 ml-3 hidden text-xs font-bold drop-shadow sm:inline ${isGrand ? "text-sky-900/80" : "text-white/90"}`}>
+                    <span className={`relative z-10 ml-3 hidden text-xs font-bold drop-shadow sm:inline ${onBannerTextMuted}`}>
                       {tier.name}
                     </span>
                     <div className="relative z-10 ml-auto flex items-center gap-2">
                       {showChance && (
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ring-1 ${isGrand ? "bg-sky-900/20 text-sky-900 ring-sky-900/30" : "bg-white/25 text-white ring-white/30"}`}
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ring-1 ${tierStyle.isLightBanner ? "bg-foreground/10 ring-foreground/20" : "bg-white/25 ring-white/30"} ${onBannerText}`}
                           title="Peluang mendapatkan tier ini saat gacha"
                         >
                           {chancePct >= 10 ? chancePct.toFixed(0) : chancePct.toFixed(1)}%
                         </span>
                       )}
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isGrand ? "bg-sky-900/80 text-white" : "bg-black/30 text-white"} ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tierStyle.isLightBanner ? "bg-foreground/80 text-background" : "bg-black/30 text-white"} ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
                         {isAdmin ? tierRemaining : obfuscateStock(tierRemaining, tierTotal).remainingLabel}/{tierTotal}
                       </span>
                     </div>
