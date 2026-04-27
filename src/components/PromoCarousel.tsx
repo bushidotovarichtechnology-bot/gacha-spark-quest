@@ -156,7 +156,7 @@ const PromoCarousel = () => {
         alt={b.title || "Promo banner"}
         loading="lazy"
         decoding="async"
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
       />
     );
     const imageLayer = b.link_url ? (
