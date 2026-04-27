@@ -64,11 +64,12 @@ const tierGlowMap: Record<string, string> = {
 };
 
 // Banner gradients per tier — kitakuji-inspired chevron banner
+// S = Diamond (icy white-cyan), A = Gold, B = Silver, C = Bronze
 const tierBannerMap: Record<string, string> = {
-  S: "from-amber-300 via-yellow-400 to-orange-500", // Gold
-  A: "from-fuchsia-500 via-purple-500 to-indigo-500", // Purple
-  B: "from-pink-400 via-rose-400 to-red-400", // Pink
-  C: "from-slate-400 via-slate-500 to-slate-600", // Silver
+  S: "from-cyan-200 via-white to-sky-300", // Diamond — icy shiny
+  A: "from-yellow-300 via-amber-400 to-yellow-600", // Gold
+  B: "from-slate-200 via-slate-300 to-slate-500", // Silver
+  C: "from-amber-700 via-orange-700 to-yellow-900", // Bronze
 };
 
 const tierLabelMap: Record<string, string> = {
@@ -544,6 +545,8 @@ const CampaignDetail = () => {
             const tierLabel = tierLabelMap[tier.label] || tier.name;
             const isGrand = tier.label === "S";
             const isRare = tier.label === "A";
+            const isSilver = tier.label === "B";
+            const isBronze = tier.label === "C";
             const TierIcon = tier.icon;
             return (
               <motion.div
@@ -556,58 +559,98 @@ const CampaignDetail = () => {
                 {/* Kitakuji-style chevron banner */}
                 <div className="relative">
                   <div
-                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${isGrand ? "shadow-[0_0_25px_rgba(251,191,36,0.6)]" : isRare ? "shadow-[0_0_15px_rgba(168,85,247,0.45)]" : ""}`}
+                    className={`relative flex h-10 items-center overflow-hidden bg-gradient-to-r ${bannerGradient} pl-3 pr-10 shadow-lg ${
+                      isGrand
+                        ? "shadow-[0_0_28px_rgba(186,230,253,0.85)] ring-1 ring-white/60"
+                        : isRare
+                        ? "shadow-[0_0_18px_rgba(250,204,21,0.55)]"
+                        : isSilver
+                        ? "shadow-[0_0_12px_rgba(203,213,225,0.45)]"
+                        : isBronze
+                        ? "shadow-[0_0_12px_rgba(180,83,9,0.45)]"
+                        : ""
+                    }`}
                     style={{
                       clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)",
                     }}
                   >
-                    {/* Grand Prize: shimmering gradient overlay + sweeping shine */}
+                    {/* Grand Prize (Diamond): brilliant shimmer + dual sweeping shine */}
                     {isGrand && (
                       <>
                         <div
-                          className="pointer-events-none absolute inset-0 animate-shimmer opacity-70"
+                          className="pointer-events-none absolute inset-0 animate-shimmer opacity-90"
                           style={{
                             backgroundImage:
-                              "linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%)",
+                              "linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.95) 50%, transparent 80%)",
                             backgroundSize: "200% 100%",
                           }}
                         />
-                        <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-shine-sweep bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
+                        <div className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-shine-sweep bg-gradient-to-r from-transparent via-white to-transparent blur-sm" />
+                        <div
+                          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/4 animate-shine-sweep bg-gradient-to-r from-transparent via-cyan-100 to-transparent blur-md"
+                          style={{ animationDelay: "1.2s" }}
+                        />
                       </>
                     )}
 
-                    {/* Tier A: subtle shimmer only — no sweeping shine */}
+                    {/* Tier A (Gold): warm shimmer */}
                     {isRare && (
                       <div
-                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-30"
+                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-40"
                         style={{
                           backgroundImage:
-                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.35) 50%, transparent 65%)",
+                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)",
                           backgroundSize: "200% 100%",
                           animationDuration: "5s",
                         }}
                       />
                     )}
 
-                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm ring-2 ring-white/40 ${isGrand ? "animate-pulse-glow" : ""}`}>
-                      <TierIcon className="h-3.5 w-3.5 text-white drop-shadow" />
+                    {/* Tier B (Silver): cool subtle shimmer */}
+                    {isSilver && (
+                      <div
+                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-30"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%)",
+                          backgroundSize: "200% 100%",
+                          animationDuration: "6s",
+                        }}
+                      />
+                    )}
+
+                    {/* Tier C (Bronze): warm copper shimmer */}
+                    {isBronze && (
+                      <div
+                        className="pointer-events-none absolute inset-0 animate-shimmer opacity-25"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(110deg, transparent 35%, rgba(255,220,180,0.45) 50%, transparent 65%)",
+                          backgroundSize: "200% 100%",
+                          animationDuration: "7s",
+                        }}
+                      />
+                    )}
+
+                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full backdrop-blur-sm ring-2 ${isGrand ? "bg-sky-500/30 ring-sky-400/60 animate-pulse-glow" : "bg-white/25 ring-white/40"}`}>
+                      <TierIcon className={`h-3.5 w-3.5 drop-shadow ${isGrand ? "text-sky-900" : "text-white"}`} />
                     </div>
-                    <span className="relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider text-white drop-shadow-md">
+                    <span className={`relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider drop-shadow-md ${isGrand ? "text-sky-900" : "text-white"}`}>
                       {tier.label} · {tierLabel}
                     </span>
-                    <span className="relative z-10 ml-3 hidden text-xs font-bold text-white/90 drop-shadow sm:inline">
+                    <span className={`relative z-10 ml-3 hidden text-xs font-bold drop-shadow sm:inline ${isGrand ? "text-sky-900/80" : "text-white/90"}`}>
                       {tier.name}
                     </span>
                     <div className="relative z-10 ml-auto flex items-center gap-2">
                       {showChance && (
                         <span
-                          className="rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/30"
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ring-1 ${isGrand ? "bg-sky-900/20 text-sky-900 ring-sky-900/30" : "bg-white/25 text-white ring-white/30"}`}
                           title="Peluang mendapatkan tier ini saat gacha"
                         >
                           {chancePct >= 10 ? chancePct.toFixed(0) : chancePct.toFixed(1)}%
                         </span>
                       )}
-                      <span className={`rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-bold text-white ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isGrand ? "bg-sky-900/80 text-white" : "bg-black/30 text-white"} ${tierRemaining <= 2 ? "animate-pulse" : ""}`}>
                         {isAdmin ? tierRemaining : obfuscateStock(tierRemaining, tierTotal).remainingLabel}/{tierTotal}
                       </span>
                     </div>
