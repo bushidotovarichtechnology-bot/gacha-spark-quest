@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const TRADE_GAS_FEE = 5;
+export const TRADE_GAS_FEE = 1;
 export const TRADABLE_TIERS = ["S", "A", "B"] as const;
 export type TradableTier = (typeof TRADABLE_TIERS)[number];
 
