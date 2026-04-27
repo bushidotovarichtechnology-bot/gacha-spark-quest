@@ -90,6 +90,7 @@ interface PersistedDrawState {
   drawnPrizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
   hasPityReward: boolean;
   pityPopup: { open: boolean; before: number; after: number; wasReset: boolean };
+  rateUpMultiplier?: number;
   savedAt: number;
 }
 
