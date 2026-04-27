@@ -59,11 +59,12 @@ interface PrizeRevealModalProps {
   rateUpMultiplier?: number;
 }
 
+// Uses global tier tokens (Diamond/Gold/Silver/Bronze) — see src/lib/tierStyles.ts.
 const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof Crown; emoji: string }> = {
-  S: { gradient: "from-accent via-yellow-400 to-accent", glow: "box-glow-gold", icon: Crown, emoji: "👑" },
-  A: { gradient: "from-primary via-purple-400 to-primary", glow: "box-glow-purple", icon: Star, emoji: "⭐" },
-  B: { gradient: "from-pink-500 via-rose-400 to-pink-500", glow: "", icon: Gift, emoji: "🎁" },
-  C: { gradient: "from-muted-foreground via-gray-400 to-muted-foreground", glow: "", icon: Award, emoji: "📦" },
+  S: { gradient: "tier-banner-s", glow: "tier-glow-s", icon: Crown, emoji: "💎" },
+  A: { gradient: "tier-banner-a", glow: "tier-glow-a", icon: Star, emoji: "🥇" },
+  B: { gradient: "tier-banner-b", glow: "tier-glow-b", icon: Gift, emoji: "🥈" },
+  C: { gradient: "tier-banner-c", glow: "tier-glow-c", icon: Award, emoji: "🥉" },
 };
 
 const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
