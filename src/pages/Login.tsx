@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -17,12 +17,19 @@ const Login = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+  // Only allow internal paths to prevent open-redirect.
+  const safeRedirect =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : "/";
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate("/", { replace: true });
+      navigate(safeRedirect, { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, safeRedirect]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +49,7 @@ const Login = () => {
       });
     } else {
       toast({ title: t("loginSuccess") });
-      navigate("/");
+      navigate(safeRedirect);
     }
     setLoading(false);
   };
