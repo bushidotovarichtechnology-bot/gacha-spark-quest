@@ -247,8 +247,11 @@ const RareGlow = ({ isRare }: { isRare: boolean }) => {
 const TierBadge = ({ tier, isRare }: { tier: string; isRare: boolean }) => {
   if (!isRare) return null;
   
-  const tierEmojis: Record<string, string> = { S: "🏆", A: "⭐" };
-  const tierColors: Record<string, string> = { S: "#fbbf24", A: "#a78bfa" };
+  const tierEmojis: Record<string, string> = { S: "💎", A: "🥇" };
+  // Use global tier tokens — read CSS variables so colors stay in sync.
+  const tierVars: Record<string, string> = { S: "--tier-s", A: "--tier-a" };
+  const tierVar = tierVars[tier] || "--tier-a";
+  const tierColor = `hsl(var(${tierVar}))`;
   
   return (
     <motion.div
