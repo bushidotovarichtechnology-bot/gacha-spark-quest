@@ -74,7 +74,7 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
     <div className="space-y-3">
       {!lockedTier && (
         <div className="flex flex-wrap gap-1.5">
-          {(["all", ...TRADABLE_TIERS] as const).map((t) => {
+          {TRADABLE_TIERS.map((t) => {
             const active = tierFilter === t;
             return (
               <button
@@ -82,13 +82,13 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
                 type="button"
                 onClick={() => setTierFilter(t)}
                 className={cn(
-                  "rounded-md border px-2.5 py-1 font-mono-hacker text-[11px] uppercase tracking-wider transition-colors",
+                  "rounded-md border px-2.5 py-1 text-[11px] uppercase tracking-wider transition-colors",
                   active
-                    ? "border-hacker bg-hacker-green/10 text-hacker-green text-glow-hacker"
-                    : "border-border bg-hacker-surface text-muted-foreground hover:text-foreground",
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t === "all" ? "all" : `tier ${t}`}
+                Tier {t}
               </button>
             );
           })}
