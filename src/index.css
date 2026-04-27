@@ -227,4 +227,47 @@
       hsl(var(--tier-c)) 50%,
       hsl(var(--tier-c-dark)) 100%);
   }
+
+  /* ===== Performance helpers for shimmer/sweep overlays =====
+     Promote to its own compositor layer so the animation stays on the GPU
+     and never invalidates paint of the parent banner. */
+  .animate-shimmer,
+  .animate-shine-sweep {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+}
+
+/* ===== Mid-range mobile + reduced-motion tuning =====
+   - Soften box-shadow glows (multiple large blurs are expensive on mobile GPUs)
+   - Slow down shimmer slightly so each frame does less work
+   - Disable secondary sweep / sparkle decorations entirely
+   These rules live OUTSIDE @layer so they always win the cascade. */
+@media (max-width: 640px) {
+  .tier-glow-s {
+    box-shadow:
+      0 0 12px hsl(var(--tier-s) / 0.45),
+      inset 0 1px 0 hsl(var(--tier-s-light) / 0.3);
+  }
+  .tier-glow-a { box-shadow: 0 0 10px hsl(var(--tier-a) / 0.45); }
+  .tier-glow-b { box-shadow: 0 0 8px  hsl(var(--tier-b) / 0.35); }
+  .tier-glow-c { box-shadow: 0 0 8px  hsl(var(--tier-c) / 0.35); }
+
+  .animate-shimmer { animation-duration: 4.5s; }
+  .animate-shine-sweep { animation-duration: 3.6s; }
+
+  /* Hide secondary decorative layers on small screens */
+  [data-fx="secondary"] { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .animate-shine-sweep,
+  .animate-pulse-glow,
+  .animate-sparkle-twinkle,
+  .animate-sparkle-float {
+    animation: none !important;
+  }
+  [data-fx="secondary"] { display: none !important; }
 }
