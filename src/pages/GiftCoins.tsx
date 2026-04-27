@@ -53,7 +53,7 @@ const GiftCoins = () => {
     markAllRead();
   }, [markAllRead]);
 
-  const [email, setEmail] = useState("");
+  const [recipientInput, setRecipientInput] = useState("");
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [verifying, setVerifying] = useState(false);
