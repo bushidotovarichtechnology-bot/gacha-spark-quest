@@ -138,6 +138,11 @@ const TradeRequest = () => {
     const tradeToken = trade.token;
     let cancelled = false;
 
+    // Forward-declared so refetch() can route fresh rows through the same
+    // toast/dedup pipeline as realtime — keeps `lastStatusRef` and the
+    // debounce map in lockstep no matter which path delivers the change.
+    let handleIncomingFn: ((row: TradeRow) => void) | null = null;
+
     // Exponential-backoff retry loop. `refetch` returns a boolean so the
     // caller can decide whether to schedule another attempt. New triggers
     // (manual retry, online event, poll tick) cancel any in-flight retry
@@ -152,7 +157,12 @@ const TradeRequest = () => {
       try {
         const fresh = await fetchTradeByToken(tradeToken);
         if (cancelled) return true;
-        if (fresh) setTrade(fresh);
+        if (fresh) {
+          // Route through handleIncoming so dedup + role-aware toasts fire
+          // exactly once even when poll wins the race against realtime.
+          if (handleIncomingFn) handleIncomingFn(fresh);
+          else setTrade(fresh);
+        }
         setSyncState("idle");
         setSyncAttempt(0);
         setLastSyncError(null);
