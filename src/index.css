@@ -173,4 +173,58 @@
   .animate-hacker-blink {
     animation: hacker-blink 1s step-end infinite;
   }
+
+  /* ===== Tier glow utilities — global, used across all campaigns ===== */
+  .tier-glow-s {
+    box-shadow:
+      0 0 18px hsl(var(--tier-s) / 0.55),
+      0 0 36px hsl(var(--tier-s-light) / 0.35),
+      inset 0 1px 0 hsl(var(--tier-s-light) / 0.4);
+  }
+  .tier-glow-a {
+    box-shadow:
+      0 0 16px hsl(var(--tier-a) / 0.55),
+      0 0 32px hsl(var(--tier-a) / 0.25);
+  }
+  .tier-glow-b {
+    box-shadow:
+      0 0 12px hsl(var(--tier-b) / 0.45),
+      0 0 24px hsl(var(--tier-b) / 0.2);
+  }
+  .tier-glow-c {
+    box-shadow:
+      0 0 12px hsl(var(--tier-c) / 0.45),
+      0 0 24px hsl(var(--tier-c-light) / 0.2);
+  }
+
+  .tier-text-s { color: hsl(var(--tier-s-dark)); }
+  .tier-text-a { color: hsl(var(--tier-a-dark)); }
+  .tier-text-b { color: hsl(var(--tier-b-dark)); }
+  .tier-text-c { color: hsl(var(--tier-c-light)); }
+
+  /* Banner gradients */
+  .tier-banner-s {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-s-light)) 0%,
+      hsl(0 0% 100%) 45%,
+      hsl(var(--tier-s)) 100%);
+  }
+  .tier-banner-a {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-a-light)) 0%,
+      hsl(var(--tier-a)) 50%,
+      hsl(var(--tier-a-dark)) 100%);
+  }
+  .tier-banner-b {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-b-light)) 0%,
+      hsl(var(--tier-b)) 50%,
+      hsl(var(--tier-b-dark)) 100%);
+  }
+  .tier-banner-c {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-c-light)) 0%,
+      hsl(var(--tier-c)) 50%,
+      hsl(var(--tier-c-dark)) 100%);
+  }
 }
