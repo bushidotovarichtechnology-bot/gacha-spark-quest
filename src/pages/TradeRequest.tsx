@@ -34,7 +34,7 @@ const tierBadgeClass = (label: string) => {
 const TradeRequest = () => {
   const { token = "" } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items, refreshInventory, refreshCoins } = useGacha();
 
   const [trade, setTrade] = useState<TradeRow | null>(null);
@@ -58,8 +58,10 @@ const TradeRequest = () => {
   const isInitiator = !!user && trade?.initiator_id === user.id;
   const isResponder = !!user && trade?.responder_id === user.id;
 
-  // Load trade by token.
+  // Load trade by token. Wait until auth has hydrated so we don't
+  // momentarily render the "no access" card while the session is restoring.
   useEffect(() => {
+    if (authLoading) return;
     let cancelled = false;
     const load = async () => {
       setLoading(true);
