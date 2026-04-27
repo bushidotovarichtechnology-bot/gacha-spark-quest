@@ -743,17 +743,14 @@ const CampaignDetail = () => {
                               <Coins className="h-2.5 w-2.5" />
                               {coinVal.toLocaleString()}
                             </span>
-                            {showPrizeChance && (
-                              <span
-                                className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary ring-1 ring-primary/20"
-                                title="Peluang mendapatkan hadiah ini per tarikan"
-                              >
-                                {chanceText}
-                              </span>
-                            )}
                             {!isOut ? (
                               <span className="text-[10px] font-medium text-muted-foreground">
                                 Stok: <span className="text-foreground">{isAdmin ? p.remaining : obfuscateStock(p.remaining, p.total).remainingLabel}/{p.total}</span>
+                                {showPrizeChance && (
+                                  <span className="ml-1 text-primary/90" title="Peluang mendapatkan hadiah ini per tarikan">
+                                    ({chanceText})
+                                  </span>
+                                )}
                               </span>
                             ) : (
                               <span className="rounded bg-destructive/20 px-1.5 py-0.5 text-[10px] font-bold text-destructive">HABIS</span>
