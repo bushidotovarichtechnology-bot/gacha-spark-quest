@@ -440,7 +440,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                 className="mx-auto mb-4"
               >
                 {prize.image ? (
-                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient} p-0.5 ${prize.tier === "S" ? "box-glow-gold-strong" : prize.tier === "A" ? "box-glow-purple-strong" : ""}`}>
+                  <div className={`relative inline-flex h-24 w-24 items-center justify-center rounded-2xl ${config.gradient} ${config.glow} p-0.5`}>
                     <img
                       src={prize.image}
                       alt={prize.prize}
