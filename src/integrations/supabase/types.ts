@@ -1483,6 +1483,7 @@ export type Database = {
         }
         Returns: Json
       }
+      _rate_up_multiplier: { Args: { _user_id: string }; Returns: number }
       admin_get_banned_users: {
         Args: never
         Returns: {
@@ -1569,6 +1570,7 @@ export type Database = {
           tier_id: string
         }[]
       }
+      get_rate_up_status: { Args: { _user_id?: string }; Returns: Json }
       get_tier_distribution: {
         Args: { _campaign_id: string; _limit?: number }
         Returns: {

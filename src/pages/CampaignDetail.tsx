@@ -10,6 +10,7 @@ import PrizeRevealModal from "@/components/PrizeRevealModal";
 import PityMeterPopup from "@/components/PityMeterPopup";
 const DinoUnboxAnimation = lazy(() => import("@/components/DinoUnboxAnimation"));
 import PrizeImagePreview from "@/components/PrizeImagePreview";
+import RateUpBadge from "@/components/RateUpBadge";
 import { useGacha } from "@/context/GachaContext";
 import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
@@ -483,6 +484,9 @@ const CampaignDetail = () => {
       </div>
 
       <div className="container mx-auto px-4 pt-6">
+        <div className="mb-3">
+          <RateUpBadge />
+        </div>
         <p className="mb-6 max-w-xl text-sm text-muted-foreground">{campaign.description}</p>
 
         <div className="mb-8 flex flex-wrap gap-3">
