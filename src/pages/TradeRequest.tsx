@@ -399,6 +399,7 @@ const TradeRequest = () => {
 
   const handleCancel = async () => {
     if (!trade) return;
+    markStatusUpdating(2500);
     try {
       await cancelTrade(trade.id);
       toast.success("Trade dibatalkan");
@@ -411,6 +412,7 @@ const TradeRequest = () => {
 
   const handleReject = async () => {
     if (!trade) return;
+    markStatusUpdating(2500);
     try {
       await rejectTrade(trade.id);
       toast.success("Trade ditolak");
