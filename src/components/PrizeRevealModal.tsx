@@ -55,6 +55,8 @@ interface PrizeRevealModalProps {
   prizes: { tier: string; color: string; prize: string; image?: string; isPityReward?: boolean }[];
   drawCount: number;
   hasPityReward?: boolean;
+  /** Rate-up multiplier yang server pakai untuk draw ini (mis. 1.5 untuk 100 user pertama). */
+  rateUpMultiplier?: number;
 }
 
 const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof Crown; emoji: string }> = {
