@@ -85,7 +85,7 @@ const App = () => (
           <GlobalTransactionWatcher />
           <TradeNotifDebugPanel />
           <MaintenanceGate>
-          <Suspense fallback={<RouteFallback />}>
+            <AnimatedRoutes>
             <AnimatedRoutes>
               <Route path="/" element={<Index />} />
               {/* SEO-friendly slug route. Old ID-based URLs are also accepted
