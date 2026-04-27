@@ -14,6 +14,7 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
 import DinoChaseLoader from "./components/DinoChaseLoader";
+import AnimatedRoutes from "./components/PageTransition";
 import { TradeNotifDebugPanel } from "./components/TradeNotifDebugPanel";
 import RouterReadyBridge from "./components/RouterReadyBridge";
 import MaintenanceGate from "./components/MaintenanceGate";
@@ -85,7 +86,7 @@ const App = () => (
           <TradeNotifDebugPanel />
           <MaintenanceGate>
           <Suspense fallback={<RouteFallback />}>
-            <Routes>
+            <AnimatedRoutes>
               <Route path="/" element={<Index />} />
               {/* SEO-friendly slug route. Old ID-based URLs are also accepted
                   here — CampaignDetail resolves either and 301-style redirects
@@ -134,7 +135,7 @@ const App = () => (
                 <Route path="gift-audit" element={<AdminGiftAudit />} />
               </Route>
               <Route path="*" element={<NotFound />} />
-            </Routes>
+            </AnimatedRoutes>
           </Suspense>
           </MaintenanceGate>
         </BrowserRouter>
