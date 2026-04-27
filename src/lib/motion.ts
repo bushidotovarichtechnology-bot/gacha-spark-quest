@@ -66,3 +66,45 @@ export const modalTransition: Transition = {
   duration: duration.base,
   ease: easing.easeOutBack,
 };
+
+/* ============================================================
+ * Per-route page variants
+ * ============================================================ */
+
+export const glowPageVariants: Variants = {
+  initial: { opacity: 0, scale: 0.96, filter: "blur(8px) brightness(1.4)" },
+  animate: {
+    opacity: 1, scale: 1, filter: "blur(0px) brightness(1)",
+    transition: { duration: duration.slow, ease: easing.easeOutExpo },
+  },
+  exit: {
+    opacity: 0, scale: 1.02, filter: "blur(6px) brightness(1.2)",
+    transition: { duration: duration.fast, ease: easing.easeStandard },
+  },
+};
+
+export const slidePageVariants: Variants = {
+  initial: { opacity: 0, x: 32 },
+  animate: { opacity: 1, x: 0, transition: { duration: duration.base, ease: easing.easeOutExpo } },
+  exit: { opacity: 0, x: -24, transition: { duration: duration.fast, ease: easing.easeStandard } },
+};
+
+export const popPageVariants: Variants = {
+  initial: { opacity: 0, scale: 0.94, y: 8 },
+  animate: { opacity: 1, scale: 1, y: 0, transition: { duration: duration.base, ease: easing.easeOutBack } },
+  exit: { opacity: 0, scale: 0.97, transition: { duration: duration.fast, ease: easing.easeStandard } },
+};
+
+export const fadePageVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: duration.base, ease: easing.easeStandard } },
+  exit: { opacity: 0, transition: { duration: duration.fast, ease: easing.easeStandard } },
+};
+
+export const getPageVariantsFor = (pathname: string): Variants => {
+  if (/^\/campaign\/[^/]+/.test(pathname)) return glowPageVariants;
+  if (/^\/(inventory|history|claims|transactions|redeem)/.test(pathname)) return slidePageVariants;
+  if (/^\/(login|register|forgot-password|reset-password|admin\/login)/.test(pathname)) return popPageVariants;
+  if (/^\/admin/.test(pathname)) return fadePageVariants;
+  return pageVariants;
+};
