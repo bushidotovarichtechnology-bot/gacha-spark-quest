@@ -25,7 +25,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 interface ExecutePayload {
   trade_id: string;
   pin: string;
-  /** Inventory ids the responder is offering. Required for first acceptance. */
+  /** 'submit' (responder pilih item), 'approve' (initiator setuju & swap), 'reject' (initiator tolak) */
+  action: "submit" | "approve" | "reject";
+  /** Inventory ids the responder is offering. Required for 'submit'. */
   responder_items?: string[];
 }
 
@@ -62,6 +64,9 @@ Deno.serve(async (req) => {
   if (!payload.trade_id || typeof payload.trade_id !== "string") {
     return json(400, { error: "missing_trade_id" });
   }
+  if (!payload.action || !["submit", "approve", "reject"].includes(payload.action)) {
+    return json(400, { error: "invalid_action" });
+  }
   if (!payload.pin || !/^\d{6}$/.test(payload.pin)) {
     return json(400, { error: "invalid_pin_format" });
   }
@@ -94,6 +99,7 @@ Deno.serve(async (req) => {
   const { data: result, error: rpcErr } = await admin.rpc("_internal_execute_trade", {
     _trade_id: payload.trade_id,
     _caller_id: callerId,
+    _action: payload.action,
     _responder_items: payload.responder_items ?? null,
     _caller_ip: ip,
     _user_agent: userAgent,
@@ -113,6 +119,8 @@ Deno.serve(async (req) => {
       "items_ownership_failed",
       "insufficient_gas_fee",
       "self_trade_forbidden",
+      "invalid_action",
+      "review_window_expired",
     ];
     if (known.some((k) => code.includes(k))) {
       return json(400, { error: code });

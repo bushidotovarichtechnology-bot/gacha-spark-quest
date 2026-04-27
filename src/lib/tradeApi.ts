@@ -28,9 +28,10 @@ export interface TradeRow {
   initiator_items: string[];
   responder_items: string[];
   tier_label: TradableTier;
-  status: "pending" | "accepted" | "rejected" | "cancelled" | "expired";
+  status: "pending" | "awaiting_initiator" | "accepted" | "rejected" | "cancelled" | "expired";
   message: string;
   expires_at: string;
+  review_expires_at: string | null;
   responded_at: string | null;
   created_at: string;
   updated_at: string;

@@ -1102,6 +1102,7 @@ export type Database = {
           responded_at: string | null
           responder_id: string | null
           responder_items: Json
+          review_expires_at: string | null
           status: string
           tier_label: string
           token: string
@@ -1120,6 +1121,7 @@ export type Database = {
           responded_at?: string | null
           responder_id?: string | null
           responder_items?: Json
+          review_expires_at?: string | null
           status?: string
           tier_label: string
           token: string
@@ -1138,6 +1140,7 @@ export type Database = {
           responded_at?: string | null
           responder_id?: string | null
           responder_items?: Json
+          review_expires_at?: string | null
           status?: string
           tier_label?: string
           token?: string
@@ -1468,6 +1471,7 @@ export type Database = {
     Functions: {
       _internal_execute_trade: {
         Args: {
+          _action: string
           _caller_id: string
           _caller_ip: string
           _responder_items: Json
@@ -1567,6 +1571,17 @@ export type Database = {
           draw_count: number
           tier_label: string
           total_draws: number
+        }[]
+      }
+      get_trade_item_details: {
+        Args: { _trade_id: string }
+        Returns: {
+          coin_value: number
+          image_url: string
+          item_id: string
+          prize_name: string
+          side: string
+          tier_label: string
         }[]
       }
       get_user_ticket_balance: {
