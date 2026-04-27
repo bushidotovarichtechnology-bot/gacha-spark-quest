@@ -86,7 +86,7 @@ const App = () => (
           <TradeNotifDebugPanel />
           <MaintenanceGate>
           <Suspense fallback={<RouteFallback />}>
-            <Routes>
+            <AnimatedRoutes>
               <Route path="/" element={<Index />} />
               {/* SEO-friendly slug route. Old ID-based URLs are also accepted
                   here — CampaignDetail resolves either and 301-style redirects
