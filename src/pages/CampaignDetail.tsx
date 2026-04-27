@@ -632,13 +632,13 @@ const CampaignDetail = () => {
                       />
                     )}
 
-                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/25 backdrop-blur-sm ring-2 ring-white/40 ${isGrand ? "animate-pulse-glow" : ""}`}>
-                      <TierIcon className="h-3.5 w-3.5 text-white drop-shadow" />
+                    <div className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full backdrop-blur-sm ring-2 ${isGrand ? "bg-sky-500/30 ring-sky-400/60 animate-pulse-glow" : "bg-white/25 ring-white/40"}`}>
+                      <TierIcon className={`h-3.5 w-3.5 drop-shadow ${isGrand ? "text-sky-900" : "text-white"}`} />
                     </div>
-                    <span className="relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider text-white drop-shadow-md">
+                    <span className={`relative z-10 ml-2 font-display text-sm font-black uppercase tracking-wider drop-shadow-md ${isGrand ? "text-sky-900" : "text-white"}`}>
                       {tier.label} · {tierLabel}
                     </span>
-                    <span className="relative z-10 ml-3 hidden text-xs font-bold text-white/90 drop-shadow sm:inline">
+                    <span className={`relative z-10 ml-3 hidden text-xs font-bold drop-shadow sm:inline ${isGrand ? "text-sky-900/80" : "text-white/90"}`}>
                       {tier.name}
                     </span>
                     <div className="relative z-10 ml-auto flex items-center gap-2">
