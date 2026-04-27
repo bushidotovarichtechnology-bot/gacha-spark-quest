@@ -621,6 +621,31 @@ const TradeRequest = () => {
                 </div>
               )}
 
+              {trade.status === "awaiting_initiator" && reviewCountdown && (
+                <div
+                  role={reviewCountdown.severity === "critical" ? "alert" : undefined}
+                  aria-live={reviewCountdown.severity === "normal" ? "off" : "polite"}
+                  className={cn(
+                    "mt-3 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs",
+                    reviewCountdown.severity === "critical" && "border-destructive/60 bg-destructive/10 text-destructive animate-pulse",
+                    reviewCountdown.severity === "warning" && "border-accent/60 bg-accent/10 text-accent",
+                    reviewCountdown.severity === "normal" && "border-primary/60 bg-primary/10 text-primary",
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 shrink-0" />
+                    <span className="uppercase tracking-wider">
+                      {reviewCountdown.expired
+                        ? "Window review kedaluwarsa"
+                        : "Sisa waktu review (1 jam)"}
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold tabular-nums text-foreground">
+                    {reviewCountdown.expired ? "00:00" : reviewCountdown.formatted}
+                  </span>
+                </div>
+              )}
+
               {/* Timeline */}
               <div className="mt-3 space-y-1.5 border-l border-border pl-3">
                 {timeline.map((ev, idx) => (
