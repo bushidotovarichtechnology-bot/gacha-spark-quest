@@ -159,13 +159,6 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
           })}
         </div>
       )}
-
-      {tierCCount > 0 && (
-        <div className="flex items-center gap-1.5 rounded-md border border-border bg-hacker-bg px-2 py-1.5 font-mono-hacker text-[10px] text-muted-foreground">
-          <Lock className="h-3 w-3" />
-          {tierCCount} item Tier C terkunci dari trade (anti-farming).
-        </div>
-      )}
     </div>
   );
 };
