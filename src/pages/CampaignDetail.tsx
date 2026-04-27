@@ -625,7 +625,7 @@ const CampaignDetail = () => {
 
                   {/* Grand Prize: floating sparkle particles around banner */}
                   {isGrand && (
-                    <div className="pointer-events-none absolute inset-0 overflow-visible">
+                    <div data-fx="secondary" className="pointer-events-none absolute inset-0 overflow-visible">
                       <Sparkles className="absolute left-[8%] top-1 h-3 w-3 animate-sparkle-twinkle text-yellow-200 drop-shadow-[0_0_4px_rgba(253,224,71,0.9)]" style={{ animationDelay: "0s" }} />
                       <Sparkles className="absolute left-[28%] top-5 h-2.5 w-2.5 animate-sparkle-twinkle text-amber-100 drop-shadow-[0_0_4px_rgba(254,240,138,0.9)]" style={{ animationDelay: "0.6s" }} />
                       <Sparkles className="absolute left-[55%] top-0 h-3.5 w-3.5 animate-sparkle-twinkle text-yellow-100 drop-shadow-[0_0_5px_rgba(253,224,71,1)]" style={{ animationDelay: "1.1s" }} />
