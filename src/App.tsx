@@ -85,6 +85,7 @@ const App = () => (
           <GlobalTransactionWatcher />
           <TradeNotifDebugPanel />
           <MaintenanceGate>
+          {/* Suspense + neon progress bar are handled inside AnimatedRoutes */}
             <AnimatedRoutes>
               <Route path="/" element={<Index />} />
               {/* SEO-friendly slug route. Old ID-based URLs are also accepted
@@ -135,6 +136,7 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </AnimatedRoutes>
+          
           </MaintenanceGate>
         </BrowserRouter>
       </GachaProvider>

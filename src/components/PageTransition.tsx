@@ -8,8 +8,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { pageVariants, duration, easing, getPageVariantsFor } from "@/lib/motion";
+import { duration, easing, getPageVariantsFor, pageVariants } from "@/lib/motion";
 import DinoChaseLoader from "./DinoChaseLoader";
+import NeonTopProgress from "./NeonTopProgress";
 
 const isLowEndDevice = (() => {
   if (typeof navigator === "undefined") return false;
@@ -38,32 +39,31 @@ const reducedMotionVariants = {
 };
 
 /**
- * Inner page wrapper. Mounts ONLY after Suspense resolves the lazy chunk,
- * because Suspense lives OUTSIDE this component. When the chunk is still
- * loading, this component never renders — the loader shows instead.
- *
- * The first paint after resolve fires `useEffect` → flips `mounted = true`,
- * which triggers the Framer Motion `animate` state on the next frame.
- * This guarantees the fade/slide runs AFTER the loader fully unmounts.
+ * Mounts only after Suspense resolves the lazy chunk.
+ * Notifies parent via `onReady` so the top neon progress bar can finish.
  */
 const PageContent = memo(function PageContent({
   pathname,
   variants,
   willChange,
+  onReady,
   children,
 }: {
   pathname: string;
   variants: typeof pageVariants;
   willChange: string;
+  onReady: () => void;
   children: ReactNode;
 }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // rAF ensures the loader has been removed from the DOM before we animate.
-    const raf = requestAnimationFrame(() => setMounted(true));
+    const raf = requestAnimationFrame(() => {
+      setMounted(true);
+      onReady();
+    });
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [onReady]);
 
   return (
     <motion.div
@@ -80,19 +80,17 @@ const PageContent = memo(function PageContent({
   );
 });
 
-/**
- * AnimatedRoutes flow:
- *   1. URL changes → React renders new <PageContent> (lazy chunk may suspend).
- *   2. <Suspense fallback={DinoChaseLoader}> shows loader during chunk fetch.
- *   3. Chunk resolves → PageContent mounts → useEffect triggers fade/slide in.
- *   4. AnimatePresence handles exit of the previous PageContent in parallel.
- */
 const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Trigger loading state immediately when pathname changes; child clears it.
+  useEffect(() => {
+    setIsLoading(true);
+  }, [location.pathname]);
 
   const variants = useMemo(() => {
-    // Reduced-motion & low-end overrides take priority over per-route flair.
     if (prefersReducedMotion) return reducedMotionVariants;
     if (isLowEndDevice) return lightPageVariants;
     return getPageVariantsFor(location.pathname);
@@ -104,18 +102,27 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
       ? "opacity, transform"
       : "opacity, transform, filter";
 
+  const handleReady = useMemo(
+    () => () => setIsLoading(false),
+    []
+  );
+
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <Suspense key={location.pathname} fallback={<DinoChaseLoader />}>
-        <PageContent
-          pathname={location.pathname}
-          variants={variants as typeof pageVariants}
-          willChange={willChange}
-        >
-          {children}
-        </PageContent>
-      </Suspense>
-    </AnimatePresence>
+    <>
+      <NeonTopProgress isLoading={isLoading} />
+      <AnimatePresence mode="wait" initial={false}>
+        <Suspense key={location.pathname} fallback={<DinoChaseLoader />}>
+          <PageContent
+            pathname={location.pathname}
+            variants={variants as typeof pageVariants}
+            willChange={willChange}
+            onReady={handleReady}
+          >
+            {children}
+          </PageContent>
+        </Suspense>
+      </AnimatePresence>
+    </>
   );
 };
 
