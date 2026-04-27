@@ -586,10 +586,10 @@ const GiftCoins = () => {
                 </div>
               )}
 
-              {/* Email match check */}
+              {/* Recipient input echo */}
               <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
                 <p className="text-xs text-amber-200/90">
-                  Email yang kamu input: <strong className="text-foreground">{email}</strong>
+                  Penerima yang kamu input: <strong className="text-foreground">{recipientInput}</strong>
                 </p>
                 <p className="mt-1 text-xs text-amber-200/70">
                   Jika ini bukan penerima yang dimaksud, batalkan dan periksa kembali.
