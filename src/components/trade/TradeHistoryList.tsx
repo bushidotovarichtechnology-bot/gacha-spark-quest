@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Loader2, ArrowLeftRight, Coins, CheckCircle2, XCircle, Clock, Ban } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Loader2, ArrowLeftRight, Coins, CheckCircle2, XCircle, Clock, Ban, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -29,7 +29,19 @@ interface PartyProfile {
   display_name: string;
 }
 
+interface CacheEntry {
+  rows: TradeRow[];
+  profiles: Record<string, PartyProfile>;
+  hasMore: boolean;
+  fetchedAt: number;
+}
+
 const COMPLETED_STATUSES = ["accepted", "rejected", "cancelled", "expired"] as const;
+const PAGE_SIZE = 10;
+const CACHE_TTL_MS = 60_000; // 1 minute
+
+// Module-level in-memory cache, keyed by user id.
+const historyCache = new Map<string, CacheEntry>();
 
 const statusMeta = (status: string) => {
   switch (status) {
@@ -59,59 +71,128 @@ const TradeHistoryList = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [trades, setTrades] = useState<TradeRow[]>([]);
   const [profiles, setProfiles] = useState<Record<string, PartyProfile>>({});
+  const [hasMore, setHasMore] = useState(false);
+  const reqIdRef = useRef(0);
 
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    const load = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
+  const fetchPage = useCallback(
+    async (
+      userId: string,
+      beforeUpdatedAt: string | null,
+      currentProfiles: Record<string, PartyProfile>,
+    ): Promise<{ rows: TradeRow[]; profiles: Record<string, PartyProfile>; hasMore: boolean }> => {
+      let query = supabase
         .from("trades")
         .select("*")
         .in("status", COMPLETED_STATUSES as unknown as string[])
-        .or(
-          `initiator_id.eq.${user.id},responder_id.eq.${user.id},recipient_id.eq.${user.id}`,
-        )
+        .or(`initiator_id.eq.${userId},responder_id.eq.${userId},recipient_id.eq.${userId}`)
         .order("updated_at", { ascending: false })
-        .limit(50);
-      if (cancelled) return;
-      if (error) {
-        setTrades([]);
-        setLoading(false);
-        return;
+        .limit(PAGE_SIZE + 1);
+      if (beforeUpdatedAt) {
+        query = query.lt("updated_at", beforeUpdatedAt);
       }
-      const rows = (data ?? []) as unknown as TradeRow[];
-      setTrades(rows);
+      const { data, error } = await query;
+      if (error) throw error;
+      const all = (data ?? []) as unknown as TradeRow[];
+      const more = all.length > PAGE_SIZE;
+      const rows = more ? all.slice(0, PAGE_SIZE) : all;
 
+      // Resolve missing partner profiles only.
       const ids = new Set<string>();
       rows.forEach((r) => {
         ids.add(r.initiator_id);
         if (r.responder_id) ids.add(r.responder_id);
         if (r.recipient_id) ids.add(r.recipient_id);
       });
-      ids.delete(user.id);
-      if (ids.size > 0) {
+      ids.delete(userId);
+      const missing = Array.from(ids).filter((id) => !currentProfiles[id]);
+      const nextProfiles = { ...currentProfiles };
+      if (missing.length > 0) {
         const { data: profs } = await supabase
           .from("profiles")
           .select("user_id, username, display_name")
-          .in("user_id", Array.from(ids));
-        if (!cancelled && profs) {
-          const map: Record<string, PartyProfile> = {};
-          profs.forEach((p) => {
-            map[p.user_id] = p as PartyProfile;
-          });
-          setProfiles(map);
+          .in("user_id", missing);
+        profs?.forEach((p) => {
+          nextProfiles[p.user_id] = p as PartyProfile;
+        });
+      }
+
+      return { rows, profiles: nextProfiles, hasMore: more };
+    },
+    [],
+  );
+
+  const loadInitial = useCallback(
+    async (userId: string, force = false) => {
+      const reqId = ++reqIdRef.current;
+      const cached = historyCache.get(userId);
+      const fresh = cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS;
+
+      if (cached && !force) {
+        setTrades(cached.rows);
+        setProfiles(cached.profiles);
+        setHasMore(cached.hasMore);
+        setLoading(false);
+        if (fresh) return; // Skip refetch when cache is still warm.
+      } else {
+        setLoading(true);
+      }
+
+      if (force) setRefreshing(true);
+      try {
+        const { rows, profiles: nextProfiles, hasMore: more } = await fetchPage(userId, null, {});
+        if (reqId !== reqIdRef.current) return;
+        historyCache.set(userId, { rows, profiles: nextProfiles, hasMore: more, fetchedAt: Date.now() });
+        setTrades(rows);
+        setProfiles(nextProfiles);
+        setHasMore(more);
+      } catch {
+        if (reqId !== reqIdRef.current) return;
+        if (!cached) {
+          setTrades([]);
+          setHasMore(false);
+        }
+      } finally {
+        if (reqId === reqIdRef.current) {
+          setLoading(false);
+          setRefreshing(false);
         }
       }
-      setLoading(false);
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
+    },
+    [fetchPage],
+  );
+
+  useEffect(() => {
+    if (!user) return;
+    loadInitial(user.id);
+  }, [user, loadInitial]);
+
+  const handleLoadMore = async () => {
+    if (!user || loadingMore || !hasMore || trades.length === 0) return;
+    setLoadingMore(true);
+    try {
+      const cursor = trades[trades.length - 1].updated_at;
+      const { rows, profiles: nextProfiles, hasMore: more } = await fetchPage(user.id, cursor, profiles);
+      const merged = [...trades, ...rows];
+      setTrades(merged);
+      setProfiles(nextProfiles);
+      setHasMore(more);
+      historyCache.set(user.id, { rows: merged, profiles: nextProfiles, hasMore: more, fetchedAt: Date.now() });
+    } catch {
+      // keep existing list on error
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (!user) return;
+    historyCache.delete(user.id);
+    loadInitial(user.id, true);
+  };
 
   if (loading) {
     return (
@@ -137,9 +218,7 @@ const TradeHistoryList = () => {
   const partnerLabel = (row: TradeRow) => {
     if (!user) return "—";
     const isInitiator = row.initiator_id === user.id;
-    const partnerId = isInitiator
-      ? row.responder_id ?? row.recipient_id
-      : row.initiator_id;
+    const partnerId = isInitiator ? row.responder_id ?? row.recipient_id : row.initiator_id;
     if (!partnerId) return "Belum ada partner";
     const p = profiles[partnerId];
     if (!p) return "Pengguna";
@@ -151,6 +230,16 @@ const TradeHistoryList = () => {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          Menampilkan {trades.length} riwayat{hasMore ? "+" : ""}
+        </p>
+        <Button size="sm" variant="ghost" onClick={handleRefresh} disabled={refreshing}>
+          <RefreshCw className={`mr-1 h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
+
       {trades.map((row) => {
         const meta = statusMeta(row.status);
         const Icon = meta.icon;
@@ -198,6 +287,21 @@ const TradeHistoryList = () => {
           </Card>
         );
       })}
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
+            {loadingMore ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Memuat…
+              </>
+            ) : (
+              "Load more"
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
