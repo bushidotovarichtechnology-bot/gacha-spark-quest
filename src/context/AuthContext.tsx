@@ -41,7 +41,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Sign out from Supabase (global scope clears all sessions/refresh tokens)
+    try {
+      await supabase.auth.signOut({ scope: "global" });
+    } catch (e) {
+      // Continue cleanup even if remote sign-out fails
+      console.warn("Supabase signOut error (continuing cleanup):", e);
+    }
+
+    // Clear local auth state immediately
+    setSession(null);
+    setUser(null);
+
+    // Purge any persisted Supabase auth tokens & related caches from storage
+    try {
+      const purgeKeys = (storage: Storage) => {
+        const toRemove: string[] = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (!key) continue;
+          if (
+            key.startsWith("sb-") ||
+            key.startsWith("supabase.") ||
+            key.includes("supabase.auth") ||
+            key.startsWith("lovable.auth") ||
+            key.startsWith("lovable-auth") ||
+            key.includes("oauth")
+          ) {
+            toRemove.push(key);
+          }
+        }
+        toRemove.forEach((k) => storage.removeItem(k));
+      };
+      purgeKeys(localStorage);
+      purgeKeys(sessionStorage);
+    } catch (e) {
+      console.warn("Storage purge error:", e);
+    }
+
+    // Best-effort: clear Cache Storage entries that might hold auth responses
+    try {
+      if (typeof caches !== "undefined") {
+        const keys = await caches.keys();
+        await Promise.all(
+          keys
+            .filter((k) => /auth|supabase|oauth|lovable/i.test(k))
+            .map((k) => caches.delete(k))
+        );
+      }
+    } catch (e) {
+      console.warn("Cache purge error:", e);
+    }
   };
 
   return (
