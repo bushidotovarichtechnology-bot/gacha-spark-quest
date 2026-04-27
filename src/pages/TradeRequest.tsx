@@ -138,12 +138,60 @@ const TradeRequest = () => {
     const tradeToken = trade.token;
     let cancelled = false;
 
-    const refetch = async () => {
+    // Exponential-backoff retry loop. `refetch` returns a boolean so the
+    // caller can decide whether to schedule another attempt. New triggers
+    // (manual retry, online event, poll tick) cancel any in-flight retry
+    // chain via `retryToken` so timers never stack.
+    const BACKOFF_BASE_MS = 1_000;
+    const BACKOFF_MAX_MS = 30_000;
+    const BACKOFF_MAX_ATTEMPTS = 6; // ~1 minute total
+    let retryToken = 0;
+    let retryTimer: number | null = null;
+
+    const refetch = async (): Promise<boolean> => {
       try {
         const fresh = await fetchTradeByToken(tradeToken);
-        if (!cancelled && fresh) setTrade(fresh);
-      } catch { /* ignore */ }
+        if (cancelled) return true;
+        if (fresh) setTrade(fresh);
+        setSyncState("idle");
+        setSyncAttempt(0);
+        setLastSyncError(null);
+        setLastSyncedAt(Date.now());
+        return true;
+      } catch (err) {
+        if (cancelled) return true;
+        setLastSyncError(err instanceof Error ? err.message : "Tidak dapat menjangkau server");
+        return false;
+      }
     };
+
+    const refetchWithBackoff = async () => {
+      const myToken = ++retryToken;
+      if (retryTimer !== null) {
+        window.clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+      setSyncState("syncing");
+      for (let attempt = 0; attempt < BACKOFF_MAX_ATTEMPTS; attempt++) {
+        if (cancelled || myToken !== retryToken) return;
+        setSyncAttempt(attempt + 1);
+        const ok = await refetch();
+        if (ok || cancelled || myToken !== retryToken) return;
+        const exp = Math.min(BACKOFF_BASE_MS * 2 ** attempt, BACKOFF_MAX_MS);
+        const delay = Math.floor(Math.random() * exp); // full jitter
+        await new Promise<void>((resolve) => {
+          retryTimer = window.setTimeout(() => {
+            retryTimer = null;
+            resolve();
+          }, delay);
+        });
+      }
+      // Exhausted attempts — surface error state, keep manual retry available.
+      if (!cancelled && myToken === retryToken) setSyncState("error");
+    };
+
+    // Expose manual retry to the banner button.
+    manualRetryRef.current = () => { void refetchWithBackoff(); };
 
     // Per-(trade,status) debounce lock — realtime + polling + manual refetch
     // can deliver the same transition multiple times within a few hundred ms.
