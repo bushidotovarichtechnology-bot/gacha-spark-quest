@@ -15,7 +15,7 @@ import { useGacha } from "@/context/GachaContext";
 import { supabase } from "@/integrations/supabase/client";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
-import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
+import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, TradeFetchError, type TradeFetchReason, type TradeRow } from "@/lib/tradeApi";
 import { supabaseImg } from "@/lib/imageTransform";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -38,6 +38,7 @@ const TradeRequest = () => {
   const { items, refreshInventory, refreshCoins } = useGacha();
 
   const [trade, setTrade] = useState<TradeRow | null>(null);
+  const [loadError, setLoadError] = useState<TradeFetchReason | null>(null);
   const [loading, setLoading] = useState(true);
   const [responderItems, setResponderItems] = useState<Set<string>>(new Set());
   const [pin, setPin] = useState("");
@@ -62,11 +63,37 @@ const TradeRequest = () => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const t = await fetchTradeByToken(token);
         if (!cancelled) setTrade(t);
-      } catch {
-        if (!cancelled) setTrade(null);
+      } catch (err) {
+        if (cancelled) return;
+        setTrade(null);
+        const reason: TradeFetchReason =
+          err instanceof TradeFetchError ? err.reason : "network_error";
+        setLoadError(reason);
+        const toastMap: Record<TradeFetchReason, { title: string; description: string }> = {
+          invalid_token: {
+            title: "Token trade tidak valid",
+            description: "Periksa kembali link yang kamu buka — formatnya tidak sesuai.",
+          },
+          not_authenticated: {
+            title: "Kamu belum login",
+            description: "Silakan login terlebih dahulu untuk membuka trade ini.",
+          },
+          not_found_or_forbidden: {
+            title: "Trade tidak bisa diakses",
+            description:
+              "Link tidak ditemukan, sudah kedaluwarsa, atau ditujukan ke akun lain (recipient berbeda). Pastikan kamu login pakai email yang dituju.",
+          },
+          network_error: {
+            title: "Gagal memuat trade",
+            description: "Terjadi kesalahan jaringan. Coba refresh halaman.",
+          },
+        };
+        const m = toastMap[reason];
+        toast.error(m.title, { description: m.description });
       } finally {
         if (!cancelled) setLoading(false);
       }
