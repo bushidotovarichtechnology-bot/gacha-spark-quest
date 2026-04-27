@@ -323,12 +323,12 @@ const GiftCoins = () => {
               <Card className="border-border/50">
                 <CardContent className="space-y-4 pt-6">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">Email Penerima</label>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Penerima (@username atau Email)</label>
                     <Input
-                      type="email"
-                      placeholder="teman@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      type="text"
+                      placeholder="@username atau teman@email.com"
+                      value={recipientInput}
+                      onChange={(e) => setRecipientInput(e.target.value)}
                       className="bg-secondary"
                       list="gift-recent-recipients"
                       autoComplete="off"
