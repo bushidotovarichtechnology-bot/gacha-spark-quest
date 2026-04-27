@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { AtSign, Check, Loader2, ShieldCheck, Lock, AlertTriangle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AtSign, Check, Loader2, ShieldCheck, Lock, AlertTriangle, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
