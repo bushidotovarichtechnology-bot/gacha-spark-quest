@@ -788,13 +788,16 @@ const TradeRequest = () => {
           </Card>
         </div>
 
-        {/* Action area — single Accept & Merge flow */}
-        {canExecute && (
+        {/* STEP 1: Responder submits items + PIN */}
+        {canResponderSubmit && (
           <Card ref={pinPanelRef} className="mt-4 p-4">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              Masukkan PIN keamanan untuk menyelesaikan trade
+              Tahap 1/2 — Kirim tawaran kamu + PIN
             </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Setelah kamu konfirmasi, initiator akan meninjau item kamu & memberi persetujuan akhir (tahap 2). Item baru berpindah setelah initiator setuju.
+            </p>
             <div className="flex justify-center">
               <InputOTP maxLength={6} value={pin} onChange={setPin} disabled={submitting}>
                 <InputOTPGroup>
@@ -805,23 +808,19 @@ const TradeRequest = () => {
               </InputOTP>
             </div>
             <div className="mt-3 rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
-              <div>
-                <span className="font-semibold text-primary">Gas fee:</span> {TRADE_GAS_FEE} koin (kedua belah pihak)
-              </div>
-              <div>
-                <span className="font-semibold text-primary">Pertukaran:</span> {initiatorItemMeta.length} ↔ {responderItemMeta.length} item
-              </div>
+              <div><span className="font-semibold text-primary">Gas fee:</span> {TRADE_GAS_FEE} koin (saat trade selesai)</div>
+              <div><span className="font-semibold text-primary">Tawaran kamu:</span> {responderItemMeta.length} item Tier {trade.tier_label}</div>
             </div>
             <Button
-              onClick={handleExecute}
+              onClick={() => callTradeExecute("submit")}
               disabled={submitting || pin.length !== 6 || responderItems.size === 0}
               className="mt-3 w-full"
               size="lg"
             >
               {submitting ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memproses…</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Mengirim…</>
               ) : (
-                <><CheckCircle2 className="mr-2 h-4 w-4" /> Terima &amp; Tukar</>
+                <><ShieldCheck className="mr-2 h-4 w-4" /> Kirim Tawaran &amp; PIN (Tahap 1)</>
               )}
             </Button>
             <Button
@@ -832,6 +831,73 @@ const TradeRequest = () => {
             >
               <XCircle className="mr-1 h-4 w-4" /> Tolak Trade
             </Button>
+          </Card>
+        )}
+
+        {/* STEP 2: Initiator reviews responder's offer + PIN */}
+        {canInitiatorReview && (
+          <Card ref={pinPanelRef} className="mt-4 border-primary/40 bg-primary/5 p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              Tahap 2/2 — Verifikasi item dari responder
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Responder telah memilih <span className="font-semibold text-foreground">{responderItemMetaRemote.length} item Tier {trade.tier_label}</span> di bawah. Cek apakah sesuai harapan kamu, lalu masukkan PIN untuk menyetujui & menukar item secara final.
+            </p>
+
+            {responderItemMetaRemote.length > 0 && (
+              <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {responderItemMetaRemote.map((it) => (
+                  <div key={it.id} className="rounded-md border border-primary/30 bg-card p-2">
+                    <div className="aspect-square overflow-hidden rounded-sm bg-muted">
+                      <img src={supabaseImg(it.image, 200)} alt={it.prize} loading="lazy" className="h-full w-full object-contain" />
+                    </div>
+                    <div className="mt-1 truncate text-xs text-foreground">{it.prize}</div>
+                    <div className="text-[10px] text-accent">+{it.coin_value} coin</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-center">
+              <InputOTP maxLength={6} value={pin} onChange={setPin} disabled={submitting}>
+                <InputOTPGroup>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <InputOTPSlot key={i} index={i} />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            <div className="mt-3 rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+              <div><span className="font-semibold text-primary">Gas fee:</span> {TRADE_GAS_FEE} koin (kedua belah pihak)</div>
+              <div><span className="font-semibold text-primary">Pertukaran:</span> {initiatorItemMeta.length} ↔ {responderItemMetaRemote.length} item</div>
+            </div>
+
+            <Button
+              onClick={() => callTradeExecute("approve")}
+              disabled={submitting || pin.length !== 6}
+              className="mt-3 w-full"
+              size="lg"
+            >
+              {submitting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menukar item…</>
+              ) : (
+                <><CheckCircle2 className="mr-2 h-4 w-4" /> Setujui &amp; Tukar (Final)</>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => callTradeExecute("reject")}
+              disabled={submitting || pin.length !== 6}
+              className="mt-2 w-full text-destructive hover:bg-destructive/10"
+            >
+              <XCircle className="mr-1 h-4 w-4" /> Tolak — item tidak sesuai (butuh PIN)
+            </Button>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Menolak akan membatalkan trade total. Responder harus membuat ulang trade jika ingin mencoba lagi.
+            </p>
           </Card>
         )}
 
