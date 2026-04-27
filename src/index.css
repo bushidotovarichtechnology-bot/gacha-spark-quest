@@ -57,15 +57,27 @@
     --hacker-surface: 220 15% 9%;
     --hacker-border: 120 50% 25%;
 
-    /* Tier badges — high-contrast semantic colors per rarity. */
-    --tier-s: 45 100% 55%;          /* gold */
-    --tier-s-foreground: 270 30% 6%;
-    --tier-a: 280 90% 65%;          /* purple */
-    --tier-a-foreground: 0 0% 100%;
-    --tier-b: 200 90% 55%;          /* cyan-blue */
-    --tier-b-foreground: 0 0% 100%;
-    --tier-c: 220 8% 45%;           /* slate */
-    --tier-c-foreground: 0 0% 100%;
+    /* Tier badges — global semantic palette (Diamond / Gold / Silver / Bronze).
+       Used everywhere across all campaigns: banners, badges, glows, modals. */
+    --tier-s: 195 90% 70%;          /* Diamond — icy cyan */
+    --tier-s-foreground: 215 50% 15%;
+    --tier-s-light: 195 100% 92%;
+    --tier-s-dark: 210 80% 45%;
+
+    --tier-a: 45 95% 55%;           /* Gold */
+    --tier-a-foreground: 30 50% 12%;
+    --tier-a-light: 48 100% 75%;
+    --tier-a-dark: 38 90% 40%;
+
+    --tier-b: 220 12% 75%;          /* Silver */
+    --tier-b-foreground: 220 25% 15%;
+    --tier-b-light: 220 15% 88%;
+    --tier-b-dark: 220 10% 50%;
+
+    --tier-c: 25 70% 45%;           /* Bronze */
+    --tier-c-foreground: 30 50% 95%;
+    --tier-c-light: 28 75% 60%;
+    --tier-c-dark: 20 80% 30%;
   }
 }
 
