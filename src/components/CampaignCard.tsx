@@ -132,7 +132,7 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-secondary">
               <div
-                className={`h-full rounded-full transition-[width,background-color] duration-700 ease-out ${flash ? "bg-accent" : isLow ? "bg-destructive" : "bg-primary"}`}
+                className={`h-full rounded-full transition-[width] duration-700 ease-out ${flash ? "tier-banner-a" : tierBarClass}`}
                 style={{ width: `${percentage}%` }}
               />
             </div>
