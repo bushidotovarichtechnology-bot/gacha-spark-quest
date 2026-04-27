@@ -1,8 +1,62 @@
 /**
  * 8-bit Dino chasing a box loading animation.
  * Pure CSS/SVG pixel art — no external assets.
+ * Auto-detects current page title from window.location.pathname.
  */
-const DinoChaseLoader = ({ label = "Memuat halaman..." }: { label?: string }) => {
+const ROUTE_TITLES: Array<{ pattern: RegExp; title: string }> = [
+  { pattern: /^\/$/, title: "Membuka Beranda" },
+  { pattern: /^\/campaign\/[^/]+/, title: "Masuk ke Ruang Draw" },
+  { pattern: /^\/inventory/, title: "Membuka Inventaris" },
+  { pattern: /^\/history/, title: "Memuat Riwayat Draw" },
+  { pattern: /^\/claims/, title: "Memuat Riwayat Klaim" },
+  { pattern: /^\/topup/, title: "Membuka Top Up Koin" },
+  { pattern: /^\/transactions\/[^/]+/, title: "Memuat Detail Transaksi" },
+  { pattern: /^\/transactions/, title: "Memuat Riwayat Transaksi" },
+  { pattern: /^\/redeem/, title: "Membuka Toko Penukaran" },
+  { pattern: /^\/gift/, title: "Membuka Hadiah Koin" },
+  { pattern: /^\/profile/, title: "Membuka Profil" },
+  { pattern: /^\/trade\/new/, title: "Menyiapkan Trade Baru" },
+  { pattern: /^\/trade\/req/, title: "Memuat Permintaan Trade" },
+  { pattern: /^\/leaderboard/, title: "Memuat Papan Peringkat" },
+  { pattern: /^\/about/, title: "Tentang Kami" },
+  { pattern: /^\/contact/, title: "Hubungi Kami" },
+  { pattern: /^\/terms/, title: "Memuat Syarat & Ketentuan" },
+  { pattern: /^\/privacy/, title: "Memuat Kebijakan Privasi" },
+  { pattern: /^\/login/, title: "Membuka Halaman Masuk" },
+  { pattern: /^\/register/, title: "Membuka Pendaftaran" },
+  { pattern: /^\/forgot-password/, title: "Memuat Lupa Kata Sandi" },
+  { pattern: /^\/reset-password/, title: "Memuat Reset Kata Sandi" },
+  { pattern: /^\/admin\/login/, title: "Masuk Panel Admin" },
+  { pattern: /^\/admin\/users/, title: "Mengelola Pengguna" },
+  { pattern: /^\/admin\/banned-users/, title: "Daftar Pengguna Diblokir" },
+  { pattern: /^\/admin\/campaigns/, title: "Mengelola Campaign" },
+  { pattern: /^\/admin\/probability/, title: "Pengaturan Probabilitas" },
+  { pattern: /^\/admin\/categories/, title: "Mengelola Kategori" },
+  { pattern: /^\/admin\/claims/, title: "Mengelola Klaim" },
+  { pattern: /^\/admin\/messages/, title: "Memuat Pesan" },
+  { pattern: /^\/admin\/pity/, title: "Pengaturan Pity" },
+  { pattern: /^\/admin\/rewards/, title: "Mengelola Hadiah" },
+  { pattern: /^\/admin\/coin-packages/, title: "Paket Koin" },
+  { pattern: /^\/admin\/coupons/, title: "Mengelola Kupon" },
+  { pattern: /^\/admin\/shipping/, title: "Pengaturan Pengiriman" },
+  { pattern: /^\/admin\/gacha-logs/, title: "Memuat Log Gacha" },
+  { pattern: /^\/admin\/stock-audit/, title: "Audit Stok" },
+  { pattern: /^\/admin\/payment-settings/, title: "Pengaturan Pembayaran" },
+  { pattern: /^\/admin\/maintenance/, title: "Mode Pemeliharaan" },
+  { pattern: /^\/admin\/promo-banners/, title: "Banner Promo" },
+  { pattern: /^\/admin\/gift-audit/, title: "Audit Hadiah" },
+  { pattern: /^\/admin/, title: "Membuka Dasbor Admin" },
+];
+
+const resolvePageTitle = (): string => {
+  if (typeof window === "undefined") return "Memuat halaman";
+  const path = window.location.pathname;
+  const match = ROUTE_TITLES.find((r) => r.pattern.test(path));
+  return match?.title ?? "Memuat halaman";
+};
+
+const DinoChaseLoader = ({ label }: { label?: string }) => {
+  const title = label ?? resolvePageTitle();
   return (
     <div
       className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background"
@@ -119,7 +173,7 @@ const DinoChaseLoader = ({ label = "Memuat halaman..." }: { label?: string }) =>
       </div>
 
       <div className="flex items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground">
-        <span>{label}</span>
+        <span className="text-foreground">{title}</span>
         <span style={{ animation: "loading-dots 1.2s infinite", animationDelay: "0s" }}>.</span>
         <span style={{ animation: "loading-dots 1.2s infinite", animationDelay: "0.2s" }}>.</span>
         <span style={{ animation: "loading-dots 1.2s infinite", animationDelay: "0.4s" }}>.</span>
