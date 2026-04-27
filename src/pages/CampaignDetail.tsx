@@ -209,8 +209,10 @@ const CampaignDetail = () => {
         name: t.name,
         image_url: t.image_url,
         sort_order: t.sort_order,
-        remaining: 1,
-        total: 1,
+        // `remaining` exact stock is hidden from public — keep it equal to `total`
+        // unless every prize in the tier is sold out. Sold-out flag still works.
+        remaining: t.total ?? 1,
+        total: t.total ?? 1,
         probability_weight: 1,
         tier_prizes: (t.tier_prizes_public || []).map((p: any) => ({
           id: p.id,
@@ -222,8 +224,8 @@ const CampaignDetail = () => {
           coin_value: p.coin_value,
           weight_grams: p.weight_grams,
           auto_refill: p.auto_refill,
-          remaining: availMap.get(p.id) ? 0 : 1,
-          total: 1,
+          remaining: availMap.get(p.id) ? 0 : (p.total ?? 1),
+          total: p.total ?? 1,
           probability_weight: 1,
         })),
       }));
