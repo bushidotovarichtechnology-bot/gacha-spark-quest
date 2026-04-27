@@ -126,33 +126,87 @@ const TradeRequest = () => {
       const prev = lastStatusRef.current;
       const meIsInitiator = !!user && next.initiator_id === user.id;
       const meIsResponder = !!user && next.responder_id === user.id;
+      const role: "initiator" | "responder" | "viewer" =
+        meIsInitiator ? "initiator" : meIsResponder ? "responder" : "viewer";
 
       // Notify on real status transitions caused by the OTHER party.
+      // Messages are tailored per role so each user sees the right call-to-action.
       if (prev && prev !== next.status) {
-        if (next.status === "awaiting_initiator" && meIsInitiator) {
-          toast.info("Responder sudah memilih item", {
-            id: `trade-rt-${tradeId}`,
-            description: "Tinjau penawaran lalu approve atau tolak (timer 1 jam).",
-          });
+        const tid = `trade-rt-${tradeId}`;
+
+        if (next.status === "awaiting_initiator") {
+          if (role === "initiator") {
+            toast.info("Penawaran masuk — giliran kamu", {
+              id: tid,
+              description: "Responder sudah memilih item. Tinjau & approve dengan PIN (timer 1 jam).",
+            });
+          } else if (role === "responder") {
+            toast.success("Tawaran terkirim", {
+              id: tid,
+              description: "Menunggu initiator meninjau & menyetujui.",
+            });
+          } else {
+            toast.info("Trade menunggu review initiator", { id: tid });
+          }
         } else if (next.status === "accepted") {
-          toast.success("Trade berhasil dieksekusi", {
-            id: `trade-rt-${tradeId}`,
-            description: "Item sudah berpindah tangan.",
-          });
+          if (role === "initiator") {
+            toast.success("Trade selesai — item diterima", {
+              id: tid,
+              description: "Inventory & saldo koin sudah diperbarui.",
+            });
+          } else if (role === "responder") {
+            toast.success("Trade disetujui initiator", {
+              id: tid,
+              description: "Item sudah berpindah tangan. Cek inventory kamu.",
+            });
+          } else {
+            toast.success("Trade berhasil dieksekusi", { id: tid });
+          }
           // Refresh own balances/inventory in real time.
           Promise.all([refreshInventory(), refreshCoins()]).catch(() => {});
         } else if (next.status === "rejected") {
-          toast.error("Trade ditolak oleh initiator", {
-            id: `trade-rt-${tradeId}`,
-            description: "Responder perlu membuat trade baru jika ingin mencoba lagi.",
-          });
+          if (role === "responder") {
+            toast.error("Tawaran kamu ditolak", {
+              id: tid,
+              description: "Initiator menolak item yang kamu pilih. Buat trade baru jika ingin mencoba lagi.",
+            });
+          } else if (role === "initiator") {
+            toast.info("Kamu menolak tawaran responder", {
+              id: tid,
+              description: "Trade ditutup. Responder perlu membuat trade baru.",
+            });
+          } else {
+            toast.error("Trade ditolak", { id: tid });
+          }
         } else if (next.status === "cancelled") {
-          toast.warning("Trade dibatalkan", { id: `trade-rt-${tradeId}` });
+          if (role === "initiator") {
+            toast.warning("Kamu membatalkan trade", { id: tid });
+          } else if (role === "responder") {
+            toast.warning("Trade dibatalkan oleh initiator", {
+              id: tid,
+              description: "Trade ini tidak bisa dilanjutkan.",
+            });
+          } else {
+            toast.warning("Trade dibatalkan", { id: tid });
+          }
         } else if (next.status === "expired") {
-          toast.error("Trade kedaluwarsa", {
-            id: `trade-rt-${tradeId}`,
-            description: "Batas waktu sudah lewat.",
-          });
+          if (role === "initiator") {
+            toast.error("Trade kedaluwarsa", {
+              id: tid,
+              description: prev === "awaiting_initiator"
+                ? "Window review 1 jam terlewat — kamu tidak sempat approve."
+                : "Batas waktu trade habis sebelum responder memilih item.",
+            });
+          } else if (role === "responder") {
+            toast.error("Trade kedaluwarsa", {
+              id: tid,
+              description: prev === "awaiting_initiator"
+                ? "Initiator tidak sempat meninjau dalam 1 jam."
+                : "Kamu tidak sempat memilih item sebelum batas waktu.",
+            });
+          } else {
+            toast.error("Trade kedaluwarsa", { id: tid });
+          }
         }
       }
       lastStatusRef.current = next.status;
