@@ -483,6 +483,9 @@ const CampaignDetail = () => {
       </div>
 
       <div className="container mx-auto px-4 pt-6">
+        <div className="mb-3">
+          <RateUpBadge />
+        </div>
         <p className="mb-6 max-w-xl text-sm text-muted-foreground">{campaign.description}</p>
 
         <div className="mb-8 flex flex-wrap gap-3">
