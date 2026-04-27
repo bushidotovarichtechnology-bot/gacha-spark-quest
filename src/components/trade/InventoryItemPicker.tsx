@@ -24,19 +24,18 @@ interface Props {
  */
 const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, emptyMessage }: Props) => {
   const { items } = useGacha();
-  const [tierFilter, setTierFilter] = useState<TradableTier | "all">(lockedTier ?? "all");
+  const [tierFilter, setTierFilter] = useState<TradableTier>(lockedTier ?? "S");
 
-  // Show tradable items + Tier C (disabled) so users see why they can't pick C.
+  // Only show tradable items (Tier S/A/B). Tier C is hidden entirely.
   const visible = useMemo(() => {
     return items.filter((it) => {
       if (hideIds?.has(it.id)) return false;
-      if (lockedTier) return true; // show all (locked-tier highlight handled per-cell)
-      if (tierFilter !== "all" && it.tier !== tierFilter) return false;
+      if (!isTradableTier(it.tier)) return false;
+      if (lockedTier) return true; // locked-tier highlight handled per-cell
+      if (it.tier !== tierFilter) return false;
       return true;
     });
   }, [items, lockedTier, tierFilter, hideIds]);
-
-  const tierCCount = items.filter((i) => i.tier === "C").length;
 
   const isSelectable = (it: InventoryItem): { ok: boolean; reason?: string } => {
     if (!isTradableTier(it.tier)) {
@@ -75,7 +74,7 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
     <div className="space-y-3">
       {!lockedTier && (
         <div className="flex flex-wrap gap-1.5">
-          {(["all", ...TRADABLE_TIERS] as const).map((t) => {
+          {TRADABLE_TIERS.map((t) => {
             const active = tierFilter === t;
             return (
               <button
@@ -83,13 +82,13 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
                 type="button"
                 onClick={() => setTierFilter(t)}
                 className={cn(
-                  "rounded-md border px-2.5 py-1 font-mono-hacker text-[11px] uppercase tracking-wider transition-colors",
+                  "rounded-md border px-2.5 py-1 text-[11px] uppercase tracking-wider transition-colors",
                   active
-                    ? "border-hacker bg-hacker-green/10 text-hacker-green text-glow-hacker"
-                    : "border-border bg-hacker-surface text-muted-foreground hover:text-foreground",
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t === "all" ? "all" : `tier ${t}`}
+                Tier {t}
               </button>
             );
           })}
@@ -158,13 +157,6 @@ const InventoryItemPicker = ({ lockedTier, selectedIds, onChange, hideIds, empty
               </button>
             );
           })}
-        </div>
-      )}
-
-      {tierCCount > 0 && (
-        <div className="flex items-center gap-1.5 rounded-md border border-border bg-hacker-bg px-2 py-1.5 font-mono-hacker text-[10px] text-muted-foreground">
-          <Lock className="h-3 w-3" />
-          {tierCCount} item Tier C terkunci dari trade (anti-farming).
         </div>
       )}
     </div>
