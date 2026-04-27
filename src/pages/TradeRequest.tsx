@@ -776,7 +776,7 @@ const TradeRequest = () => {
 
           const toneClasses: Record<Tone, string> = {
             info: "border-primary/40 bg-primary/10 text-primary",
-            success: "border-success/40 bg-success/10 text-success",
+            success: "border-primary/50 bg-primary/10 text-primary",
             warning: "border-accent/40 bg-accent/10 text-accent",
             danger: "border-destructive/50 bg-destructive/10 text-destructive",
             neutral: "border-border bg-muted/40 text-muted-foreground",
