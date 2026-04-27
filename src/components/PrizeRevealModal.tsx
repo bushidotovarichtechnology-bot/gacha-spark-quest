@@ -286,7 +286,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-                    className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-yellow-400 px-2.5 py-1 text-[10px] font-black text-background shadow-lg"
+                    className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full tier-banner-a px-2.5 py-1 text-[10px] font-black text-tier-a-foreground shadow-lg"
                   >
                     <Star className="h-3 w-3" />
                     PITY REWARD
