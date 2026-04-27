@@ -327,6 +327,9 @@ const TradeRequest = () => {
 
     // Seed last status so we don't fire a notification on first mount.
     lastStatusRef.current = trade.status;
+    // Also seed the dedup map for the current status so any echo of the same
+    // status that arrives right after mount is suppressed.
+    lastFiredAt.set(`${tradeId}:${trade.status}`, Date.now());
 
     const channel = supabase
       .channel(`trade-${tradeId}`)
