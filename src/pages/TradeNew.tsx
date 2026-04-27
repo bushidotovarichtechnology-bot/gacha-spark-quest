@@ -144,121 +144,134 @@ const TradeNew = () => {
           </p>
         </div>
 
-        {pinReady === false && !showPinSetup && (
-          <Card className="mb-4 flex items-start gap-2 border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-            <AlertTriangle className="mt-0.5 h-4 w-4" />
-            <div className="flex-1">
-              <p className="font-semibold">Security PIN belum diset.</p>
-              <p className="text-xs">PIN 6 digit wajib aktif sebelum kamu bisa eksekusi trade.</p>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => setShowPinSetup(true)}>
-              Setup PIN
-            </Button>
-          </Card>
-        )}
+        <Tabs defaultValue="create" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="create">Buat Trade</TabsTrigger>
+            <TabsTrigger value="history">Riwayat</TabsTrigger>
+          </TabsList>
 
-        {!generatedToken ? (
-          <Card className="space-y-5 p-5">
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Pilih Item</span>
-                {lockedTier && (
-                  <Badge variant="secondary" className="text-xs">
-                    Tier {lockedTier} terkunci
-                  </Badge>
-                )}
-              </div>
-              <InventoryItemPicker
-                lockedTier={lockedTier}
-                selectedIds={selectedIds}
-                onChange={setSelectedIds}
-                emptyMessage="Belum ada item tradable. Lakukan gacha dulu untuk mendapatkan item Tier S/A/B."
-              />
-            </div>
+          <TabsContent value="create">
+            {pinReady === false && !showPinSetup && (
+              <Card className="mb-4 flex items-start gap-2 border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="mt-0.5 h-4 w-4" />
+                <div className="flex-1">
+                  <p className="font-semibold">Security PIN belum diset.</p>
+                  <p className="text-xs">PIN 6 digit wajib aktif sebelum kamu bisa eksekusi trade.</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => setShowPinSetup(true)}>
+                  Setup PIN
+                </Button>
+              </Card>
+            )}
 
-            <div>
-              <label htmlFor="trade-msg" className="mb-1 block text-sm font-medium text-foreground">
-                Pesan <span className="text-muted-foreground font-normal">(opsional)</span>
-              </label>
-              <Textarea
-                id="trade-msg"
-                value={message}
-                onChange={(e) => setMessage(e.target.value.slice(0, 200))}
-                placeholder="Contoh: nyari iPhone tier S, tukar Switch 2 saya"
-                rows={2}
-              />
-              <p className="mt-1 text-right text-xs text-muted-foreground">{message.length}/200</p>
-            </div>
+            {!generatedToken ? (
+              <Card className="space-y-5 p-5">
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Pilih Item</span>
+                    {lockedTier && (
+                      <Badge variant="secondary" className="text-xs">
+                        Tier {lockedTier} terkunci
+                      </Badge>
+                    )}
+                  </div>
+                  <InventoryItemPicker
+                    lockedTier={lockedTier}
+                    selectedIds={selectedIds}
+                    onChange={setSelectedIds}
+                    emptyMessage="Belum ada item tradable. Lakukan gacha dulu untuk mendapatkan item Tier S/A/B."
+                  />
+                </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">
-                Penerima <span className="text-muted-foreground font-normal">(opsional)</span>
-              </label>
-              <RecipientPicker value={recipient} onChange={setRecipient} />
-            </div>
+                <div>
+                  <label htmlFor="trade-msg" className="mb-1 block text-sm font-medium text-foreground">
+                    Pesan <span className="text-muted-foreground font-normal">(opsional)</span>
+                  </label>
+                  <Textarea
+                    id="trade-msg"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value.slice(0, 200))}
+                    placeholder="Contoh: nyari iPhone tier S, tukar Switch 2 saya"
+                    rows={2}
+                  />
+                  <p className="mt-1 text-right text-xs text-muted-foreground">{message.length}/200</p>
+                </div>
 
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
-              <div className="flex items-center gap-1.5 text-primary">
-                <Coins className="h-4 w-4" />
-                <span className="font-semibold">Gas fee {TRADE_GAS_FEE} koin per pihak</span>
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                Dipotong otomatis dari saldo koin saat trade berhasil. Trade berlaku 24 jam.
-              </div>
-            </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground">
+                    Penerima <span className="text-muted-foreground font-normal">(opsional)</span>
+                  </label>
+                  <RecipientPicker value={recipient} onChange={setRecipient} />
+                </div>
 
-            <Button
-              onClick={openConfirm}
-              disabled={creating || selectedIds.size === 0 || pinReady === false}
-              className="w-full"
-              size="lg"
-            >
-              {creating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Membuat trade…
-                </>
-              ) : (
-                <>
-                  <ArrowLeftRight className="mr-2 h-4 w-4" />
-                  Buat Trade Link
-                </>
-              )}
-            </Button>
-          </Card>
-        ) : (
-          <Card className="space-y-4 p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-              <Check className="h-4 w-4" />
-              Trade Link berhasil dibuat
-            </div>
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-2">
-              <code className="flex-1 truncate text-xs text-foreground">{tradeUrl}</code>
-              <Button size="sm" variant="outline" onClick={handleCopy}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Bagikan link ke partner trade-mu (WhatsApp, Discord, dll). Mereka akan memilih item
-              tier {lockedTier} miliknya untuk ditukarkan, lalu kalian berdua input PIN untuk eksekusi.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="default"
-                className="flex-1"
-                onClick={() => navigate(`/trade/req/${generatedToken}`)}
-              >
-                Buka Trade
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => navigate("/inventory")}
-              >
-                Kembali ke Inventory
-              </Button>
-            </div>
-          </Card>
-        )}
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+                  <div className="flex items-center gap-1.5 text-primary">
+                    <Coins className="h-4 w-4" />
+                    <span className="font-semibold">Gas fee {TRADE_GAS_FEE} koin per pihak</span>
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Dipotong otomatis dari saldo koin saat trade berhasil. Trade berlaku 24 jam.
+                  </div>
+                </div>
+
+                <Button
+                  onClick={openConfirm}
+                  disabled={creating || selectedIds.size === 0 || pinReady === false}
+                  className="w-full"
+                  size="lg"
+                >
+                  {creating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Membuat trade…
+                    </>
+                  ) : (
+                    <>
+                      <ArrowLeftRight className="mr-2 h-4 w-4" />
+                      Buat Trade Link
+                    </>
+                  )}
+                </Button>
+              </Card>
+            ) : (
+              <Card className="space-y-4 p-5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Check className="h-4 w-4" />
+                  Trade Link berhasil dibuat
+                </div>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-2">
+                  <code className="flex-1 truncate text-xs text-foreground">{tradeUrl}</code>
+                  <Button size="sm" variant="outline" onClick={handleCopy}>
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Bagikan link ke partner trade-mu (WhatsApp, Discord, dll). Mereka akan memilih item
+                  tier {lockedTier} miliknya untuk ditukarkan, lalu kalian berdua input PIN untuk eksekusi.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="default"
+                    className="flex-1"
+                    onClick={() => navigate(`/trade/req/${generatedToken}`)}
+                  >
+                    Buka Trade
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => navigate("/inventory")}
+                  >
+                    Kembali ke Inventory
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history">
+            <TradeHistoryList />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <SecurityPinDialog
