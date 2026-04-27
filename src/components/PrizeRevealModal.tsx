@@ -407,6 +407,15 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                 </div>
               )}
 
+              {/* Rate-up indicator */}
+              {rateUpMultiplier && rateUpMultiplier > 1 ? (
+                <div className="mb-2 flex justify-center">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_hsl(var(--accent)/0.35)]">
+                    ✦ Rate Up {rateUpMultiplier}x
+                  </span>
+                </div>
+              ) : null}
+
               {/* Counter + Skip */}
               {isMulti && (
                 <div className="mb-2 flex items-center justify-center gap-3">
