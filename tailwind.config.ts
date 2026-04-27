@@ -122,6 +122,10 @@ export default {
           "60%": { transform: "translate(1px, 0) scale(1.18)" },
           "75%": { transform: "translate(-1px, 0) scale(1.12)" },
         },
+        "status-bar": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(400%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
