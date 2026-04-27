@@ -139,6 +139,7 @@ export default {
         "scale-in": "scale-in 0.4s ease-out 0.3s both",
         "bounce-slow": "bounce-slow 2s ease-in-out infinite",
         "badge-shake": "badge-shake 0.6s ease-in-out",
+        "status-bar": "status-bar 1.2s ease-in-out infinite",
       },
     },
   },
