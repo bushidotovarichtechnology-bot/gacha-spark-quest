@@ -301,6 +301,8 @@ const CampaignDetail = () => {
   const pityThreshold = pitySettings?.threshold ?? 10;
   const pityGuaranteedTier = pitySettings?.guaranteed_tier ?? "A";
 
+  const { is_rate_up: isRateUp, multiplier: rateUpMult } = useRateUpStatus();
+
   // Restore in-progress draw animation after page refresh.
   // Runs once per (user, campaign) when both are known.
   useEffect(() => {
