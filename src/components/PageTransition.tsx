@@ -1,12 +1,16 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Routes, useLocation } from "react-router-dom";
-import { memo, useMemo, type ReactNode } from "react";
+import {
+  memo,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { pageVariants, duration, easing } from "@/lib/motion";
+import DinoChaseLoader from "./DinoChaseLoader";
 
-/**
- * Detect low-end device once per session.
- * Avoids GPU-heavy `filter: blur` on devices with little RAM / few cores.
- */
 const isLowEndDevice = (() => {
   if (typeof navigator === "undefined") return false;
   const mem = (navigator as any).deviceMemory ?? 8;
@@ -14,7 +18,6 @@ const isLowEndDevice = (() => {
   return mem <= 4 || cores <= 4;
 })();
 
-/** Lighter variants for low-end devices (no blur, smaller translate, faster). */
 const lightPageVariants = {
   initial: { opacity: 0, y: 8 },
   animate: {
@@ -35,22 +38,55 @@ const reducedMotionVariants = {
 };
 
 /**
- * Memoized children container — prevents Routes subtree from re-rendering
- * when only the AnimatedRoutes wrapper updates (e.g. parent state churn).
- * Children identity stays stable because <Route> JSX in App.tsx is static.
+ * Inner page wrapper. Mounts ONLY after Suspense resolves the lazy chunk,
+ * because Suspense lives OUTSIDE this component. When the chunk is still
+ * loading, this component never renders — the loader shows instead.
+ *
+ * The first paint after resolve fires `useEffect` → flips `mounted = true`,
+ * which triggers the Framer Motion `animate` state on the next frame.
+ * This guarantees the fade/slide runs AFTER the loader fully unmounts.
  */
-const RoutesShell = memo(function RoutesShell({
+const PageContent = memo(function PageContent({
   pathname,
+  variants,
+  willChange,
   children,
 }: {
   pathname: string;
+  variants: typeof pageVariants;
+  willChange: string;
   children: ReactNode;
 }) {
-  // `location` prop is intentionally derived from pathname so AnimatePresence
-  // can swap by key without forcing the inner Routes to re-resolve every tick.
-  return <Routes key={pathname}>{children}</Routes>;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // rAF ensures the loader has been removed from the DOM before we animate.
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <motion.div
+      key={pathname}
+      variants={variants}
+      initial="initial"
+      animate={mounted ? "animate" : "initial"}
+      exit="exit"
+      className="min-h-screen"
+      style={{ willChange }}
+    >
+      <Routes>{children}</Routes>
+    </motion.div>
+  );
 });
 
+/**
+ * AnimatedRoutes flow:
+ *   1. URL changes → React renders new <PageContent> (lazy chunk may suspend).
+ *   2. <Suspense fallback={DinoChaseLoader}> shows loader during chunk fetch.
+ *   3. Chunk resolves → PageContent mounts → useEffect triggers fade/slide in.
+ *   4. AnimatePresence handles exit of the previous PageContent in parallel.
+ */
 const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
@@ -61,7 +97,6 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
     return pageVariants;
   }, [prefersReducedMotion]);
 
-  // Hint browser only for properties we actually animate.
   const willChange = prefersReducedMotion
     ? "opacity"
     : isLowEndDevice
@@ -70,26 +105,19 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={location.pathname}
-        variants={variants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        className="min-h-screen"
-        style={{ willChange }}
-      >
-        <RoutesShell pathname={location.pathname}>{children}</RoutesShell>
-      </motion.div>
+      <Suspense key={location.pathname} fallback={<DinoChaseLoader />}>
+        <PageContent
+          pathname={location.pathname}
+          variants={variants as typeof pageVariants}
+          willChange={willChange}
+        >
+          {children}
+        </PageContent>
+      </Suspense>
     </AnimatePresence>
   );
 };
 
-/**
- * Outer memo: re-renders only when `children` reference changes.
- * In App.tsx the Route tree is declared inline once, so identity is stable
- * across context updates (Auth, I18n, Notifications).
- */
 const AnimatedRoutes = memo(AnimatedRoutesInner);
 
 export default AnimatedRoutes;

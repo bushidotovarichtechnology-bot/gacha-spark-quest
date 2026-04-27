@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -13,7 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
-import DinoChaseLoader from "./components/DinoChaseLoader";
+
 import AnimatedRoutes from "./components/PageTransition";
 import { TradeNotifDebugPanel } from "./components/TradeNotifDebugPanel";
 import RouterReadyBridge from "./components/RouterReadyBridge";
@@ -68,7 +68,7 @@ const AdminGiftAudit = lazy(() => import("./pages/admin/AdminGiftAudit.tsx"));
 
 const queryClient = new QueryClient();
 
-const RouteFallback = () => <DinoChaseLoader />;
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -85,7 +85,6 @@ const App = () => (
           <GlobalTransactionWatcher />
           <TradeNotifDebugPanel />
           <MaintenanceGate>
-          <Suspense fallback={<RouteFallback />}>
             <AnimatedRoutes>
               <Route path="/" element={<Index />} />
               {/* SEO-friendly slug route. Old ID-based URLs are also accepted
@@ -136,7 +135,6 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </AnimatedRoutes>
-          </Suspense>
           </MaintenanceGate>
         </BrowserRouter>
       </GachaProvider>
