@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { pageVariants, duration, easing } from "@/lib/motion";
+import { pageVariants, duration, easing, getPageVariantsFor } from "@/lib/motion";
 import DinoChaseLoader from "./DinoChaseLoader";
 
 const isLowEndDevice = (() => {
@@ -92,10 +92,11 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
   const prefersReducedMotion = useReducedMotion();
 
   const variants = useMemo(() => {
+    // Reduced-motion & low-end overrides take priority over per-route flair.
     if (prefersReducedMotion) return reducedMotionVariants;
     if (isLowEndDevice) return lightPageVariants;
-    return pageVariants;
-  }, [prefersReducedMotion]);
+    return getPageVariantsFor(location.pathname);
+  }, [prefersReducedMotion, location.pathname]);
 
   const willChange = prefersReducedMotion
     ? "opacity"

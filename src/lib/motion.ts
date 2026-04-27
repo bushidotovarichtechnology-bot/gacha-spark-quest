@@ -66,3 +66,86 @@ export const modalTransition: Transition = {
   duration: duration.base,
   ease: easing.easeOutBack,
 };
+
+/* ============================================================
+ * Per-route page variants
+ * Each variant is tuned to match the "feel" of the destination.
+ * ============================================================ */
+
+/** Draw room — dramatic glow + scale, like opening a treasure chest. */
+export const glowPageVariants: Variants = {
+  initial: {
+    opacity: 0,
+    scale: 0.96,
+    filter: "blur(8px) brightness(1.4)",
+    boxShadow: "0 0 0px hsl(var(--primary) / 0)",
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    filter: "blur(0px) brightness(1)",
+    transition: { duration: duration.slow, ease: easing.easeOutExpo },
+  },
+  exit: {
+    opacity: 0,
+    scale: 1.02,
+    filter: "blur(6px) brightness(1.2)",
+    transition: { duration: duration.fast, ease: easing.easeStandard },
+  },
+};
+
+/** Inventory / lists — horizontal slide like sliding a drawer. */
+export const slidePageVariants: Variants = {
+  initial: { opacity: 0, x: 32 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: duration.base, ease: easing.easeOutExpo },
+  },
+  exit: {
+    opacity: 0,
+    x: -24,
+    transition: { duration: duration.fast, ease: easing.easeStandard },
+  },
+};
+
+/** Auth / forms — gentle scale-up, focused entry. */
+export const popPageVariants: Variants = {
+  initial: { opacity: 0, scale: 0.94, y: 8 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: duration.base, ease: easing.easeOutBack },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.97,
+    transition: { duration: duration.fast, ease: easing.easeStandard },
+  },
+};
+
+/** Admin dashboards — quick crossfade, productivity feel. */
+export const fadePageVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: { duration: duration.base, ease: easing.easeStandard },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: duration.fast, ease: easing.easeStandard },
+  },
+};
+
+/** Map a pathname to its page variant. */
+export const getPageVariantsFor = (pathname: string): Variants => {
+  if (/^\/campaign\/[^/]+/.test(pathname)) return glowPageVariants;
+  if (/^\/(inventory|history|claims|transactions|redeem)/.test(pathname))
+    return slidePageVariants;
+  if (/^\/(login|register|forgot-password|reset-password|admin\/login)/.test(pathname))
+    return popPageVariants;
+  if (/^\/admin/.test(pathname)) return fadePageVariants;
+  return pageVariants;
+};
+
