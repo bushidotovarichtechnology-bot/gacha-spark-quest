@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +35,7 @@ const tierBadgeClass = (label: string) => {
 const TradeRequest = () => {
   const { token = "" } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items, refreshInventory, refreshCoins } = useGacha();
 
   const [trade, setTrade] = useState<TradeRow | null>(null);
@@ -58,8 +59,10 @@ const TradeRequest = () => {
   const isInitiator = !!user && trade?.initiator_id === user.id;
   const isResponder = !!user && trade?.responder_id === user.id;
 
-  // Load trade by token.
+  // Load trade by token. Wait until auth has hydrated so we don't
+  // momentarily render the "no access" card while the session is restoring.
   useEffect(() => {
+    if (authLoading) return;
     let cancelled = false;
     const load = async () => {
       setLoading(true);
@@ -100,7 +103,7 @@ const TradeRequest = () => {
     };
     load();
     return () => { cancelled = true; };
-  }, [token]);
+  }, [token, authLoading]);
 
   // Realtime auto-refresh + fallback reconcile.
   useEffect(() => {
@@ -287,12 +290,57 @@ const TradeRequest = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 pt-24 text-muted-foreground">
-          <Loader2 className="inline h-4 w-4 animate-spin" /> Memuat trade…
+        <div className="container mx-auto max-w-4xl px-4 pt-24">
+          {/* Header skeleton */}
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-3 w-3 rounded-full" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-4 w-16 rounded-full" />
+            </div>
+            <Skeleton className="h-7 w-64" />
+          </div>
+
+          {/* Status card skeleton */}
+          <Card className="mb-4 p-4">
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-full max-w-md" />
+                <Skeleton className="mt-2 h-9 w-full rounded-md" />
+              </div>
+            </div>
+          </Card>
+
+          {/* Two-column trade panels skeleton */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[0, 1].map((i) => (
+              <Card key={i} className="p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Skeleton className="h-4 w-4 rounded-full" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-16 w-full rounded-md" />
+                  <Skeleton className="h-16 w-full rounded-md" />
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <p
+            className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <Loader2 className="h-3 w-3 animate-spin" />
+            {authLoading ? "Memeriksa sesi login…" : "Memuat trade…"}
+          </p>
         </div>
       </div>
     );
