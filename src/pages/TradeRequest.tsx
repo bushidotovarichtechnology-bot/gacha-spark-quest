@@ -766,6 +766,51 @@ const TradeRequest = () => {
           </Card>
         )}
 
+        {/* Sync health banner — auto-retry with backoff + manual retry button. */}
+        {(syncState === "syncing" && syncAttempt > 1) || syncState === "error" ? (
+          <Card
+            className={cn(
+              "mb-4 border-l-4 p-3 transition-colors",
+              syncState === "error"
+                ? "border-destructive/60 bg-destructive/10 text-destructive"
+                : "border-accent/60 bg-accent/10 text-accent",
+            )}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-start gap-2">
+                {syncState === "syncing"
+                  ? <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" />
+                  : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wider">
+                    {syncState === "syncing"
+                      ? `Mencoba menyinkronkan ulang… (percobaan ${syncAttempt})`
+                      : "Sinkronisasi gagal"}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-foreground/80">
+                    {syncState === "syncing"
+                      ? "Koneksi sedang dipulihkan. Halaman akan otomatis ter-update."
+                      : (lastSyncError ?? "Tidak dapat menjangkau server.") + " Tekan Coba lagi untuk sinkron manual."}
+                  </p>
+                </div>
+              </div>
+              {syncState === "error" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1.5"
+                  onClick={() => manualRetryRef.current?.()}
+                >
+                  <Loader2 className="h-3.5 w-3.5" />
+                  Coba lagi
+                </Button>
+              )}
+            </div>
+          </Card>
+        ) : null}
+
         {/* Role-aware CTA banner — updates live on realtime status changes */}
         {(() => {
           type Tone = "info" | "success" | "warning" | "danger" | "neutral";
