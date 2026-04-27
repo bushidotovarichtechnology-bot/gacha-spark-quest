@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
+import DinoChaseLoader from "./components/DinoChaseLoader";
 import { TradeNotifDebugPanel } from "./components/TradeNotifDebugPanel";
 import RouterReadyBridge from "./components/RouterReadyBridge";
 import MaintenanceGate from "./components/MaintenanceGate";
@@ -66,9 +67,7 @@ const AdminGiftAudit = lazy(() => import("./pages/admin/AdminGiftAudit.tsx"));
 
 const queryClient = new QueryClient();
 
-const RouteFallback = () => (
-  <div className="min-h-screen bg-background" aria-hidden="true" />
-);
+const RouteFallback = () => <DinoChaseLoader />;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
