@@ -219,7 +219,7 @@ const AdminPromoBanners = () => {
                     <Card className="overflow-hidden">
                       <div className="aspect-[16/7] bg-muted">
                         {b.image_url ? (
-                          <img src={b.image_url} alt={b.title} className="h-full w-full object-cover" />
+                          <img src={b.image_url} alt={b.title} className="h-full w-full object-contain" />
                         ) : (
                           <div className="flex h-full items-center justify-center">
                             <ImageIcon className="h-8 w-8 text-muted-foreground" />
