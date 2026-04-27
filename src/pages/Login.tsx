@@ -7,7 +7,7 @@ import { useI18n } from "@/context/I18nContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Mail, Lock, Eye, EyeOff, ArrowLeftRight, Info } from "lucide-react";
+import { Coins, Mail, Lock, Eye, EyeOff, ArrowLeftRight, Info, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
@@ -118,7 +118,28 @@ const Login = () => {
             <CardDescription>{t("loginDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            {redirectParam && safeRedirect !== "/" && (
+            {redirectRejected && (
+              <div
+                role="alert"
+                aria-live="polite"
+                className="mb-4 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-foreground"
+              >
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-destructive">
+                    Tujuan redirect ditolak
+                  </p>
+                  <p className="mt-0.5 text-muted-foreground">
+                    Link login berisi tujuan{" "}
+                    <span className="break-all font-mono text-foreground">{redirectParam}</span>{" "}
+                    yang tidak diizinkan (bukan halaman internal yang dikenal). Setelah login,
+                    kamu akan diarahkan ke halaman utama. Jika kamu mengikuti link dari teman,
+                    minta mereka mengirim ulang link aslinya.
+                  </p>
+                </div>
+              </div>
+            )}
+            {!redirectRejected && redirectParam && safeRedirect !== "/" && (
               <div
                 role="status"
                 aria-live="polite"
