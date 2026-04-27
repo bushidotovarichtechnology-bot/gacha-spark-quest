@@ -15,7 +15,7 @@ import { useGacha } from "@/context/GachaContext";
 import { supabase } from "@/integrations/supabase/client";
 import InventoryItemPicker from "@/components/trade/InventoryItemPicker";
 import SecurityPinDialog from "@/components/trade/SecurityPinDialog";
-import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, type TradeRow } from "@/lib/tradeApi";
+import { fetchTradeByToken, hasSecurityPin, cancelTrade, rejectTrade, TRADE_GAS_FEE, TradeFetchError, type TradeFetchReason, type TradeRow } from "@/lib/tradeApi";
 import { supabaseImg } from "@/lib/imageTransform";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -38,6 +38,7 @@ const TradeRequest = () => {
   const { items, refreshInventory, refreshCoins } = useGacha();
 
   const [trade, setTrade] = useState<TradeRow | null>(null);
+  const [loadError, setLoadError] = useState<TradeFetchReason | null>(null);
   const [loading, setLoading] = useState(true);
   const [responderItems, setResponderItems] = useState<Set<string>>(new Set());
   const [pin, setPin] = useState("");
@@ -62,11 +63,37 @@ const TradeRequest = () => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const t = await fetchTradeByToken(token);
         if (!cancelled) setTrade(t);
-      } catch {
-        if (!cancelled) setTrade(null);
+      } catch (err) {
+        if (cancelled) return;
+        setTrade(null);
+        const reason: TradeFetchReason =
+          err instanceof TradeFetchError ? err.reason : "network_error";
+        setLoadError(reason);
+        const toastMap: Record<TradeFetchReason, { title: string; description: string }> = {
+          invalid_token: {
+            title: "Token trade tidak valid",
+            description: "Periksa kembali link yang kamu buka — formatnya tidak sesuai.",
+          },
+          not_authenticated: {
+            title: "Kamu belum login",
+            description: "Silakan login terlebih dahulu untuk membuka trade ini.",
+          },
+          not_found_or_forbidden: {
+            title: "Trade tidak bisa diakses",
+            description:
+              "Link tidak ditemukan, sudah kedaluwarsa, atau ditujukan ke akun lain (recipient berbeda). Pastikan kamu login pakai email yang dituju.",
+          },
+          network_error: {
+            title: "Gagal memuat trade",
+            description: "Terjadi kesalahan jaringan. Coba refresh halaman.",
+          },
+        };
+        const m = toastMap[reason];
+        toast.error(m.title, { description: m.description });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -272,16 +299,57 @@ const TradeRequest = () => {
   }
 
   if (!trade) {
+    const reasonCopy: Record<TradeFetchReason, { title: string; hint: string; cta: { label: string; to: string } }> = {
+      invalid_token: {
+        title: "Token trade tidak valid",
+        hint: "Format link salah. Pastikan kamu menyalin link trade lengkap dari pengirim (contoh: https://bushidogacha.com/trade/req/abcd1234).",
+        cta: { label: "← Kembali ke Inventory", to: "/inventory" },
+      },
+      not_authenticated: {
+        title: "Kamu belum login",
+        hint: "Login dulu pakai akun yang dituju oleh pengirim trade, lalu buka kembali link ini.",
+        cta: { label: "Ke halaman login", to: `/login?redirect=/trade/req/${token}` },
+      },
+      not_found_or_forbidden: {
+        title: "Trade tidak bisa diakses",
+        hint: "Kemungkinan: (1) link salah/sudah dihapus, (2) trade ini direct-target ke email lain — login pakai email yang dituju pengirim, atau (3) trade sudah kedaluwarsa.",
+        cta: { label: "← Kembali ke Inventory", to: "/inventory" },
+      },
+      network_error: {
+        title: "Gagal memuat trade",
+        hint: "Cek koneksi internet kamu, lalu refresh halaman ini.",
+        cta: { label: "← Kembali ke Inventory", to: "/inventory" },
+      },
+    };
+    const copy = reasonCopy[loadError ?? "not_found_or_forbidden"];
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto max-w-xl px-4 pt-24">
-          <Card className="border-destructive/40 bg-destructive/10 p-4 text-center text-destructive">
-            <AlertTriangle className="mx-auto mb-2 h-6 w-6" />
-            <p className="text-sm">Trade tidak ditemukan atau kamu tidak punya akses.</p>
-            <Button variant="outline" className="mt-3" onClick={() => navigate("/inventory")}>
-              ← Kembali ke Inventory
-            </Button>
+          <Card className="border-destructive/40 bg-destructive/5 p-5">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div className="flex-1">
+                <h2 className="font-display text-base font-bold text-destructive">{copy.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{copy.hint}</p>
+                {user?.email && loadError === "not_found_or_forbidden" && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Saat ini kamu login sebagai{" "}
+                    <span className="font-mono text-foreground">{user.email}</span>.
+                  </p>
+                )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(copy.cta.to)}>
+                    {copy.cta.label}
+                  </Button>
+                  {loadError === "network_error" && (
+                    <Button size="sm" onClick={() => window.location.reload()}>
+                      Refresh halaman
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           </Card>
         </div>
       </div>

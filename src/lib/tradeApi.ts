@@ -62,14 +62,44 @@ export const createTrade = async (params: {
   return data.trade as TradeRow;
 };
 
-export const fetchTradeByToken = async (token: string): Promise<TradeRow | null> => {
+export type TradeFetchReason =
+  | "invalid_token"
+  | "not_authenticated"
+  | "not_found_or_forbidden"
+  | "network_error";
+
+export class TradeFetchError extends Error {
+  reason: TradeFetchReason;
+  constructor(reason: TradeFetchReason, message?: string) {
+    super(message ?? reason);
+    this.reason = reason;
+  }
+}
+
+const TOKEN_RE = /^[a-z0-9]{8,32}$/i;
+
+export const fetchTradeByToken = async (token: string): Promise<TradeRow> => {
+  if (!token || !TOKEN_RE.test(token)) {
+    throw new TradeFetchError("invalid_token");
+  }
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    throw new TradeFetchError("not_authenticated");
+  }
   const { data, error } = await supabase
     .from("trades")
     .select("*")
     .eq("token", token)
     .maybeSingle();
-  if (error) throw error;
-  return (data as unknown as TradeRow) ?? null;
+  if (error) {
+    throw new TradeFetchError("network_error", error.message);
+  }
+  if (!data) {
+    // Either the token doesn't exist OR RLS hid the row because the
+    // current user is not the initiator/responder/recipient.
+    throw new TradeFetchError("not_found_or_forbidden");
+  }
+  return data as unknown as TradeRow;
 };
 
 export const cancelTrade = async (tradeId: string) => {
