@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Routes, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
+import { pageVariants } from "@/lib/motion";
 
 /**
- * Wraps <Routes> with Framer Motion fade/slide transition keyed by pathname.
- * Triggers AFTER lazy-loaded route resolves (Suspense fallback already handled by DinoChaseLoader).
+ * Wraps <Routes> with consistent Framer Motion page transition.
+ * Animation tokens (duration / easing) live in src/lib/motion.ts.
  */
 const AnimatedRoutes = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -13,11 +14,11 @@ const AnimatedRoutes = ({ children }: { children: ReactNode }) => {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-        className="min-h-screen"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="min-h-screen will-change-[opacity,transform,filter]"
       >
         <Routes location={location} key={location.pathname}>
           {children}
@@ -28,3 +29,4 @@ const AnimatedRoutes = ({ children }: { children: ReactNode }) => {
 };
 
 export default AnimatedRoutes;
+
