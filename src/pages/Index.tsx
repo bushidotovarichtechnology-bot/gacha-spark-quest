@@ -10,7 +10,7 @@ import { Sparkles, Shield, Clock, Trophy, Crown, ExternalLink, Send, ShieldCheck
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
-import CategoryMenu from "@/components/CategoryMenu";
+import CategorySection from "@/components/CategorySection";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
