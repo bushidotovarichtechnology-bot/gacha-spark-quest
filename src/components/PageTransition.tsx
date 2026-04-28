@@ -55,24 +55,26 @@ const PageContent = memo(function PageContent({
   onReady: () => void;
   children: ReactNode;
 }) {
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
+    // Notify parent the page chunk has resolved so the top progress bar can finish.
+    // Use rAF to wait one frame for layout, but never block visibility.
     const raf = requestAnimationFrame(() => {
-      setMounted(true);
       onReady();
     });
     return () => cancelAnimationFrame(raf);
   }, [onReady]);
 
+  // Safety: always render at full visibility on mount to avoid "blank screen"
+  // bugs where a stuck transition leaves opacity at 0. The animate state is
+  // applied immediately so content is visible even if framer-motion fails.
   return (
     <motion.div
       key={pathname}
       variants={variants}
-      initial="initial"
-      animate={mounted ? "animate" : "initial"}
+      initial="animate"
+      animate="animate"
       exit="exit"
-      className="min-h-screen"
+      className="min-h-screen bg-background text-foreground"
       style={{ willChange }}
     >
       <Routes>{children}</Routes>
