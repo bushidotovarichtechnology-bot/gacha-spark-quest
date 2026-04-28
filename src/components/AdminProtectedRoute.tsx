@@ -22,9 +22,9 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     setIsAdmin(null);
     setCheckError(null);
 
-    supabase
-      .rpc("has_role", { _user_id: user.id, _role: "admin" as const })
-      .then(({ data, error }) => {
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as const });
         if (cancelled) return;
         if (error) {
           setCheckError(error.message || "Gagal memeriksa akses admin.");
@@ -32,12 +32,12 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         setIsAdmin(!!data);
-      })
-      .catch((error) => {
+      } catch (error) {
         if (cancelled) return;
         setCheckError(error instanceof Error ? error.message : "Gagal memeriksa akses admin.");
         setIsAdmin(false);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;
