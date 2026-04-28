@@ -33,11 +33,13 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
     }
   }, [remaining]);
 
+  // Cards display ~150-315px on screen; serving 320w default and only stepping
+  // up to 480w for high-DPI keeps payload tiny (LCP-friendly).
   const isSupabase = image.includes("/storage/v1/object/public/");
   const base = isSupabase ? image.replace("/object/public/", "/render/image/public/") : image;
-  const src = isSupabase ? `${base}?width=420&quality=70&resize=contain` : image;
+  const src = isSupabase ? `${base}?width=320&quality=68&resize=contain` : image;
   const srcSet = isSupabase
-    ? `${base}?width=320&quality=68&resize=contain 320w, ${base}?width=420&quality=70&resize=contain 420w, ${base}?width=640&quality=70&resize=contain 640w`
+    ? `${base}?width=240&quality=66&resize=contain 240w, ${base}?width=320&quality=68&resize=contain 320w, ${base}?width=480&quality=70&resize=contain 480w`
     : undefined;
 
   // Map remaining % to a tier-themed visual: high=Diamond, mid=Gold, low=Silver, almost out=Bronze
@@ -83,10 +85,10 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
           <img
             src={src}
             srcSet={srcSet}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 420px"
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 320px"
             alt={`Banner kampanye gacha ${title} — Bushido Gacha`}
-            width={420}
-            height={420}
+            width={320}
+            height={320}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"

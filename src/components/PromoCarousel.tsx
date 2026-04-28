@@ -149,12 +149,24 @@ const PromoCarousel = () => {
     );
   };
 
-  const renderSlide = (b: PromoBanner) => {
+  const renderSlide = (b: PromoBanner, idx: number) => {
+    // Responsive image via Supabase image transform — original 1600x900 banners
+    // were ~150 KiB each; serving 720w cuts ~80% of that on mobile.
+    const isSupabase = b.image_url.includes("/storage/v1/object/public/");
+    const base = isSupabase ? b.image_url.replace("/object/public/", "/render/image/public/") : b.image_url;
+    const src = isSupabase ? `${base}?width=720&quality=72&resize=contain` : b.image_url;
+    const srcSet = isSupabase
+      ? `${base}?width=480&quality=70&resize=contain 480w, ${base}?width=720&quality=72&resize=contain 720w, ${base}?width=1080&quality=74&resize=contain 1080w`
+      : undefined;
+    const isFirst = idx === 0;
     const image = (
       <img
-        src={b.image_url}
+        src={src}
+        srcSet={srcSet}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1080px"
         alt={b.title || "Promo banner"}
-        loading="lazy"
+        loading={isFirst ? "eager" : "lazy"}
+        fetchPriority={isFirst ? "high" : "low"}
         decoding="async"
         className="h-full w-full object-contain"
       />
@@ -207,9 +219,9 @@ const PromoCarousel = () => {
         className="w-full"
       >
         <CarouselContent>
-          {banners.map((b) => (
+          {banners.map((b, i) => (
             <CarouselItem key={b.id}>
-              <div className="aspect-[16/7] sm:aspect-[16/5]">{renderSlide(b)}</div>
+              <div className="aspect-[16/7] sm:aspect-[16/5]">{renderSlide(b, i)}</div>
             </CarouselItem>
           ))}
         </CarouselContent>
