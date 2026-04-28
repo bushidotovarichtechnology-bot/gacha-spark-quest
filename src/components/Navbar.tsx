@@ -87,8 +87,9 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-      <div className="container mx-auto flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 shrink-0 mr-2">
           <img
             src="/favicon.webp"
             alt="Bushido Gacha"
@@ -97,32 +98,36 @@ const Navbar = () => {
             className="h-9 w-9 rounded-lg object-contain"
             style={{ imageRendering: "pixelated" }}
           />
-          <span className="font-display text-lg font-bold tracking-wider text-foreground">
+          <span className="font-display text-base xl:text-lg font-bold tracking-wider text-foreground whitespace-nowrap leading-none">
             BUSHIDO<span className="text-accent"> GACHA</span>
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden items-center gap-6 md:flex">
+        {/* Desktop nav links — only on xl screens to prevent crowding */}
+        <div className="hidden xl:flex items-center gap-5 flex-1 justify-center">
           {user && navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
             >
               <link.icon className="h-4 w-4" />
               {link.label}
             </Link>
           ))}
+        </div>
+
+        {/* Right cluster — visible from lg up */}
+        <div className="hidden lg:flex items-center gap-2 shrink-0">
           {user && (
             <>
-              <div className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5">
+              <div className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5" title="Bushido Coins">
                 <Coins className="h-4 w-4 text-accent" />
-                <span className="text-sm font-semibold text-accent">{totalCoins.toLocaleString()}</span>
+                <span className="text-sm font-semibold text-accent tabular-nums">{totalCoins.toLocaleString()}</span>
               </div>
               <Link
                 to="/redeem"
-                className={`flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 transition-all hover:bg-secondary/80 ${ticketPulse ? "scale-110 ring-2 ring-primary/60 shadow-[0_0_20px_hsl(var(--primary)/0.5)]" : "scale-100"}`}
+                className={`flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 transition-all hover:bg-secondary/80 ${ticketPulse ? "scale-110 ring-2 ring-primary/60 shadow-[0_0_20px_hsl(var(--primary)/0.5)]" : "scale-100"}`}
                 title="Bushido Tiket"
                 style={{ transitionDuration: "300ms" }}
               >
@@ -130,20 +135,20 @@ const Navbar = () => {
                 <span className="text-sm font-semibold text-primary tabular-nums">{displayedTickets.toLocaleString()}</span>
               </Link>
               {freeDraws > 0 && (
-                <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-3 py-1.5 animate-pulse">
+                <div className="hidden xl:flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-2.5 py-1 animate-pulse">
                   <Gamepad2 className="h-3.5 w-3.5 text-green-400" />
-                  <span className="text-xs font-bold text-green-400">{freeDraws}x Gratis</span>
+                  <span className="text-xs font-bold text-green-400">{freeDraws}x</span>
                 </div>
               )}
               {activeDiscountPercent > 0 && (
-                <div className="flex items-center gap-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1.5 animate-pulse">
+                <div className="hidden xl:flex items-center gap-1 rounded-full bg-orange-500/15 border border-orange-500/30 px-2.5 py-1 animate-pulse">
                   <Percent className="h-3.5 w-3.5 text-orange-400" />
                   <span className="text-xs font-bold text-orange-400">-{activeDiscountPercent}%</span>
                 </div>
               )}
               <Link
                 to="/topup"
-                className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110"
+                className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition-all hover:brightness-110 shadow-sm shadow-accent/30"
               >
                 <ShoppingCart className="h-3.5 w-3.5" />
                 {t("topUp")}
@@ -195,10 +200,11 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile toggle */}
+        {/* Mobile toggle — visible below lg */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="text-foreground md:hidden"
+          className="text-foreground lg:hidden"
+          aria-label="Menu"
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -206,7 +212,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="overflow-hidden border-b border-border/50 bg-background/95 backdrop-blur-xl md:hidden animate-fade-in">
+        <div className="overflow-hidden border-b border-border/50 bg-background/95 backdrop-blur-xl lg:hidden animate-fade-in">
           <div className="container mx-auto flex flex-col gap-4 py-4">
               {user && (
                 <div className="flex items-center gap-3 pb-2 border-b border-border/50">
