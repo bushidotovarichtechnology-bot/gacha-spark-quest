@@ -126,7 +126,6 @@ const GrandPrizePreview = () => {
 const Index = () => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
 
   // Realtime: auto-refetch when tier_prizes/campaign_tiers change so the
   // displayed remaining stock per campaign stays in sync with real draws.
@@ -136,12 +135,12 @@ const Index = () => {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "campaign_tiers" },
-        () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+        () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tier_prizes" },
-        () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+        () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
       )
       .subscribe();
 
@@ -149,58 +148,16 @@ const Index = () => {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
-  const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ["campaigns", selectedSubcategoryId],
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["home-categories"],
     queryFn: async () => {
-      let query = supabase
-        .from("campaigns")
-        .select("id, slug, title, image_url, price, is_hot, subcategory_id, sort_order, created_at")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true });
-
-      if (selectedSubcategoryId) {
-        query = query.eq("subcategory_id", selectedSubcategoryId);
-      }
-
-      const { data: camps, error } = await query;
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name, icon, image_url, sort_order")
+        .order("sort_order");
       if (error) throw error;
-
-      // Fetch coarse stock buckets from server (no exact counts leak to client)
-      const campaignIds = (camps || []).map((c) => c.id);
-      const stockByCampaign: Record<string, { remaining: number; total: number; isSoldOut: boolean }> = {};
-
-      if (campaignIds.length > 0) {
-        const { data: summaries } = await supabase.rpc("get_campaign_stock_summary" as any, {
-          _campaign_ids: campaignIds,
-        });
-        // Server now returns exact remaining counts as strings; parse directly.
-        (summaries || []).forEach((s: any) => {
-          const acc = stockByCampaign[s.campaign_id] ||
-            (stockByCampaign[s.campaign_id] = { remaining: 0, total: 0, isSoldOut: true });
-          const r = parseInt(String(s.remaining_bucket ?? "0"), 10);
-          acc.remaining += Number.isFinite(r) ? r : 0;
-          acc.total += s.total_bucket || 0;
-          if (!s.is_sold_out) acc.isSoldOut = false;
-        });
-      }
-
-      return (camps || []).map((c) => {
-        const s = stockByCampaign[c.id] || { remaining: 0, total: 0, isSoldOut: true };
-        return {
-          id: c.id,
-          slug: (c as any).slug as string | undefined,
-          title: c.title,
-          image: resolveImage(c.image_url),
-          price: c.price,
-          remaining: s.remaining,
-          total: s.total,
-          hot: c.is_hot,
-        };
-      });
+      return data || [];
     },
   });
 
