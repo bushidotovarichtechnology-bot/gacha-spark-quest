@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import PromoCarousel from "@/components/PromoCarousel";
-import CampaignCard from "@/components/CampaignCard";
 import SEO from "@/components/SEO";
 import { organizationLd, softwareApplicationLd, websiteLd } from "@/lib/structuredData";
 import { Sparkles, Shield, Clock, Trophy, Crown, ExternalLink, Send, ShieldCheck, Users } from "lucide-react";
