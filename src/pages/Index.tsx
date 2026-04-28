@@ -3,14 +3,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import PromoCarousel from "@/components/PromoCarousel";
-import CampaignCard from "@/components/CampaignCard";
 import SEO from "@/components/SEO";
 import { organizationLd, softwareApplicationLd, websiteLd } from "@/lib/structuredData";
 import { Sparkles, Shield, Clock, Trophy, Crown, ExternalLink, Send, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
-import CategoryMenu from "@/components/CategoryMenu";
+import CategorySection from "@/components/CategorySection";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -126,7 +125,6 @@ const GrandPrizePreview = () => {
 const Index = () => {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
 
   // Realtime: auto-refetch when tier_prizes/campaign_tiers change so the
   // displayed remaining stock per campaign stays in sync with real draws.
@@ -136,12 +134,12 @@ const Index = () => {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "campaign_tiers" },
-        () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+        () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tier_prizes" },
-        () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+        () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
       )
       .subscribe();
 
@@ -149,58 +147,16 @@ const Index = () => {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
-  const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ["campaigns", selectedSubcategoryId],
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["home-categories"],
     queryFn: async () => {
-      let query = supabase
-        .from("campaigns")
-        .select("id, slug, title, image_url, price, is_hot, subcategory_id, sort_order, created_at")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true });
-
-      if (selectedSubcategoryId) {
-        query = query.eq("subcategory_id", selectedSubcategoryId);
-      }
-
-      const { data: camps, error } = await query;
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name, icon, image_url, sort_order")
+        .order("sort_order");
       if (error) throw error;
-
-      // Fetch coarse stock buckets from server (no exact counts leak to client)
-      const campaignIds = (camps || []).map((c) => c.id);
-      const stockByCampaign: Record<string, { remaining: number; total: number; isSoldOut: boolean }> = {};
-
-      if (campaignIds.length > 0) {
-        const { data: summaries } = await supabase.rpc("get_campaign_stock_summary" as any, {
-          _campaign_ids: campaignIds,
-        });
-        // Server now returns exact remaining counts as strings; parse directly.
-        (summaries || []).forEach((s: any) => {
-          const acc = stockByCampaign[s.campaign_id] ||
-            (stockByCampaign[s.campaign_id] = { remaining: 0, total: 0, isSoldOut: true });
-          const r = parseInt(String(s.remaining_bucket ?? "0"), 10);
-          acc.remaining += Number.isFinite(r) ? r : 0;
-          acc.total += s.total_bucket || 0;
-          if (!s.is_sold_out) acc.isSoldOut = false;
-        });
-      }
-
-      return (camps || []).map((c) => {
-        const s = stockByCampaign[c.id] || { remaining: 0, total: 0, isSoldOut: true };
-        return {
-          id: c.id,
-          slug: (c as any).slug as string | undefined,
-          title: c.title,
-          image: resolveImage(c.image_url),
-          price: c.price,
-          remaining: s.remaining,
-          total: s.total,
-          hot: c.is_hot,
-        };
-      });
+      return data || [];
     },
   });
 
@@ -239,9 +195,9 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="featured-campaigns" className="scroll-mt-20 py-16">
+      <section id="featured-campaigns" className="scroll-mt-20 py-12">
         <div className="container mx-auto px-4">
-          <div className="mb-10 text-center animate-fade-in">
+          <div className="mb-6 text-center animate-fade-in">
             <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
               {t("liveNow")}
             </p>
@@ -249,24 +205,18 @@ const Index = () => {
               {t("featuredCampaigns")}
             </h2>
           </div>
+        </div>
 
-          <div className="mb-8">
-            <CategoryMenu selectedSubcategoryId={selectedSubcategoryId} onSelect={setSelectedSubcategoryId} />
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-64 animate-pulse rounded-xl bg-secondary" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
-              {campaigns.map((c) => (
-                <CampaignCard key={c.id} {...c} />
-              ))}
-            </div>
-          )}
+        <div className="space-y-2">
+          {categories.map((cat) => (
+            <CategorySection
+              key={cat.id}
+              categoryId={cat.id}
+              categoryName={cat.name}
+              categoryIcon={cat.icon}
+              categoryImage={cat.image_url}
+            />
+          ))}
         </div>
       </section>
 
