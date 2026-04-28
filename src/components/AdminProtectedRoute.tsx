@@ -1,55 +1,68 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+type AdminCheck =
+  | { status: "checking" }
+  | { status: "allowed" }
+  | { status: "denied" }
+  | { status: "error"; message: string };
+
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [checkError, setCheckError] = useState<string | null>(null);
+  const location = useLocation();
+  const [check, setCheck] = useState<AdminCheck>({ status: "checking" });
 
   useEffect(() => {
     let cancelled = false;
 
     if (authLoading) return;
 
-    if (!user) {
-      setIsAdmin(false);
-      setCheckError(null);
-      return;
-    }
-
-    setIsAdmin(null);
-    setCheckError(null);
-
     void (async () => {
       try {
-        const { data, error } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" as const });
-        if (cancelled) return;
-        if (error) {
-          setCheckError(error.message || "Gagal memeriksa akses admin.");
-          setIsAdmin(false);
+        setCheck({ status: "checking" });
+
+        let currentUser = user;
+        if (!currentUser) {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          if (cancelled) return;
+          if (sessionError) {
+            setCheck({ status: "error", message: sessionError.message || "Gagal memulihkan sesi admin." });
+            return;
+          }
+          currentUser = sessionData.session?.user ?? null;
+        }
+
+        if (!currentUser) {
+          setCheck({ status: "denied" });
           return;
         }
-        setIsAdmin(!!data);
+
+        const { data, error } = await supabase.rpc("has_role", { _user_id: currentUser.id, _role: "admin" as const });
+        if (cancelled) return;
+        if (error) {
+          setCheck({ status: "error", message: error.message || "Gagal memeriksa akses admin." });
+          return;
+        }
+        setCheck(data ? { status: "allowed" } : { status: "denied" });
       } catch (error) {
         if (cancelled) return;
-        setCheckError(error instanceof Error ? error.message : "Gagal memeriksa akses admin.");
-        setIsAdmin(false);
+        setCheck({ status: "error", message: error instanceof Error ? error.message : "Gagal memeriksa akses admin." });
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user]);
+  }, [authLoading, user?.id]);
 
-  if (checkError) {
+  if (check.status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-lg">
           <h1 className="font-display text-lg font-bold text-foreground">Admin belum bisa dibuka</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{checkError}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{check.message}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
@@ -62,7 +75,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (authLoading || isAdmin === null) {
+  if (authLoading || check.status === "checking") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-destructive border-t-transparent" />
@@ -70,8 +83,9 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user || !isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+  if (check.status === "denied") {
+    const redirectTo = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/admin/login?redirect=${encodeURIComponent(redirectTo)}`} replace />;
   }
 
   return <>{children}</>;
