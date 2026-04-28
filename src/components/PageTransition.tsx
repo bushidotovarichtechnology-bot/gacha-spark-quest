@@ -85,6 +85,8 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
   const prefersReducedMotion = useReducedMotion();
   const [isLoading, setIsLoading] = useState(false);
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isTradeRoute = location.pathname.startsWith("/trade");
+  const bypassAnimation = isAdminRoute || isTradeRoute;
 
   // Trigger loading state immediately when pathname changes; child clears it.
   useEffect(() => {
