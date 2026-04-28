@@ -84,6 +84,17 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
   const [isLoading, setIsLoading] = useState(false);
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
+  if (isAdminRoute) {
+    return (
+      <Suspense fallback={<DinoChaseLoader />}>
+        <div className="min-h-screen bg-background text-foreground">
+          <Routes>{children}</Routes>
+        </div>
+      </Suspense>
+    );
+  }
 
   // Trigger loading state immediately when pathname changes; child clears it.
   useEffect(() => {
