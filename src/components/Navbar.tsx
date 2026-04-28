@@ -200,10 +200,11 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile toggle */}
+        {/* Mobile toggle — visible below lg */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="text-foreground md:hidden"
+          className="text-foreground lg:hidden"
+          aria-label="Menu"
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -211,7 +212,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="overflow-hidden border-b border-border/50 bg-background/95 backdrop-blur-xl md:hidden animate-fade-in">
+        <div className="overflow-hidden border-b border-border/50 bg-background/95 backdrop-blur-xl lg:hidden animate-fade-in">
           <div className="container mx-auto flex flex-col gap-4 py-4">
               {user && (
                 <div className="flex items-center gap-3 pb-2 border-b border-border/50">
