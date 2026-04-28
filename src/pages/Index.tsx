@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import CategorySection from "@/components/CategorySection";
+import HomeFAQ from "@/components/HomeFAQ";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -311,6 +312,8 @@ const Index = () => {
           </article>
         </div>
       </section>
+
+      <HomeFAQ />
 
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
