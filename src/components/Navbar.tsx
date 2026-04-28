@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Coins, Package, Home, Globe, History, ShoppingCart, LogIn, LogOut, User, ClipboardList, Receipt, Ticket, Gift, Camera, Percent, Gamepad2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
@@ -15,11 +15,26 @@ const Navbar = () => {
   const { totalCoins, freeDraws, activeDiscountPercent } = useGacha();
   const { t, locale, setLocale } = useI18n();
   const { user, signOut } = useAuth();
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [displayedTickets, setDisplayedTickets] = useState(0);
   const [ticketPulse, setTicketPulse] = useState(false);
   const prevTicketsRef = useRef(0);
+
+  // Realtime: refresh ticket balance when tickets are issued (draw) or spent (redeem).
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`navbar-tickets-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "redeem_tickets", filter: `user_id=eq.${user.id}` },
+        () => { queryClient.invalidateQueries({ queryKey: ["user-ticket-balance", user.id] }); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   const { data: ticketBalance = 0 } = useQuery({
     queryKey: ["user-ticket-balance", user?.id],

@@ -291,6 +291,38 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, [user]);
 
+  // Realtime sync: keep coin balance & inventory in sync across tabs/sessions
+  // (e.g., after draw via edge function or recycle in inventory).
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`gacha-sync-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_coins", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as any;
+          if (!row) return;
+          if (typeof row.balance === "number") setTotalCoins(row.balance);
+          if (typeof row.draws_since_tier_a === "number") {
+            setDrawsSinceTierA(row.draws_since_tier_a);
+            writePersistedPity(user.id, row.draws_since_tier_a);
+          }
+          if (typeof row.free_draws === "number") setFreeDraws(row.free_draws);
+          if (typeof row.active_discount_percent === "number") {
+            setActiveDiscountPercent(row.active_discount_percent);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_inventory", filter: `user_id=eq.${user.id}` },
+        () => { refreshInventory(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, refreshInventory]);
+
   const syncCoins = useCallback(async (balance: number, draws: number) => {
     if (!user) return;
     await supabase
