@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,10 +29,16 @@ const AdminLogin = () => {
     }
 
     // Check if user has admin role
-    const { data: roleData } = await supabase.rpc("has_role", {
+    const { data: roleData, error: roleError } = await supabase.rpc("has_role", {
       _user_id: data.user.id,
       _role: "admin",
     });
+
+    if (roleError) {
+      toast({ title: "Login failed", description: roleError.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
 
     if (!roleData) {
       await supabase.auth.signOut();
@@ -41,7 +48,8 @@ const AdminLogin = () => {
     }
 
     toast({ title: "Welcome, Admin!" });
-    navigate("/admin");
+    const redirect = searchParams.get("redirect");
+    navigate(redirect?.startsWith("/admin") ? redirect : "/admin", { replace: true });
     setLoading(false);
   };
 
