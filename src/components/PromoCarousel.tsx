@@ -161,12 +161,16 @@ const PromoCarousel = () => {
       ? `${base}?width=400&quality=68&resize=contain 400w, ${base}?width=560&quality=70&resize=contain 560w, ${base}?width=800&quality=72&resize=contain 800w`
       : undefined;
     const isFirst = idx === 0;
+    // Add explicit width/height so layout is reserved before image loads
+    // (reduces CLS + helps the browser pick the right srcset entry).
     const image = (
       <img
         src={src}
         srcSet={srcSet}
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1080px"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 800px"
         alt={b.title || "Promo banner"}
+        width={800}
+        height={350}
         loading={isFirst ? "eager" : "lazy"}
         fetchPriority={isFirst ? "high" : "low"}
         decoding="async"
