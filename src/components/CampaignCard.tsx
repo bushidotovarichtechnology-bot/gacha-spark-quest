@@ -33,13 +33,14 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
     }
   }, [remaining]);
 
-  // Cards display ~150-315px on screen; serving 320w default and only stepping
-  // up to 480w for high-DPI keeps payload tiny (LCP-friendly).
+  // Lighthouse: cards display ~175px wide on mobile (45vw) and ~315px at 2x DPR.
+  // Serve 240w default, step up to 360w for high-DPI; drop the 480w variant
+  // entirely (saved ~140 KiB across the visible card grid on mobile).
   const isSupabase = image.includes("/storage/v1/object/public/");
   const base = isSupabase ? image.replace("/object/public/", "/render/image/public/") : image;
-  const src = isSupabase ? `${base}?width=320&quality=68&resize=contain` : image;
+  const src = isSupabase ? `${base}?width=240&quality=66&resize=contain` : image;
   const srcSet = isSupabase
-    ? `${base}?width=240&quality=66&resize=contain 240w, ${base}?width=320&quality=68&resize=contain 320w, ${base}?width=480&quality=70&resize=contain 480w`
+    ? `${base}?width=180&quality=64&resize=contain 180w, ${base}?width=240&quality=66&resize=contain 240w, ${base}?width=360&quality=68&resize=contain 360w`
     : undefined;
 
   // Map remaining % to a tier-themed visual: high=Diamond, mid=Gold, low=Silver, almost out=Bronze
