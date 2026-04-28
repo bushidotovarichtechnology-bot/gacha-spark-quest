@@ -110,7 +110,7 @@ const AnimatedRoutesInner = ({ children }: { children: ReactNode }) => {
     []
   );
 
-  if (isAdminRoute) {
+  if (bypassAnimation) {
     return (
       <Suspense fallback={<DinoChaseLoader />}>
         <div className="min-h-screen bg-background text-foreground">
