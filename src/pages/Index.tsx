@@ -196,9 +196,9 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="featured-campaigns" className="scroll-mt-20 py-16">
+      <section id="featured-campaigns" className="scroll-mt-20 py-12">
         <div className="container mx-auto px-4">
-          <div className="mb-10 text-center animate-fade-in">
+          <div className="mb-6 text-center animate-fade-in">
             <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
               {t("liveNow")}
             </p>
@@ -206,24 +206,18 @@ const Index = () => {
               {t("featuredCampaigns")}
             </h2>
           </div>
+        </div>
 
-          <div className="mb-8">
-            <CategoryMenu selectedSubcategoryId={selectedSubcategoryId} onSelect={setSelectedSubcategoryId} />
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-64 animate-pulse rounded-xl bg-secondary" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:gap-6">
-              {campaigns.map((c) => (
-                <CampaignCard key={c.id} {...c} />
-              ))}
-            </div>
-          )}
+        <div className="space-y-2">
+          {categories.map((cat) => (
+            <CategorySection
+              key={cat.id}
+              categoryId={cat.id}
+              categoryName={cat.name}
+              categoryIcon={cat.icon}
+              categoryImage={cat.image_url}
+            />
+          ))}
         </div>
       </section>
 
