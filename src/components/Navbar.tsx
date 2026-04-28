@@ -117,6 +117,25 @@ const Navbar = () => {
           ))}
         </div>
 
+        {/* Coins & Tickets — visible from md up (outside hamburger) */}
+        {user && (
+          <div className="hidden md:flex lg:hidden items-center gap-2 shrink-0 ml-auto mr-2">
+            <div className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5" title="Bushido Coins">
+              <Coins className="h-4 w-4 text-accent" />
+              <span className="text-sm font-semibold text-accent tabular-nums">{totalCoins.toLocaleString()}</span>
+            </div>
+            <Link
+              to="/redeem"
+              className={`flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 transition-all hover:bg-secondary/80 ${ticketPulse ? "scale-110 ring-2 ring-primary/60 shadow-[0_0_20px_hsl(var(--primary)/0.5)]" : "scale-100"}`}
+              title="Bushido Tiket"
+              style={{ transitionDuration: "300ms" }}
+            >
+              <Ticket className={`h-4 w-4 text-primary ${ticketPulse ? "animate-pulse" : ""}`} />
+              <span className="text-sm font-semibold text-primary tabular-nums">{displayedTickets.toLocaleString()}</span>
+            </Link>
+          </div>
+        )}
+
         {/* Right cluster — visible from lg up */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
           {user && (
