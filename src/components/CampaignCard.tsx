@@ -86,10 +86,10 @@ const CampaignCard = ({ id, slug, title, image, price, remaining, total, hot }: 
           <img
             src={src}
             srcSet={srcSet}
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 320px"
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 240px"
             alt={`Banner kampanye gacha ${title} — Bushido Gacha`}
-            width={320}
-            height={320}
+            width={240}
+            height={240}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
