@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import CategorySection from "@/components/CategorySection";
+import HomeFAQ from "@/components/HomeFAQ";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
