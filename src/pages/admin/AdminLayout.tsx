@@ -76,9 +76,9 @@ const AdminLayout = () => {
   const isProd = midtransMode === "production";
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-secondary/20 text-foreground">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 flex h-full w-56 flex-col border-r border-border/50 bg-card/80 backdrop-blur-xl">
+      <aside className="fixed left-0 top-0 z-40 flex h-full w-56 flex-col border-r border-border bg-card shadow-xl">
         <div className="flex items-center gap-2 border-b border-border/50 px-4 py-4">
           <Shield className="h-5 w-5 text-destructive" />
           <span className="font-display text-sm font-bold tracking-wider">ADMIN PANEL</span>
@@ -119,9 +119,9 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="ml-56 flex-1">
+      <main className="ml-56 min-h-screen flex-1 bg-background text-foreground">
         {/* Header bar */}
-        <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-border/50 bg-background/80 px-6 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-3 border-b border-border bg-card px-6 shadow-sm">
           <div className="flex items-center gap-3">
             {maintenanceOn && (
               <Link
@@ -153,7 +153,7 @@ const AdminLayout = () => {
           )}
           </div>
         </header>
-        <div className="p-6">
+        <div className="min-h-[calc(100vh-3rem)] bg-secondary/20 p-6 text-foreground">
           <Outlet />
         </div>
       </main>
