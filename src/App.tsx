@@ -42,6 +42,7 @@ const RedeemStore = lazy(() => import("./pages/RedeemStore.tsx"));
 const GiftCoins = lazy(() => import("./pages/GiftCoins.tsx"));
 const Profile = lazy(() => import("./pages/Profile.tsx"));
 const TradeNew = lazy(() => import("./pages/TradeNew.tsx"));
+const FAQ = lazy(() => import("./pages/FAQ.tsx"));
 const TradeRequest = lazy(() => import("./pages/TradeRequest.tsx"));
 
 // Admin routes — heavy & only used by admins, fully split out.
@@ -109,6 +110,7 @@ const App = () => (
               <Route path="/contact" element={<ContactUs />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/faq" element={<FAQ />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
