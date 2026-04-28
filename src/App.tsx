@@ -11,6 +11,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import AdminRouteErrorBoundary from "./components/AdminRouteErrorBoundary";
 import Index from "./pages/Index.tsx";
 import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
 
@@ -113,7 +114,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+              <Route path="/admin" element={<AdminRouteErrorBoundary><AdminProtectedRoute><AdminLayout /></AdminProtectedRoute></AdminRouteErrorBoundary>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="banned-users" element={<AdminBannedUsers />} />
