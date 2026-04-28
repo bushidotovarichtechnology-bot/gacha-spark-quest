@@ -150,21 +150,27 @@ const PromoCarousel = () => {
   };
 
   const renderSlide = (b: PromoBanner, idx: number) => {
-    // Responsive image via Supabase image transform — original 1600x900 banners
-    // were ~150 KiB each; serving 720w cuts ~80% of that on mobile.
+    // Responsive image via Supabase image transform.
+    // Lighthouse showed banner displayed at ~511x287 on mobile; 720w covers
+    // up to ~2x DPR. Drop the 1080w variant to avoid serving oversized files
+    // (saved ~160 KiB across 3 promo banners on mobile LCP path).
     const isSupabase = b.image_url.includes("/storage/v1/object/public/");
     const base = isSupabase ? b.image_url.replace("/object/public/", "/render/image/public/") : b.image_url;
-    const src = isSupabase ? `${base}?width=720&quality=72&resize=contain` : b.image_url;
+    const src = isSupabase ? `${base}?width=560&quality=70&resize=contain` : b.image_url;
     const srcSet = isSupabase
-      ? `${base}?width=480&quality=70&resize=contain 480w, ${base}?width=720&quality=72&resize=contain 720w, ${base}?width=1080&quality=74&resize=contain 1080w`
+      ? `${base}?width=400&quality=68&resize=contain 400w, ${base}?width=560&quality=70&resize=contain 560w, ${base}?width=800&quality=72&resize=contain 800w`
       : undefined;
     const isFirst = idx === 0;
+    // Add explicit width/height so layout is reserved before image loads
+    // (reduces CLS + helps the browser pick the right srcset entry).
     const image = (
       <img
         src={src}
         srcSet={srcSet}
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1080px"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 800px"
         alt={b.title || "Promo banner"}
+        width={800}
+        height={350}
         loading={isFirst ? "eager" : "lazy"}
         fetchPriority={isFirst ? "high" : "low"}
         decoding="async"
