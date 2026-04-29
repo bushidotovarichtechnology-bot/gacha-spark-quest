@@ -16,7 +16,7 @@ import {
   getAvailableMethodsFromZones,
   type ShippingZone,
 } from "@/lib/shippingRates";
-import { useCitiesForProvince, usePostalCodesForCity } from "@/hooks/use-indonesian-locations";
+import { useCitiesForProvince, usePostalCodesForCity, useDistrictsForCity, useVillagesForDistrict } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
 import { loadMidtransSnap } from "@/lib/midtransSnap";
 
@@ -56,6 +56,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     address: "",
     city: "",
     province: "",
+    district: "",
+    village: "",
     postalCode: "",
     shippingMethod: "regular",
     notes: "",
@@ -69,7 +71,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("recipient_name, phone, address, city, province, postal_code")
+      .select("recipient_name, phone, address, city, province, postal_code, district, village")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -82,6 +84,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             city: data.city || prev.city,
             province: data.province || prev.province,
             postalCode: data.postal_code || prev.postalCode,
+            district: (data as any).district || prev.district,
+            village: (data as any).village || prev.village,
           }));
         }
       });
@@ -89,12 +93,14 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
   const { cities, loading: citiesLoading } = useCitiesForProvince(form.province);
   const { postalCodes, loading: postalCodesLoading } = usePostalCodesForCity(form.province, form.city);
+  const { districts, loading: districtsLoading } = useDistrictsForCity(form.province, form.city);
+  const { villages, loading: villagesLoading } = useVillagesForDistrict(form.province, form.city, form.district);
 
-  // Reset city when province change makes it invalid
+  // Reset city + downstream when province changes and city is no longer valid
   useEffect(() => {
     if (!form.province) return;
     if (!citiesLoading && cities.length > 0 && form.city && !cities.includes(form.city)) {
-      setForm((prev) => ({ ...prev, city: "", postalCode: "" }));
+      setForm((prev) => ({ ...prev, city: "", postalCode: "", district: "", village: "" }));
     }
   }, [form.province, cities, citiesLoading, form.city]);
 
@@ -105,6 +111,22 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       setForm((prev) => ({ ...prev, postalCode: "" }));
     }
   }, [form.city, postalCodes, postalCodesLoading, form.postalCode]);
+
+  // Reset district when city changes and saved district isn't in the new list
+  useEffect(() => {
+    if (!form.city) return;
+    if (!districtsLoading && districts.length > 0 && form.district && !districts.includes(form.district)) {
+      setForm((prev) => ({ ...prev, district: "", village: "" }));
+    }
+  }, [form.city, districts, districtsLoading, form.district]);
+
+  // Reset village when district changes and saved village isn't in the new list
+  useEffect(() => {
+    if (!form.district) return;
+    if (!villagesLoading && villages.length > 0 && form.village && !villages.includes(form.village)) {
+      setForm((prev) => ({ ...prev, village: "" }));
+    }
+  }, [form.district, villages, villagesLoading, form.village]);
 
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -124,7 +146,12 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const shippingCost = selectedMethod?.price || 0;
 
   const canProceedStep1 = form.recipientName.trim() && form.phone.trim() && form.address.trim();
-  const canProceedStep2 = form.city.trim() && form.province.trim() && form.postalCode.trim();
+  const canProceedStep2 =
+    form.city.trim() &&
+    form.province.trim() &&
+    form.district.trim() &&
+    form.village.trim() &&
+    form.postalCode.trim();
 
   const handleSubmit = async () => {
     if (!user || !selectedMethod) return;
@@ -142,6 +169,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         address: form.address.trim(),
         city: form.city.trim(),
         province: form.province.trim(),
+        district: form.district.trim(),
+        village: form.village.trim(),
         postal_code: form.postalCode.trim(),
         shipping_method: form.shippingMethod,
         shipping_eta: selectedMethod.eta,
@@ -348,6 +377,44 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                     emptyText="Kota tidak ditemukan."
                     disabled={!form.province}
                     loading={citiesLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kecamatan</Label>
+                  <LocationCombobox
+                    value={form.district}
+                    onChange={(v) => updateField("district", v)}
+                    options={districts}
+                    placeholder={
+                      !form.city
+                        ? "Pilih kota dulu"
+                        : districts.length === 0
+                          ? "Tidak ada kecamatan tersedia"
+                          : "Pilih kecamatan..."
+                    }
+                    searchPlaceholder="Cari kecamatan..."
+                    emptyText="Kecamatan tidak ditemukan."
+                    disabled={!form.city}
+                    loading={districtsLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kelurahan / Desa</Label>
+                  <LocationCombobox
+                    value={form.village}
+                    onChange={(v) => updateField("village", v)}
+                    options={villages}
+                    placeholder={
+                      !form.district
+                        ? "Pilih kecamatan dulu"
+                        : villages.length === 0
+                          ? "Tidak ada kelurahan tersedia"
+                          : "Pilih kelurahan..."
+                    }
+                    searchPlaceholder="Cari kelurahan..."
+                    emptyText="Kelurahan tidak ditemukan."
+                    disabled={!form.district}
+                    loading={villagesLoading}
                   />
                 </div>
                 <div className="space-y-2">
