@@ -21,13 +21,12 @@ const AdminShipping = () => {
   const [postalStats, setPostalStats] = useState<{ total: number; filled: number } | null>(null);
 
   const refreshPostalStats = async () => {
-    const { count: total } = await supabase
-      .from("indonesian_cities").select("*", { count: "exact", head: true });
-    const { count: filled } = await supabase
-      .from("indonesian_cities").select("*", { count: "exact", head: true })
-      .gt("postal_codes_count", 0 as any) // fallback below
-      .or("id.not.is.null"); // no-op
-    setPostalStats({ total: total ?? 0, filled: filled ?? 0 });
+    const { data } = await supabase
+      .from("indonesian_cities")
+      .select("postal_codes");
+    const rows = (data ?? []) as Array<{ postal_codes: string[] | null }>;
+    const filled = rows.filter(r => (r.postal_codes?.length ?? 0) > 0).length;
+    setPostalStats({ total: rows.length, filled });
   };
 
   useEffect(() => { refreshPostalStats(); }, []);
