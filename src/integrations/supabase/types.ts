@@ -601,6 +601,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           destination_area_id: string | null
+          district: string
           id: string
           image_url: string
           notes: string | null
@@ -622,6 +623,7 @@ export type Database = {
           tracking_url: string | null
           updated_at: string
           user_id: string
+          village: string
         }
         Insert: {
           address: string
@@ -634,6 +636,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           destination_area_id?: string | null
+          district?: string
           id?: string
           image_url?: string
           notes?: string | null
@@ -655,6 +658,7 @@ export type Database = {
           tracking_url?: string | null
           updated_at?: string
           user_id: string
+          village?: string
         }
         Update: {
           address?: string
@@ -667,6 +671,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           destination_area_id?: string | null
+          district?: string
           id?: string
           image_url?: string
           notes?: string | null
@@ -688,6 +693,7 @@ export type Database = {
           tracking_url?: string | null
           updated_at?: string
           user_id?: string
+          village?: string
         }
         Relationships: []
       }
@@ -698,6 +704,7 @@ export type Database = {
           city: string
           created_at: string
           display_name: string
+          district: string
           id: string
           phone: string
           postal_code: string
@@ -706,6 +713,7 @@ export type Database = {
           updated_at: string
           user_id: string
           username: string | null
+          village: string
         }
         Insert: {
           address?: string
@@ -713,6 +721,7 @@ export type Database = {
           city?: string
           created_at?: string
           display_name?: string
+          district?: string
           id?: string
           phone?: string
           postal_code?: string
@@ -721,6 +730,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           username?: string | null
+          village?: string
         }
         Update: {
           address?: string
@@ -728,6 +738,7 @@ export type Database = {
           city?: string
           created_at?: string
           display_name?: string
+          district?: string
           id?: string
           phone?: string
           postal_code?: string
@@ -736,6 +747,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+          village?: string
         }
         Relationships: []
       }
