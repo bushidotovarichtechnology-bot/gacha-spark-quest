@@ -56,6 +56,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     address: "",
     city: "",
     province: "",
+    district: "",
+    village: "",
     postalCode: "",
     shippingMethod: "regular",
     notes: "",
