@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Save, Loader2, MapPin, Truck, Plus, Trash2, X } from "lucide-react";
+import { Save, Loader2, MapPin, Truck, Plus, Trash2, X, Mailbox, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumberInput } from "@/components/ui/number-input";
@@ -17,6 +17,37 @@ const AdminShipping = () => {
   const [saving, setSaving] = useState<string | null>(null);
   const [newProvince, setNewProvince] = useState<Record<string, string>>({});
   const { provinces: allProvinces, loading: provincesLoading } = useProvinces();
+  const [seedingPostal, setSeedingPostal] = useState(false);
+  const [postalStats, setPostalStats] = useState<{ total: number; filled: number } | null>(null);
+
+  const refreshPostalStats = async () => {
+    const { count: total } = await supabase
+      .from("indonesian_cities").select("*", { count: "exact", head: true });
+    const { count: filled } = await supabase
+      .from("indonesian_cities").select("*", { count: "exact", head: true })
+      .neq("postal_codes", "{}");
+    setPostalStats({ total: total ?? 0, filled: filled ?? 0 });
+  };
+
+  useEffect(() => { refreshPostalStats(); }, []);
+
+  const seedPostalCodes = async () => {
+    if (!confirm("Seed kode pos otomatis untuk seluruh kota Indonesia? Proses ~30 detik.")) return;
+    setSeedingPostal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-postal-codes");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Berhasil!", {
+        description: `${data.updated} dari ${data.total} kota berhasil di-update.`,
+      });
+      await refreshPostalStats();
+    } catch (e: any) {
+      toast.error("Gagal seed kode pos", { description: e.message });
+    } finally {
+      setSeedingPostal(false);
+    }
+  };
 
   useEffect(() => {
     fetchZones();
