@@ -71,7 +71,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("recipient_name, phone, address, city, province, postal_code")
+      .select("recipient_name, phone, address, city, province, postal_code, district, village")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -84,6 +84,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
             city: data.city || prev.city,
             province: data.province || prev.province,
             postalCode: data.postal_code || prev.postalCode,
+            district: (data as any).district || prev.district,
+            village: (data as any).village || prev.village,
           }));
         }
       });
