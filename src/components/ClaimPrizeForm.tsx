@@ -380,6 +380,44 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Kecamatan</Label>
+                  <LocationCombobox
+                    value={form.district}
+                    onChange={(v) => updateField("district", v)}
+                    options={districts}
+                    placeholder={
+                      !form.city
+                        ? "Pilih kota dulu"
+                        : districts.length === 0
+                          ? "Tidak ada kecamatan tersedia"
+                          : "Pilih kecamatan..."
+                    }
+                    searchPlaceholder="Cari kecamatan..."
+                    emptyText="Kecamatan tidak ditemukan."
+                    disabled={!form.city}
+                    loading={districtsLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kelurahan / Desa</Label>
+                  <LocationCombobox
+                    value={form.village}
+                    onChange={(v) => updateField("village", v)}
+                    options={villages}
+                    placeholder={
+                      !form.district
+                        ? "Pilih kecamatan dulu"
+                        : villages.length === 0
+                          ? "Tidak ada kelurahan tersedia"
+                          : "Pilih kelurahan..."
+                    }
+                    searchPlaceholder="Cari kelurahan..."
+                    emptyText="Kelurahan tidak ditemukan."
+                    disabled={!form.district}
+                    loading={villagesLoading}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>{t("postalCode")}</Label>
                   <LocationCombobox
                     value={form.postalCode}
