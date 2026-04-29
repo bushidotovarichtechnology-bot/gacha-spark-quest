@@ -56,6 +56,89 @@ export function useCitiesForProvince(province: string) {
   return { cities, loading };
 }
 
+const districtsCache = new Map<string, string[]>(); // key: `${province}::${city}`
+const villagesCache = new Map<string, string[]>(); // key: `${province}::${city}::${district}`
+
+export function useDistrictsForCity(province: string, city: string) {
+  const cacheKey = `${province}::${city}`;
+  const [districts, setDistricts] = useState<string[]>(
+    province && city && districtsCache.has(cacheKey) ? districtsCache.get(cacheKey)! : []
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!province || !city) {
+      setDistricts([]);
+      return;
+    }
+    if (districtsCache.has(cacheKey)) {
+      setDistricts(districtsCache.get(cacheKey)!);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    supabase.functions
+      .invoke("get-region-data", { body: { type: "districts", province, city } })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const list = ((data as any)?.districts as string[] | null) || [];
+        districtsCache.set(cacheKey, list);
+        setDistricts(list);
+      })
+      .catch(() => {
+        if (!cancelled) setDistricts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [province, city, cacheKey]);
+
+  return { districts, loading };
+}
+
+export function useVillagesForDistrict(province: string, city: string, district: string) {
+  const cacheKey = `${province}::${city}::${district}`;
+  const [villages, setVillages] = useState<string[]>(
+    province && city && district && villagesCache.has(cacheKey) ? villagesCache.get(cacheKey)! : []
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!province || !city || !district) {
+      setVillages([]);
+      return;
+    }
+    if (villagesCache.has(cacheKey)) {
+      setVillages(villagesCache.get(cacheKey)!);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    supabase.functions
+      .invoke("get-region-data", { body: { type: "villages", province, city, district } })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const list = ((data as any)?.villages as string[] | null) || [];
+        villagesCache.set(cacheKey, list);
+        setVillages(list);
+      })
+      .catch(() => {
+        if (!cancelled) setVillages([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [province, city, district, cacheKey]);
+
+  return { villages, loading };
+}
+
 export function usePostalCodesForCity(province: string, city: string) {
   const cacheKey = `${province}::${city}`;
   const [postalCodes, setPostalCodes] = useState<string[]>(
