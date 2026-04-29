@@ -25,7 +25,8 @@ const AdminShipping = () => {
       .from("indonesian_cities").select("*", { count: "exact", head: true });
     const { count: filled } = await supabase
       .from("indonesian_cities").select("*", { count: "exact", head: true })
-      .neq("postal_codes", "{}");
+      .gt("postal_codes_count", 0 as any) // fallback below
+      .or("id.not.is.null"); // no-op
     setPostalStats({ total: total ?? 0, filled: filled ?? 0 });
   };
 
