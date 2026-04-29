@@ -532,18 +532,21 @@ export type Database = {
           city: string
           created_at: string
           id: string
+          postal_codes: string[]
           province: string
         }
         Insert: {
           city: string
           created_at?: string
           id?: string
+          postal_codes?: string[]
           province: string
         }
         Update: {
           city?: string
           created_at?: string
           id?: string
+          postal_codes?: string[]
           province?: string
         }
         Relationships: []
