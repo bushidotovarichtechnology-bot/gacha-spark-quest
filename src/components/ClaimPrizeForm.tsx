@@ -16,7 +16,7 @@ import {
   getAvailableMethodsFromZones,
   type ShippingZone,
 } from "@/lib/shippingRates";
-import { useCitiesForProvince } from "@/hooks/use-indonesian-locations";
+import { useCitiesForProvince, usePostalCodesForCity } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
 import { loadMidtransSnap } from "@/lib/midtransSnap";
 
@@ -88,17 +88,32 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   }, [user]);
 
   const { cities, loading: citiesLoading } = useCitiesForProvince(form.province);
+  const { postalCodes, loading: postalCodesLoading } = usePostalCodesForCity(form.province, form.city);
 
   // Reset city when province change makes it invalid
   useEffect(() => {
     if (!form.province) return;
     if (!citiesLoading && cities.length > 0 && form.city && !cities.includes(form.city)) {
-      setForm((prev) => ({ ...prev, city: "" }));
+      setForm((prev) => ({ ...prev, city: "", postalCode: "" }));
     }
   }, [form.province, cities, citiesLoading, form.city]);
 
+  // Reset postal code when city changes and saved code isn't in the new list
+  useEffect(() => {
+    if (!form.city) return;
+    if (!postalCodesLoading && postalCodes.length > 0 && form.postalCode && !postalCodes.includes(form.postalCode)) {
+      setForm((prev) => ({ ...prev, postalCode: "" }));
+    }
+  }, [form.city, postalCodes, postalCodesLoading, form.postalCode]);
+
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // Phone: only digits, allow leading +
+  const updatePhone = (value: string) => {
+    const cleaned = value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+    setForm((prev) => ({ ...prev, phone: cleaned }));
+  };
 
   const provinces = useMemo(() => getProvincesList(zones), [zones]);
   const availableMethods = useMemo(
