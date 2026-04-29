@@ -146,7 +146,12 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const shippingCost = selectedMethod?.price || 0;
 
   const canProceedStep1 = form.recipientName.trim() && form.phone.trim() && form.address.trim();
-  const canProceedStep2 = form.city.trim() && form.province.trim() && form.postalCode.trim();
+  const canProceedStep2 =
+    form.city.trim() &&
+    form.province.trim() &&
+    form.district.trim() &&
+    form.village.trim() &&
+    form.postalCode.trim();
 
   const handleSubmit = async () => {
     if (!user || !selectedMethod) return;
