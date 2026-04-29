@@ -93,12 +93,14 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
   const { cities, loading: citiesLoading } = useCitiesForProvince(form.province);
   const { postalCodes, loading: postalCodesLoading } = usePostalCodesForCity(form.province, form.city);
+  const { districts, loading: districtsLoading } = useDistrictsForCity(form.province, form.city);
+  const { villages, loading: villagesLoading } = useVillagesForDistrict(form.province, form.city, form.district);
 
-  // Reset city when province change makes it invalid
+  // Reset city + downstream when province changes and city is no longer valid
   useEffect(() => {
     if (!form.province) return;
     if (!citiesLoading && cities.length > 0 && form.city && !cities.includes(form.city)) {
-      setForm((prev) => ({ ...prev, city: "", postalCode: "" }));
+      setForm((prev) => ({ ...prev, city: "", postalCode: "", district: "", village: "" }));
     }
   }, [form.province, cities, citiesLoading, form.city]);
 
@@ -109,6 +111,22 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       setForm((prev) => ({ ...prev, postalCode: "" }));
     }
   }, [form.city, postalCodes, postalCodesLoading, form.postalCode]);
+
+  // Reset district when city changes and saved district isn't in the new list
+  useEffect(() => {
+    if (!form.city) return;
+    if (!districtsLoading && districts.length > 0 && form.district && !districts.includes(form.district)) {
+      setForm((prev) => ({ ...prev, district: "", village: "" }));
+    }
+  }, [form.city, districts, districtsLoading, form.district]);
+
+  // Reset village when district changes and saved village isn't in the new list
+  useEffect(() => {
+    if (!form.district) return;
+    if (!villagesLoading && villages.length > 0 && form.village && !villages.includes(form.village)) {
+      setForm((prev) => ({ ...prev, village: "" }));
+    }
+  }, [form.district, villages, villagesLoading, form.village]);
 
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
