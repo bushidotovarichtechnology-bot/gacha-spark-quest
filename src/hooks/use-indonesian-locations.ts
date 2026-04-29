@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 let cachedProvinces: string[] | null = null;
 const cityCache = new Map<string, string[]>();
+const postalCodeCache = new Map<string, string[]>(); // key: `${province}::${city}`
 
 export function useProvinces() {
   const [provinces, setProvinces] = useState<string[]>(cachedProvinces || []);
@@ -53,4 +54,39 @@ export function useCitiesForProvince(province: string) {
   }, [province]);
 
   return { cities, loading };
+}
+
+export function usePostalCodesForCity(province: string, city: string) {
+  const cacheKey = `${province}::${city}`;
+  const [postalCodes, setPostalCodes] = useState<string[]>(
+    province && city && postalCodeCache.has(cacheKey) ? postalCodeCache.get(cacheKey)! : []
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!province || !city) {
+      setPostalCodes([]);
+      return;
+    }
+    if (postalCodeCache.has(cacheKey)) {
+      setPostalCodes(postalCodeCache.get(cacheKey)!);
+      return;
+    }
+    setLoading(true);
+    supabase
+      .from("indonesian_cities")
+      .select("postal_codes")
+      .eq("province", province)
+      .eq("city", city)
+      .maybeSingle()
+      .then(({ data }) => {
+        const list = ((data as any)?.postal_codes as string[] | null) || [];
+        const sorted = [...list].sort();
+        postalCodeCache.set(cacheKey, sorted);
+        setPostalCodes(sorted);
+        setLoading(false);
+      });
+  }, [province, city, cacheKey]);
+
+  return { postalCodes, loading };
 }

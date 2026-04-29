@@ -16,7 +16,7 @@ import {
   getAvailableMethodsFromZones,
   type ShippingZone,
 } from "@/lib/shippingRates";
-import { useCitiesForProvince } from "@/hooks/use-indonesian-locations";
+import { useCitiesForProvince, usePostalCodesForCity } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
 import { loadMidtransSnap } from "@/lib/midtransSnap";
 
@@ -88,17 +88,32 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   }, [user]);
 
   const { cities, loading: citiesLoading } = useCitiesForProvince(form.province);
+  const { postalCodes, loading: postalCodesLoading } = usePostalCodesForCity(form.province, form.city);
 
   // Reset city when province change makes it invalid
   useEffect(() => {
     if (!form.province) return;
     if (!citiesLoading && cities.length > 0 && form.city && !cities.includes(form.city)) {
-      setForm((prev) => ({ ...prev, city: "" }));
+      setForm((prev) => ({ ...prev, city: "", postalCode: "" }));
     }
   }, [form.province, cities, citiesLoading, form.city]);
 
+  // Reset postal code when city changes and saved code isn't in the new list
+  useEffect(() => {
+    if (!form.city) return;
+    if (!postalCodesLoading && postalCodes.length > 0 && form.postalCode && !postalCodes.includes(form.postalCode)) {
+      setForm((prev) => ({ ...prev, postalCode: "" }));
+    }
+  }, [form.city, postalCodes, postalCodesLoading, form.postalCode]);
+
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // Phone: only digits, allow leading +
+  const updatePhone = (value: string) => {
+    const cleaned = value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+    setForm((prev) => ({ ...prev, phone: cleaned }));
+  };
 
   const provinces = useMemo(() => getProvincesList(zones), [zones]);
   const availableMethods = useMemo(
@@ -277,7 +292,20 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                 </div>
                 <div className="space-y-2">
                   <Label>{t("phoneNumber")}</Label>
-                  <Input type="tel" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="08xxxxxxxxxx" maxLength={20} />
+                  <Input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9+]*"
+                    value={form.phone}
+                    onChange={(e) => updatePhone(e.target.value)}
+                    onKeyDown={(e) => {
+                      const allowed = ["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "Home", "End"];
+                      if (allowed.includes(e.key) || e.ctrlKey || e.metaKey) return;
+                      if (!/^[0-9+]$/.test(e.key)) e.preventDefault();
+                    }}
+                    placeholder="08xxxxxxxxxx"
+                    maxLength={20}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>{t("fullAddress")}</Label>
@@ -324,7 +352,22 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                 </div>
                 <div className="space-y-2">
                   <Label>{t("postalCode")}</Label>
-                  <Input value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} placeholder="12345" maxLength={10} />
+                  <LocationCombobox
+                    value={form.postalCode}
+                    onChange={(v) => updateField("postalCode", v)}
+                    options={postalCodes}
+                    placeholder={
+                      !form.city
+                        ? "Pilih kota dulu"
+                        : postalCodes.length === 0
+                          ? "Tidak ada kode pos tersedia"
+                          : "Pilih kode pos..."
+                    }
+                    searchPlaceholder="Cari kode pos..."
+                    emptyText="Kode pos tidak ditemukan."
+                    disabled={!form.city}
+                    loading={postalCodesLoading}
+                  />
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1">{t("back")}</Button>
