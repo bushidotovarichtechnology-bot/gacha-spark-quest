@@ -909,6 +909,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seed_image_runs: {
+        Row: {
+          batch_size: number
+          consecutive_failures: number
+          error_message: string | null
+          finished_at: string | null
+          http_status: number | null
+          id: string
+          next_retry_at: string | null
+          request_id: number | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          batch_size?: number
+          consecutive_failures?: number
+          error_message?: string | null
+          finished_at?: string | null
+          http_status?: number | null
+          id?: string
+          next_retry_at?: string | null
+          request_id?: number | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          batch_size?: number
+          consecutive_failures?: number
+          error_message?: string | null
+          finished_at?: string | null
+          http_status?: number | null
+          id?: string
+          next_retry_at?: string | null
+          request_id?: number | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       shipping_zones: {
         Row: {
           created_at: string
