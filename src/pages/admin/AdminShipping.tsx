@@ -126,6 +126,41 @@ const AdminShipping = () => {
         <p className="text-sm text-muted-foreground mt-1">Kelola tarif ongkir berdasarkan zona wilayah</p>
       </div>
 
+      {/* Postal codes seeder */}
+      <div className="mb-6 rounded-xl border border-accent/30 bg-accent/5 p-4">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-accent">
+              <Mailbox className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Data Kode Pos Otomatis</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Mengisi otomatis kode pos untuk setiap kabupaten/kota dari sumber resmi (Kemendagri 2025).
+                Dipakai oleh dropdown kode pos di form klaim hadiah.
+              </p>
+              {postalStats && (
+                <p className="text-xs mt-1.5">
+                  Status: <span className="font-semibold text-foreground">{postalStats.filled}</span>
+                  {" / "}
+                  <span className="text-muted-foreground">{postalStats.total} kota</span> sudah punya kode pos.
+                </p>
+              )}
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant={postalStats && postalStats.filled === postalStats.total ? "outline" : "default"}
+            onClick={seedPostalCodes}
+            disabled={seedingPostal}
+            className="gap-1.5 shrink-0"
+          >
+            {seedingPostal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {seedingPostal ? "Memproses..." : postalStats && postalStats.filled > 0 ? "Re-seed" : "Seed Sekarang"}
+          </Button>
+        </div>
+      </div>
+
       <div className="space-y-6">
         {zones.map((zone) => (
           <div key={zone.id} className="rounded-xl border border-border bg-card p-5">
