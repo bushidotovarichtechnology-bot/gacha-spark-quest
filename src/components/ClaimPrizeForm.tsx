@@ -575,8 +575,15 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         shipping_method={selectedMethod?.label}
         prize_name={item.prize}
         returnUrl={`${window.location.origin}/claims?session_id={CHECKOUT_SESSION_ID}`}
+        onLoadingChange={setStripeLoading}
+        onError={(msg) => {
+          setStripeError(msg);
+          setStripeOpen(false);
+          toast.error("Gagal memuat pembayaran Stripe", { description: msg });
+        }}
         onClose={() => {
           setStripeOpen(false);
+          if (stripeError) return;
           // After closing the embedded checkout, mark claim as submitted
           // (webhook will confirm payment asynchronously)
           setSuccess(true);
