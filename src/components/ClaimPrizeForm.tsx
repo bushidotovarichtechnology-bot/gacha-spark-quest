@@ -303,18 +303,19 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
       window.snap.pay(data.token, {
         onSuccess: () => {
-          setSuccess(true);
-          toast.success("Pembayaran terkirim!", {
-            description: "Klaim akan diproses setelah pembayaran dikonfirmasi sistem.",
+          toast.info("Mengonfirmasi pembayaran...", {
+            description: "Mohon tunggu konfirmasi sistem.",
           });
-          setTimeout(() => { onClaimed(item.id); onClose(); }, 2500);
+          // Poll until webhook flips payment_status to "paid"
+          setStripeClaimId(claimId);
+          setPollingPayment(true);
         },
         onPending: () => {
           toast.info("Pembayaran pending", {
-            description: "Selesaikan pembayaran agar klaim diproses.",
+            description: "Selesaikan pembayaran agar klaim diproses. Item tetap di inventori sampai konfirmasi.",
           });
-          setSuccess(true);
-          setTimeout(() => { onClaimed(item.id); onClose(); }, 2500);
+          // Do NOT mark claimed — let user finish from claim history
+          setTimeout(() => { onClose(); }, 2000);
         },
         onError: () => {
           toast.error("Pembayaran gagal", { description: "Silakan coba lagi dari Riwayat Klaim." });
