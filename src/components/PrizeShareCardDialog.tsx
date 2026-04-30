@@ -63,7 +63,7 @@ const PrizeShareCardDialog = ({
     };
   }, [open, prize, tier, imageUrl, caption, t]);
 
-  const fileName = `bushidogacha-${tier}-${prize.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "prize"}.png`;
+  const fileName = `bushidogacha-${tier}-${prize.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "prize"}.jpg`;
   const fullText = `${caption} ${shareUrl}`;
 
   const handleDownload = () => {
@@ -82,7 +82,7 @@ const PrizeShareCardDialog = ({
     const navAny = navigator as any;
     if (!navAny.canShare) return false;
     try {
-      return navAny.canShare({ files: [new File([new Blob()], "x.png", { type: "image/png" })] });
+      return navAny.canShare({ files: [new File([new Blob()], "x.jpg", { type: "image/jpeg" })] });
     } catch {
       return false;
     }
@@ -91,7 +91,7 @@ const PrizeShareCardDialog = ({
   /** Native share with file (mobile) — best UX, prize image becomes the post media */
   const handleNativeShare = async () => {
     if (!blob) return;
-    const file = new File([blob], fileName, { type: "image/png" });
+    const file = new File([blob], fileName, { type: "image/jpeg" });
     const navAny = navigator as any;
 
     if (navAny.canShare && navAny.canShare({ files: [file] })) {
@@ -119,7 +119,7 @@ const PrizeShareCardDialog = ({
   /** WhatsApp: try native share with file first, else open WA web with caption + auto-download image */
   const handleWhatsapp = async () => {
     if (!blob) return;
-    const file = new File([blob], fileName, { type: "image/png" });
+    const file = new File([blob], fileName, { type: "image/jpeg" });
     const navAny = navigator as any;
     if (navAny.canShare && navAny.canShare({ files: [file] })) {
       try {

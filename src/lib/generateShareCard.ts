@@ -116,11 +116,19 @@ function wrapText(
 
 export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   const SIZE = 1080;
+  // Render at 2x for crisp output on retina/HD social feeds; ctx is scaled so
+  // all drawing code keeps using logical 1080×1080 coordinates.
+  const SCALE = 2;
   const canvas = document.createElement("canvas");
-  canvas.width = SIZE;
-  canvas.height = SIZE;
-  const ctx = canvas.getContext("2d");
+  canvas.width = SIZE * SCALE;
+  canvas.height = SIZE * SCALE;
+  const ctx = canvas.getContext("2d", { alpha: false });
   if (!ctx) throw new Error("Canvas not supported");
+  ctx.scale(SCALE, SCALE);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  // Crisp text rendering
+  (ctx as any).textRendering = "geometricPrecision";
 
   const tierConf = TIER_COLORS[opts.tier] || TIER_COLORS.C;
 
@@ -308,14 +316,17 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
     ctx.fill();
   });
 
+  // JPEG @ 0.9 keeps the card sharp on FB/WA feeds while shrinking file size
+  // dramatically vs PNG (~2–3 MB → ~250–500 KB). Background is fully opaque
+  // so JPEG is safe — no transparency loss.
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (blob) resolve(blob);
         else reject(new Error("Failed to generate image"));
       },
-      "image/png",
-      0.95,
+      "image/jpeg",
+      0.9,
     );
   });
 }
