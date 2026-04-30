@@ -530,6 +530,26 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
           </AnimatePresence>
         </div>
       </motion.div>
+
+      <StripeCheckoutDialog
+        open={stripeOpen}
+        kind="shipping"
+        claim_id={stripeClaimId ?? undefined}
+        shipping_cost={shippingCost}
+        shipping_method={selectedMethod?.label}
+        prize_name={item.prize}
+        returnUrl={`${window.location.origin}/claims?session_id={CHECKOUT_SESSION_ID}`}
+        onClose={() => {
+          setStripeOpen(false);
+          // After closing the embedded checkout, mark claim as submitted
+          // (webhook will confirm payment asynchronously)
+          setSuccess(true);
+          toast.success("Pembayaran diproses", {
+            description: "Status pembayaran akan diperbarui otomatis. Pantau Riwayat Klaim.",
+          });
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+        }}
+      />
     </motion.div>
   );
 };
