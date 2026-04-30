@@ -49,6 +49,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const [payingShipping, setPayingShipping] = useState(false);
   const [stripeOpen, setStripeOpen] = useState(false);
   const [stripeClaimId, setStripeClaimId] = useState<string | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
 
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [zonesLoading, setZonesLoading] = useState(true);
