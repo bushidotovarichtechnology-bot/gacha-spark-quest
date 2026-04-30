@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
 import PityMeterPopup from "@/components/PityMeterPopup";
-const DinoUnboxAnimation = lazy(() => import("@/components/DinoUnboxAnimation"));
+import DinoUnboxAnimation from "@/components/DinoUnboxAnimation";
 import PrizeImagePreview from "@/components/PrizeImagePreview";
 import RateUpBadge from "@/components/RateUpBadge";
 import { useRateUpStatus } from "@/hooks/use-rate-up-status";
@@ -949,20 +949,18 @@ const CampaignDetail = () => {
 
       <AnimatePresence>
         {isDrawing && (
-          <Suspense fallback={null}>
-            <DinoUnboxAnimation
-              drawCount={drawCount}
-              tier={drawnPrizes.length > 0 ? (drawnPrizes[0].tier as "S" | "A" | "B" | "C") : "C"}
-              prizeImage={drawnPrizes[0]?.image}
-              prizeName={drawnPrizes[0]?.prize}
-              onComplete={() => {
-                setIsDrawing(false);
-                if (pendingDrawComplete) {
-                  setShowResult(true);
-                }
-              }}
-            />
-          </Suspense>
+          <DinoUnboxAnimation
+            drawCount={drawCount}
+            tier={drawnPrizes.length > 0 ? (drawnPrizes[0].tier as "S" | "A" | "B" | "C") : "C"}
+            prizeImage={drawnPrizes[0]?.image}
+            prizeName={drawnPrizes[0]?.prize}
+            onComplete={() => {
+              setIsDrawing(false);
+              if (pendingDrawComplete) {
+                setShowResult(true);
+              }
+            }}
+          />
         )}
       </AnimatePresence>
 
