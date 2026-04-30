@@ -87,6 +87,7 @@ const translations = {
     shareCardHint: "Tip: download the image, then upload it to your Instagram Story.",
     shareCardDownloaded: "Image saved! Share it on Instagram or WhatsApp.",
     shareCardFallbackHint: "Caption copied & image downloaded — paste anywhere!",
+    shareFacebookHint: "Caption copied! Paste it in the Facebook composer. Facebook will pull the prize image automatically from the link.",
     shareCardFailed: "Failed to generate image. Please try again.",
     shareCardPreview: "Preview",
     shareCaptionPreview: "Caption preview",
