@@ -13,12 +13,37 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminRouteErrorBoundary from "./components/AdminRouteErrorBoundary";
 import Index from "./pages/Index.tsx";
-import GlobalTransactionWatcher from "./components/GlobalTransactionWatcher";
 
 import AnimatedRoutes from "./components/PageTransition";
-import { TradeNotifDebugPanel } from "./components/TradeNotifDebugPanel";
 import RouterReadyBridge from "./components/RouterReadyBridge";
 import MaintenanceGate from "./components/MaintenanceGate";
+
+// Defer non-critical headless components — they don't affect first paint of the home page
+// and pull in realtime/trade hooks + framer-motion-adjacent code that we don't need eagerly.
+const GlobalTransactionWatcher = lazy(() => import("./components/GlobalTransactionWatcher"));
+const TradeNotifDebugPanel = lazy(() =>
+  import("./components/TradeNotifDebugPanel").then((m) => ({ default: m.TradeNotifDebugPanel }))
+);
+
+import { Suspense, useEffect, useState } from "react";
+
+/** Mounts children after the browser is idle (or after a short timeout) so they don't block FCP/LCP. */
+const DeferIdle = ({ children, timeout = 2000 }: { children: React.ReactNode; timeout?: number }) => {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout: number }) => number)
+      | undefined;
+    if (ric) {
+      const id = ric(() => setReady(true), { timeout });
+      return () => (window as any).cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(() => setReady(true), timeout);
+    return () => clearTimeout(t);
+  }, [timeout]);
+  if (!ready) return null;
+  return <Suspense fallback={null}>{children}</Suspense>;
+};
 
 // Lazy-loaded routes — code-split to reduce initial JS bundle size & parse/eval time on home.
 const CampaignDetail = lazy(() => import("./pages/CampaignDetail.tsx"));
