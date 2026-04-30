@@ -359,6 +359,30 @@ const DinoUnboxAnimation = ({
     }
   }, [taps, requiredTaps, completed, onComplete, config.isRare]);
 
+  // Lock body scroll while the unbox animation is active so the dino is
+  // always centered in the viewport — no scroll-to-top required on desktop.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
+  // Keyboard shortcuts (desktop UX): Space / Enter / any letter triggers a tap.
+  // This means users never need to move the mouse — just smash the spacebar.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (completed) return;
+      if (e.key === " " || e.code === "Space" || e.key === "Enter") {
+        e.preventDefault();
+        handleTap();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleTap, completed]);
+
   return (
     <>
       {showFlash && <FlashOverlay color={config.flashColor} />}
