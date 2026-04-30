@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import CategorySection from "@/components/CategorySection";
+import CampaignSearchBar from "@/components/CampaignSearchBar";
 import HomeFAQ from "@/components/HomeFAQ";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
@@ -205,6 +206,11 @@ const Index = () => {
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {t("featuredCampaigns")}
             </h2>
+          </div>
+
+          {/* Search bar: cari campaign atau prize */}
+          <div className="mb-6">
+            <CampaignSearchBar />
           </div>
         </div>
 
