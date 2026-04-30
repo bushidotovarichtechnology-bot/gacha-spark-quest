@@ -254,9 +254,11 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   }
 
   // ===== Prize image card (HERO) =====
-  const cardSize = 620;
+  // Slightly smaller card so prize name has guaranteed space below without
+  // ever overlapping the image (was 620 → text would crash into card edge).
+  const cardSize = 560;
   const cardX = (SIZE - cardSize) / 2;
-  const cardY = campaignName ? 240 : 210;
+  const cardY = campaignName ? 230 : 200;
 
   // Glowing border
   ctx.shadowColor = tierConf.from + "CC";
