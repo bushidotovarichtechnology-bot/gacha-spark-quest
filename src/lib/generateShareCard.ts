@@ -325,38 +325,50 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   ctx.fillText(opts.tier, stampX, stampY + 2);
   ctx.textBaseline = "alphabetic";
 
-  // ===== Prize name (BIG, focus) =====
-  // Auto-fit: shrink font + allow up to 3 lines so long product names like
-  // "Speakers Pc / Komputer / Handphone Laptop Kisonli L101" never truncate.
+  // ===== Prize name (BIG, focus) — lives in a FIXED zone below the card =====
+  // Reserve a clear text zone between the card bottom and footer so the name
+  // never crashes into the prize image. Auto-fit font + line count to the zone.
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
 
-  const maxNameWidth = SIZE - 80; // 40px safe margin each side
-  const fontSizes = [60, 54, 48, 44, 40, 36];
-  let chosenFont = 60;
+  const cardBottom = cardY + cardSize;       // bottom edge of prize card
+  const nameZoneTop = cardBottom + 28;        // 28px gap so text never touches card
+  const nameZoneBottom = SIZE - 60;           // leave room for footer watermark
+  const nameZoneH = nameZoneBottom - nameZoneTop;
+  const maxNameWidth = SIZE - 100;            // 50px safe margin each side
+
+  // Try font sizes from large → small, with up to 3 lines. Pick the largest
+  // size where ALL lines fit without truncation AND the block fits the zone.
+  const fontSizes = [56, 50, 46, 42, 38, 34, 30];
+  let chosenFont = 30;
   let nameLines: string[] = [];
   for (const fs of fontSizes) {
     ctx.font = `900 ${fs}px system-ui, -apple-system, sans-serif`;
     const lines = wrapText(ctx, opts.prize, maxNameWidth, 3);
-    // Accept the first size that doesn't require ellipsis truncation
-    const lastLine = lines[lines.length - 1] || "";
-    const truncated = lastLine.endsWith("…");
-    if (!truncated || fs === fontSizes[fontSizes.length - 1]) {
+    const lineH = Math.round(fs * 1.18);
+    const blockH = lines.length * lineH;
+    const truncated = (lines[lines.length - 1] || "").endsWith("…");
+    const fits = blockH <= nameZoneH && !truncated;
+    if (fits) {
       chosenFont = fs;
       nameLines = lines;
-      if (!truncated) break;
+      break;
     }
+    // Fallback: keep smallest attempt so we always render something
+    chosenFont = fs;
+    nameLines = lines;
   }
-  ctx.font = `900 ${chosenFont}px system-ui, -apple-system, sans-serif`;
-  const nameLineH = Math.round(chosenFont * 1.13);
-  const namesBlockH = nameLines.length * nameLineH;
-  // Anchor block bottom near y=985 so multi-line names don't crash into footer
-  const blockBottomY = 985;
-  const nameStartY = blockBottomY - namesBlockH + nameLineH * 0.85;
 
-  // Soft shadow behind text for legibility
+  ctx.font = `900 ${chosenFont}px system-ui, -apple-system, sans-serif`;
+  const nameLineH = Math.round(chosenFont * 1.18);
+  const namesBlockH = nameLines.length * nameLineH;
+  // Vertically center the block within the reserved zone
+  const blockTop = nameZoneTop + (nameZoneH - namesBlockH) / 2;
+  const nameStartY = blockTop + nameLineH * 0.82; // baseline of first line
+
+  // Soft shadow behind text for legibility on dark background
   ctx.shadowColor = "#000000AA";
-  ctx.shadowBlur = 16;
+  ctx.shadowBlur = 14;
   nameLines.forEach((line, i) => {
     ctx.fillText(line, SIZE / 2, nameStartY + i * nameLineH);
   });
