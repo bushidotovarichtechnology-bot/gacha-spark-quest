@@ -159,10 +159,14 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         if (status === "paid" || status === "settlement" || status === "capture") {
           setPollingPayment(false);
           setSuccess(true);
-          toast.success("Pembayaran ongkir berhasil!", {
-            description: "Klaim hadiah sedang diproses admin.",
+          toast.success("Pembayaran dikonfirmasi", {
+            description: "Ongkir telah diterima. Klaim hadiah sedang diproses admin.",
           });
-          setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+          // Refresh inventory + close form only after webhook confirms payment
+          setTimeout(() => {
+            onClaimed(item.id);
+            onClose();
+          }, 1500);
           return;
         }
         if (status === "failed" || status === "cancel" || status === "expire" || status === "deny") {
