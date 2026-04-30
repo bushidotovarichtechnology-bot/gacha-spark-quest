@@ -107,17 +107,27 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
 
   // Lock body scroll while modal is open so the dialog stays anchored to the
   // user's viewport (right where the unbox animation just finished).
+  // Always restore overflow to "" on cleanup so the page never gets stuck
+  // unscrollable if a previous unbox/draw left the lock applied.
   useEffect(() => {
     if (!open) return;
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, [open]);
+
+  // Safety net: when this component unmounts for any reason, ensure the
+  // scroll lock is released. Prevents "page can't scroll after gacha" bugs
+  // if the modal is unmounted without `open` going false first.
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
 
   if (!prizes.length) return null;
 
