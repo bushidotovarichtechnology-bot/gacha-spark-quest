@@ -19,6 +19,7 @@ import {
 import { useCitiesForProvince, usePostalCodesForCity, useDistrictsForCity, useVillagesForDistrict } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
 import { loadMidtransSnap } from "@/lib/midtransSnap";
+import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 
 interface ClaimPrizeFormProps {
   item: InventoryItem;
@@ -46,6 +47,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [payingShipping, setPayingShipping] = useState(false);
+  const [stripeOpen, setStripeOpen] = useState(false);
+  const [stripeClaimId, setStripeClaimId] = useState<string | null>(null);
 
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [zonesLoading, setZonesLoading] = useState(true);
@@ -212,35 +215,10 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         : "midtrans");
 
       if (provider === "stripe") {
-        // Create Stripe checkout session and redirect
-        const { getStripeEnvironment } = await import("@/lib/stripe");
-        const { data, error } = await supabase.functions.invoke("create-stripe-checkout", {
-          body: {
-            kind: "shipping",
-            claim_id: claimId,
-            shipping_cost: shippingCost,
-            shipping_method: selectedMethod.label,
-            prize_name: item.prize,
-            environment: getStripeEnvironment(),
-            return_url: `${window.location.origin}/claims?session_id={CHECKOUT_SESSION_ID}`,
-          },
-        });
-        if (error || !data?.clientSecret) {
-          throw new Error(error?.message || "Gagal membuat sesi pembayaran Stripe");
-        }
-        // Use embedded checkout via redirect to a dedicated page is heavier;
-        // simplest: open Stripe-hosted checkout via clientSecret + Stripe.js redirectToCheckout fallback.
-        // For simplicity here, inform user to complete in inventory dialog.
-        const { getStripe } = await import("@/lib/stripe");
-        const stripe = await getStripe();
-        if (!stripe) throw new Error("Stripe.js gagal dimuat");
-        // Embedded mode: we need to mount EmbeddedCheckout. Simplest path is redirect using session URL — but embedded sessions don't have one.
-        // Pass the clientSecret via window event so a host dialog can open. As a pragmatic approach, store and reload claims page.
-        toast.success("Pembayaran Stripe disiapkan", {
-          description: "Buka Riwayat Klaim untuk menyelesaikan pembayaran.",
-        });
-        setSuccess(true);
-        setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+        // Open embedded Stripe checkout inside this form
+        setStripeClaimId(claimId);
+        setStripeOpen(true);
+        setPayingShipping(false);
         return;
       }
 
@@ -552,6 +530,26 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
           </AnimatePresence>
         </div>
       </motion.div>
+
+      <StripeCheckoutDialog
+        open={stripeOpen}
+        kind="shipping"
+        claim_id={stripeClaimId ?? undefined}
+        shipping_cost={shippingCost}
+        shipping_method={selectedMethod?.label}
+        prize_name={item.prize}
+        returnUrl={`${window.location.origin}/claims?session_id={CHECKOUT_SESSION_ID}`}
+        onClose={() => {
+          setStripeOpen(false);
+          // After closing the embedded checkout, mark claim as submitted
+          // (webhook will confirm payment asynchronously)
+          setSuccess(true);
+          toast.success("Pembayaran diproses", {
+            description: "Status pembayaran akan diperbarui otomatis. Pantau Riwayat Klaim.",
+          });
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+        }}
+      />
     </motion.div>
   );
 };
