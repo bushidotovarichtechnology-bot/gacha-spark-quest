@@ -324,14 +324,33 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   ctx.textBaseline = "alphabetic";
 
   // ===== Prize name (BIG, focus) =====
+  // Auto-fit: shrink font + allow up to 3 lines so long product names like
+  // "Speakers Pc / Komputer / Handphone Laptop Kisonli L101" never truncate.
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 60px system-ui, -apple-system, sans-serif";
   ctx.textAlign = "center";
 
-  const nameLines = wrapText(ctx, opts.prize, SIZE - 100, 2);
-  const nameLineH = 68;
+  const maxNameWidth = SIZE - 80; // 40px safe margin each side
+  const fontSizes = [60, 54, 48, 44, 40, 36];
+  let chosenFont = 60;
+  let nameLines: string[] = [];
+  for (const fs of fontSizes) {
+    ctx.font = `900 ${fs}px system-ui, -apple-system, sans-serif`;
+    const lines = wrapText(ctx, opts.prize, maxNameWidth, 3);
+    // Accept the first size that doesn't require ellipsis truncation
+    const lastLine = lines[lines.length - 1] || "";
+    const truncated = lastLine.endsWith("…");
+    if (!truncated || fs === fontSizes[fontSizes.length - 1]) {
+      chosenFont = fs;
+      nameLines = lines;
+      if (!truncated) break;
+    }
+  }
+  ctx.font = `900 ${chosenFont}px system-ui, -apple-system, sans-serif`;
+  const nameLineH = Math.round(chosenFont * 1.13);
   const namesBlockH = nameLines.length * nameLineH;
-  const nameStartY = 920 - (namesBlockH - nameLineH) / 2;
+  // Anchor block bottom near y=985 so multi-line names don't crash into footer
+  const blockBottomY = 985;
+  const nameStartY = blockBottomY - namesBlockH + nameLineH * 0.85;
 
   // Soft shadow behind text for legibility
   ctx.shadowColor = "#000000AA";
