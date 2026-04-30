@@ -483,7 +483,7 @@ const DinoUnboxAnimation = ({
             {/* Dino with tier colors */}
             <motion.div
               className="absolute"
-              style={{ width: 120, height: 120, left: 10, bottom: 10 }}
+              style={{ width: "43%", aspectRatio: "1 / 1", left: "3.5%", bottom: "5%" }}
               animate={
                 completed
                   ? { 
