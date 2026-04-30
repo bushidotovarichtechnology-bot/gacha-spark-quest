@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import SEO from "@/components/SEO";
 import PrizeRevealModal from "@/components/PrizeRevealModal";
 import PityMeterPopup from "@/components/PityMeterPopup";
-const DinoUnboxAnimation = lazy(() => import("@/components/DinoUnboxAnimation"));
+import DinoUnboxAnimation from "@/components/DinoUnboxAnimation";
 import PrizeImagePreview from "@/components/PrizeImagePreview";
 import RateUpBadge from "@/components/RateUpBadge";
 import { useRateUpStatus } from "@/hooks/use-rate-up-status";
