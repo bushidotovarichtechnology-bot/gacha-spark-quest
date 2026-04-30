@@ -950,10 +950,7 @@ const CampaignDetail = () => {
             prizeImage={drawnPrizes[0]?.image}
             prizeName={drawnPrizes[0]?.prize}
             onComplete={() => {
-              setIsDrawing(false);
-              if (pendingDrawComplete) {
-                setShowResult(true);
-              }
+              setUnboxFinished(true);
             }}
           />
         )}
