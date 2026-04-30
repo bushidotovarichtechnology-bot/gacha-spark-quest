@@ -364,6 +364,7 @@ const translations = {
     shareCardHint: "Tip: unduh gambarnya, lalu upload ke Instagram Story.",
     shareCardDownloaded: "Gambar tersimpan! Bagikan ke Instagram atau WhatsApp.",
     shareCardFallbackHint: "Caption disalin & gambar diunduh — tempel di mana saja!",
+    shareFacebookHint: "Caption disalin! Tempel di kolom posting Facebook. Facebook akan otomatis menarik gambar hadiah dari tautannya.",
     shareCardFailed: "Gagal membuat gambar. Silakan coba lagi.",
     shareCardPreview: "Pratinjau",
     shareCaptionPreview: "Pratinjau caption",
