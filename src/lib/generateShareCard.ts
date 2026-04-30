@@ -116,11 +116,19 @@ function wrapText(
 
 export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   const SIZE = 1080;
+  // Render at 2x for crisp output on retina/HD social feeds; ctx is scaled so
+  // all drawing code keeps using logical 1080×1080 coordinates.
+  const SCALE = 2;
   const canvas = document.createElement("canvas");
-  canvas.width = SIZE;
-  canvas.height = SIZE;
-  const ctx = canvas.getContext("2d");
+  canvas.width = SIZE * SCALE;
+  canvas.height = SIZE * SCALE;
+  const ctx = canvas.getContext("2d", { alpha: false });
   if (!ctx) throw new Error("Canvas not supported");
+  ctx.scale(SCALE, SCALE);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  // Crisp text rendering
+  (ctx as any).textRendering = "geometricPrecision";
 
   const tierConf = TIER_COLORS[opts.tier] || TIER_COLORS.C;
 
