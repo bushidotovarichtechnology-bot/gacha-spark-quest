@@ -1,41 +1,53 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import PromoCarousel from "@/components/PromoCarousel";
 import SEO from "@/components/SEO";
 import { organizationLd, softwareApplicationLd, websiteLd } from "@/lib/structuredData";
 import { Sparkles, Shield, Clock, Trophy, Crown, ExternalLink, Send, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
-import CategorySection from "@/components/CategorySection";
 import CampaignSearchBar from "@/components/CampaignSearchBar";
-import HomeFAQ from "@/components/HomeFAQ";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import defaultAvatar from "@/assets/default-avatar.webp";
 
-import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
-import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
-import campaignWallet from "@/assets/campaign-wallet.jpg";
-import campaignFigurine from "@/assets/campaign-figurine.jpg";
-import campaignGaming from "@/assets/campaign-gaming.jpg";
+// Defer heavy / below-the-fold components so they don't block initial paint on mobile.
+const PromoCarousel = lazy(() => import("@/components/PromoCarousel"));
+const CategorySection = lazy(() => import("@/components/CategorySection"));
+const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 
-// Fallback image map for campaigns using local assets
-const imageMap: Record<string, string> = {
-  "/assets/campaign-blindbox.jpg": campaignBlindbox,
-  "/assets/campaign-desksetup.jpg": campaignDesksetup,
-  "/assets/campaign-wallet.jpg": campaignWallet,
-  "/assets/campaign-figurine.jpg": campaignFigurine,
-  "/assets/campaign-gaming.jpg": campaignGaming,
+/** Mounts children only when the wrapper enters (or nears) the viewport. */
+const InView = ({ children, rootMargin = "300px", minHeight = 0 }: { children: React.ReactNode; rootMargin?: string; minHeight?: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (shown || !ref.current) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setShown(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShown(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [shown, rootMargin]);
+  return (
+    <div ref={ref} style={minHeight ? { minHeight } : undefined}>
+      {shown ? children : null}
+    </div>
+  );
 };
-
-function resolveImage(url: string) {
-  return imageMap[url] || url || campaignBlindbox;
-}
 
 interface GrandPrizeWinner {
   draw_id: string;
@@ -179,7 +191,9 @@ const Index = () => {
       />
       <Navbar />
       <HeroSection />
-      <PromoCarousel />
+      <Suspense fallback={<div className="container mx-auto px-4 pt-6"><div className="aspect-[16/7] w-full animate-pulse rounded-2xl border border-border/50 bg-secondary sm:aspect-[16/5]" /></div>}>
+        <PromoCarousel />
+      </Suspense>
 
       <section className="border-y border-border/50 bg-secondary/30">
         <div className="container mx-auto grid grid-cols-2 gap-4 px-4 py-8 md:grid-cols-4">
@@ -215,20 +229,25 @@ const Index = () => {
         </div>
 
         <div className="space-y-2">
-          {categories.map((cat) => (
-            <CategorySection
-              key={cat.id}
-              categoryId={cat.id}
-              categoryName={cat.name}
-              categoryIcon={cat.icon}
-              categoryImage={cat.image_url}
-            />
-          ))}
+          <Suspense fallback={<div className="h-64" />}>
+            {categories.map((cat, idx) => (
+              <InView key={cat.id} rootMargin="400px" minHeight={idx === 0 ? 0 : 320}>
+                <CategorySection
+                  categoryId={cat.id}
+                  categoryName={cat.name}
+                  categoryIcon={cat.icon}
+                  categoryImage={cat.image_url}
+                />
+              </InView>
+            ))}
+          </Suspense>
         </div>
       </section>
 
-      {/* Grand Prize Leaderboard Preview */}
-      <GrandPrizePreview />
+      {/* Grand Prize Leaderboard Preview — defer until near viewport */}
+      <InView rootMargin="200px" minHeight={120}>
+        <GrandPrizePreview />
+      </InView>
 
       {/* SEO long-form: Why + Pity System */}
       <section className="border-t border-border/50 py-16">
@@ -319,7 +338,11 @@ const Index = () => {
         </div>
       </section>
 
-      <HomeFAQ />
+      <InView rootMargin="200px" minHeight={300}>
+        <Suspense fallback={<div className="h-64" />}>
+          <HomeFAQ />
+        </Suspense>
+      </InView>
 
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
