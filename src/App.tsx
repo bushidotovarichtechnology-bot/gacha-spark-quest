@@ -25,7 +25,7 @@ const TradeNotifDebugPanel = lazy(() =>
   import("./components/TradeNotifDebugPanel").then((m) => ({ default: m.TradeNotifDebugPanel }))
 );
 
-import { Suspense, useEffect, useState } from "react";
+
 
 /** Mounts children after the browser is idle (or after a short timeout) so they don't block FCP/LCP. */
 const DeferIdle = ({ children, timeout = 2000 }: { children: React.ReactNode; timeout?: number }) => {
