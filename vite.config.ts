@@ -16,7 +16,6 @@ export default defineConfig(({ mode }) => ({
   build: {
     minify: "terser",
     cssCodeSplit: true,
-    cssMinify: "lightningcss" as any,
     target: "es2020",
     terserOptions: {
       compress: {
