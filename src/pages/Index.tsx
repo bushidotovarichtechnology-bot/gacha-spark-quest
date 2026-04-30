@@ -229,20 +229,25 @@ const Index = () => {
         </div>
 
         <div className="space-y-2">
-          {categories.map((cat) => (
-            <CategorySection
-              key={cat.id}
-              categoryId={cat.id}
-              categoryName={cat.name}
-              categoryIcon={cat.icon}
-              categoryImage={cat.image_url}
-            />
-          ))}
+          <Suspense fallback={<div className="h-64" />}>
+            {categories.map((cat, idx) => (
+              <InView key={cat.id} rootMargin="400px" minHeight={idx === 0 ? 0 : 320}>
+                <CategorySection
+                  categoryId={cat.id}
+                  categoryName={cat.name}
+                  categoryIcon={cat.icon}
+                  categoryImage={cat.image_url}
+                />
+              </InView>
+            ))}
+          </Suspense>
         </div>
       </section>
 
-      {/* Grand Prize Leaderboard Preview */}
-      <GrandPrizePreview />
+      {/* Grand Prize Leaderboard Preview — defer until near viewport */}
+      <InView rootMargin="200px" minHeight={120}>
+        <GrandPrizePreview />
+      </InView>
 
       {/* SEO long-form: Why + Pity System */}
       <section className="border-t border-border/50 py-16">
