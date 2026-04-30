@@ -525,8 +525,42 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
 
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-12 text-center space-y-4">
-                <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Memproses pembayaran ongkir...</p>
+                {stripeError ? (
+                  <>
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                      <X className="h-6 w-6 text-destructive" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-display text-base font-semibold text-foreground">
+                        Gagal menyiapkan pembayaran
+                      </p>
+                      <p className="text-sm text-muted-foreground max-w-xs mx-auto">{stripeError}</p>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        setStripeError(null);
+                        if (stripeClaimId) {
+                          setStripeOpen(true);
+                        } else {
+                          setStep(3);
+                        }
+                      }}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      Coba lagi
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">
+                      {stripeLoading
+                        ? "Menyiapkan sesi pembayaran Stripe..."
+                        : "Memproses pembayaran ongkir..."}
+                    </p>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
