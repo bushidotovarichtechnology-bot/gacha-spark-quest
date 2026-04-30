@@ -4,6 +4,7 @@ import { Crown, Star, Gift, Award, X, ChevronLeft, ChevronRight, SkipForward, Vo
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
+import PrizeShareMenu from "@/components/PrizeShareMenu";
 
 // Cache audio data URLs across modal re-opens
 const sfxCache: Record<string, string> = {};
@@ -238,9 +239,12 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                 })}
               </div>
 
-              <Button variant="neon" onClick={handleClose} className="mt-4 w-full">
-                {t("continue")}
-              </Button>
+              <div className="mt-4 space-y-2">
+                <PrizeShareMenu prize={sorted[0].prize} tier={sorted[0].tier} />
+                <Button variant="neon" onClick={handleClose} className="w-full">
+                  {t("continue")}
+                </Button>
+              </div>
             </motion.div>
           ) : (
             /* ===== Single Prize View ===== */
@@ -476,6 +480,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                   <Button variant={isRare ? "gold" : "neon"} onClick={handleNext} className="w-full">
                     {isLast ? (isRare ? t("claimReward") : t("continue")) : t("continue")}
                   </Button>
+                  <PrizeShareMenu prize={prize.prize} tier={prize.tier} variant="compact" />
                   {isMulti && !isLast && (
                     <Button variant="outline" onClick={handleNext} className="shrink-0">
                       <ChevronRight className="h-4 w-4" />
