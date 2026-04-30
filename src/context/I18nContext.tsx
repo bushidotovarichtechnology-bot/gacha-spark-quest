@@ -347,7 +347,7 @@ const translations = {
     shareMore: "Lainnya",
     shareCopied: "Tautan disalin! Tempel di Instagram.",
     shareInstagramHint: "Instagram tidak mengizinkan share langsung dari web. Kami sudah menyalin tautannya — tempel di Story atau DM kamu.",
-    shareCaption: "Aku baru saja memenangkan {prize} (Tier {tier}) di BushidoGacha! 🎉 Coba keberuntunganmu:",
+    shareCaption: "🎉 Aku baru saja dapat {prize}! Hadiah ini aku menangkan dari gacha Tier {tier} di BushidoGacha — coba keberuntunganmu juga:",
     shareAsImage: "Bagikan sebagai Gambar",
     shareCardTitle: "Kartu Hadiahmu",
     shareCardDesc: "Gambar siap-bagikan — cocok untuk WhatsApp & Instagram Story.",
