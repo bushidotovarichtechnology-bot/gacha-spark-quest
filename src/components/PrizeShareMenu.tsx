@@ -19,10 +19,11 @@ interface PrizeShareMenuProps {
 
 const SITE_URL = "https://bushidogacha.com";
 
-const PrizeShareMenu = ({ prize, tier, url, variant = "default" }: PrizeShareMenuProps) => {
+const PrizeShareMenu = ({ prize, tier, imageUrl, url, variant = "default" }: PrizeShareMenuProps) => {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
 
   const shareUrl = url || (typeof window !== "undefined" ? window.location.origin : SITE_URL);
   const caption = t("shareCaption", { prize, tier });
