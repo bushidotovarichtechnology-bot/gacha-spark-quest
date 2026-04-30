@@ -12,7 +12,7 @@ import { NotificationsProvider } from "./context/NotificationsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminRouteErrorBoundary from "./components/AdminRouteErrorBoundary";
-import Index from "./pages/Index.tsx";
+const Index = lazy(() => import("./pages/Index.tsx"));
 
 import AnimatedRoutes from "./components/PageTransition";
 import RouterReadyBridge from "./components/RouterReadyBridge";
