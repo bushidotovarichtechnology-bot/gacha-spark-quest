@@ -992,7 +992,7 @@ const CampaignDetail = () => {
       <PrizeImagePreview image={previewImage} onClose={() => setPreviewImage(null)} />
 
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-3">
+        <div ref={drawButtonsRef} className="container mx-auto flex items-center gap-3 px-4 py-3">
           {totalRemaining <= 0 ? (
             <div className="flex w-full items-center justify-center gap-2 py-1">
               <span className="font-display text-lg font-bold tracking-wider text-destructive">{t("soldOut")}</span>
