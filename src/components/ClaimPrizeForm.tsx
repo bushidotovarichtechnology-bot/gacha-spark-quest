@@ -647,13 +647,12 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         onClose={() => {
           setStripeOpen(false);
           if (stripeError) return;
-          // After closing the embedded checkout, mark claim as submitted
-          // (webhook will confirm payment asynchronously)
-          setSuccess(true);
-          toast.success("Pembayaran diproses", {
-            description: "Status pembayaran akan diperbarui otomatis. Pantau Riwayat Klaim.",
+          // Start polling prize_claims.payment_status — webhook updates it async.
+          // Form stays mounted on step 4 showing polling indicator.
+          toast.info("Mengonfirmasi pembayaran...", {
+            description: "Mohon tunggu sebentar.",
           });
-          setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+          setPollingPayment(true);
         }}
       />
     </motion.div>
