@@ -159,21 +159,6 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
     tierCounts[p.tier].names.push(p.prize);
   });
 
-  // Lock body scroll while modal is open so the dialog stays anchored to the
-  // user's viewport (right where the unbox animation just finished) and they
-  // don't have to scroll to see/confirm the prize.
-  useEffect(() => {
-    if (!open) return;
-    const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-    };
-  }, [open]);
-
   const modalContent = (
     <AnimatePresence>
       {open && (
