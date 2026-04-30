@@ -75,7 +75,7 @@ const translations = {
     shareMore: "More",
     shareCopied: "Link copied! Paste it on Instagram.",
     shareInstagramHint: "Instagram doesn't allow direct web sharing. We've copied the link — paste it in your Story or DM.",
-    shareCaption: "I just won {prize} (Tier {tier}) at BushidoGacha! 🎉 Try your luck:",
+    shareCaption: "🎉 I just won {prize}! Got it from a Tier {tier} gacha drop on BushidoGacha — try your luck too:",
     shareAsImage: "Share as Image",
     shareCardTitle: "Your Prize Card",
     shareCardDesc: "A shareable image — perfect for WhatsApp & Instagram Story.",
