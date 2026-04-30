@@ -408,9 +408,9 @@ const DinoUnboxAnimation = ({
             transition={completed ? { duration: 0.5 } : { duration: 1.2, repeat: Infinity }}
             className="font-display text-xs tracking-[0.2em] uppercase text-muted-foreground"
           >
-            {completed 
-              ? (config.isRare ? "🎉 JACKPOT! 🎉" : "💥 TERBUKA! 💥") 
-              : "👆 Tap untuk menggigit!"}
+            {completed
+              ? (config.isRare ? "🎉 JACKPOT! 🎉" : "💥 TERBUKA! 💥")
+              : "👆 Tap di mana saja — atau tekan SPACE / ENTER"}
           </motion.p>
 
           {/* Progress bar */}
