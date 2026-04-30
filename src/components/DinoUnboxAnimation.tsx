@@ -452,8 +452,18 @@ const DinoUnboxAnimation = ({
           </div>
           <span className="text-[10px] text-muted-foreground font-mono">{taps}/{requiredTaps}</span>
 
-          {/* Animation area */}
-          <div className="relative" style={{ width: 280, height: 200 }}>
+          {/* Animation area — scales with viewport so the dino & box are
+              easy to tap directly on phones, tablets, and desktops alike.
+              Width = ~70vw on mobile, capped at 480px on large screens.
+              Height keeps a 1.4:1 ratio (matches original 280×200). */}
+          <div
+            className="relative"
+            style={{
+              width: "min(86vw, 480px)",
+              maxWidth: "min(70vh, 480px)",
+              aspectRatio: "1.4 / 1",
+            }}
+          >
             {/* Bite particles */}
             <div className="absolute inset-0 flex items-center justify-center">
               {particles.map((p) => (
