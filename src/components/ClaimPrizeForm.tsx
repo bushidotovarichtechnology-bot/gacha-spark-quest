@@ -618,10 +618,17 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                   <>
                     <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">
-                      {stripeLoading
-                        ? "Menyiapkan sesi pembayaran Stripe..."
-                        : "Memproses pembayaran ongkir..."}
+                      {pollingPayment
+                        ? "Mengonfirmasi pembayaran ongkir..."
+                        : stripeLoading
+                          ? "Menyiapkan sesi pembayaran Stripe..."
+                          : "Memproses pembayaran ongkir..."}
                     </p>
+                    {pollingPayment && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Ini bisa memakan waktu beberapa detik.
+                      </p>
+                    )}
                   </>
                 )}
               </motion.div>
