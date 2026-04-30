@@ -316,14 +316,17 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
     ctx.fill();
   });
 
+  // JPEG @ 0.9 keeps the card sharp on FB/WA feeds while shrinking file size
+  // dramatically vs PNG (~2–3 MB → ~250–500 KB). Background is fully opaque
+  // so JPEG is safe — no transparency loss.
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (blob) resolve(blob);
         else reject(new Error("Failed to generate image"));
       },
-      "image/png",
-      0.95,
+      "image/jpeg",
+      0.9,
     );
   });
 }
