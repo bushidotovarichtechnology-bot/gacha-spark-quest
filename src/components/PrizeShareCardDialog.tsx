@@ -196,8 +196,14 @@ const PrizeShareCardDialog = ({
         </DialogHeader>
 
         <div className="px-5 pb-5">
-          {/* Generated prize card preview */}
-          <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-border bg-secondary/40">
+          {/* Generated prize card preview — click to view fullscreen */}
+          <button
+            type="button"
+            onClick={() => previewUrl && setPreviewOpen(true)}
+            disabled={!previewUrl}
+            className="group relative block aspect-square w-full overflow-hidden rounded-xl border border-border bg-secondary/40 disabled:cursor-not-allowed"
+            aria-label={t("shareCardPreview")}
+          >
             {loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -205,20 +211,39 @@ const PrizeShareCardDialog = ({
               </div>
             )}
             {previewUrl && (
-              <img
-                src={previewUrl}
-                alt={prize}
-                className="h-full w-full object-contain"
-              />
+              <>
+                <img
+                  src={previewUrl}
+                  alt={prize}
+                  className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                />
+                {/* Hover hint */}
+                <div className="absolute inset-0 flex items-center justify-center bg-background/0 opacity-0 transition-opacity group-hover:bg-background/40 group-hover:opacity-100">
+                  <div className="flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 text-xs font-semibold text-foreground shadow-lg">
+                    <ZoomIn className="h-3.5 w-3.5" />
+                    {t("shareCardPreview")}
+                  </div>
+                </div>
+              </>
             )}
-          </div>
+          </button>
 
-          {/* Primary action: native share (mobile) or download (desktop) */}
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          {/* Action row: Preview / Download / Share */}
+          <div className="mt-4 grid grid-cols-3 gap-2">
             <Button
               type="button"
               variant="outline"
-              className="gap-2"
+              className="gap-1.5"
+              onClick={() => setPreviewOpen(true)}
+              disabled={!previewUrl}
+            >
+              <Eye className="h-4 w-4" />
+              {t("shareCardPreview")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-1.5"
               onClick={handleDownload}
               disabled={!previewUrl}
             >
@@ -228,7 +253,7 @@ const PrizeShareCardDialog = ({
             <Button
               type="button"
               variant="neon"
-              className="gap-2"
+              className="gap-1.5"
               onClick={handleNativeShare}
               disabled={!blob}
             >
