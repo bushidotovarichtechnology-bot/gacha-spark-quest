@@ -483,7 +483,13 @@ const DinoUnboxAnimation = ({
             {/* Dino with tier colors */}
             <motion.div
               className="absolute"
-              style={{ width: "43%", aspectRatio: "1 / 1", left: "3.5%", bottom: "5%" }}
+              style={{
+                width: "43%",
+                aspectRatio: "1 / 1",
+                left: "3.5%",
+                bottom: "5%",
+                filter: `drop-shadow(0 0 8px ${config.flashColor}) drop-shadow(0 4px 6px rgba(0,0,0,0.5))`,
+              }}
               animate={
                 completed
                   ? { 
