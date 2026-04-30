@@ -51,6 +51,7 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
   const [stripeClaimId, setStripeClaimId] = useState<string | null>(null);
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
+  const [pollingPayment, setPollingPayment] = useState(false);
 
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [zonesLoading, setZonesLoading] = useState(true);
@@ -132,6 +133,68 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       setForm((prev) => ({ ...prev, village: "" }));
     }
   }, [form.district, villages, villagesLoading, form.village]);
+
+  // Poll prize_claims.payment_status after Stripe dialog closes.
+  // Webhook updates the row asynchronously — wait for paid/failed or timeout.
+  useEffect(() => {
+    if (!pollingPayment || !stripeClaimId) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const startedAt = Date.now();
+    const TIMEOUT_MS = 90_000;
+    const INTERVAL_MS = 2500;
+
+    const tick = async () => {
+      if (cancelled) return;
+      const { data, error } = await supabase
+        .from("prize_claims")
+        .select("payment_status")
+        .eq("id", stripeClaimId)
+        .maybeSingle();
+      if (cancelled) return;
+
+      if (!error && data) {
+        const status = data.payment_status;
+        if (status === "paid" || status === "settlement" || status === "capture") {
+          setPollingPayment(false);
+          setSuccess(true);
+          toast.success("Pembayaran ongkir berhasil!", {
+            description: "Klaim hadiah sedang diproses admin.",
+          });
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+          return;
+        }
+        if (status === "failed" || status === "cancel" || status === "expire" || status === "deny") {
+          setPollingPayment(false);
+          toast.error("Pembayaran gagal/dibatalkan", {
+            description: "Lanjutkan dari Riwayat Klaim untuk mencoba lagi.",
+          });
+          setStep(3);
+          return;
+        }
+      }
+
+      if (Date.now() - startedAt >= TIMEOUT_MS) {
+        setPollingPayment(false);
+        toast.info("Menunggu konfirmasi pembayaran", {
+          description: "Status akan diperbarui otomatis di Riwayat Klaim.",
+        });
+        setSuccess(true);
+        setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+        return;
+      }
+
+      timer = setTimeout(tick, INTERVAL_MS);
+    };
+
+    tick();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [pollingPayment, stripeClaimId, item.id, onClaimed, onClose]);
+
 
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -555,10 +618,17 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                   <>
                     <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">
-                      {stripeLoading
-                        ? "Menyiapkan sesi pembayaran Stripe..."
-                        : "Memproses pembayaran ongkir..."}
+                      {pollingPayment
+                        ? "Mengonfirmasi pembayaran ongkir..."
+                        : stripeLoading
+                          ? "Menyiapkan sesi pembayaran Stripe..."
+                          : "Memproses pembayaran ongkir..."}
                     </p>
+                    {pollingPayment && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Ini bisa memakan waktu beberapa detik.
+                      </p>
+                    )}
                   </>
                 )}
               </motion.div>
@@ -584,13 +654,12 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         onClose={() => {
           setStripeOpen(false);
           if (stripeError) return;
-          // After closing the embedded checkout, mark claim as submitted
-          // (webhook will confirm payment asynchronously)
-          setSuccess(true);
-          toast.success("Pembayaran diproses", {
-            description: "Status pembayaran akan diperbarui otomatis. Pantau Riwayat Klaim.",
+          // Start polling prize_claims.payment_status — webhook updates it async.
+          // Form stays mounted on step 4 showing polling indicator.
+          toast.info("Mengonfirmasi pembayaran...", {
+            description: "Mohon tunggu sebentar.",
           });
-          setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+          setPollingPayment(true);
         }}
       />
     </motion.div>
