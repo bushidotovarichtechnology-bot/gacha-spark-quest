@@ -141,34 +141,27 @@ const PrizeShareCardDialog = ({
   };
 
   /**
-   * Facebook: open FB share dialog only — no auto-download.
-   * FB scrapes the OG image from the shared URL (campaign detail page),
-   * so make sure the campaign page exposes a proper og:image showing the prize.
-   * If user wants to attach the generated card image, they can use the
-   * Download button explicitly.
+   * Facebook: ALWAYS open Facebook sharer directly — no system share sheet,
+   * no auto-download. FB scrapes og:image from the shared URL (campaign page),
+   * so the prize image shows up in the FB preview automatically.
+   * Caption is copied to clipboard so user can paste it in the FB composer.
    */
   const handleFacebook = async () => {
-    // Try native share with file first (mobile) — best UX, image becomes the post
-    if (blob) {
-      const file = new File([blob], fileName, { type: "image/jpeg" });
-      const navAny = navigator as any;
-      if (navAny.canShare && navAny.canShare({ files: [file] })) {
-        try {
-          await navAny.share({ files: [file], title: prize, text: fullText });
-          return;
-        } catch {
-          // user cancelled — fall through to web sharer
-        }
-      }
-    }
-    // Copy caption so user can paste it in FB composer
     try {
       await navigator.clipboard.writeText(fullText);
     } catch {
       /* ignore */
     }
-    const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-    window.open(u, "_blank", "noopener,noreferrer,width=600,height=600");
+
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // On mobile, open in same tab so the FB app deep-link / mobile sharer takes over
+      window.location.href = fbUrl;
+    } else {
+      window.open(fbUrl, "_blank", "noopener,noreferrer,width=600,height=600");
+    }
     toast({ description: t("shareFacebookHint") });
   };
 
