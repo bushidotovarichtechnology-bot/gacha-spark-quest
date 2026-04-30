@@ -11,6 +11,8 @@ interface CardOptions {
   prize: string;
   tier: string;
   imageUrl?: string;
+  /** Campaign name (e.g. "Ultimate Desk Setup") shown above the prize image. */
+  campaign?: string;
   /** Optional caption shown at bottom (e.g. translated CTA). */
   caption?: string;
   /** Optional site/url shown small at the very bottom. */
@@ -192,10 +194,41 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   ctx.fillText(ribbonLabel, SIZE / 2, ribbonY + ribbonH / 2 + 2);
   ctx.textBaseline = "alphabetic";
 
+  // ===== Campaign chip (ties prize back to the campaign it was won from) =====
+  const campaignName = (opts.campaign || "").trim();
+  if (campaignName) {
+    ctx.font = "700 22px system-ui, -apple-system, sans-serif";
+    // Truncate if absurdly long so chip stays single-line
+    let label = `FROM  •  ${campaignName.toUpperCase()}`;
+    const maxChipW = SIZE - 160;
+    while (ctx.measureText(label).width > maxChipW - 40 && label.length > 12) {
+      label = label.slice(0, -2);
+    }
+    if (label !== `FROM  •  ${campaignName.toUpperCase()}`) label = label + "…";
+
+    const chipTextW = ctx.measureText(label).width;
+    const chipW = Math.min(maxChipW, chipTextW + 40);
+    const chipH = 36;
+    const chipX = (SIZE - chipW) / 2;
+    const chipY = ribbonY + ribbonH + 8;
+
+    ctx.fillStyle = "#ffffff14";
+    ctx.strokeStyle = tierConf.from + "AA";
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, chipX, chipY, chipW, chipH, 18);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffffEE";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, SIZE / 2, chipY + chipH / 2 + 1);
+    ctx.textBaseline = "alphabetic";
+  }
+
   // ===== Prize image card (HERO) =====
-  const cardSize = 640;
+  const cardSize = 620;
   const cardX = (SIZE - cardSize) / 2;
-  const cardY = 210;
+  const cardY = campaignName ? 230 : 210;
 
   // Glowing border
   ctx.shadowColor = tierConf.from + "CC";

@@ -977,6 +977,7 @@ const CampaignDetail = () => {
         drawCount={drawCount}
         hasPityReward={hasPityReward}
         rateUpMultiplier={drawRateUpMultiplier}
+        campaignName={(campaign as any)?.title}
       />
 
       <PityMeterPopup
