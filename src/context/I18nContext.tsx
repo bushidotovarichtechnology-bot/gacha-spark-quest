@@ -325,6 +325,18 @@ const translations = {
     continue: "Lanjutkan",
     skipAll: "Lewati Semua",
     drawSummary: "Ringkasan",
+    sharePrize: "Bagikan Hadiah",
+    shareTitle: "Pamerkan Kemenanganmu!",
+    shareDesc: "Bagikan ke teman-temanmu apa yang kamu menangkan di BushidoGacha",
+    shareWhatsapp: "WhatsApp",
+    shareFacebook: "Facebook",
+    shareTwitter: "Twitter / X",
+    shareInstagram: "Instagram",
+    shareCopyLink: "Salin Tautan",
+    shareMore: "Lainnya",
+    shareCopied: "Tautan disalin! Tempel di Instagram.",
+    shareInstagramHint: "Instagram tidak mengizinkan share langsung dari web. Kami sudah menyalin tautannya — tempel di Story atau DM kamu.",
+    shareCaption: "Aku baru saja memenangkan {prize} (Tier {tier}) di BushidoGacha! 🎉 Coba keberuntunganmu:",
 
     // Inventory
     totalItems: "Total Item",
