@@ -105,11 +105,14 @@ const TopUp = () => {
   const { t } = useI18n();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { provider } = usePaymentProvider();
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const [processing, setProcessing] = useState(false);
   const [midtransReady, setMidtransReady] = useState(false);
   const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
+  const [stripeOpen, setStripeOpen] = useState(false);
+  const [stripePackageId, setStripePackageId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -129,6 +132,15 @@ const TopUp = () => {
 
   const handlePurchase = async () => {
     if (!selectedPackage || !user) return;
+
+    // Route to Stripe if active provider is stripe
+    if (provider === "stripe") {
+      setStripePackageId(selectedPackage.id);
+      setSelectedPackage(null);
+      setStripeOpen(true);
+      return;
+    }
+
     setProcessing(true);
     const finalPrice = getDiscountedPrice(selectedPackage);
     const totalCoins = selectedPackage.coins + selectedPackage.bonus_coins;
