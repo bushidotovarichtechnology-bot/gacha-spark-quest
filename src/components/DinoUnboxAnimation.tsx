@@ -363,24 +363,20 @@ const DinoUnboxAnimation = ({
   // Lock page scroll while the unbox animation is active. Avoid moving the
   // body with `position: fixed`; that can push fixed overlays off-screen on
   // scrolled campaign pages, leaving only a blank dark layer visible.
+  // Always restore overflow/touch styles to "" on cleanup so the page never
+  // gets stuck unscrollable after the unbox finishes.
   useEffect(() => {
     const body = document.body;
     const html = document.documentElement;
-    const prev = {
-      overflow: body.style.overflow,
-      htmlOverflow: html.style.overflow,
-      touchAction: body.style.touchAction,
-      overscrollBehavior: body.style.overscrollBehavior,
-    };
     body.style.overflow = "hidden";
     html.style.overflow = "hidden";
     body.style.touchAction = "none";
     body.style.overscrollBehavior = "contain";
     return () => {
-      body.style.overflow = prev.overflow;
-      html.style.overflow = prev.htmlOverflow;
-      body.style.touchAction = prev.touchAction;
-      body.style.overscrollBehavior = prev.overscrollBehavior;
+      body.style.overflow = "";
+      html.style.overflow = "";
+      body.style.touchAction = "";
+      body.style.overscrollBehavior = "";
     };
   }, []);
 
