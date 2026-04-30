@@ -493,7 +493,7 @@ const CampaignDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="container mx-auto">
-            <Link to="/" className="mb-3 inline-flex items-center gap-1.5 transition-colors font-bold text-base text-secondary">
+            <Link to="/" className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-background/70 px-3 py-1.5 font-bold text-sm text-foreground backdrop-blur-sm ring-1 ring-border transition-colors hover:bg-background hover:text-accent">
               <ArrowLeft className="h-3.5 w-3.5" /> {t("backToCampaigns")}
             </Link>
             <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
