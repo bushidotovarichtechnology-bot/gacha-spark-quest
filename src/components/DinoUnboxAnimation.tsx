@@ -361,11 +361,36 @@ const DinoUnboxAnimation = ({
 
   // Lock body scroll while the unbox animation is active so the dino is
   // always centered in the viewport — no scroll-to-top required on desktop.
+  // We also freeze the body at the user's current scroll position using
+  // `position: fixed` so the overlay is guaranteed to align with where the
+  // user is currently looking, regardless of any transformed ancestors that
+  // could otherwise break `position: fixed` on the overlay itself.
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prevOverflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      // Restore the user back to exactly where they were before the draw.
+      window.scrollTo(0, scrollY);
     };
   }, []);
 
