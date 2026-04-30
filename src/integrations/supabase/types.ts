@@ -1678,6 +1678,18 @@ export type Database = {
       recycle_inventory_item: { Args: { _item_id: string }; Returns: Json }
       redeem_coupon_atomic: { Args: { _code: string }; Returns: Json }
       redeem_reward: { Args: { _reward_id: string }; Returns: Json }
+      search_campaigns: {
+        Args: { _lim?: number; _q: string }
+        Returns: {
+          campaign_id: string
+          image_url: string
+          match_type: string
+          matched_prize: string
+          price: number
+          slug: string
+          title: string
+        }[]
+      }
       secure_draw: {
         Args: { _campaign_id: string; _draw_count: number }
         Returns: Json
