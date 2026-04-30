@@ -15,11 +15,15 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   build: {
     minify: "terser",
+    cssCodeSplit: true,
+    cssMinify: "lightningcss" as any,
+    target: "es2020",
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
         passes: 2,
+        pure_funcs: ["console.log", "console.info", "console.debug"],
       },
       format: {
         comments: false,
