@@ -27,7 +27,7 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
       </div>
 
-      <div className="container relative mx-auto flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
+      <div className="container relative mx-auto flex min-h-[480px] flex-col items-center justify-center px-4 py-20 text-center sm:min-h-[560px]">
         <div className="max-w-2xl animate-fade-in">
           <p className="mb-4 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
             {t("wayOfFortune")}

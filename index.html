@@ -31,17 +31,27 @@
     <!-- Favicon (lightweight webp) -->
     <link rel="icon" type="image/webp" href="/favicon.webp" />
 
-    <!-- Google Fonts: trimmed to weights actually used; non-blocking load -->
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Inter:wght@400;500;700&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
+    <!-- Google Fonts: load fully async via requestIdleCallback to remove from critical path.
+         FCP/LCP will use system-ui fallback (defined in index.css) for instant first paint. -->
+    <script>
+      (function () {
+        var load = function () {
+          var l = document.createElement('link');
+          l.rel = 'stylesheet';
+          l.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;700&display=swap';
+          document.head.appendChild(l);
+        };
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(load, { timeout: 3000 });
+        } else {
+          window.addEventListener('load', function () { setTimeout(load, 1); });
+        }
+      })();
+    </script>
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Inter:wght@400;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;700&display=swap"
       />
     </noscript>
 
