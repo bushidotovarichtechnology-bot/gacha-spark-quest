@@ -25,7 +25,7 @@ const SITE_URL = "https://bushidogacha.com";
  * — using the generated PRIZE IMAGE as the primary share content, so social
  * media previews show the actual prize won, not the website's OG image.
  */
-const PrizeShareMenu = ({ prize, tier, imageUrl, url, variant = "default" }: PrizeShareMenuProps) => {
+const PrizeShareMenu = ({ prize, tier, imageUrl, campaign, url, variant = "default" }: PrizeShareMenuProps) => {
   const { t } = useI18n();
   const [cardOpen, setCardOpen] = useState(false);
 
@@ -63,6 +63,7 @@ const PrizeShareMenu = ({ prize, tier, imageUrl, url, variant = "default" }: Pri
         prize={prize}
         tier={tier}
         imageUrl={imageUrl}
+        campaign={campaign}
         caption={caption}
         shareUrl={shareUrl}
       />
