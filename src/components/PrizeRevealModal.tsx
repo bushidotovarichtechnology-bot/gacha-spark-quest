@@ -4,6 +4,7 @@ import { Crown, Star, Gift, Award, X, ChevronLeft, ChevronRight, SkipForward, Vo
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
+import PrizeShareMenu from "@/components/PrizeShareMenu";
 
 // Cache audio data URLs across modal re-opens
 const sfxCache: Record<string, string> = {};
