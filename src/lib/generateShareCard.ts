@@ -194,32 +194,60 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   ctx.fillText(ribbonLabel, SIZE / 2, ribbonY + ribbonH / 2 + 2);
   ctx.textBaseline = "alphabetic";
 
-  // ===== Campaign chip (ties prize back to the campaign it was won from) =====
+  // ===== Campaign chip — colored by winning tier for instant context =====
   const campaignName = (opts.campaign || "").trim();
   if (campaignName) {
-    ctx.font = "700 22px system-ui, -apple-system, sans-serif";
-    // Truncate if absurdly long so chip stays single-line
+    ctx.font = "800 22px system-ui, -apple-system, sans-serif";
     let label = `FROM  •  ${campaignName.toUpperCase()}`;
     const maxChipW = SIZE - 160;
-    while (ctx.measureText(label).width > maxChipW - 40 && label.length > 12) {
+    while (ctx.measureText(label).width > maxChipW - 48 && label.length > 12) {
       label = label.slice(0, -2);
     }
     if (label !== `FROM  •  ${campaignName.toUpperCase()}`) label = label + "…";
 
     const chipTextW = ctx.measureText(label).width;
-    const chipW = Math.min(maxChipW, chipTextW + 40);
-    const chipH = 36;
+    const chipW = Math.min(maxChipW, chipTextW + 48);
+    const chipH = 40;
     const chipX = (SIZE - chipW) / 2;
-    const chipY = ribbonY + ribbonH + 8;
+    const chipY = ribbonY + ribbonH + 10;
 
-    ctx.fillStyle = "#ffffff14";
-    ctx.strokeStyle = tierConf.from + "AA";
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, chipX, chipY, chipW, chipH, 18);
+    // Tier-specific gradient: S=rainbow, A=gold, B=silver, C=bronze
+    let chipGrad: CanvasGradient;
+    if (opts.tier === "S") {
+      chipGrad = ctx.createLinearGradient(chipX, 0, chipX + chipW, 0);
+      chipGrad.addColorStop(0, "#FF6B6B");      // red
+      chipGrad.addColorStop(0.2, "#FFD93D");    // gold
+      chipGrad.addColorStop(0.4, "#6BCB77");    // green
+      chipGrad.addColorStop(0.6, "#4D96FF");    // blue
+      chipGrad.addColorStop(0.8, "#B084FF");    // purple
+      chipGrad.addColorStop(1, "#FF6BD6");      // pink
+    } else {
+      chipGrad = ctx.createLinearGradient(chipX, 0, chipX + chipW, 0);
+      chipGrad.addColorStop(0, tierConf.from);
+      chipGrad.addColorStop(1, tierConf.to);
+    }
+
+    // Soft glow matching tier
+    ctx.save();
+    ctx.shadowColor = (opts.tier === "S" ? "#FFD93D" : tierConf.from) + "AA";
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = chipGrad;
+    roundRect(ctx, chipX, chipY, chipW, chipH, 20);
     ctx.fill();
-    ctx.stroke();
+    ctx.restore();
 
-    ctx.fillStyle = "#ffffffEE";
+    // Subtle inner highlight (top edge) for premium feel
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#ffffff";
+    roundRect(ctx, chipX + 2, chipY + 2, chipW - 4, chipH / 2 - 2, 18);
+    ctx.fill();
+    ctx.restore();
+
+    // Label — dark text on bright chip for max legibility
+    ctx.fillStyle = "#0B0420";
+    ctx.font = "900 22px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(label, SIZE / 2, chipY + chipH / 2 + 1);
     ctx.textBaseline = "alphabetic";
