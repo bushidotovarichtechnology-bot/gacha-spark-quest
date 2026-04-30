@@ -63,7 +63,7 @@ const PrizeShareCardDialog = ({
     };
   }, [open, prize, tier, imageUrl, caption, t]);
 
-  const fileName = `bushidogacha-${tier}-${prize.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "prize"}.png`;
+  const fileName = `bushidogacha-${tier}-${prize.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "prize"}.jpg`;
   const fullText = `${caption} ${shareUrl}`;
 
   const handleDownload = () => {
