@@ -9,6 +9,8 @@ interface PrizeShareMenuProps {
   tier: string;
   /** Optional product image URL — used to render the share card. */
   imageUrl?: string;
+  /** Optional campaign name shown on the share card. */
+  campaign?: string;
   /** Optional URL to share. Defaults to current site root. */
   url?: string;
   /** Visual variant: full button (default) or compact icon-only. */
