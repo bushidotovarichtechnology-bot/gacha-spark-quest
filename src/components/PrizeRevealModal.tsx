@@ -60,6 +60,8 @@ interface PrizeRevealModalProps {
   rateUpMultiplier?: number;
   /** Campaign name (for share card context). */
   campaignName?: string;
+  /** Absolute URL to the campaign detail page (used by share menu). */
+  campaignUrl?: string;
 }
 
 // Uses global tier tokens (Diamond/Gold/Silver/Bronze) — see src/lib/tierStyles.ts.
@@ -72,7 +74,7 @@ const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof 
 
 const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
 
-const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rateUpMultiplier, campaignName }: PrizeRevealModalProps) => {
+const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rateUpMultiplier, campaignName, campaignUrl }: PrizeRevealModalProps) => {
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
