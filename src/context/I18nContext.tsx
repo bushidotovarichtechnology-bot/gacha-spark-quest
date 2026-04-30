@@ -88,6 +88,8 @@ const translations = {
     shareCardDownloaded: "Image saved! Share it on Instagram or WhatsApp.",
     shareCardFallbackHint: "Caption copied & image downloaded — paste anywhere!",
     shareCardFailed: "Failed to generate image. Please try again.",
+    shareCardPreview: "Preview",
+    shareCardPreviewHint: "Tap outside to close",
 
     // Inventory
     totalItems: "Total Items",
@@ -361,6 +363,8 @@ const translations = {
     shareCardDownloaded: "Gambar tersimpan! Bagikan ke Instagram atau WhatsApp.",
     shareCardFallbackHint: "Caption disalin & gambar diunduh — tempel di mana saja!",
     shareCardFailed: "Gagal membuat gambar. Silakan coba lagi.",
+    shareCardPreview: "Pratinjau",
+    shareCardPreviewHint: "Klik di luar untuk menutup",
 
     // Inventory
     totalItems: "Total Item",
