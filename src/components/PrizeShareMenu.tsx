@@ -30,7 +30,10 @@ const PrizeShareMenu = ({ prize, tier, imageUrl, campaign, url, variant = "defau
   const [cardOpen, setCardOpen] = useState(false);
 
   const shareUrl = url || (typeof window !== "undefined" ? window.location.origin : SITE_URL);
-  const caption = t("shareCaption", { prize, tier });
+  const trimmedCampaign = (campaign || "").trim();
+  const caption = trimmedCampaign
+    ? t("shareCaption", { prize, tier, campaign: trimmedCampaign })
+    : t("shareCaptionNoCampaign", { prize, tier });
 
   return (
     <>
