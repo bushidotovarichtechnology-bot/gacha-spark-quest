@@ -530,7 +530,7 @@ const DinoUnboxAnimation = ({
                   }}
                   transition={{ duration: config.isRare ? 0.8 : 0.6, ease: "easeOut" }}
                   className="absolute flex flex-col items-center justify-center gap-1"
-                  style={{ width: 130, height: 130, right: 5, bottom: 5 }}
+                  style={{ width: "46%", aspectRatio: "1 / 1", right: "2%", bottom: "2%" }}
                 >
                   {/* Glow halo behind prize */}
                   <motion.div
