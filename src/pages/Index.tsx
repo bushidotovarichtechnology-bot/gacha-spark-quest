@@ -191,7 +191,9 @@ const Index = () => {
       />
       <Navbar />
       <HeroSection />
-      <PromoCarousel />
+      <Suspense fallback={<div className="container mx-auto px-4 pt-6"><div className="aspect-[16/7] w-full animate-pulse rounded-2xl border border-border/50 bg-secondary sm:aspect-[16/5]" /></div>}>
+        <PromoCarousel />
+      </Suspense>
 
       <section className="border-y border-border/50 bg-secondary/30">
         <div className="container mx-auto grid grid-cols-2 gap-4 px-4 py-8 md:grid-cols-4">
