@@ -12,6 +12,8 @@ interface PrizeShareCardDialogProps {
   prize: string;
   tier: string;
   imageUrl?: string;
+  /** Campaign name shown above the prize on the share card. */
+  campaign?: string;
   caption: string;
   shareUrl: string;
 }
@@ -22,6 +24,7 @@ const PrizeShareCardDialog = ({
   prize,
   tier,
   imageUrl,
+  campaign,
   caption,
   shareUrl,
 }: PrizeShareCardDialogProps) => {
