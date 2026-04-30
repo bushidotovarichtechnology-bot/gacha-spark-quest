@@ -140,12 +140,36 @@ const PrizeShareCardDialog = ({
     toast({ description: t("shareCardFallbackHint") });
   };
 
-  /** Facebook: FB doesn't accept image upload via URL — download image + open FB share dialog */
-  const handleFacebook = () => {
-    handleDownload();
-    const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(caption)}`;
+  /**
+   * Facebook: open FB share dialog only — no auto-download.
+   * FB scrapes the OG image from the shared URL (campaign detail page),
+   * so make sure the campaign page exposes a proper og:image showing the prize.
+   * If user wants to attach the generated card image, they can use the
+   * Download button explicitly.
+   */
+  const handleFacebook = async () => {
+    // Try native share with file first (mobile) — best UX, image becomes the post
+    if (blob) {
+      const file = new File([blob], fileName, { type: "image/jpeg" });
+      const navAny = navigator as any;
+      if (navAny.canShare && navAny.canShare({ files: [file] })) {
+        try {
+          await navAny.share({ files: [file], title: prize, text: fullText });
+          return;
+        } catch {
+          // user cancelled — fall through to web sharer
+        }
+      }
+    }
+    // Copy caption so user can paste it in FB composer
+    try {
+      await navigator.clipboard.writeText(fullText);
+    } catch {
+      /* ignore */
+    }
+    const u = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
     window.open(u, "_blank", "noopener,noreferrer,width=600,height=600");
-    toast({ description: t("shareCardFallbackHint") });
+    toast({ description: t("shareFacebookHint") });
   };
 
   /** Instagram: no public share URL — download image + copy caption + open IG */
