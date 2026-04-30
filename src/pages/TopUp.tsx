@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
+import { usePaymentProvider } from "@/hooks/use-payment-provider";
+import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import Navbar from "@/components/Navbar";
 import {
   Dialog,
