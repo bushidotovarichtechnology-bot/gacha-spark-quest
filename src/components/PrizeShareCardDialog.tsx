@@ -91,7 +91,7 @@ const PrizeShareCardDialog = ({
   /** Native share with file (mobile) — best UX, prize image becomes the post media */
   const handleNativeShare = async () => {
     if (!blob) return;
-    const file = new File([blob], fileName, { type: "image/png" });
+    const file = new File([blob], fileName, { type: "image/jpeg" });
     const navAny = navigator as any;
 
     if (navAny.canShare && navAny.canShare({ files: [file] })) {
@@ -119,7 +119,7 @@ const PrizeShareCardDialog = ({
   /** WhatsApp: try native share with file first, else open WA web with caption + auto-download image */
   const handleWhatsapp = async () => {
     if (!blob) return;
-    const file = new File([blob], fileName, { type: "image/png" });
+    const file = new File([blob], fileName, { type: "image/jpeg" });
     const navAny = navigator as any;
     if (navAny.canShare && navAny.canShare({ files: [file] })) {
       try {
