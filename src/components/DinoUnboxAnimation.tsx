@@ -49,24 +49,24 @@ const TIER_CONFIG = {
     dinoColor: { main: "#f59e0b", dark: "#d97706" },
   },
   B: {
-    // Silver
+    // Silver — brightened so the dino is clearly visible on dark bg
     isRare: false,
     explosionCount: 35,
     explosionColors: ["#cbd5e1", "#e2e8f0", "#94a3b8", "#f1f5f9", "#ffffff", "#94a3b8", "#cbd5e1"],
     screenShakeMultiplier: 1.5,
     flashColor: "#e2e8f0",
-    giftBoxColor: { main: "#94a3b8", light: "#cbd5e1", ribbon: "#475569" },
-    dinoColor: { main: "#94a3b8", dark: "#64748b" },
+    giftBoxColor: { main: "#cbd5e1", light: "#f1f5f9", ribbon: "#64748b" },
+    dinoColor: { main: "#e2e8f0", dark: "#94a3b8" },
   },
   C: {
-    // Bronze
+    // Bronze — brightened so the dino is clearly visible on dark bg
     isRare: false,
     explosionCount: 30,
-    explosionColors: ["#b45309", "#d97706", "#92400e", "#fbbf24", "#fed7aa", "#c2410c", "#78350f"],
+    explosionColors: ["#fbbf24", "#f59e0b", "#fcd34d", "#fed7aa", "#ffffff", "#fbbf24", "#d97706"],
     screenShakeMultiplier: 1,
-    flashColor: "#d97706",
-    giftBoxColor: { main: "#b45309", light: "#d97706", ribbon: "#78350f" },
-    dinoColor: { main: "#b45309", dark: "#78350f" },
+    flashColor: "#fbbf24",
+    giftBoxColor: { main: "#f59e0b", light: "#fcd34d", ribbon: "#92400e" },
+    dinoColor: { main: "#fbbf24", dark: "#b45309" },
   },
 };
 
