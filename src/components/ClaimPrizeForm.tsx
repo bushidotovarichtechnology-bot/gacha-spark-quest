@@ -178,10 +178,11 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
       if (Date.now() - startedAt >= TIMEOUT_MS) {
         setPollingPayment(false);
         toast.info("Menunggu konfirmasi pembayaran", {
-          description: "Status akan diperbarui otomatis di Riwayat Klaim.",
+          description: "Status akan diperbarui otomatis di Riwayat Klaim. Item tetap di inventori sampai pembayaran terkonfirmasi.",
         });
-        setSuccess(true);
-        setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+        // Do NOT call onClaimed — webhook hasn't confirmed payment.
+        // Close the form so the user can revisit from claim history.
+        setTimeout(() => { onClose(); }, 1500);
         return;
       }
 
