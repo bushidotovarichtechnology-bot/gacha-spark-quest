@@ -287,6 +287,7 @@ const CampaignDetail = () => {
   const [drawCount, setDrawCount] = useState(0);
   const [hasPityReward, setHasPityReward] = useState(false);
   const [pendingDrawComplete, setPendingDrawComplete] = useState(false);
+  const [unboxFinished, setUnboxFinished] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
   const [pityPopup, setPityPopup] = useState<{ open: boolean; before: number; after: number; wasReset: boolean }>({ open: false, before: 0, after: 0, wasReset: false });
   const [drawRateUpMultiplier, setDrawRateUpMultiplier] = useState<number>(1);
@@ -319,6 +320,17 @@ const CampaignDetail = () => {
     setIsDrawing(true); // replays the shake/glow/unbox animation
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, campaignId]);
+
+  const revealDrawResult = useCallback(() => {
+    setIsDrawing(false);
+    setShowResult(true);
+  }, []);
+
+  useEffect(() => {
+    if (isDrawing && pendingDrawComplete && unboxFinished) {
+      revealDrawResult();
+    }
+  }, [isDrawing, pendingDrawComplete, revealDrawResult, unboxFinished]);
 
   if (isLoading || !campaign) {
     return (
@@ -356,26 +368,9 @@ const CampaignDetail = () => {
     // Optimistic UI lock — prevent double-click / spam BEFORE network call
     setDrawCount(actualCount);
 
-    // Auto-align: scroll the Draw buttons into the vertical center of the
-    // viewport BEFORE the unbox overlay locks scroll. That way the dino &
-    // gift box appear right at the spot the user just tapped — no need to
-    // scroll back up on desktop / laptop.
-    try {
-      const el = drawButtonsRef.current;
-      if (el && typeof el.getBoundingClientRect === "function") {
-        const rect = el.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
-        window.scrollTo({
-          top: Math.max(0, targetY),
-          behavior: "smooth",
-        });
-      }
-    } catch {
-      // non-fatal — scrolling is a UX nicety
-    }
-
     setIsDrawing(true);
     setPendingDrawComplete(false);
+    setUnboxFinished(false);
 
     try {
       const { data, error } = await supabase.functions.invoke("secure-draw", {
@@ -955,10 +950,7 @@ const CampaignDetail = () => {
             prizeImage={drawnPrizes[0]?.image}
             prizeName={drawnPrizes[0]?.prize}
             onComplete={() => {
-              setIsDrawing(false);
-              if (pendingDrawComplete) {
-                setShowResult(true);
-              }
+              setUnboxFinished(true);
             }}
           />
         )}

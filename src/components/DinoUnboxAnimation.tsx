@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, memo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 // Detect low-end devices once (hardware concurrency, deviceMemory, or reduced motion)
@@ -359,38 +360,27 @@ const DinoUnboxAnimation = ({
     }
   }, [taps, requiredTaps, completed, onComplete, config.isRare]);
 
-  // Lock body scroll while the unbox animation is active so the dino is
-  // always centered in the viewport — no scroll-to-top required on desktop.
-  // We also freeze the body at the user's current scroll position using
-  // `position: fixed` so the overlay is guaranteed to align with where the
-  // user is currently looking, regardless of any transformed ancestors that
-  // could otherwise break `position: fixed` on the overlay itself.
+  // Lock page scroll while the unbox animation is active. Avoid moving the
+  // body with `position: fixed`; that can push fixed overlays off-screen on
+  // scrolled campaign pages, leaving only a blank dark layer visible.
   useEffect(() => {
-    const scrollY = window.scrollY;
     const body = document.body;
+    const html = document.documentElement;
     const prev = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      width: body.style.width,
       overflow: body.style.overflow,
+      htmlOverflow: html.style.overflow,
+      touchAction: body.style.touchAction,
+      overscrollBehavior: body.style.overscrollBehavior,
     };
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
     body.style.overflow = "hidden";
+    html.style.overflow = "hidden";
+    body.style.touchAction = "none";
+    body.style.overscrollBehavior = "contain";
     return () => {
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.left = prev.left;
-      body.style.right = prev.right;
-      body.style.width = prev.width;
       body.style.overflow = prev.overflow;
-      // Restore the user back to exactly where they were before the draw.
-      window.scrollTo(0, scrollY);
+      html.style.overflow = prev.htmlOverflow;
+      body.style.touchAction = prev.touchAction;
+      body.style.overscrollBehavior = prev.overscrollBehavior;
     };
   }, []);
 
@@ -408,11 +398,8 @@ const DinoUnboxAnimation = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [handleTap, completed]);
 
-  return (
+  const content = (
     <>
-      {showFlash && <FlashOverlay color={config.flashColor} />}
-      <RareGlow isRare={config.isRare} />
-      <TierBadge tier={tier} isRare={config.isRare} />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ 
@@ -430,6 +417,9 @@ const DinoUnboxAnimation = ({
         }}
         style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent" }}
       >
+        {showFlash && <FlashOverlay color={config.flashColor} />}
+        <RareGlow isRare={config.isRare} />
+        <TierBadge tier={tier} isRare={config.isRare} />
         <div className="flex flex-col items-center gap-3 sm:gap-4 select-none w-full max-w-[640px]">
           {/* Tap prompt */}
           <motion.p
@@ -606,6 +596,8 @@ const DinoUnboxAnimation = ({
       </motion.div>
     </>
   );
+
+  return typeof document !== "undefined" ? createPortal(content, document.body) : content;
 };
 
 export default DinoUnboxAnimation;
