@@ -240,7 +240,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
               </div>
 
               <div className="mt-4 space-y-2">
-                <PrizeShareMenu prize={sorted[0].prize} tier={sorted[0].tier} />
+                <PrizeShareMenu prize={sorted[0].prize} tier={sorted[0].tier} imageUrl={sorted[0].image} />
                 <Button variant="neon" onClick={handleClose} className="w-full">
                   {t("continue")}
                 </Button>
