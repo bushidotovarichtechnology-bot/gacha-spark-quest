@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Download, Share2, Image as ImageIcon, MessageCircle, Facebook, Instagram, Twitter, Copy, Check } from "lucide-react";
+import { Loader2, Download, Share2, Image as ImageIcon, MessageCircle, Facebook, Instagram, Twitter, Copy, Check, Eye, X, ZoomIn } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
