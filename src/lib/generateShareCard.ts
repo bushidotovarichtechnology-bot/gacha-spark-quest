@@ -272,16 +272,23 @@ export async function generatePrizeShareCard(opts: CardOptions): Promise<Blob> {
   });
   ctx.shadowBlur = 0;
 
-  // ===== Footer brand (small, subtle) =====
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "800 22px system-ui, -apple-system, sans-serif";
-  ctx.fillText("BUSHIDO", SIZE / 2 - 52, SIZE - 38);
-  ctx.fillStyle = tierConf.accent;
-  ctx.fillText("GACHA", SIZE / 2 + 48, SIZE - 38);
+  // ===== Subtle watermark on prize card (bottom-right corner of image area) =====
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = "#0B0420";
+  ctx.font = "600 14px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("bushidogacha.com", cardX + cardSize - 22, cardY + cardSize - 18);
+  ctx.restore();
 
-  ctx.fillStyle = "#ffffff88";
-  ctx.font = "500 16px system-ui, -apple-system, sans-serif";
-  ctx.fillText(opts.siteLabel || "bushidogacha.com", SIZE / 2, SIZE - 16);
+  // ===== Footer brand watermark (very subtle, single line) =====
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 14px system-ui, -apple-system, sans-serif";
+  ctx.fillText("BUSHIDO GACHA  •  bushidogacha.com", SIZE / 2, SIZE - 28);
+  ctx.restore();
 
   // ===== Decorative sparkles =====
   ctx.fillStyle = tierConf.from;
