@@ -98,76 +98,107 @@ const PrizeShareMenu = ({ prize, tier, imageUrl, url, variant = "default" }: Pri
   const hasNativeShare = typeof navigator !== "undefined" && !!(navigator as any).share;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        {variant === "compact" ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={t("sharePrize")}
-            className="shrink-0"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button type="button" variant="outline" className="w-full gap-2">
-            <Share2 className="h-4 w-4" />
-            {t("sharePrize")}
-          </Button>
-        )}
-      </PopoverTrigger>
-      <PopoverContent
-        align="center"
-        className="w-72 p-3"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-2 text-center">
-          <p className="font-display text-sm font-bold text-foreground">{t("shareTitle")}</p>
-          <p className="text-xs text-muted-foreground">{t("shareDesc")}</p>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <ShareTile
-            label={t("shareWhatsapp")}
-            icon={<MessageCircle className="h-5 w-5" />}
-            onClick={handleWhatsapp}
-            tone="bg-green-500/15 text-green-500 hover:bg-green-500/25"
-          />
-          <ShareTile
-            label={t("shareFacebook")}
-            icon={<Facebook className="h-5 w-5" />}
-            onClick={handleFacebook}
-            tone="bg-blue-500/15 text-blue-500 hover:bg-blue-500/25"
-          />
-          <ShareTile
-            label={t("shareInstagram")}
-            icon={<Instagram className="h-5 w-5" />}
-            onClick={handleInstagram}
-            tone="bg-pink-500/15 text-pink-500 hover:bg-pink-500/25"
-          />
-          <ShareTile
-            label={t("shareTwitter")}
-            icon={<Twitter className="h-5 w-5" />}
-            onClick={handleTwitter}
-            tone="bg-sky-500/15 text-sky-500 hover:bg-sky-500/25"
-          />
-          <ShareTile
-            label={t("shareCopyLink")}
-            icon={copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-            onClick={handleCopy}
-            tone="bg-secondary text-foreground hover:bg-secondary/70"
-          />
-          {hasNativeShare && (
-            <ShareTile
-              label={t("shareMore")}
-              icon={<Share className="h-5 w-5" />}
-              onClick={handleNativeShare}
-              tone="bg-primary/15 text-primary hover:bg-primary/25"
-            />
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          {variant === "compact" ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={t("sharePrize")}
+              className="shrink-0"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" className="w-full gap-2">
+              <Share2 className="h-4 w-4" />
+              {t("sharePrize")}
+            </Button>
           )}
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverTrigger>
+        <PopoverContent
+          align="center"
+          className="w-72 p-3"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-2 text-center">
+            <p className="font-display text-sm font-bold text-foreground">{t("shareTitle")}</p>
+            <p className="text-xs text-muted-foreground">{t("shareDesc")}</p>
+          </div>
+
+          {/* Featured: Share as Image (mockup card) */}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setCardOpen(true);
+            }}
+            className="mb-2 flex w-full items-center gap-2.5 rounded-lg bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 p-2.5 text-left transition-colors hover:from-primary/30 hover:via-accent/30 hover:to-primary/30 border border-accent/30"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent/20 text-accent">
+              <ImageIcon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-foreground">{t("shareAsImage")}</p>
+              <p className="truncate text-[10px] text-muted-foreground">{t("shareCardDesc")}</p>
+            </div>
+          </button>
+
+          <div className="grid grid-cols-3 gap-2">
+            <ShareTile
+              label={t("shareWhatsapp")}
+              icon={<MessageCircle className="h-5 w-5" />}
+              onClick={handleWhatsapp}
+              tone="bg-green-500/15 text-green-500 hover:bg-green-500/25"
+            />
+            <ShareTile
+              label={t("shareFacebook")}
+              icon={<Facebook className="h-5 w-5" />}
+              onClick={handleFacebook}
+              tone="bg-blue-500/15 text-blue-500 hover:bg-blue-500/25"
+            />
+            <ShareTile
+              label={t("shareInstagram")}
+              icon={<Instagram className="h-5 w-5" />}
+              onClick={handleInstagram}
+              tone="bg-pink-500/15 text-pink-500 hover:bg-pink-500/25"
+            />
+            <ShareTile
+              label={t("shareTwitter")}
+              icon={<Twitter className="h-5 w-5" />}
+              onClick={handleTwitter}
+              tone="bg-sky-500/15 text-sky-500 hover:bg-sky-500/25"
+            />
+            <ShareTile
+              label={t("shareCopyLink")}
+              icon={copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+              onClick={handleCopy}
+              tone="bg-secondary text-foreground hover:bg-secondary/70"
+            />
+            {hasNativeShare && (
+              <ShareTile
+                label={t("shareMore")}
+                icon={<Share className="h-5 w-5" />}
+                onClick={handleNativeShare}
+                tone="bg-primary/15 text-primary hover:bg-primary/25"
+              />
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <PrizeShareCardDialog
+        open={cardOpen}
+        onOpenChange={setCardOpen}
+        prize={prize}
+        tier={tier}
+        imageUrl={imageUrl}
+        caption={caption}
+        shareUrl={shareUrl}
+      />
+    </>
   );
 };
 
