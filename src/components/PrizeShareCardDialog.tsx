@@ -43,7 +43,7 @@ const PrizeShareCardDialog = ({
     setPreviewUrl(null);
     setBlob(null);
 
-    generatePrizeShareCard({ prize, tier, imageUrl, caption, siteLabel: "bushidogacha.com" })
+    generatePrizeShareCard({ prize, tier, imageUrl, campaign, caption, siteLabel: "bushidogacha.com" })
       .then((b) => {
         if (cancelled) return;
         createdUrl = URL.createObjectURL(b);
@@ -64,7 +64,7 @@ const PrizeShareCardDialog = ({
       cancelled = true;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [open, prize, tier, imageUrl, caption, t]);
+  }, [open, prize, tier, imageUrl, campaign, caption, t]);
 
   const fileName = `bushidogacha-${tier}-${prize.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "prize"}.jpg`;
   const fullText = `${caption} ${shareUrl}`;
