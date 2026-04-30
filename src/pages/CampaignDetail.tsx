@@ -355,6 +355,25 @@ const CampaignDetail = () => {
 
     // Optimistic UI lock — prevent double-click / spam BEFORE network call
     setDrawCount(actualCount);
+
+    // Auto-align: scroll the Draw buttons into the vertical center of the
+    // viewport BEFORE the unbox overlay locks scroll. That way the dino &
+    // gift box appear right at the spot the user just tapped — no need to
+    // scroll back up on desktop / laptop.
+    try {
+      const el = drawButtonsRef.current;
+      if (el && typeof el.getBoundingClientRect === "function") {
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+        window.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: "smooth",
+        });
+      }
+    } catch {
+      // non-fatal — scrolling is a UX nicety
+    }
+
     setIsDrawing(true);
     setPendingDrawComplete(false);
 
