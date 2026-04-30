@@ -1,41 +1,53 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import PromoCarousel from "@/components/PromoCarousel";
 import SEO from "@/components/SEO";
 import { organizationLd, softwareApplicationLd, websiteLd } from "@/lib/structuredData";
 import { Sparkles, Shield, Clock, Trophy, Crown, ExternalLink, Send, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
-import CategorySection from "@/components/CategorySection";
 import CampaignSearchBar from "@/components/CampaignSearchBar";
-import HomeFAQ from "@/components/HomeFAQ";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import defaultAvatar from "@/assets/default-avatar.webp";
 
-import campaignBlindbox from "@/assets/campaign-blindbox.jpg";
-import campaignDesksetup from "@/assets/campaign-desksetup.jpg";
-import campaignWallet from "@/assets/campaign-wallet.jpg";
-import campaignFigurine from "@/assets/campaign-figurine.jpg";
-import campaignGaming from "@/assets/campaign-gaming.jpg";
+// Defer heavy / below-the-fold components so they don't block initial paint on mobile.
+const PromoCarousel = lazy(() => import("@/components/PromoCarousel"));
+const CategorySection = lazy(() => import("@/components/CategorySection"));
+const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 
-// Fallback image map for campaigns using local assets
-const imageMap: Record<string, string> = {
-  "/assets/campaign-blindbox.jpg": campaignBlindbox,
-  "/assets/campaign-desksetup.jpg": campaignDesksetup,
-  "/assets/campaign-wallet.jpg": campaignWallet,
-  "/assets/campaign-figurine.jpg": campaignFigurine,
-  "/assets/campaign-gaming.jpg": campaignGaming,
+/** Mounts children only when the wrapper enters (or nears) the viewport. */
+const InView = ({ children, rootMargin = "300px", minHeight = 0 }: { children: React.ReactNode; rootMargin?: string; minHeight?: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (shown || !ref.current) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setShown(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShown(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [shown, rootMargin]);
+  return (
+    <div ref={ref} style={minHeight ? { minHeight } : undefined}>
+      {shown ? children : null}
+    </div>
+  );
 };
-
-function resolveImage(url: string) {
-  return imageMap[url] || url || campaignBlindbox;
-}
 
 interface GrandPrizeWinner {
   draw_id: string;
