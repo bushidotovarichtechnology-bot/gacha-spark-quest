@@ -422,24 +422,28 @@ const DinoUnboxAnimation = ({
         }}
         exit={{ opacity: 0 }}
         transition={screenShake ? { duration: 0.15 } : { duration: 0.3 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-background/95"
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 sm:gap-4 bg-background/95 px-4 py-6 overflow-hidden touch-manipulation"
         onClick={handleTap}
-        style={{ cursor: "pointer" }}
+        onTouchStart={(e) => {
+          // Prevent 300ms tap delay & double-fire — onClick still handles it
+          e.stopPropagation();
+        }}
+        style={{ cursor: "pointer", WebkitTapHighlightColor: "transparent" }}
       >
-        <div className="flex flex-col items-center gap-4 select-none">
+        <div className="flex flex-col items-center gap-3 sm:gap-4 select-none w-full max-w-[640px]">
           {/* Tap prompt */}
           <motion.p
             animate={completed ? { scale: [1, 1.2, 1], opacity: 1 } : { opacity: [0.4, 1, 0.4] }}
             transition={completed ? { duration: 0.5 } : { duration: 1.2, repeat: Infinity }}
-            className="font-display text-xs tracking-[0.2em] uppercase text-muted-foreground"
+            className="font-display text-[10px] sm:text-xs tracking-[0.2em] uppercase text-muted-foreground text-center px-2"
           >
             {completed
               ? (config.isRare ? "🎉 JACKPOT! 🎉" : "💥 TERBUKA! 💥")
-              : "👆 Tap di mana saja — atau tekan SPACE / ENTER"}
+              : "👆 Tap di dino / kotak — atau tekan SPACE / ENTER"}
           </motion.p>
 
           {/* Progress bar */}
-          <div className="w-48 h-2 rounded-full bg-secondary overflow-hidden border border-border">
+          <div className="w-40 sm:w-48 h-2 rounded-full bg-secondary overflow-hidden border border-border">
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
               animate={{ width: `${progress * 100}%` }}
@@ -448,8 +452,18 @@ const DinoUnboxAnimation = ({
           </div>
           <span className="text-[10px] text-muted-foreground font-mono">{taps}/{requiredTaps}</span>
 
-          {/* Animation area */}
-          <div className="relative" style={{ width: 280, height: 200 }}>
+          {/* Animation area — scales with viewport so the dino & box are
+              easy to tap directly on phones, tablets, and desktops alike.
+              Width = ~70vw on mobile, capped at 480px on large screens.
+              Height keeps a 1.4:1 ratio (matches original 280×200). */}
+          <div
+            className="relative"
+            style={{
+              width: "min(86vw, 480px)",
+              maxWidth: "min(70vh, 480px)",
+              aspectRatio: "1.4 / 1",
+            }}
+          >
             {/* Bite particles */}
             <div className="absolute inset-0 flex items-center justify-center">
               {particles.map((p) => (
@@ -469,7 +483,7 @@ const DinoUnboxAnimation = ({
             {/* Dino with tier colors */}
             <motion.div
               className="absolute"
-              style={{ width: 120, height: 120, left: 10, bottom: 10 }}
+              style={{ width: "43%", aspectRatio: "1 / 1", left: "3.5%", bottom: "5%" }}
               animate={
                 completed
                   ? { 
@@ -495,7 +509,7 @@ const DinoUnboxAnimation = ({
               {!completed ? (
                 <motion.div
                   className="absolute"
-                  style={{ width: 100, height: 100, right: 20, bottom: 20 }}
+                  style={{ width: "36%", aspectRatio: "1 / 1", right: "7%", bottom: "10%" }}
                   animate={isBiting ? { rotate: [-5, 5, 0], scale: [1, 0.95, 1] } : {}}
                   transition={{ duration: 0.2 }}
                   exit={{
@@ -516,7 +530,7 @@ const DinoUnboxAnimation = ({
                   }}
                   transition={{ duration: config.isRare ? 0.8 : 0.6, ease: "easeOut" }}
                   className="absolute flex flex-col items-center justify-center gap-1"
-                  style={{ width: 130, height: 130, right: 5, bottom: 5 }}
+                  style={{ width: "46%", aspectRatio: "1 / 1", right: "2%", bottom: "2%" }}
                 >
                   {/* Glow halo behind prize */}
                   <motion.div
@@ -533,8 +547,8 @@ const DinoUnboxAnimation = ({
                     <div
                       className="relative rounded-xl overflow-hidden border-2 bg-card"
                       style={{
-                        width: 110,
-                        height: 110,
+                        width: "85%",
+                        height: "85%",
                         borderColor: config.giftBoxColor.main,
                         boxShadow: `0 0 30px ${config.flashColor}, 0 0 60px ${config.flashColor}80`,
                       }}
@@ -568,7 +582,7 @@ const DinoUnboxAnimation = ({
             {isBiting && (
               <motion.div
                 className="absolute rounded-full border-2 border-accent/50"
-                style={{ right: 40, bottom: 40, width: 40, height: 40 }}
+                style={{ right: "14%", bottom: "20%", width: "14%", aspectRatio: "1 / 1" }}
                 initial={{ scale: 0.5, opacity: 0.8 }}
                 animate={{ scale: config.isRare ? 4 : 2.5, opacity: 0 }}
                 transition={{ duration: config.isRare ? 0.4 : 0.3 }}
