@@ -381,12 +381,27 @@ const formatRupiah = (value: number) =>
                     <span className="flex items-center gap-2"><Check className="h-4 w-4" />{t("payNow")}</span>
                   )}
                 </Button>
-                <p className="text-center text-xs text-muted-foreground">Pembayaran diproses melalui Midtrans</p>
+                <p className="text-center text-xs text-muted-foreground">
+                  Pembayaran diproses melalui {provider === "stripe" ? "Stripe" : "Midtrans"}
+                </p>
               </div>
             );
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Stripe Embedded Checkout */}
+      <StripeCheckoutDialog
+        open={stripeOpen}
+        kind="topup"
+        package_id={stripePackageId || undefined}
+        onClose={() => {
+          setStripeOpen(false);
+          setStripePackageId(null);
+          // Trigger coin balance refresh — webhook may have credited
+          setTimeout(() => window.dispatchEvent(new Event("coins-updated")), 1500);
+        }}
+      />
     </div>
   );
 };
