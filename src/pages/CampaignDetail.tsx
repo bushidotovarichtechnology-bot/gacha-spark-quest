@@ -978,6 +978,17 @@ const CampaignDetail = () => {
         hasPityReward={hasPityReward}
         rateUpMultiplier={drawRateUpMultiplier}
         campaignName={(campaign as any)?.title}
+        campaignUrl={(() => {
+          const slug = (campaign as any)?.slug || campaignId;
+          if (!slug) return undefined;
+          // Always share the canonical production URL so links remain valid
+          // when shared from preview/staging environments too.
+          const origin =
+            typeof window !== "undefined" && window.location.hostname === "bushidogacha.com"
+              ? window.location.origin
+              : "https://bushidogacha.com";
+          return `${origin}/campaign/${slug}`;
+        })()}
       />
 
       <PityMeterPopup
