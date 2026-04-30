@@ -331,6 +331,7 @@ export type Database = {
         Row: {
           benefit_type: string
           benefit_value: number
+          coupon_code: string | null
           coupon_id: string
           created_at: string
           id: string
@@ -339,6 +340,7 @@ export type Database = {
         Insert: {
           benefit_type: string
           benefit_value?: number
+          coupon_code?: string | null
           coupon_id: string
           created_at?: string
           id?: string
@@ -347,6 +349,7 @@ export type Database = {
         Update: {
           benefit_type?: string
           benefit_value?: number
+          coupon_code?: string | null
           coupon_id?: string
           created_at?: string
           id?: string
