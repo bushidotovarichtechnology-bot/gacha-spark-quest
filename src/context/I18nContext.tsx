@@ -64,6 +64,18 @@ const translations = {
     continue: "Continue",
     skipAll: "Skip All",
     drawSummary: "Summary",
+    sharePrize: "Share Prize",
+    shareTitle: "Share your win!",
+    shareDesc: "Let your friends know what you won at BushidoGacha",
+    shareWhatsapp: "WhatsApp",
+    shareFacebook: "Facebook",
+    shareTwitter: "Twitter / X",
+    shareInstagram: "Instagram",
+    shareCopyLink: "Copy Link",
+    shareMore: "More",
+    shareCopied: "Link copied! Paste it on Instagram.",
+    shareInstagramHint: "Instagram doesn't allow direct web sharing. We've copied the link — paste it in your Story or DM.",
+    shareCaption: "I just won {prize} (Tier {tier}) at BushidoGacha! 🎉 Try your luck:",
 
     // Inventory
     totalItems: "Total Items",
