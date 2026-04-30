@@ -19,6 +19,7 @@ import {
 import { useCitiesForProvince, usePostalCodesForCity, useDistrictsForCity, useVillagesForDistrict } from "@/hooks/use-indonesian-locations";
 import type { InventoryItem } from "@/context/GachaContext";
 import { loadMidtransSnap } from "@/lib/midtransSnap";
+import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
 
 interface ClaimPrizeFormProps {
   item: InventoryItem;
