@@ -4,153 +4,230 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { CreditCard, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { CreditCard, AlertTriangle, CheckCircle2, Zap } from "lucide-react";
 
 type Mode = "sandbox" | "production";
+type Provider = "midtrans" | "stripe";
 
 const AdminPaymentSettings = () => {
   const [mode, setMode] = useState<Mode>("sandbox");
   const [initialMode, setInitialMode] = useState<Mode>("sandbox");
+  const [provider, setProvider] = useState<Provider>("midtrans");
+  const [initialProvider, setInitialProvider] = useState<Provider>("midtrans");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("app_settings")
-        .select("value")
-        .eq("key", "midtrans_mode")
-        .maybeSingle();
-      if (error) {
-        toast.error("Gagal memuat pengaturan");
-      }
-      const current = ((data?.value as { mode?: string } | null)?.mode === "production"
+      const [{ data: modeRow }, { data: provRow }] = await Promise.all([
+        supabase.from("app_settings").select("value").eq("key", "midtrans_mode").maybeSingle(),
+        supabase.from("app_settings").select("value").eq("key", "payment_provider").maybeSingle(),
+      ]);
+      const currentMode = ((modeRow?.value as { mode?: string } | null)?.mode === "production"
         ? "production"
         : "sandbox") as Mode;
-      setMode(current);
-      setInitialMode(current);
+      const currentProv = ((provRow?.value as { provider?: string } | null)?.provider === "stripe"
+        ? "stripe"
+        : "midtrans") as Provider;
+      setMode(currentMode);
+      setInitialMode(currentMode);
+      setProvider(currentProv);
+      setInitialProvider(currentProv);
       setLoading(false);
     })();
   }, []);
 
+  const upsertSetting = async (key: string, value: Record<string, unknown>) => {
+    const { data: userRes } = await supabase.auth.getUser();
+    const uid = userRes.user?.id ?? null;
+    const { data: existing } = await supabase
+      .from("app_settings")
+      .select("id")
+      .eq("key", key)
+      .maybeSingle();
+    if (existing) {
+      const { error } = await supabase
+        .from("app_settings")
+        .update({ value: value as any, updated_at: new Date().toISOString(), updated_by: uid })
+        .eq("id", existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("app_settings")
+        .insert([{ key, value: value as any, updated_by: uid }]);
+      if (error) throw error;
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data: userRes } = await supabase.auth.getUser();
-      const uid = userRes.user?.id ?? null;
-
-      const { data: existing, error: selErr } = await supabase
-        .from("app_settings")
-        .select("id")
-        .eq("key", "midtrans_mode")
-        .maybeSingle();
-      if (selErr) throw selErr;
-
-      if (existing) {
-        const { error } = await supabase
-          .from("app_settings")
-          .update({ value: { mode }, updated_at: new Date().toISOString(), updated_by: uid })
-          .eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("app_settings")
-          .insert({ key: "midtrans_mode", value: { mode }, updated_by: uid });
-        if (error) throw error;
+      if (provider !== initialProvider) {
+        await upsertSetting("payment_provider", { provider });
       }
-
+      if (mode !== initialMode) {
+        await upsertSetting("midtrans_mode", { mode });
+      }
       setInitialMode(mode);
-      toast.success(`Mode Midtrans diubah ke ${mode.toUpperCase()}`);
+      setInitialProvider(provider);
+      toast.success("Pengaturan pembayaran disimpan");
     } catch (e: any) {
-      console.error("Save midtrans mode error:", e);
+      console.error("Save payment settings error:", e);
       toast.error("Gagal menyimpan: " + (e?.message || "unknown error"));
     } finally {
       setSaving(false);
     }
   };
 
-  const dirty = mode !== initialMode;
+  const dirty = mode !== initialMode || provider !== initialProvider;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold">Pengaturan Pembayaran</h1>
         <p className="text-sm text-muted-foreground">
-          Kelola mode Midtrans antara sandbox (testing) dan production (live).
+          Pilih payment gateway aktif dan kelola mode Midtrans (sandbox/production).
         </p>
       </div>
 
-      <Card className="p-6 space-y-6">
-        <div className="flex items-start gap-3">
-          <CreditCard className="h-5 w-5 text-primary mt-0.5" />
-          <div className="flex-1">
-            <h2 className="font-semibold">Mode Midtrans</h2>
-            <p className="text-sm text-muted-foreground">
-              Beralih antara environment Midtrans. Edge function akan otomatis menggunakan kredensial yang sesuai.
-            </p>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="h-20 animate-pulse rounded-lg bg-muted" />
-        ) : (
-          <>
-            <div className="flex items-center justify-between rounded-lg border border-border p-4">
-              <div>
-                <Label className="text-base">
-                  {mode === "production" ? "Production (Live)" : "Sandbox (Testing)"}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {mode === "production"
-                    ? "Pembayaran akan diproses dengan uang asli."
-                    : "Pembayaran simulasi — tidak ada transaksi nyata."}
+      {loading ? (
+        <Card className="p-6">
+          <div className="h-32 animate-pulse rounded-lg bg-muted" />
+        </Card>
+      ) : (
+        <>
+          {/* Provider Selection */}
+          <Card className="p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <Zap className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <h2 className="font-semibold">Payment Gateway Aktif</h2>
+                <p className="text-sm text-muted-foreground">
+                  Pilih gateway yang akan digunakan untuk semua transaksi top-up koin & ongkir hadiah.
                 </p>
               </div>
-              <Switch
-                checked={mode === "production"}
-                onCheckedChange={(checked) => setMode(checked ? "production" : "sandbox")}
-              />
             </div>
 
-            {mode === "production" ? (
-              <div className="flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
-                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-destructive">Mode Production aktif</p>
-                  <p className="text-muted-foreground text-xs">
-                    Pastikan secret <code>MIDTRANS_SERVER_KEY_PRODUCTION</code> dan{" "}
-                    <code>MIDTRANS_CLIENT_KEY_PRODUCTION</code> sudah benar.
-                  </p>
+            <RadioGroup value={provider} onValueChange={(v) => setProvider(v as Provider)}>
+              <label
+                htmlFor="prov-midtrans"
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+                  provider === "midtrans" ? "border-primary bg-primary/5" : "border-border"
+                }`}
+              >
+                <RadioGroupItem value="midtrans" id="prov-midtrans" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-medium">Midtrans</div>
+                  <div className="text-xs text-muted-foreground">
+                    Gateway lokal Indonesia (GoPay, OVO, DANA, QRIS, VA bank, dll). Wajib aktivasi akun Midtrans.
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+              </label>
+
+              <label
+                htmlFor="prov-stripe"
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+                  provider === "stripe" ? "border-primary bg-primary/5" : "border-border"
+                }`}
+              >
+                <RadioGroupItem value="stripe" id="prov-stripe" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-medium">Stripe (Bawaan Lovable)</div>
+                  <div className="text-xs text-muted-foreground">
+                    Backup gateway — kartu kredit/debit internasional. Tidak perlu setup, langsung jalan untuk testing.
+                  </div>
+                </div>
+              </label>
+            </RadioGroup>
+
+            {provider === "stripe" && (
+              <div className="flex gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Mode Sandbox aktif</p>
+                  <p className="font-medium">Stripe aktif</p>
                   <p className="text-muted-foreground text-xs">
-                    Aman untuk testing. Tidak ada uang asli yang diproses.
+                    Saat ini berjalan di <strong>test mode</strong>. Untuk menerima pembayaran sungguhan, klaim akun
+                    Stripe sandbox Anda dari menu Payments di Lovable.
                   </p>
                 </div>
               </div>
             )}
+          </Card>
 
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setMode(initialMode)}
-                disabled={!dirty || saving}
-              >
-                Batal
-              </Button>
-              <Button onClick={handleSave} disabled={!dirty || saving}>
-                {saving ? "Menyimpan..." : "Simpan Perubahan"}
-              </Button>
-            </div>
-          </>
-        )}
-      </Card>
+          {/* Midtrans Mode (only relevant if midtrans is selected) */}
+          {provider === "midtrans" && (
+            <Card className="p-6 space-y-6">
+              <div className="flex items-start gap-3">
+                <CreditCard className="h-5 w-5 text-primary mt-0.5" />
+                <div className="flex-1">
+                  <h2 className="font-semibold">Mode Midtrans</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Beralih antara environment Midtrans. Edge function akan otomatis menggunakan kredensial yang sesuai.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border p-4">
+                <div>
+                  <Label className="text-base">
+                    {mode === "production" ? "Production (Live)" : "Sandbox (Testing)"}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {mode === "production"
+                      ? "Pembayaran akan diproses dengan uang asli."
+                      : "Pembayaran simulasi — tidak ada transaksi nyata."}
+                  </p>
+                </div>
+                <Switch
+                  checked={mode === "production"}
+                  onCheckedChange={(checked) => setMode(checked ? "production" : "sandbox")}
+                />
+              </div>
+
+              {mode === "production" ? (
+                <div className="flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                  <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-destructive">Mode Production aktif</p>
+                    <p className="text-muted-foreground text-xs">
+                      Pastikan secret <code>MIDTRANS_SERVER_KEY_PRODUCTION</code> dan{" "}
+                      <code>MIDTRANS_CLIENT_KEY_PRODUCTION</code> sudah benar.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Mode Sandbox aktif</p>
+                    <p className="text-muted-foreground text-xs">
+                      Aman untuk testing. Tidak ada uang asli yang diproses.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMode(initialMode);
+                setProvider(initialProvider);
+              }}
+              disabled={!dirty || saving}
+            >
+              Batal
+            </Button>
+            <Button onClick={handleSave} disabled={!dirty || saving}>
+              {saving ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
+import { usePaymentProvider } from "@/hooks/use-payment-provider";
+import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import Navbar from "@/components/Navbar";
 import {
   Dialog,
@@ -102,11 +105,14 @@ const TopUp = () => {
   const { t } = useI18n();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { provider } = usePaymentProvider();
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const [processing, setProcessing] = useState(false);
   const [midtransReady, setMidtransReady] = useState(false);
   const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
+  const [stripeOpen, setStripeOpen] = useState(false);
+  const [stripePackageId, setStripePackageId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -126,6 +132,15 @@ const TopUp = () => {
 
   const handlePurchase = async () => {
     if (!selectedPackage || !user) return;
+
+    // Route to Stripe if active provider is stripe
+    if (provider === "stripe") {
+      setStripePackageId(selectedPackage.id);
+      setSelectedPackage(null);
+      setStripeOpen(true);
+      return;
+    }
+
     setProcessing(true);
     const finalPrice = getDiscountedPrice(selectedPackage);
     const totalCoins = selectedPackage.coins + selectedPackage.bonus_coins;
@@ -366,12 +381,27 @@ const formatRupiah = (value: number) =>
                     <span className="flex items-center gap-2"><Check className="h-4 w-4" />{t("payNow")}</span>
                   )}
                 </Button>
-                <p className="text-center text-xs text-muted-foreground">Pembayaran diproses melalui Midtrans</p>
+                <p className="text-center text-xs text-muted-foreground">
+                  Pembayaran diproses melalui {provider === "stripe" ? "Stripe" : "Midtrans"}
+                </p>
               </div>
             );
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Stripe Embedded Checkout */}
+      <StripeCheckoutDialog
+        open={stripeOpen}
+        kind="topup"
+        package_id={stripePackageId || undefined}
+        onClose={() => {
+          setStripeOpen(false);
+          setStripePackageId(null);
+          // Trigger coin balance refresh — webhook may have credited
+          setTimeout(() => window.dispatchEvent(new Event("coins-updated")), 1500);
+        }}
+      />
     </div>
   );
 };
