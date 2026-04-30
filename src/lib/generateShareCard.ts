@@ -11,6 +11,8 @@ interface CardOptions {
   prize: string;
   tier: string;
   imageUrl?: string;
+  /** Campaign name (e.g. "Ultimate Desk Setup") shown above the prize image. */
+  campaign?: string;
   /** Optional caption shown at bottom (e.g. translated CTA). */
   caption?: string;
   /** Optional site/url shown small at the very bottom. */
