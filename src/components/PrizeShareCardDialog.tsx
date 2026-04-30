@@ -82,7 +82,7 @@ const PrizeShareCardDialog = ({
     const navAny = navigator as any;
     if (!navAny.canShare) return false;
     try {
-      return navAny.canShare({ files: [new File([new Blob()], "x.png", { type: "image/png" })] });
+      return navAny.canShare({ files: [new File([new Blob()], "x.jpg", { type: "image/jpeg" })] });
     } catch {
       return false;
     }
