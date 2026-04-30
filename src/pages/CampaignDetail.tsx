@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -290,6 +290,11 @@ const CampaignDetail = () => {
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
   const [pityPopup, setPityPopup] = useState<{ open: boolean; before: number; after: number; wasReset: boolean }>({ open: false, before: 0, after: 0, wasReset: false });
   const [drawRateUpMultiplier, setDrawRateUpMultiplier] = useState<number>(1);
+  // Container holding the Draw 1x / 10x buttons. Used to auto-scroll the
+  // viewport so the dino unbox overlay always appears centered on the
+  // button area — the user keeps seeing the dino bite the box right where
+  // they tapped, without ever having to scroll up.
+  const drawButtonsRef = useRef<HTMLDivElement | null>(null);
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
@@ -350,6 +355,25 @@ const CampaignDetail = () => {
 
     // Optimistic UI lock — prevent double-click / spam BEFORE network call
     setDrawCount(actualCount);
+
+    // Auto-align: scroll the Draw buttons into the vertical center of the
+    // viewport BEFORE the unbox overlay locks scroll. That way the dino &
+    // gift box appear right at the spot the user just tapped — no need to
+    // scroll back up on desktop / laptop.
+    try {
+      const el = drawButtonsRef.current;
+      if (el && typeof el.getBoundingClientRect === "function") {
+        const rect = el.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+        window.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: "smooth",
+        });
+      }
+    } catch {
+      // non-fatal — scrolling is a UX nicety
+    }
+
     setIsDrawing(true);
     setPendingDrawComplete(false);
 
@@ -968,7 +992,7 @@ const CampaignDetail = () => {
       <PrizeImagePreview image={previewImage} onClose={() => setPreviewImage(null)} />
 
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-3">
+        <div ref={drawButtonsRef} className="container mx-auto flex items-center gap-3 px-4 py-3">
           {totalRemaining <= 0 ? (
             <div className="flex w-full items-center justify-center gap-2 py-1">
               <span className="font-display text-lg font-bold tracking-wider text-destructive">{t("soldOut")}</span>
