@@ -582,7 +582,7 @@ const DinoUnboxAnimation = ({
             {isBiting && (
               <motion.div
                 className="absolute rounded-full border-2 border-accent/50"
-                style={{ right: 40, bottom: 40, width: 40, height: 40 }}
+                style={{ right: "14%", bottom: "20%", width: "14%", aspectRatio: "1 / 1" }}
                 initial={{ scale: 0.5, opacity: 0.8 }}
                 animate={{ scale: config.isRare ? 4 : 2.5, opacity: 0 }}
                 transition={{ duration: config.isRare ? 0.4 : 0.3 }}
