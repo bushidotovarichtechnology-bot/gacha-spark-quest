@@ -142,23 +142,32 @@ const Index = () => {
 
   // Realtime: auto-refetch when tier_prizes/campaign_tiers change so the
   // displayed remaining stock per campaign stays in sync with real draws.
+  // Deferred until idle so it doesn't block FCP/LCP on mobile.
   useEffect(() => {
-    const channel = supabase
-      .channel("home-stock")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "campaign_tiers" },
-        () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tier_prizes" },
-        () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
-      )
-      .subscribe();
-
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout: number }) => number)
+      | undefined;
+    const start = () => {
+      channel = supabase
+        .channel("home-stock")
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "campaign_tiers" },
+          () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "tier_prizes" },
+          () => queryClient.invalidateQueries({ queryKey: ["campaigns-by-category"] })
+        )
+        .subscribe();
+    };
+    const id = ric ? ric(start, { timeout: 3000 }) : (setTimeout(start, 2500) as unknown as number);
     return () => {
-      supabase.removeChannel(channel);
+      if (ric) (window as any).cancelIdleCallback?.(id);
+      else clearTimeout(id);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [queryClient]);
 
