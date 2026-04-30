@@ -348,6 +348,17 @@ const translations = {
     shareCopied: "Tautan disalin! Tempel di Instagram.",
     shareInstagramHint: "Instagram tidak mengizinkan share langsung dari web. Kami sudah menyalin tautannya — tempel di Story atau DM kamu.",
     shareCaption: "Aku baru saja memenangkan {prize} (Tier {tier}) di BushidoGacha! 🎉 Coba keberuntunganmu:",
+    shareAsImage: "Bagikan sebagai Gambar",
+    shareCardTitle: "Kartu Hadiahmu",
+    shareCardDesc: "Gambar siap-bagikan — cocok untuk WhatsApp & Instagram Story.",
+    shareCardGenerating: "Mendesain kartumu…",
+    shareCardDownload: "Unduh",
+    shareCardShare: "Bagikan",
+    shareCardSaveShare: "Simpan & Bagikan",
+    shareCardHint: "Tip: unduh gambarnya, lalu upload ke Instagram Story.",
+    shareCardDownloaded: "Gambar tersimpan! Bagikan ke Instagram atau WhatsApp.",
+    shareCardFallbackHint: "Caption disalin & gambar diunduh — tempel di mana saja!",
+    shareCardFailed: "Gagal membuat gambar. Silakan coba lagi.",
 
     // Inventory
     totalItems: "Total Item",
