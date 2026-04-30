@@ -480,6 +480,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                   <Button variant={isRare ? "gold" : "neon"} onClick={handleNext} className="w-full">
                     {isLast ? (isRare ? t("claimReward") : t("continue")) : t("continue")}
                   </Button>
+                  <PrizeShareMenu prize={prize.prize} tier={prize.tier} variant="compact" />
                   {isMulti && !isLast && (
                     <Button variant="outline" onClick={handleNext} className="shrink-0">
                       <ChevronRight className="h-4 w-4" />
