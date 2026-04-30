@@ -532,6 +532,9 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === "undefined") return modalContent;
+  return createPortal(modalContent, document.body);
 };
 
 export default PrizeRevealModal;
