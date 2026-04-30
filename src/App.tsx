@@ -109,8 +109,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <RouterReadyBridge />
-          <GlobalTransactionWatcher />
-          <TradeNotifDebugPanel />
+          <DeferIdle>
+            <GlobalTransactionWatcher />
+            <TradeNotifDebugPanel />
+          </DeferIdle>
           <MaintenanceGate>
           {/* Suspense + neon progress bar are handled inside AnimatedRoutes */}
             <AnimatedRoutes>
