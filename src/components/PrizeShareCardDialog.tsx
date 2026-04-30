@@ -311,6 +311,28 @@ const PrizeShareCardDialog = ({
           </p>
         </div>
       </DialogContent>
+
+      {/* Fullscreen preview modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl border-none bg-background/95 p-0 backdrop-blur-md">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{t("shareCardPreview")}</DialogTitle>
+            <DialogDescription>{t("shareCardPreviewHint")}</DialogDescription>
+          </DialogHeader>
+          <div className="relative flex items-center justify-center p-4 sm:p-8">
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt={prize}
+                className="max-h-[80vh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
+              />
+            )}
+            <p className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur">
+              {t("shareCardPreviewHint")}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
