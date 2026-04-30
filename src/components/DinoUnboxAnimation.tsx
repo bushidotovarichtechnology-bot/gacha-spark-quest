@@ -547,8 +547,8 @@ const DinoUnboxAnimation = ({
                     <div
                       className="relative rounded-xl overflow-hidden border-2 bg-card"
                       style={{
-                        width: 110,
-                        height: 110,
+                        width: "85%",
+                        height: "85%",
                         borderColor: config.giftBoxColor.main,
                         boxShadow: `0 0 30px ${config.flashColor}, 0 0 60px ${config.flashColor}80`,
                       }}
