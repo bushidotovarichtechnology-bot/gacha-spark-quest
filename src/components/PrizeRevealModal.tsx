@@ -60,6 +60,8 @@ interface PrizeRevealModalProps {
   rateUpMultiplier?: number;
   /** Campaign name (for share card context). */
   campaignName?: string;
+  /** Absolute URL to the campaign detail page (used by share menu). */
+  campaignUrl?: string;
 }
 
 // Uses global tier tokens (Diamond/Gold/Silver/Bronze) — see src/lib/tierStyles.ts.
@@ -72,7 +74,7 @@ const tierConfig: Record<string, { gradient: string; glow: string; icon: typeof 
 
 const tierOrder = { S: 0, A: 1, B: 2, C: 3 };
 
-const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rateUpMultiplier, campaignName }: PrizeRevealModalProps) => {
+const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rateUpMultiplier, campaignName, campaignUrl }: PrizeRevealModalProps) => {
   const { t } = useI18n();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
@@ -242,7 +244,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
               </div>
 
               <div className="mt-4 space-y-2">
-                <PrizeShareMenu prize={sorted[0].prize} tier={sorted[0].tier} imageUrl={sorted[0].image} campaign={campaignName} />
+                <PrizeShareMenu prize={sorted[0].prize} tier={sorted[0].tier} imageUrl={sorted[0].image} campaign={campaignName} url={campaignUrl} />
                 <Button variant="neon" onClick={handleClose} className="w-full">
                   {t("continue")}
                 </Button>
@@ -482,7 +484,7 @@ const PrizeRevealModal = ({ open, onClose, prizes, drawCount, hasPityReward, rat
                   <Button variant={isRare ? "gold" : "neon"} onClick={handleNext} className="w-full">
                     {isLast ? (isRare ? t("claimReward") : t("continue")) : t("continue")}
                   </Button>
-                  <PrizeShareMenu prize={prize.prize} tier={prize.tier} imageUrl={prize.image} campaign={campaignName} variant="compact" />
+                  <PrizeShareMenu prize={prize.prize} tier={prize.tier} imageUrl={prize.image} campaign={campaignName} url={campaignUrl} variant="compact" />
                   {isMulti && !isLast && (
                     <Button variant="outline" onClick={handleNext} className="shrink-0">
                       <ChevronRight className="h-4 w-4" />

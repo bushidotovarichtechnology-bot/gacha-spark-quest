@@ -29,7 +29,13 @@ const PrizeShareMenu = ({ prize, tier, imageUrl, campaign, url, variant = "defau
   const { t } = useI18n();
   const [cardOpen, setCardOpen] = useState(false);
 
-  const shareUrl = url || (typeof window !== "undefined" ? window.location.origin : SITE_URL);
+  // Default share URL = the full current page URL (e.g. campaign detail),
+  // bukan hanya origin. Strip query/hash agar link tetap bersih saat dibagikan.
+  const shareUrl =
+    url ||
+    (typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}`
+      : SITE_URL);
   const trimmedCampaign = (campaign || "").trim();
   const caption = trimmedCampaign
     ? t("shareCaption", { prize, tier, campaign: trimmedCampaign })
