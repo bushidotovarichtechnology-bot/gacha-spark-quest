@@ -39,7 +39,7 @@ const AdminPaymentSettings = () => {
     })();
   }, []);
 
-  const upsertSetting = async (key: string, value: object) => {
+  const upsertSetting = async (key: string, value: Record<string, unknown>) => {
     const { data: userRes } = await supabase.auth.getUser();
     const uid = userRes.user?.id ?? null;
     const { data: existing } = await supabase
@@ -50,13 +50,13 @@ const AdminPaymentSettings = () => {
     if (existing) {
       const { error } = await supabase
         .from("app_settings")
-        .update({ value, updated_at: new Date().toISOString(), updated_by: uid })
+        .update({ value: value as any, updated_at: new Date().toISOString(), updated_by: uid })
         .eq("id", existing.id);
       if (error) throw error;
     } else {
       const { error } = await supabase
         .from("app_settings")
-        .insert({ key, value, updated_by: uid });
+        .insert([{ key, value: value as any, updated_by: uid }]);
       if (error) throw error;
     }
   };
