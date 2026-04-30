@@ -134,6 +134,68 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     }
   }, [form.district, villages, villagesLoading, form.village]);
 
+  // Poll prize_claims.payment_status after Stripe dialog closes.
+  // Webhook updates the row asynchronously — wait for paid/failed or timeout.
+  useEffect(() => {
+    if (!pollingPayment || !stripeClaimId) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const startedAt = Date.now();
+    const TIMEOUT_MS = 90_000;
+    const INTERVAL_MS = 2500;
+
+    const tick = async () => {
+      if (cancelled) return;
+      const { data, error } = await supabase
+        .from("prize_claims")
+        .select("payment_status")
+        .eq("id", stripeClaimId)
+        .maybeSingle();
+      if (cancelled) return;
+
+      if (!error && data) {
+        const status = data.payment_status;
+        if (status === "paid" || status === "settlement" || status === "capture") {
+          setPollingPayment(false);
+          setSuccess(true);
+          toast.success("Pembayaran ongkir berhasil!", {
+            description: "Klaim hadiah sedang diproses admin.",
+          });
+          setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+          return;
+        }
+        if (status === "failed" || status === "cancel" || status === "expire" || status === "deny") {
+          setPollingPayment(false);
+          toast.error("Pembayaran gagal/dibatalkan", {
+            description: "Lanjutkan dari Riwayat Klaim untuk mencoba lagi.",
+          });
+          setStep(3);
+          return;
+        }
+      }
+
+      if (Date.now() - startedAt >= TIMEOUT_MS) {
+        setPollingPayment(false);
+        toast.info("Menunggu konfirmasi pembayaran", {
+          description: "Status akan diperbarui otomatis di Riwayat Klaim.",
+        });
+        setSuccess(true);
+        setTimeout(() => { onClaimed(item.id); onClose(); }, 1500);
+        return;
+      }
+
+      timer = setTimeout(tick, INTERVAL_MS);
+    };
+
+    tick();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [pollingPayment, stripeClaimId, item.id, onClaimed, onClose]);
+
+
   const updateField = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
