@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Share2, Copy, Check, Instagram, Facebook, MessageCircle, Twitter, Share } from "lucide-react";
+import { Share2, Copy, Check, Instagram, Facebook, MessageCircle, Twitter, Share, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useI18n } from "@/context/I18nContext";
 import { toast } from "@/hooks/use-toast";
+import PrizeShareCardDialog from "@/components/PrizeShareCardDialog";
 
 interface PrizeShareMenuProps {
   prize: string;
   tier: string;
+  /** Optional product image URL — used to render the share card. */
+  imageUrl?: string;
   /** Optional URL to share. Defaults to current site root. */
   url?: string;
   /** Visual variant: full button (default) or compact icon-only. */
