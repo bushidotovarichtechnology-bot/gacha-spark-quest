@@ -76,6 +76,17 @@ const translations = {
     shareCopied: "Link copied! Paste it on Instagram.",
     shareInstagramHint: "Instagram doesn't allow direct web sharing. We've copied the link — paste it in your Story or DM.",
     shareCaption: "I just won {prize} (Tier {tier}) at BushidoGacha! 🎉 Try your luck:",
+    shareAsImage: "Share as Image",
+    shareCardTitle: "Your Prize Card",
+    shareCardDesc: "A shareable image — perfect for WhatsApp & Instagram Story.",
+    shareCardGenerating: "Designing your card…",
+    shareCardDownload: "Download",
+    shareCardShare: "Share",
+    shareCardSaveShare: "Save & Share",
+    shareCardHint: "Tip: download the image, then upload it to your Instagram Story.",
+    shareCardDownloaded: "Image saved! Share it on Instagram or WhatsApp.",
+    shareCardFallbackHint: "Caption copied & image downloaded — paste anywhere!",
+    shareCardFailed: "Failed to generate image. Please try again.",
 
     // Inventory
     totalItems: "Total Items",
