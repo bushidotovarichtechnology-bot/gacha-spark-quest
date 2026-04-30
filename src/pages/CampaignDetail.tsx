@@ -290,6 +290,11 @@ const CampaignDetail = () => {
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string; description?: string; images?: { url: string; name: string; description?: string }[]; index?: number } | null>(null);
   const [pityPopup, setPityPopup] = useState<{ open: boolean; before: number; after: number; wasReset: boolean }>({ open: false, before: 0, after: 0, wasReset: false });
   const [drawRateUpMultiplier, setDrawRateUpMultiplier] = useState<number>(1);
+  // Container holding the Draw 1x / 10x buttons. Used to auto-scroll the
+  // viewport so the dino unbox overlay always appears centered on the
+  // button area — the user keeps seeing the dino bite the box right where
+  // they tapped, without ever having to scroll up.
+  const drawButtonsRef = useRef<HTMLDivElement | null>(null);
 
   const pityEnabled = pitySettings?.is_enabled ?? true;
   const pityThreshold = pitySettings?.threshold ?? 10;
