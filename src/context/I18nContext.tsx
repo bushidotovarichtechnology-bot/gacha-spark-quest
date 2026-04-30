@@ -89,6 +89,7 @@ const translations = {
     shareCardFallbackHint: "Caption copied & image downloaded — paste anywhere!",
     shareCardFailed: "Failed to generate image. Please try again.",
     shareCardPreview: "Preview",
+    shareCaptionPreview: "Caption preview",
     shareCardPreviewHint: "Tap outside to close",
 
     // Inventory
@@ -364,6 +365,7 @@ const translations = {
     shareCardFallbackHint: "Caption disalin & gambar diunduh — tempel di mana saja!",
     shareCardFailed: "Gagal membuat gambar. Silakan coba lagi.",
     shareCardPreview: "Pratinjau",
+    shareCaptionPreview: "Pratinjau caption",
     shareCardPreviewHint: "Klik di luar untuk menutup",
 
     // Inventory

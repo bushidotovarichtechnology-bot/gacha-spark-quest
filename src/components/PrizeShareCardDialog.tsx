@@ -228,6 +228,29 @@ const PrizeShareCardDialog = ({
             )}
           </button>
 
+          {/* Caption preview — final text users will share, with copy shortcut */}
+          <div className="mt-4 rounded-lg border border-border bg-secondary/40 p-3">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {t("shareCaptionPreview")}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyText}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-primary transition-colors hover:bg-primary/10"
+              >
+                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied ? t("shareCopied") : t("shareCopyLink")}
+              </button>
+            </div>
+            <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-foreground">
+              {caption}
+            </p>
+            <p className="mt-1 truncate text-[11px] font-medium text-primary">
+              {shareUrl}
+            </p>
+          </div>
+
           {/* Action row: Preview / Download / Share */}
           <div className="mt-4 grid grid-cols-3 gap-2">
             <Button
