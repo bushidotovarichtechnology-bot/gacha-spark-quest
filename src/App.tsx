@@ -105,10 +105,8 @@ const App = () => (
       <AuthProvider>
       <NotificationsProvider>
       <GachaProvider>
-        <DeferIdle>
-          <Toaster />
-          <Sonner />
-        </DeferIdle>
+        <Toaster />
+        <Sonner />
         <BrowserRouter>
           <RouterReadyBridge />
           <DeferIdle>
