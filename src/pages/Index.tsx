@@ -15,10 +15,9 @@ import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import defaultAvatar from "@/assets/default-avatar.webp";
 
-// Defer heavy / below-the-fold components so they don't block initial paint on mobile.
-const PromoCarousel = lazy(() => import("@/components/PromoCarousel"));
-const CategorySection = lazy(() => import("@/components/CategorySection"));
-const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
+import PromoCarousel from "@/components/PromoCarousel";
+import CategorySection from "@/components/CategorySection";
+import HomeFAQ from "@/components/HomeFAQ";
 
 /** Mounts children only when the wrapper enters (or nears) the viewport. */
 const InView = ({ children, rootMargin = "300px", minHeight = 0 }: { children: React.ReactNode; rootMargin?: string; minHeight?: number }) => {
