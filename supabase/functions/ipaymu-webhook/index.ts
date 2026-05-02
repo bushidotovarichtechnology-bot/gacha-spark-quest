@@ -82,10 +82,8 @@ Deno.serve(async (req) => {
         // On settlement, credit coins
         if (internalStatus === "settlement") {
           const { data: txFull } = await supabaseAdmin
-            .from("transactions").select("coins, user_id").eq("id", tx.id).maybeSingle();
+            .from("transactions").select("id, coins, amount, user_id, order_id").eq("id", tx.id).maybeSingle();
           if (txFull?.user_id && txFull?.coins) {
-            await supabaseAdmin.rpc as any; // placeholder if rpc exists
-            // Direct update: increment user_coins.balance
             const { data: uc } = await supabaseAdmin
               .from("user_coins").select("balance").eq("user_id", txFull.user_id).maybeSingle();
             const newBalance = (uc?.balance ?? 0) + (txFull.coins ?? 0);
@@ -93,6 +91,37 @@ Deno.serve(async (req) => {
               .from("user_coins")
               .update({ balance: newBalance, updated_at: new Date().toISOString() })
               .eq("user_id", txFull.user_id);
+
+            // Top-up success email (only credit once on transition into settlement)
+            if (tx.status !== "settlement") {
+              try {
+                const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(txFull.user_id);
+                const recipientEmail = userRes?.user?.email;
+                const displayName =
+                  (userRes?.user?.user_metadata as any)?.username ||
+                  (userRes?.user?.user_metadata as any)?.full_name ||
+                  (userRes?.user?.user_metadata as any)?.name ||
+                  null;
+                if (recipientEmail) {
+                  await supabaseAdmin.functions.invoke("send-transactional-email", {
+                    body: {
+                      templateName: "topup-success",
+                      recipientEmail,
+                      idempotencyKey: `topup-success-${txFull.id}`,
+                      templateData: {
+                        name: displayName,
+                        coins: txFull.coins,
+                        amount: (txFull as any).amount,
+                        orderId: txFull.order_id,
+                        paymentType: "ipaymu",
+                      },
+                    },
+                  });
+                }
+              } catch (emailErr) {
+                console.error("Failed to send top-up success email (ipaymu):", emailErr);
+              }
+            }
           }
         }
       }
