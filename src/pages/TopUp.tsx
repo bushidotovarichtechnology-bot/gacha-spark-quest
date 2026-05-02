@@ -61,6 +61,20 @@ const isPromoActive = (pkg: CoinPackage) => {
 const getDiscountedPrice = (pkg: CoinPackage) =>
   isPromoActive(pkg) ? Math.round(pkg.price * (1 - pkg.discount_percent / 100)) : pkg.price;
 
+const getPaymentErrorMessage = async (error: unknown, fallback: string) => {
+  const context = (error as { context?: unknown } | null)?.context;
+  if (context instanceof Response) {
+    try {
+      const payload = await context.clone().json();
+      return payload?.user_message || payload?.error || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  return (error as { message?: string } | null)?.message || fallback;
+};
+
 const useCountdown = (endTime: string | null) => {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
@@ -151,7 +165,11 @@ const TopUp = () => {
             return_url: `${window.location.origin}/transactions`,
           },
         });
-        if (error || !data?.redirect_url) throw new Error(error?.message || "Gagal membuat sesi iPaymu");
+        if (error || !data?.redirect_url) {
+          const description = await getPaymentErrorMessage(error, data?.user_message || "Gagal membuat sesi iPaymu");
+          toast({ title: "Pembayaran iPaymu belum siap", description, variant: "destructive" });
+          return;
+        }
         setSelectedPackage(null);
         toast({
           title: "Mengarahkan ke iPaymu",
@@ -160,7 +178,8 @@ const TopUp = () => {
         window.location.href = data.redirect_url;
       } catch (err: any) {
         console.error("iPaymu error:", err);
-        toast({ title: "Gagal", description: err?.message || "Gagal membuat pembayaran iPaymu", variant: "destructive" });
+        const description = await getPaymentErrorMessage(err, "Gagal membuat pembayaran iPaymu");
+        toast({ title: "Pembayaran iPaymu belum siap", description, variant: "destructive" });
       } finally {
         setProcessing(false);
       }
