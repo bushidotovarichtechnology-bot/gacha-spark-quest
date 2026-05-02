@@ -65,6 +65,7 @@ const AdminLayout = () => {
       setMaintenanceOn(!!v.enabled);
     };
     fetchMode();
+    fetchProvider();
     fetchMaintenance();
 
     const channel = supabase
@@ -73,6 +74,11 @@ const AdminLayout = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "app_settings", filter: "key=eq.midtrans_mode" },
         () => fetchMode(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings", filter: "key=eq.payment_provider" },
+        () => fetchProvider(),
       )
       .on(
         "postgres_changes",
@@ -86,7 +92,9 @@ const AdminLayout = () => {
     };
   }, []);
 
-  const isProd = midtransMode === "production";
+  const badgeMode = activeProvider === "ipaymu" ? ipaymuMode : midtransMode;
+  const badgeLabel = activeProvider === "stripe" ? "Stripe" : activeProvider === "ipaymu" ? "iPaymu" : "Midtrans";
+  const isProd = badgeMode === "production";
 
   return (
     <div className="flex min-h-screen bg-secondary/20 text-foreground">
