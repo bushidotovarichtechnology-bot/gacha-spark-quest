@@ -69,6 +69,7 @@ const Profile = lazy(() => import("./pages/Profile.tsx"));
 const TradeNew = lazy(() => import("./pages/TradeNew.tsx"));
 const FAQ = lazy(() => import("./pages/FAQ.tsx"));
 const TradeRequest = lazy(() => import("./pages/TradeRequest.tsx"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe.tsx"));
 
 // Admin routes — heavy & only used by admins, fully split out.
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.tsx"));
@@ -142,6 +143,7 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminRouteErrorBoundary><AdminProtectedRoute><AdminLayout /></AdminProtectedRoute></AdminRouteErrorBoundary>}>
                 <Route index element={<AdminDashboard />} />

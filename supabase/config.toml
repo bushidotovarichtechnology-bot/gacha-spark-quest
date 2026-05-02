@@ -15,3 +15,15 @@ project_id = "eeyivrgpdbigxpgtujjy"
     verify_jwt = true
   [functions.sitemap]
     verify_jwt = false
+
+[functions.send-transactional-email]
+verify_jwt = true
+
+[functions.preview-transactional-email]
+verify_jwt = false
+
+[functions.handle-email-unsubscribe]
+verify_jwt = false
+
+[functions.handle-email-suppression]
+verify_jwt = false
