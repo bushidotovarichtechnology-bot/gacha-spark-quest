@@ -30,6 +30,8 @@ const AdminLayout = () => {
   const { signOut } = useAuth();
   const location = useLocation();
   const [midtransMode, setMidtransMode] = useState<"sandbox" | "production" | null>(null);
+  const [ipaymuMode, setIpaymuMode] = useState<"sandbox" | "production">("sandbox");
+  const [activeProvider, setActiveProvider] = useState<"midtrans" | "stripe" | "ipaymu">("midtrans");
   const [maintenanceOn, setMaintenanceOn] = useState(false);
 
   useEffect(() => {
@@ -42,6 +44,17 @@ const AdminLayout = () => {
       const m = (data?.value as { mode?: string } | null)?.mode;
       setMidtransMode(m === "production" ? "production" : "sandbox");
     };
+    const fetchProvider = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "payment_provider")
+        .maybeSingle();
+      const v = (data?.value as { provider?: string; active?: string; ipaymu_mode?: string } | null) || {};
+      const p = v.active || v.provider;
+      setActiveProvider(p === "stripe" ? "stripe" : p === "ipaymu" ? "ipaymu" : "midtrans");
+      setIpaymuMode(v.ipaymu_mode === "production" ? "production" : "sandbox");
+    };
     const fetchMaintenance = async () => {
       const { data } = await supabase
         .from("app_settings")
@@ -52,6 +65,7 @@ const AdminLayout = () => {
       setMaintenanceOn(!!v.enabled);
     };
     fetchMode();
+    fetchProvider();
     fetchMaintenance();
 
     const channel = supabase
@@ -60,6 +74,11 @@ const AdminLayout = () => {
         "postgres_changes",
         { event: "*", schema: "public", table: "app_settings", filter: "key=eq.midtrans_mode" },
         () => fetchMode(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings", filter: "key=eq.payment_provider" },
+        () => fetchProvider(),
       )
       .on(
         "postgres_changes",
@@ -73,7 +92,9 @@ const AdminLayout = () => {
     };
   }, []);
 
-  const isProd = midtransMode === "production";
+  const badgeMode = activeProvider === "ipaymu" ? ipaymuMode : midtransMode;
+  const badgeLabel = activeProvider === "stripe" ? "Stripe" : activeProvider === "ipaymu" ? "iPaymu" : "Midtrans";
+  const isProd = badgeMode === "production";
 
   return (
     <div className="flex min-h-screen bg-secondary/20 text-foreground">
@@ -136,10 +157,10 @@ const AdminLayout = () => {
             )}
           </div>
           <div className="flex items-center gap-3">
-          {midtransMode && (
+          {badgeMode && (
             <Link
               to="/admin/payment-settings"
-              title="Klik untuk mengubah mode Midtrans"
+              title="Klik untuk mengubah pengaturan pembayaran"
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
                 isProd
                   ? "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
@@ -147,7 +168,7 @@ const AdminLayout = () => {
               }`}
             >
               {isProd ? <Zap className="h-3 w-3" /> : <FlaskConical className="h-3 w-3" />}
-              Midtrans: {isProd ? "PRODUCTION" : "SANDBOX"}
+              {badgeLabel}: {isProd ? "PRODUCTION" : "SANDBOX"}
               <span className={`ml-1 inline-block h-1.5 w-1.5 rounded-full ${isProd ? "bg-destructive animate-pulse" : "bg-amber-500"}`} />
             </Link>
           )}

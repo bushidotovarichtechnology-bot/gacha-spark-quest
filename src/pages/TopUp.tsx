@@ -427,7 +427,7 @@ const formatRupiah = (value: number) =>
                   )}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground">
-                  Pembayaran diproses melalui {provider === "stripe" ? "Stripe" : "Midtrans"}
+                  Pembayaran diproses melalui {provider === "stripe" ? "Stripe" : provider === "ipaymu" ? "iPaymu" : "Midtrans"}
                 </p>
               </div>
             );
