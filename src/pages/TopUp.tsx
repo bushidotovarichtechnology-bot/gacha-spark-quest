@@ -141,6 +141,32 @@ const TopUp = () => {
       return;
     }
 
+    // Route to iPaymu redirect page if active provider is ipaymu
+    if (provider === "ipaymu") {
+      setProcessing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-ipaymu-token", {
+          body: {
+            package_id: selectedPackage.id,
+            return_url: `${window.location.origin}/transactions`,
+          },
+        });
+        if (error || !data?.redirect_url) throw new Error(error?.message || "Gagal membuat sesi iPaymu");
+        setSelectedPackage(null);
+        toast({
+          title: "Mengarahkan ke iPaymu",
+          description: "Anda akan diarahkan ke halaman pembayaran iPaymu.",
+        });
+        window.location.href = data.redirect_url;
+      } catch (err: any) {
+        console.error("iPaymu error:", err);
+        toast({ title: "Gagal", description: err?.message || "Gagal membuat pembayaran iPaymu", variant: "destructive" });
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
     setProcessing(true);
     const finalPrice = getDiscountedPrice(selectedPackage);
     const totalCoins = selectedPackage.coins + selectedPackage.bonus_coins;
