@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getMidtransConfig } from "../_shared/midtransMode.ts";
-import { getIpaymuConfig, ipaymuRequest } from "../_shared/ipaymu.ts";
+import { getIpaymuConfig, getIpaymuProviderError, ipaymuRequest } from "../_shared/ipaymu.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,8 +89,9 @@ Deno.serve(async (req) => {
       const { ok: ipOk, data: ipData } = await ipaymuRequest<any>(cfg, "/payment", payload);
       if (!ipOk || ipData?.Status !== 200) {
         console.error("iPaymu shipping error:", ipData);
-        return new Response(JSON.stringify({ error: ipData?.Message || "Failed to create iPaymu session" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        const setupError = getIpaymuProviderError(ipData?.Message, cfg.mode);
+        return new Response(JSON.stringify(setupError.body), {
+          status: setupError.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
