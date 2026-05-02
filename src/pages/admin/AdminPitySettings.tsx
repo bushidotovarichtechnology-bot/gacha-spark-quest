@@ -103,6 +103,47 @@ const AdminPitySettings = () => {
   const getCampaignTitle = (id: string) =>
     campaigns.find((c) => c.id === id)?.title || id;
 
+  const handleBulkApply = async () => {
+    setBulkSaving(true);
+    try {
+      const payload = { threshold: bulkThreshold, guaranteed_tier: bulkTier, is_enabled: bulkEnabled };
+
+      // Update existing settings (scope: all or existing)
+      if (bulkScope === "all" || bulkScope === "existing") {
+        if (settings.length > 0) {
+          const ids = settings.map((s) => s.id);
+          const { error } = await supabase.from("pity_settings").update(payload as any).in("id", ids);
+          if (error) throw error;
+        }
+      }
+
+      // Insert for campaigns without pity (scope: all or missing)
+      if (bulkScope === "all" || bulkScope === "missing") {
+        if (campaignsWithoutPity.length > 0) {
+          const rows = campaignsWithoutPity.map((c) => ({ campaign_id: c.id, ...payload }));
+          const { error } = await supabase.from("pity_settings").insert(rows as any);
+          if (error) throw error;
+        }
+      }
+
+      await fetchData();
+      toast.success("Pengaturan pity diterapkan ke semua campaign");
+      setBulkOpen(false);
+    } catch (e: any) {
+      toast.error("Gagal menerapkan: " + (e?.message || "unknown error"));
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  const bulkTargetCount =
+    bulkScope === "all"
+      ? settings.length + campaignsWithoutPity.length
+      : bulkScope === "existing"
+        ? settings.length
+        : campaignsWithoutPity.length;
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
