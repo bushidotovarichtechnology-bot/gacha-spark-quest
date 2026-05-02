@@ -60,6 +60,35 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
       await supabase.from("user_coins").insert({ user_id: tx.user_id, balance: tx.coins });
     }
     console.log(`Stripe topup settled ${orderId}, +${tx.coins} coins for ${tx.user_id} (env=${env})`);
+
+    // Top-up success email
+    try {
+      const { data: userRes } = await supabase.auth.admin.getUserById(tx.user_id);
+      const recipientEmail = userRes?.user?.email;
+      const displayName =
+        (userRes?.user?.user_metadata as any)?.username ||
+        (userRes?.user?.user_metadata as any)?.full_name ||
+        (userRes?.user?.user_metadata as any)?.name ||
+        null;
+      if (recipientEmail) {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "topup-success",
+            recipientEmail,
+            idempotencyKey: `topup-success-${tx.id}`,
+            templateData: {
+              name: displayName,
+              coins: tx.coins,
+              amount: tx.amount,
+              orderId: tx.order_id,
+              paymentType: "stripe",
+            },
+          },
+        });
+      }
+    } catch (emailErr) {
+      console.error("Failed to send top-up success email (stripe):", emailErr);
+    }
   } else if (kind === "shipping") {
     const claimId = meta.claim_id;
     if (!claimId) return;
