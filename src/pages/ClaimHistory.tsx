@@ -120,7 +120,17 @@ const ClaimHistory = () => {
         },
       });
 
-      if (error || !data?.token) throw new Error(error?.message || "Gagal membuat pembayaran");
+      if (error) throw new Error(error.message || "Gagal membuat pembayaran");
+
+      // iPaymu: redirect to hosted payment page
+      if (data?.provider === "ipaymu" || data?.redirect_url) {
+        if (!data?.redirect_url) throw new Error("iPaymu redirect URL tidak tersedia");
+        toast.info("Mengarahkan ke halaman pembayaran iPaymu...");
+        window.location.href = data.redirect_url;
+        return;
+      }
+
+      if (!data?.token) throw new Error("Token pembayaran tidak tersedia");
 
       if (data.client_key) {
         const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;

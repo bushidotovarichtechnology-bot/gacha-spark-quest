@@ -280,9 +280,8 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         .select("value")
         .eq("key", "payment_provider")
         .maybeSingle();
-      const provider = ((provRow?.value as { provider?: string } | null)?.provider === "stripe"
-        ? "stripe"
-        : "midtrans");
+      const provVal = (provRow?.value as { active?: string; provider?: string } | null) ?? {};
+      const provider = (provVal.active ?? provVal.provider ?? "midtrans") as "midtrans" | "stripe" | "ipaymu";
 
       if (provider === "stripe") {
         // Open embedded Stripe checkout inside this form
@@ -301,7 +300,17 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
         },
       });
 
-      if (error || !data?.token) throw new Error(error?.message || "Failed to create shipping payment");
+      if (error) throw new Error(error.message || "Failed to create shipping payment");
+
+      // iPaymu: redirect ke halaman pembayaran
+      if (data?.provider === "ipaymu" || data?.redirect_url) {
+        if (!data?.redirect_url) throw new Error("iPaymu redirect URL tidak tersedia");
+        toast.info("Mengarahkan ke halaman pembayaran iPaymu...");
+        window.location.href = data.redirect_url;
+        return;
+      }
+
+      if (!data?.token) throw new Error("Token pembayaran tidak tersedia");
 
       await loadMidtransSnap(data.mode ?? "sandbox", data.client_key);
 
