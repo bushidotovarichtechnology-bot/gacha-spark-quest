@@ -29,6 +29,12 @@ const AdminPitySettings = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkThreshold, setBulkThreshold] = useState(10);
+  const [bulkTier, setBulkTier] = useState("A");
+  const [bulkEnabled, setBulkEnabled] = useState(true);
+  const [bulkScope, setBulkScope] = useState<"all" | "existing" | "missing">("all");
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const fetchData = async () => {
     const [settingsRes, campaignsRes] = await Promise.all([
