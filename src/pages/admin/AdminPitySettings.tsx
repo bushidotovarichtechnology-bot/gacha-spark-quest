@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Star, Save, Plus, Trash2 } from "lucide-react";
+import { Loader2, Star, Save, Trash2, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ConfirmDelete } from "@/components/admin/ConfirmDelete";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface PitySetting {
   id: string;
@@ -28,6 +29,12 @@ const AdminPitySettings = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkThreshold, setBulkThreshold] = useState(10);
+  const [bulkTier, setBulkTier] = useState("A");
+  const [bulkEnabled, setBulkEnabled] = useState(true);
+  const [bulkScope, setBulkScope] = useState<"all" | "existing" | "missing">("all");
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const fetchData = async () => {
     const [settingsRes, campaignsRes] = await Promise.all([
@@ -96,6 +103,47 @@ const AdminPitySettings = () => {
   const getCampaignTitle = (id: string) =>
     campaigns.find((c) => c.id === id)?.title || id;
 
+  const handleBulkApply = async () => {
+    setBulkSaving(true);
+    try {
+      const payload = { threshold: bulkThreshold, guaranteed_tier: bulkTier, is_enabled: bulkEnabled };
+
+      // Update existing settings (scope: all or existing)
+      if (bulkScope === "all" || bulkScope === "existing") {
+        if (settings.length > 0) {
+          const ids = settings.map((s) => s.id);
+          const { error } = await supabase.from("pity_settings").update(payload as any).in("id", ids);
+          if (error) throw error;
+        }
+      }
+
+      // Insert for campaigns without pity (scope: all or missing)
+      if (bulkScope === "all" || bulkScope === "missing") {
+        if (campaignsWithoutPity.length > 0) {
+          const rows = campaignsWithoutPity.map((c) => ({ campaign_id: c.id, ...payload }));
+          const { error } = await supabase.from("pity_settings").insert(rows as any);
+          if (error) throw error;
+        }
+      }
+
+      await fetchData();
+      toast.success("Pengaturan pity diterapkan ke semua campaign");
+      setBulkOpen(false);
+    } catch (e: any) {
+      toast.error("Gagal menerapkan: " + (e?.message || "unknown error"));
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  const bulkTargetCount =
+    bulkScope === "all"
+      ? settings.length + campaignsWithoutPity.length
+      : bulkScope === "existing"
+        ? settings.length
+        : campaignsWithoutPity.length;
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -106,12 +154,87 @@ const AdminPitySettings = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-foreground">Pity System Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Atur jaminan hadiah langka setelah sejumlah draw tertentu per campaign
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">Pity System Settings</h1>
+          <p className="text-sm text-muted-foreground">
+            Atur jaminan hadiah langka setelah sejumlah draw tertentu per campaign
+          </p>
+        </div>
+        <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="default" size="sm" className="gap-1.5" disabled={campaigns.length === 0}>
+              <Settings2 className="h-4 w-4" /> Atur Semua Campaign
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Atur Pity untuk Semua Campaign</AlertDialogTitle>
+              <AlertDialogDescription>
+                Terapkan pengaturan pity yang sama ke banyak campaign sekaligus.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Lingkup</label>
+                <Select value={bulkScope} onValueChange={(v: any) => setBulkScope(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua campaign ({campaigns.length})</SelectItem>
+                    <SelectItem value="existing">Hanya yang sudah punya pity ({settings.length})</SelectItem>
+                    <SelectItem value="missing">Hanya yang belum punya pity ({campaignsWithoutPity.length})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Threshold</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={bulkThreshold}
+                    onChange={(e) => setBulkThreshold(parseInt(e.target.value) || 1)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Tier Dijamin</label>
+                  <Select value={bulkTier} onValueChange={setBulkTier}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {TIERS.map((t) => (
+                        <SelectItem key={t} value={t}>Tier {t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium">Aktifkan Pity</p>
+                  <p className="text-xs text-muted-foreground">Setting akan {bulkEnabled ? "aktif" : "nonaktif"} setelah diterapkan</p>
+                </div>
+                <Switch checked={bulkEnabled} onCheckedChange={setBulkEnabled} />
+              </div>
+
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-xs">
+                Akan diterapkan ke <span className="font-bold text-foreground">{bulkTargetCount}</span> campaign.
+              </div>
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={bulkSaving}>Batal</AlertDialogCancel>
+              <AlertDialogAction onClick={(e) => { e.preventDefault(); handleBulkApply(); }} disabled={bulkSaving || bulkTargetCount === 0}>
+                {bulkSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Terapkan"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
+
 
       {/* Add new */}
       {campaignsWithoutPity.length > 0 && (
