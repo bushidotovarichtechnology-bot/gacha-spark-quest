@@ -164,6 +164,35 @@ Deno.serve(async (req) => {
           .insert({ user_id: tx.user_id, balance: tx.coins });
         console.log(`Created user_coins for ${tx.user_id} with balance: ${tx.coins}`);
       }
+
+      // Fire-and-forget top-up success email
+      try {
+        const { data: userRes } = await supabase.auth.admin.getUserById(tx.user_id);
+        const recipientEmail = userRes?.user?.email;
+        const displayName =
+          (userRes?.user?.user_metadata as any)?.username ||
+          (userRes?.user?.user_metadata as any)?.full_name ||
+          (userRes?.user?.user_metadata as any)?.name ||
+          null;
+        if (recipientEmail) {
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "topup-success",
+              recipientEmail,
+              idempotencyKey: `topup-success-${tx.id}`,
+              templateData: {
+                name: displayName,
+                coins: tx.coins,
+                amount: tx.amount,
+                orderId: tx.order_id,
+                paymentType: payment_type || tx.payment_type || "midtrans",
+              },
+            },
+          });
+        }
+      } catch (emailErr) {
+        console.error("Failed to send top-up success email (midtrans):", emailErr);
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
