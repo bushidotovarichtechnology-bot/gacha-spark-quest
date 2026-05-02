@@ -170,11 +170,6 @@ Deno.serve(async (req) => {
     }
 
     // Update the claim with shipping order info
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
     await supabaseAdmin
       .from("prize_claims")
       .update({
