@@ -10,6 +10,45 @@ export interface IpaymuConfig {
   baseUrl: string;
 }
 
+export function getIpaymuProviderError(message: string | undefined, mode: string) {
+  const providerMessage = message || "Failed to create iPaymu session";
+  if (providerMessage.toLowerCase().includes("invalid ip")) {
+    return {
+      status: 424,
+      body: {
+        code: "IPAYMU_INVALID_IP",
+        error: "IP server pembayaran belum diizinkan oleh iPaymu.",
+        user_message:
+          `iPaymu menolak request karena IP server Lovable Cloud belum masuk whitelist akun iPaymu ${mode}. Tambahkan IP server/API callback di dashboard iPaymu, lalu coba lagi.`,
+        provider_message: providerMessage,
+      },
+    };
+  }
+
+  if (providerMessage.toLowerCase().includes("invalid domain")) {
+    return {
+      status: 424,
+      body: {
+        code: "IPAYMU_INVALID_DOMAIN",
+        error: "Domain pembayaran belum diizinkan oleh iPaymu.",
+        user_message:
+          "iPaymu menolak request karena domain return/callback belum masuk whitelist. Tambahkan bushidogacha.com dan domain preview Lovable di dashboard iPaymu.",
+        provider_message: providerMessage,
+      },
+    };
+  }
+
+  return {
+    status: 502,
+    body: {
+      code: "IPAYMU_REQUEST_FAILED",
+      error: providerMessage,
+      user_message: "Gagal membuat sesi pembayaran iPaymu. Silakan coba lagi beberapa saat.",
+      provider_message: providerMessage,
+    },
+  };
+}
+
 export async function getIpaymuConfig(): Promise<IpaymuConfig> {
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
