@@ -55,17 +55,19 @@ const ClaimHistory = () => {
   const [paying, setPaying] = useState<string | null>(null);
 
 
+  const fetchClaims = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("prize_claims")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setClaims((data as Claim[]) || []);
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-    const fetchClaims = async () => {
-      const { data } = await supabase
-        .from("prize_claims")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      setClaims((data as Claim[]) || []);
-      setLoading(false);
-    };
     fetchClaims();
 
     // Realtime subscription for live tracking updates
@@ -111,8 +113,31 @@ const ClaimHistory = () => {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Refetch when tab regains focus (e.g., back from iPaymu redirect)
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchClaims();
+    };
+    const onFocus = () => fetchClaims();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
   }, [user]);
+
+  // Short polling fallback while there are unpaid claims (covers Midtrans Snap close + iPaymu return)
+  useEffect(() => {
+    if (!user) return;
+    const hasUnpaid = claims.some(c => c.shipping_cost > 0 && !c.shipping_paid && c.payment_status !== "paid");
+    if (!hasUnpaid) return;
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") fetchClaims();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [user, claims]);
 
   const statuses = ["all", "pending", "processing", "shipped", "delivered"];
   const filtered = filter === "all" ? claims : claims.filter((c) => c.status === filter);
