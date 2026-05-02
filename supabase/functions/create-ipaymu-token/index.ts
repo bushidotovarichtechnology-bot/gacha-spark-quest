@@ -8,6 +8,45 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ipaymuSetupError = (message: string | undefined, mode: string) => {
+  const providerMessage = message || "Failed to create iPaymu session";
+  if (providerMessage.toLowerCase().includes("invalid ip")) {
+    return {
+      status: 424,
+      body: {
+        code: "IPAYMU_INVALID_IP",
+        error: "IP server pembayaran belum diizinkan oleh iPaymu.",
+        user_message:
+          `iPaymu menolak request karena IP server Lovable Cloud belum masuk whitelist akun iPaymu ${mode}. Tambahkan IP server/API callback di dashboard iPaymu, lalu coba lagi.`,
+        provider_message: providerMessage,
+      },
+    };
+  }
+
+  if (providerMessage.toLowerCase().includes("invalid domain")) {
+    return {
+      status: 424,
+      body: {
+        code: "IPAYMU_INVALID_DOMAIN",
+        error: "Domain pembayaran belum diizinkan oleh iPaymu.",
+        user_message:
+          "iPaymu menolak request karena domain return/callback belum masuk whitelist. Tambahkan bushidogacha.com dan domain preview Lovable di dashboard iPaymu.",
+        provider_message: providerMessage,
+      },
+    };
+  }
+
+  return {
+    status: 502,
+    body: {
+      code: "IPAYMU_REQUEST_FAILED",
+      error: providerMessage,
+      user_message: "Gagal membuat sesi pembayaran iPaymu. Silakan coba lagi beberapa saat.",
+      provider_message: providerMessage,
+    },
+  };
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -92,8 +131,9 @@ Deno.serve(async (req) => {
     const { ok, data } = await ipaymuRequest<any>(cfg, "/payment", payload);
     if (!ok || data?.Status !== 200) {
       console.error("iPaymu error:", data);
-      return new Response(JSON.stringify({ error: data?.Message || "Failed to create iPaymu session" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const setupError = ipaymuSetupError(data?.Message, cfg.mode);
+      return new Response(JSON.stringify(setupError.body), {
+        status: setupError.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
