@@ -154,12 +154,87 @@ const AdminPitySettings = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-foreground">Pity System Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Atur jaminan hadiah langka setelah sejumlah draw tertentu per campaign
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">Pity System Settings</h1>
+          <p className="text-sm text-muted-foreground">
+            Atur jaminan hadiah langka setelah sejumlah draw tertentu per campaign
+          </p>
+        </div>
+        <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="default" size="sm" className="gap-1.5" disabled={campaigns.length === 0}>
+              <Settings2 className="h-4 w-4" /> Atur Semua Campaign
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Atur Pity untuk Semua Campaign</AlertDialogTitle>
+              <AlertDialogDescription>
+                Terapkan pengaturan pity yang sama ke banyak campaign sekaligus.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Lingkup</label>
+                <Select value={bulkScope} onValueChange={(v: any) => setBulkScope(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua campaign ({campaigns.length})</SelectItem>
+                    <SelectItem value="existing">Hanya yang sudah punya pity ({settings.length})</SelectItem>
+                    <SelectItem value="missing">Hanya yang belum punya pity ({campaignsWithoutPity.length})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Threshold</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={bulkThreshold}
+                    onChange={(e) => setBulkThreshold(parseInt(e.target.value) || 1)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Tier Dijamin</label>
+                  <Select value={bulkTier} onValueChange={setBulkTier}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {TIERS.map((t) => (
+                        <SelectItem key={t} value={t}>Tier {t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium">Aktifkan Pity</p>
+                  <p className="text-xs text-muted-foreground">Setting akan {bulkEnabled ? "aktif" : "nonaktif"} setelah diterapkan</p>
+                </div>
+                <Switch checked={bulkEnabled} onCheckedChange={setBulkEnabled} />
+              </div>
+
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-xs">
+                Akan diterapkan ke <span className="font-bold text-foreground">{bulkTargetCount}</span> campaign.
+              </div>
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={bulkSaving}>Batal</AlertDialogCancel>
+              <AlertDialogAction onClick={(e) => { e.preventDefault(); handleBulkApply(); }} disabled={bulkSaving || bulkTargetCount === 0}>
+                {bulkSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Terapkan"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
+
 
       {/* Add new */}
       {campaignsWithoutPity.length > 0 && (
