@@ -54,7 +54,14 @@ export const useGlobalTransactionNotifications = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          const row = payload.new as { id: string; status: string; coins: number; order_id: string };
+          const row = payload.new as {
+            id: string;
+            status: string;
+            coins: number;
+            order_id: string;
+            amount?: number;
+            payment_type?: string | null;
+          };
           const prev = prevTxStatus.current[row.id];
           prevTxStatus.current[row.id] = row.status;
 
@@ -65,9 +72,26 @@ export const useGlobalTransactionNotifications = () => {
           }
 
           if (row.status === "settlement" && prev !== "settlement") {
-            toast.success("Pembayaran Berhasil! 🎉", {
-              description: `+${row.coins?.toLocaleString()} koin telah masuk ke saldo kamu.`,
-              duration: 8000,
+            const formatRupiah = (n?: number) =>
+              typeof n === "number"
+                ? new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                  }).format(n)
+                : null;
+
+            const lines = [
+              `🪙 +${row.coins?.toLocaleString("id-ID") ?? "—"} Bushido Coin masuk ke saldo`,
+              row.amount ? `💳 Total bayar: ${formatRupiah(row.amount)}` : null,
+              row.payment_type ? `🧾 Metode: ${row.payment_type}` : null,
+              `✅ Status: Lunas`,
+            ].filter(Boolean) as string[];
+
+            toast.success("Top-up Berhasil! 🎉", {
+              description: lines.join("\n"),
+              duration: 10000,
+              style: { whiteSpace: "pre-line" },
               action: {
                 label: "Lihat",
                 onClick: () => {
