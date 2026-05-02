@@ -157,10 +157,10 @@ const AdminLayout = () => {
             )}
           </div>
           <div className="flex items-center gap-3">
-          {midtransMode && (
+          {badgeMode && (
             <Link
               to="/admin/payment-settings"
-              title="Klik untuk mengubah mode Midtrans"
+              title="Klik untuk mengubah pengaturan pembayaran"
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
                 isProd
                   ? "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
@@ -168,7 +168,7 @@ const AdminLayout = () => {
               }`}
             >
               {isProd ? <Zap className="h-3 w-3" /> : <FlaskConical className="h-3 w-3" />}
-              Midtrans: {isProd ? "PRODUCTION" : "SANDBOX"}
+              {badgeLabel}: {isProd ? "PRODUCTION" : "SANDBOX"}
               <span className={`ml-1 inline-block h-1.5 w-1.5 rounded-full ${isProd ? "bg-destructive animate-pulse" : "bg-amber-500"}`} />
             </Link>
           )}
