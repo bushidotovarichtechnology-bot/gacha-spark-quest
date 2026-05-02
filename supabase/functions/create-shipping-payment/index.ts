@@ -183,6 +183,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        provider: "midtrans",
         token: midtransData.token,
         order_id: orderId,
         client_key: midtransCfg.clientKey,
