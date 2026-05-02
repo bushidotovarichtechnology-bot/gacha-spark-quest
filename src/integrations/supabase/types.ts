@@ -1217,6 +1217,8 @@ export type Database = {
           order_id: string
           package_id: string
           payment_type: string | null
+          provider: string
+          provider_reference: string | null
           snap_token: string | null
           status: string
           updated_at: string
@@ -1230,6 +1232,8 @@ export type Database = {
           order_id: string
           package_id: string
           payment_type?: string | null
+          provider?: string
+          provider_reference?: string | null
           snap_token?: string | null
           status?: string
           updated_at?: string
@@ -1243,6 +1247,8 @@ export type Database = {
           order_id?: string
           package_id?: string
           payment_type?: string | null
+          provider?: string
+          provider_reference?: string | null
           snap_token?: string | null
           status?: string
           updated_at?: string
