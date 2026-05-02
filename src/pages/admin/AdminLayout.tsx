@@ -30,6 +30,8 @@ const AdminLayout = () => {
   const { signOut } = useAuth();
   const location = useLocation();
   const [midtransMode, setMidtransMode] = useState<"sandbox" | "production" | null>(null);
+  const [ipaymuMode, setIpaymuMode] = useState<"sandbox" | "production">("sandbox");
+  const [activeProvider, setActiveProvider] = useState<"midtrans" | "stripe" | "ipaymu">("midtrans");
   const [maintenanceOn, setMaintenanceOn] = useState(false);
 
   useEffect(() => {
@@ -41,6 +43,17 @@ const AdminLayout = () => {
         .maybeSingle();
       const m = (data?.value as { mode?: string } | null)?.mode;
       setMidtransMode(m === "production" ? "production" : "sandbox");
+    };
+    const fetchProvider = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "payment_provider")
+        .maybeSingle();
+      const v = (data?.value as { provider?: string; active?: string; ipaymu_mode?: string } | null) || {};
+      const p = v.active || v.provider;
+      setActiveProvider(p === "stripe" ? "stripe" : p === "ipaymu" ? "ipaymu" : "midtrans");
+      setIpaymuMode(v.ipaymu_mode === "production" ? "production" : "sandbox");
     };
     const fetchMaintenance = async () => {
       const { data } = await supabase
