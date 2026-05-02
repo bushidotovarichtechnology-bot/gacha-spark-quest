@@ -81,18 +81,32 @@ const ClaimHistory = () => {
         },
         (payload) => {
           const updated = payload.new as Claim;
-          setClaims(prev => prev.map(c => c.id === updated.id ? updated : c));
+          setClaims(prev => {
+            const before = prev.find(c => c.id === updated.id);
 
-          // Show notification for status changes
-          if (updated.status === "shipped" && updated.tracking_number) {
-            toast.success("📦 Paket dikirim!", {
-              description: `${updated.prize_name} dikirim via ${updated.courier_name || "kurir"} - ${updated.tracking_number}`,
-            });
-          } else if (updated.status === "delivered") {
-            toast.success("✅ Paket sampai!", {
-              description: `${updated.prize_name} telah diterima.`,
-            });
-          }
+            // Notification: shipping payment confirmed (Midtrans/iPaymu webhook)
+            const wasPaid = before?.payment_status === "paid" || before?.shipping_paid === true;
+            const isPaid = updated.payment_status === "paid" || updated.shipping_paid === true;
+            if (before && !wasPaid && isPaid) {
+              toast.success("💳 Pembayaran ongkir berhasil!", {
+                description: `Ongkir untuk ${updated.prize_name} telah dikonfirmasi. Klaim akan segera diproses admin.`,
+                duration: 6000,
+              });
+            }
+
+            // Status change notifications
+            if (updated.status === "shipped" && updated.tracking_number && before?.status !== "shipped") {
+              toast.success("📦 Paket dikirim!", {
+                description: `${updated.prize_name} dikirim via ${updated.courier_name || "kurir"} - ${updated.tracking_number}`,
+              });
+            } else if (updated.status === "delivered" && before?.status !== "delivered") {
+              toast.success("✅ Paket sampai!", {
+                description: `${updated.prize_name} telah diterima.`,
+              });
+            }
+
+            return prev.map(c => c.id === updated.id ? updated : c);
+          });
         }
       )
       .subscribe();
