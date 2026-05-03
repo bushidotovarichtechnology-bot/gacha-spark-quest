@@ -81,6 +81,12 @@ export default {
             light: "hsl(var(--tier-c-light))",
             dark: "hsl(var(--tier-c-dark))",
           },
+          d: {
+            DEFAULT: "hsl(var(--tier-d))",
+            foreground: "hsl(var(--tier-d-foreground))",
+            light: "hsl(var(--tier-d-light))",
+            dark: "hsl(var(--tier-d-dark))",
+          },
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
