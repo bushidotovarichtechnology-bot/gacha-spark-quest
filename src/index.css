@@ -270,6 +270,7 @@
   .tier-glow-a { box-shadow: 0 0 10px hsl(var(--tier-a) / 0.45); }
   .tier-glow-b { box-shadow: 0 0 8px  hsl(var(--tier-b) / 0.35); }
   .tier-glow-c { box-shadow: 0 0 8px  hsl(var(--tier-c) / 0.35); }
+  .tier-glow-d { box-shadow: 0 0 6px  hsl(var(--tier-d) / 0.3); }
 
   .animate-shimmer { animation-duration: 4.5s; }
   .animate-shine-sweep { animation-duration: 3.6s; }
