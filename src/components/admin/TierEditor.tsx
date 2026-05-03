@@ -300,7 +300,7 @@ export function TierEditor({
     onRefresh();
   };
 
-  const tierColors: Record<string, string> = { S: "border-accent/50", A: "border-primary/50", B: "border-neon-pink/50", C: "border-border" };
+  const tierColors: Record<string, string> = { S: "border-accent/50", A: "border-primary/50", B: "border-neon-pink/50", C: "border-tier-c/50", D: "border-tier-d/50" };
 
   const sortable = useSortable({ id: tier.id });
   const tierStyle = {
