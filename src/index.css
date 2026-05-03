@@ -201,11 +201,17 @@
       0 0 12px hsl(var(--tier-c) / 0.45),
       0 0 24px hsl(var(--tier-c-light) / 0.2);
   }
+  .tier-glow-d {
+    box-shadow:
+      0 0 8px hsl(var(--tier-d) / 0.35),
+      0 0 16px hsl(var(--tier-d-light) / 0.15);
+  }
 
   .tier-text-s { color: hsl(var(--tier-s-dark)); }
   .tier-text-a { color: hsl(var(--tier-a-dark)); }
   .tier-text-b { color: hsl(var(--tier-b-dark)); }
   .tier-text-c { color: hsl(var(--tier-c-light)); }
+  .tier-text-d { color: hsl(var(--tier-d-light)); }
 
   /* Banner gradients */
   .tier-banner-s {
