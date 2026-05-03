@@ -1,0 +1,2 @@
+ALTER TABLE public.campaign_tiers DROP CONSTRAINT IF EXISTS campaign_tiers_label_check;
+ALTER TABLE public.campaign_tiers ADD CONSTRAINT campaign_tiers_label_check CHECK (label = ANY (ARRAY['S'::text, 'A'::text, 'B'::text, 'C'::text, 'D'::text]));
