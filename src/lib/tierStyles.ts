@@ -71,6 +71,16 @@ export const TIER_STYLES: Record<TierLabel, TierStyle> = {
     onColorTextClass: "text-tier-c-foreground",
     isLightBanner: false,
   },
+  D: {
+    name: "Common",
+    bannerClass: "tier-banner-d",
+    glowClass: "tier-glow-d",
+    bgClass: "bg-tier-d",
+    borderClass: "border-tier-d",
+    textClass: "text-tier-d-light",
+    onColorTextClass: "text-tier-d-foreground",
+    isLightBanner: false,
+  },
 };
 
 export const getTierStyle = (label: string): TierStyle =>
