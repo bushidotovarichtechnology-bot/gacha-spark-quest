@@ -78,6 +78,11 @@
     --tier-c-foreground: 30 50% 95%;
     --tier-c-light: 28 75% 60%;
     --tier-c-dark: 20 80% 30%;
+
+    --tier-d: 220 8% 45%;           /* Common — slate gray */
+    --tier-d-foreground: 0 0% 98%;
+    --tier-d-light: 220 6% 65%;
+    --tier-d-dark: 220 10% 28%;
   }
 }
 
