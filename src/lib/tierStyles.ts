@@ -9,7 +9,7 @@
  * (--tier-s, --tier-a, --tier-b, --tier-c and their -light/-dark variants).
  */
 
-export type TierLabel = "S" | "A" | "B" | "C";
+export type TierLabel = "S" | "A" | "B" | "C" | "D";
 
 export interface TierStyle {
   /** Human label */
