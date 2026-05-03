@@ -300,7 +300,7 @@ export function TierEditor({
     onRefresh();
   };
 
-  const tierColors: Record<string, string> = { S: "border-accent/50", A: "border-primary/50", B: "border-neon-pink/50", C: "border-border" };
+  const tierColors: Record<string, string> = { S: "border-accent/50", A: "border-primary/50", B: "border-neon-pink/50", C: "border-tier-c/50", D: "border-tier-d/50" };
 
   const sortable = useSortable({ id: tier.id });
   const tierStyle = {
@@ -330,6 +330,7 @@ export function TierEditor({
           <option value="A">A</option>
           <option value="B">B</option>
           <option value="C">C</option>
+          <option value="D">D</option>
         </select>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tier name" className="h-8 text-sm flex-1" />
         <Button size="sm" variant="ghost" onClick={save}><Save className="h-3.5 w-3.5" /></Button>

@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Upload, GripVertical, Loader2 } from "lucide-react";
 import { CampaignRow } from "@/components/admin/CampaignRow";
 import { TierEditor, type CampaignTier } from "@/components/admin/TierEditor";
+import { BulkTierPanel } from "@/components/admin/BulkTierPanel";
 import type { Tables } from "@/integrations/supabase/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
@@ -296,6 +297,8 @@ const AdminCampaigns = () => {
           </Button>
         </CardContent>
       </Card>
+
+      <BulkTierPanel campaignIds={campaigns.map((c) => c.id)} onDone={() => { fetchCampaigns(); if (expandedId) fetchTiers(expandedId); }} />
 
       <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragEnd={handleDragEnd}>
         <SortableContext items={campaigns.map(c => c.id)} strategy={verticalListSortingStrategy}>

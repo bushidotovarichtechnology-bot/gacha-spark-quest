@@ -78,6 +78,11 @@
     --tier-c-foreground: 30 50% 95%;
     --tier-c-light: 28 75% 60%;
     --tier-c-dark: 20 80% 30%;
+
+    --tier-d: 220 8% 45%;           /* Common — slate gray */
+    --tier-d-foreground: 0 0% 98%;
+    --tier-d-light: 220 6% 65%;
+    --tier-d-dark: 220 10% 28%;
   }
 }
 
@@ -196,11 +201,17 @@
       0 0 12px hsl(var(--tier-c) / 0.45),
       0 0 24px hsl(var(--tier-c-light) / 0.2);
   }
+  .tier-glow-d {
+    box-shadow:
+      0 0 8px hsl(var(--tier-d) / 0.35),
+      0 0 16px hsl(var(--tier-d-light) / 0.15);
+  }
 
   .tier-text-s { color: hsl(var(--tier-s-dark)); }
   .tier-text-a { color: hsl(var(--tier-a-dark)); }
   .tier-text-b { color: hsl(var(--tier-b-dark)); }
   .tier-text-c { color: hsl(var(--tier-c-light)); }
+  .tier-text-d { color: hsl(var(--tier-d-light)); }
 
   /* Banner gradients */
   .tier-banner-s {
@@ -226,6 +237,12 @@
       hsl(var(--tier-c-light)) 0%,
       hsl(var(--tier-c)) 50%,
       hsl(var(--tier-c-dark)) 100%);
+  }
+  .tier-banner-d {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-d-light)) 0%,
+      hsl(var(--tier-d)) 50%,
+      hsl(var(--tier-d-dark)) 100%);
   }
 
   /* ===== Performance helpers for shimmer/sweep overlays =====
@@ -253,6 +270,7 @@
   .tier-glow-a { box-shadow: 0 0 10px hsl(var(--tier-a) / 0.45); }
   .tier-glow-b { box-shadow: 0 0 8px  hsl(var(--tier-b) / 0.35); }
   .tier-glow-c { box-shadow: 0 0 8px  hsl(var(--tier-c) / 0.35); }
+  .tier-glow-d { box-shadow: 0 0 6px  hsl(var(--tier-d) / 0.3); }
 
   .animate-shimmer { animation-duration: 4.5s; }
   .animate-shine-sweep { animation-duration: 3.6s; }

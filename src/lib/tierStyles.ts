@@ -9,7 +9,7 @@
  * (--tier-s, --tier-a, --tier-b, --tier-c and their -light/-dark variants).
  */
 
-export type TierLabel = "S" | "A" | "B" | "C";
+export type TierLabel = "S" | "A" | "B" | "C" | "D";
 
 export interface TierStyle {
   /** Human label */
@@ -69,6 +69,16 @@ export const TIER_STYLES: Record<TierLabel, TierStyle> = {
     borderClass: "border-tier-c",
     textClass: "text-tier-c-light",
     onColorTextClass: "text-tier-c-foreground",
+    isLightBanner: false,
+  },
+  D: {
+    name: "Common",
+    bannerClass: "tier-banner-d",
+    glowClass: "tier-glow-d",
+    bgClass: "bg-tier-d",
+    borderClass: "border-tier-d",
+    textClass: "text-tier-d-light",
+    onColorTextClass: "text-tier-d-foreground",
     isLightBanner: false,
   },
 };
