@@ -298,6 +298,8 @@ const AdminCampaigns = () => {
         </CardContent>
       </Card>
 
+      <BulkTierPanel campaignIds={campaigns.map((c) => c.id)} onDone={() => { fetchCampaigns(); if (expandedId) fetchTiers(expandedId); }} />
+
       <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragEnd={handleDragEnd}>
         <SortableContext items={campaigns.map(c => c.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-3">
