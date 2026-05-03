@@ -238,6 +238,12 @@
       hsl(var(--tier-c)) 50%,
       hsl(var(--tier-c-dark)) 100%);
   }
+  .tier-banner-d {
+    background-image: linear-gradient(110deg,
+      hsl(var(--tier-d-light)) 0%,
+      hsl(var(--tier-d)) 50%,
+      hsl(var(--tier-d-dark)) 100%);
+  }
 
   /* ===== Performance helpers for shimmer/sweep overlays =====
      Promote to its own compositor layer so the animation stays on the GPU
