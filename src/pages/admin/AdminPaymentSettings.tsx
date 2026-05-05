@@ -268,6 +268,72 @@ const AdminPaymentSettings = () => {
             </Card>
           )}
 
+          {/* DOKU Mode */}
+          {provider === "doku" && (
+            <Card className="p-6 space-y-6">
+              <div className="flex items-start gap-3">
+                <Wallet className="h-5 w-5 text-primary mt-0.5" />
+                <div className="flex-1">
+                  <h2 className="font-semibold">Mode DOKU</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Beralih antara environment DOKU. Edge function akan otomatis menggunakan kredensial yang sesuai.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border p-4">
+                <div>
+                  <Label className="text-base">
+                    {dokuMode === "production" ? "Production (Live)" : "Sandbox (Testing)"}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {dokuMode === "production"
+                      ? "Pembayaran diproses dengan uang asli melalui api.doku.com."
+                      : "Pembayaran simulasi melalui api-sandbox.doku.com — tidak ada transaksi nyata."}
+                  </p>
+                </div>
+                <Switch
+                  checked={dokuMode === "production"}
+                  onCheckedChange={(checked) => setDokuMode(checked ? "production" : "sandbox")}
+                />
+              </div>
+
+              {dokuMode === "production" ? (
+                <div className="flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                  <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-destructive">Mode Production aktif</p>
+                    <p className="text-muted-foreground text-xs">
+                      Pastikan <code>DOKU_CLIENT_ID_PRODUCTION</code> dan <code>DOKU_SECRET_KEY_PRODUCTION</code>
+                      sudah valid dari dashboard.doku.com.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Mode Sandbox aktif</p>
+                    <p className="text-muted-foreground text-xs">
+                      Aman untuk testing menggunakan kredensial sandbox.doku.com.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">Notification URL untuk dashboard DOKU:</p>
+                <code className="block break-all bg-background border border-border rounded px-2 py-1">
+                  {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/doku-webhook`}
+                </code>
+                <p className="mt-2">
+                  Tempelkan URL ini ke setting <strong>Notification URL</strong> di dashboard DOKU
+                  (Settings → Notification). Signature otomatis diverifikasi.
+                </p>
+              </div>
+            </Card>
+          )}
+
           {/* Midtrans Mode */}
           {provider === "midtrans" && (
             <Card className="p-6 space-y-6">
