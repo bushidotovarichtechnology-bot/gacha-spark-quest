@@ -156,30 +156,32 @@ const TopUp = () => {
     }
 
     // Route to iPaymu redirect page if active provider is ipaymu
-    if (provider === "ipaymu") {
+    if (provider === "ipaymu" || provider === "doku") {
+      const fnName = provider === "doku" ? "create-doku-checkout" : "create-ipaymu-token";
+      const providerLabel = provider === "doku" ? "DOKU" : "iPaymu";
       setProcessing(true);
       try {
-        const { data, error } = await supabase.functions.invoke("create-ipaymu-token", {
+        const { data, error } = await supabase.functions.invoke(fnName, {
           body: {
             package_id: selectedPackage.id,
             return_url: `${window.location.origin}/transactions`,
           },
         });
         if (error || !data?.redirect_url) {
-          const description = await getPaymentErrorMessage(error, data?.user_message || "Gagal membuat sesi iPaymu");
-          toast({ title: "Pembayaran iPaymu belum siap", description, variant: "destructive" });
+          const description = await getPaymentErrorMessage(error, data?.user_message || `Gagal membuat sesi ${providerLabel}`);
+          toast({ title: `Pembayaran ${providerLabel} belum siap`, description, variant: "destructive" });
           return;
         }
         setSelectedPackage(null);
         toast({
-          title: "Mengarahkan ke iPaymu",
-          description: "Anda akan diarahkan ke halaman pembayaran iPaymu.",
+          title: `Mengarahkan ke ${providerLabel}`,
+          description: `Anda akan diarahkan ke halaman pembayaran ${providerLabel}.`,
         });
         window.location.href = data.redirect_url;
       } catch (err: any) {
-        console.error("iPaymu error:", err);
-        const description = await getPaymentErrorMessage(err, "Gagal membuat pembayaran iPaymu");
-        toast({ title: "Pembayaran iPaymu belum siap", description, variant: "destructive" });
+        console.error(`${providerLabel} error:`, err);
+        const description = await getPaymentErrorMessage(err, `Gagal membuat pembayaran ${providerLabel}`);
+        toast({ title: `Pembayaran ${providerLabel} belum siap`, description, variant: "destructive" });
       } finally {
         setProcessing(false);
       }
