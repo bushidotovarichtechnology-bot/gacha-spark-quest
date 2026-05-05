@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getMidtransConfig } from "../_shared/midtransMode.ts";
 import { getIpaymuConfig, getIpaymuProviderError, ipaymuRequest } from "../_shared/ipaymu.ts";
+import { getDokuConfig, dokuRequest } from "../_shared/doku.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -116,6 +117,56 @@ Deno.serve(async (req) => {
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    // ===== DOKU branch =====
+    if (activeProvider === "doku") {
+      const cfg = await getDokuConfig();
+      if (!cfg.clientId || !cfg.secretKey) {
+        return new Response(JSON.stringify({ error: `DOKU ${cfg.mode} credentials not configured` }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const orderId = `DOKU-SHIP-${claim_id}-${Date.now()}`;
+      const fallbackReturn = `${req.headers.get("origin") || ""}/claims`;
+      const itemName = `Ongkir ${prize_name || "Hadiah"} (${shipping_method})`.slice(0, 60);
+
+      const payload = {
+        order: {
+          amount: shipping_cost,
+          invoice_number: orderId,
+          currency: "IDR",
+          callback_url: fallbackReturn,
+          line_items: [{ name: itemName, price: shipping_cost, quantity: 1 }],
+        },
+        payment: { payment_due_date: 60 },
+        customer: {
+          name: user.email?.split("@")[0] || "User",
+          email: user.email || "user@example.com",
+        },
+      };
+
+      const { ok: dOk, status: dStatus, data: dData } = await dokuRequest<any>(cfg, "/checkout/v1/payment", payload);
+      if (!dOk || !dData?.response?.payment?.url) {
+        console.error("DOKU shipping error:", dStatus, dData);
+        const msg = dData?.message || dData?.error?.message || "Failed to create DOKU session";
+        return new Response(JSON.stringify({
+          error: msg, user_message: "Gagal membuat sesi pembayaran DOKU.", provider_message: msg,
+        }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      await supabaseAdmin
+        .from("prize_claims")
+        .update({ shipping_cost, shipping_order_id: orderId, payment_status: "unpaid", shipping_paid: false })
+        .eq("id", claim_id).eq("user_id", user.id);
+
+      return new Response(JSON.stringify({
+        provider: "doku",
+        redirect_url: dData.response.payment.url,
+        session_id: dData.response?.order?.session_id || "",
+        order_id: orderId,
+        mode: cfg.mode,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ===== Midtrans branch (default) =====

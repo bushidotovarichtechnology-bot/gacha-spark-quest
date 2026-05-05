@@ -31,7 +31,8 @@ const AdminLayout = () => {
   const location = useLocation();
   const [midtransMode, setMidtransMode] = useState<"sandbox" | "production" | null>(null);
   const [ipaymuMode, setIpaymuMode] = useState<"sandbox" | "production">("sandbox");
-  const [activeProvider, setActiveProvider] = useState<"midtrans" | "stripe" | "ipaymu">("midtrans");
+  const [dokuMode, setDokuMode] = useState<"sandbox" | "production">("sandbox");
+  const [activeProvider, setActiveProvider] = useState<"midtrans" | "stripe" | "ipaymu" | "doku">("midtrans");
   const [maintenanceOn, setMaintenanceOn] = useState(false);
 
   useEffect(() => {
@@ -50,10 +51,15 @@ const AdminLayout = () => {
         .select("value")
         .eq("key", "payment_provider")
         .maybeSingle();
-      const v = (data?.value as { provider?: string; active?: string; ipaymu_mode?: string } | null) || {};
+      const v = (data?.value as { provider?: string; active?: string; ipaymu_mode?: string; doku_mode?: string } | null) || {};
       const p = v.active || v.provider;
-      setActiveProvider(p === "stripe" ? "stripe" : p === "ipaymu" ? "ipaymu" : "midtrans");
+      setActiveProvider(
+        p === "stripe" ? "stripe" :
+        p === "ipaymu" ? "ipaymu" :
+        p === "doku" ? "doku" : "midtrans"
+      );
       setIpaymuMode(v.ipaymu_mode === "production" ? "production" : "sandbox");
+      setDokuMode(v.doku_mode === "production" ? "production" : "sandbox");
     };
     const fetchMaintenance = async () => {
       const { data } = await supabase
@@ -92,8 +98,14 @@ const AdminLayout = () => {
     };
   }, []);
 
-  const badgeMode = activeProvider === "ipaymu" ? ipaymuMode : midtransMode;
-  const badgeLabel = activeProvider === "stripe" ? "Stripe" : activeProvider === "ipaymu" ? "iPaymu" : "Midtrans";
+  const badgeMode =
+    activeProvider === "ipaymu" ? ipaymuMode :
+    activeProvider === "doku" ? dokuMode :
+    midtransMode;
+  const badgeLabel =
+    activeProvider === "stripe" ? "Stripe" :
+    activeProvider === "ipaymu" ? "iPaymu" :
+    activeProvider === "doku" ? "DOKU" : "Midtrans";
   const isProd = badgeMode === "production";
 
   return (
