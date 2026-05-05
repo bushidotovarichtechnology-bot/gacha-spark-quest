@@ -159,6 +159,21 @@ const AdminPaymentSettings = () => {
               </label>
 
               <label
+                htmlFor="prov-doku"
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+                  provider === "doku" ? "border-primary bg-primary/5" : "border-border"
+                }`}
+              >
+                <RadioGroupItem value="doku" id="prov-doku" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-medium">DOKU Checkout (Jokul)</div>
+                  <div className="text-xs text-muted-foreground">
+                    Halaman bayar DOKU dengan e-wallet (OVO/DANA/ShopeePay/LinkAja), QRIS, VA bank, kartu kredit.
+                  </div>
+                </div>
+              </label>
+
+              <label
                 htmlFor="prov-stripe"
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
                   provider === "stripe" ? "border-primary bg-primary/5" : "border-border"
