@@ -396,6 +396,7 @@ const AdminPaymentSettings = () => {
                 setMode(initialMode);
                 setProvider(initialProvider);
                 setIpaymuMode(initialIpaymuMode);
+                setDokuMode(initialDokuMode);
               }}
               disabled={!dirty || saving}
             >
