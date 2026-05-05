@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { CreditCard, AlertTriangle, CheckCircle2, Zap, Wallet } from "lucide-react";
 
 type Mode = "sandbox" | "production";
-type Provider = "midtrans" | "stripe" | "ipaymu";
+type Provider = "midtrans" | "stripe" | "ipaymu" | "doku";
 
 const AdminPaymentSettings = () => {
   const [mode, setMode] = useState<Mode>("sandbox");
@@ -18,6 +18,8 @@ const AdminPaymentSettings = () => {
   const [initialProvider, setInitialProvider] = useState<Provider>("midtrans");
   const [ipaymuMode, setIpaymuMode] = useState<Mode>("sandbox");
   const [initialIpaymuMode, setInitialIpaymuMode] = useState<Mode>("sandbox");
+  const [dokuMode, setDokuMode] = useState<Mode>("sandbox");
+  const [initialDokuMode, setInitialDokuMode] = useState<Mode>("sandbox");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -30,11 +32,14 @@ const AdminPaymentSettings = () => {
       const currentMode = ((modeRow?.value as { mode?: string } | null)?.mode === "production"
         ? "production"
         : "sandbox") as Mode;
-      const provVal = (provRow?.value as { provider?: string; active?: string; ipaymu_mode?: string } | null) || {};
+      const provVal = (provRow?.value as { provider?: string; active?: string; ipaymu_mode?: string; doku_mode?: string } | null) || {};
       const activeRaw = provVal.active || provVal.provider;
       const currentProv: Provider =
-        activeRaw === "stripe" ? "stripe" : activeRaw === "ipaymu" ? "ipaymu" : "midtrans";
+        activeRaw === "stripe" ? "stripe" :
+        activeRaw === "ipaymu" ? "ipaymu" :
+        activeRaw === "doku" ? "doku" : "midtrans";
       const currentIpaymu: Mode = provVal.ipaymu_mode === "production" ? "production" : "sandbox";
+      const currentDoku: Mode = provVal.doku_mode === "production" ? "production" : "sandbox";
 
       setMode(currentMode);
       setInitialMode(currentMode);
@@ -42,6 +47,8 @@ const AdminPaymentSettings = () => {
       setInitialProvider(currentProv);
       setIpaymuMode(currentIpaymu);
       setInitialIpaymuMode(currentIpaymu);
+      setDokuMode(currentDoku);
+      setInitialDokuMode(currentDoku);
       setLoading(false);
     })();
   }, []);
@@ -71,8 +78,8 @@ const AdminPaymentSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      if (provider !== initialProvider || ipaymuMode !== initialIpaymuMode) {
-        await upsertSetting("payment_provider", { active: provider, ipaymu_mode: ipaymuMode });
+      if (provider !== initialProvider || ipaymuMode !== initialIpaymuMode || dokuMode !== initialDokuMode) {
+        await upsertSetting("payment_provider", { active: provider, ipaymu_mode: ipaymuMode, doku_mode: dokuMode });
       }
       if (mode !== initialMode) {
         await upsertSetting("midtrans_mode", { mode });
@@ -80,6 +87,7 @@ const AdminPaymentSettings = () => {
       setInitialMode(mode);
       setInitialProvider(provider);
       setInitialIpaymuMode(ipaymuMode);
+      setInitialDokuMode(dokuMode);
       toast.success("Pengaturan pembayaran disimpan");
     } catch (e: any) {
       console.error("Save payment settings error:", e);
@@ -89,7 +97,7 @@ const AdminPaymentSettings = () => {
     }
   };
 
-  const dirty = mode !== initialMode || provider !== initialProvider || ipaymuMode !== initialIpaymuMode;
+  const dirty = mode !== initialMode || provider !== initialProvider || ipaymuMode !== initialIpaymuMode || dokuMode !== initialDokuMode;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
