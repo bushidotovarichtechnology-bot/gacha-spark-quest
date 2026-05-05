@@ -7,6 +7,8 @@ project_id = "eeyivrgpdbigxpgtujjy"
     verify_jwt = false
   [functions.ipaymu-webhook]
     verify_jwt = false
+  [functions.doku-webhook]
+    verify_jwt = false
   [functions.midtrans-webhook]
     verify_jwt = false
   [functions.payments-webhook]
