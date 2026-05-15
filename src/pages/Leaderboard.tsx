@@ -52,8 +52,23 @@ const Leaderboard = () => {
       });
   }, []);
 
+  const collectionLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Hall of Fame — Pemenang Grand Prize Bushido Gacha",
+    description:
+      "Daftar pemenang Grand Prize dari semua campaign Bushido Gacha. Pemenang nyata, hadiah fisik, dikirim ke seluruh Indonesia.",
+    url: "https://bushidogacha.com/leaderboard",
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Hall of Fame — Pemenang Grand Prize | Bushido Gacha"
+        description="Lihat daftar pemenang Grand Prize Bushido Gacha. Bukti nyata hadiah fisik PS5, iPhone, Nintendo Switch yang sudah dimenangkan komunitas."
+        canonicalPath="/leaderboard"
+        jsonLd={collectionLd}
+      />
       <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-16">
         <Link

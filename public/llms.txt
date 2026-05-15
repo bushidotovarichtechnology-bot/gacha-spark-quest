@@ -1,0 +1,22 @@
+# Bushido Gacha
+
+> Platform gacha online Indonesia berhadiah fisik dengan sistem Pity transparan, adil, dan berbasis komunitas. Menangkan PS5, Nintendo Switch 2, iPhone 17 Pro dan banyak lagi.
+
+Bushido Gacha (PT. BUSHIDO TOVARICH TECHNOLOGY) menyediakan pengalaman gacha online dengan jaminan hadiah fisik dikirim ke seluruh Indonesia. Setiap campaign menampilkan drop rate terbuka, sistem pity garansi, fitur trade antar pemain, dan toko penukaran tiket.
+
+## Pages
+
+- [Beranda](/): Daftar campaign gacha aktif & hadiah unggulan.
+- [Tentang Kami](/about): Profil perusahaan & nilai Fair Play, Transparansi, Komunitas.
+- [Kontak](/contact): Hubungi tim Bushido Gacha.
+- [Hall of Fame](/leaderboard): Daftar pemenang Grand Prize dari semua campaign.
+- [FAQ](/faq): Pertanyaan umum seputar gacha, pity, koin, trade, dan klaim hadiah.
+- [Bushido Tiket Store](/redeem-store): Tukar tiket hasil gacha dengan hadiah eksklusif.
+- [Top Up Koin](/topup): Beli Bushido Koin via berbagai metode pembayaran.
+- [Syarat & Ketentuan](/terms): Aturan layanan.
+- [Kebijakan Privasi](/privacy): Cara kami mengelola data pengguna.
+
+## Optional
+
+- [Login](/login)
+- [Register](/register)

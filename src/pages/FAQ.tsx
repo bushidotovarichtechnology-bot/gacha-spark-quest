@@ -248,6 +248,17 @@ const FAQ = () => {
         title="FAQ — Pertanyaan yang Sering Diajukan | Bushido Gacha"
         description="Temukan jawaban atas pertanyaan seputar BushidoGacha: sistem pity, koin, gift, Bushido Ticket, trade hadiah, klaim & pengiriman, serta akun & keamanan."
         canonicalPath="/faq"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: categories.flatMap((c) =>
+            c.items.map((it) => ({
+              "@type": "Question",
+              name: it.q,
+              acceptedAnswer: { "@type": "Answer", text: it.a },
+            })),
+          ),
+        }}
       />
       <Navbar />
 
