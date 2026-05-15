@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
+import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useGacha } from "@/context/GachaContext";
@@ -101,8 +102,25 @@ const RedeemStore = () => {
     rejected: "bg-red-500/20 text-red-400",
   };
 
+  const itemListLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Bushido Tiket Store — Tukar Tiket dengan Hadiah",
+    itemListElement: (rewards as any[]).map((r, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: r.name,
+    })),
+  };
+
   return (
     <div className="min-h-screen pb-20">
+      <SEO
+        title="Bushido Tiket Store — Tukar Tiket Hadiah | Bushido Gacha"
+        description="Tukar Bushido Tiket hasil gacha dengan hadiah eksklusif. Cek katalog terbaru, harga tiket, dan riwayat penukaranmu di Bushido Tiket Store."
+        canonicalPath="/redeem-store"
+        jsonLd={itemListLd}
+      />
       <Navbar />
       <div className="container mx-auto px-4 pt-24">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

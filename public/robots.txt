@@ -15,4 +15,4 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/
 
-Sitemap: https://eeyivrgpdbigxpgtujjy.supabase.co/functions/v1/sitemap
+Sitemap: https://bushidogacha.com/sitemap.xml
