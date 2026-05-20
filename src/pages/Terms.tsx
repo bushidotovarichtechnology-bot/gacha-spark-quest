@@ -23,8 +23,8 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SEO
-        title="Syarat & Ketentuan — Bushido Gacha"
-        description="Syarat dan ketentuan penggunaan Bushido Gacha — platform gacha online Indonesia. Pelajari aturan tarikan, transaksi, hadiah, dan kebijakan akun."
+        title="Syarat & Ketentuan — Bushido Vault"
+        description="Syarat dan ketentuan penggunaan Bushido Vault — platform gacha online Indonesia. Pelajari aturan tarikan, transaksi, hadiah, dan kebijakan akun."
         canonicalPath="/terms"
       />
       <Navbar />
@@ -40,7 +40,7 @@ const Terms = () => {
               Syarat & Ketentuan Penggunaan
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-              www.bushidogacha.com · Berlaku sejak: 18 April 2025
+              www.bushidovault.com · Berlaku sejak: 18 April 2025
             </p>
           </motion.div>
         </div>
@@ -63,8 +63,8 @@ const Terms = () => {
               <h2 className="font-display text-xl font-bold text-foreground">Pendahuluan</h2>
               <p>
                 Dokumen Syarat dan Ketentuan ini ("Perjanjian") merupakan perjanjian yang mengikat secara hukum antara Anda
-                ("Pengguna") dan PT Perorangan Bushido Gacha ("Perusahaan", "kami", "milik kami"), selaku pengelola platform
-                digital BUSHIDO GACHA yang dapat diakses melalui www.bushidogacha.com.
+                ("Pengguna") dan PT. BUSHIDO TOVARICH TECHNOLOGY ("Perusahaan", "kami", "milik kami"), selaku pengelola platform
+                digital BUSHIDO VAULT yang dapat diakses melalui www.bushidovault.com.
               </p>
               <p>
                 Dengan mengakses, mendaftarkan akun, atau menggunakan layanan yang tersedia pada platform ini, Pengguna
@@ -84,12 +84,12 @@ const Terms = () => {
             <section id="bab-1" className="space-y-3 scroll-mt-24">
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 1 — Pengertian Umum</h3>
               <ul className="list-disc space-y-1 pl-6">
-                <li><strong className="text-foreground">Platform</strong> — layanan digital BUSHIDO GACHA yang dapat diakses melalui www.bushidogacha.com beserta seluruh subdomain, aplikasi, dan antarmuka terkait.</li>
+                <li><strong className="text-foreground">Platform</strong> — layanan digital BUSHIDO VAULT yang dapat diakses melalui www.bushidovault.com beserta seluruh subdomain, aplikasi, dan antarmuka terkait.</li>
                 <li><strong className="text-foreground">Pengguna</strong> — setiap orang perseorangan yang mengakses dan/atau menggunakan Platform.</li>
                 <li><strong className="text-foreground">Akun</strong> — identitas digital Pengguna yang dibuat setelah proses registrasi berhasil.</li>
-                <li><strong className="text-foreground">Pull/Gacha</strong> — mekanisme permainan berbasis keberuntungan untuk memenangkan hadiah secara acak.</li>
+                <li><strong className="text-foreground">Pembelian Kolektibel</strong> — mekanisme pembelian mystery box untuk mendapatkan produk kolektibel secara acak.</li>
                 <li><strong className="text-foreground">Tier Hadiah</strong> — pengelompokan hadiah Tier S (tertinggi), A, B, dan C.</li>
-                <li><strong className="text-foreground">Kredit/Token</strong> — satuan nilai digital sebagai alat tukar dalam pull.</li>
+                <li><strong className="text-foreground">Kredit/Koin</strong> — satuan nilai digital sebagai alat tukar dalam pull.</li>
                 <li><strong className="text-foreground">Hadiah</strong> — barang/layanan fisik maupun digital yang diperoleh melalui pull.</li>
                 <li><strong className="text-foreground">Konten Pengguna</strong> — informasi/data/materi yang diunggah Pengguna ke Platform.</li>
               </ul>
@@ -124,7 +124,7 @@ const Terms = () => {
             </section>
 
             <section id="bab-3" className="space-y-3 scroll-mt-24">
-              <h3 className="font-display text-base font-semibold text-foreground">Pasal 5 — Sistem Pull Gacha</h3>
+              <h3 className="font-display text-base font-semibold text-foreground">Pasal 5 — Sistem Pembelian Kolektibel</h3>
               <ul className="list-disc space-y-1 pl-6">
                 <li>Setiap pull menukarkan kredit/token yang diperoleh secara sah.</li>
                 <li>Hasil pull ditentukan algoritma RNG yang acak dan tidak dapat dipengaruhi.</li>
@@ -184,7 +184,7 @@ const Terms = () => {
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 12 — Kepemilikan</h3>
               <p>
                 Seluruh konten, desain, logo, merek dagang, kode perangkat lunak, basis data, dan materi lain pada Platform
-                adalah milik eksklusif PT Perorangan Bushido Gacha atau pemberi lisensi, dilindungi UU No. 28 Tahun 2014
+                adalah milik eksklusif PT. BUSHIDO TOVARICH TECHNOLOGY atau pemberi lisensi, dilindungi UU No. 28 Tahun 2014
                 tentang Hak Cipta.
               </p>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 13 — Larangan Penggunaan</h3>
@@ -243,7 +243,7 @@ const Terms = () => {
               </p>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 20 — Kontak Resmi</h3>
               <ul className="list-disc space-y-1 pl-6">
-                <li>Situs Web: www.bushidogacha.com</li>
+                <li>Situs Web: www.bushidovault.com</li>
                 <li>Email: support@bushidotovarichtechnology.com</li>
                 <li>Alamat: Jl. Semolowaru Indah II Blok Q 11, Surabaya, 60119</li>
               </ul>
@@ -255,7 +255,7 @@ const Terms = () => {
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
           <span className="font-display text-sm font-bold tracking-wider text-foreground">
-            BUSHIDO<span className="text-accent"> GACHA</span>
+            BUSHIDO<span className="text-accent"> VAULT</span>
           </span>
           <p className="text-xs text-muted-foreground">{t("companyName")}</p>
           <p className="font-display text-xs tracking-wider text-muted-foreground">{t("allRightsReserved")}</p>

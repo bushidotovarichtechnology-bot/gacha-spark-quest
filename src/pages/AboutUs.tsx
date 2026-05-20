@@ -19,8 +19,8 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SEO
-        title="Tentang PT. BUSHIDO TOVARICH TECHNOLOGY — Bushido Gacha"
-        description="PT. BUSHIDO TOVARICH TECHNOLOGY membangun Bushido Gacha — platform gacha online Indonesia dengan fokus Fair Play, Transparansi, dan Komunitas."
+        title="Tentang PT. BUSHIDO TOVARICH TECHNOLOGY — Bushido Vault"
+        description="PT. BUSHIDO TOVARICH TECHNOLOGY membangun Bushido Vault — platform kolektibel online Indonesia dengan fokus Fair Play, Transparansi, dan Komunitas."
         canonicalPath="/about"
         jsonLd={organizationLd}
       />
@@ -110,7 +110,7 @@ const AboutUs = () => {
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-accent-foreground transition-all hover:brightness-110"
             >
               <Sparkles className="h-4 w-4" />
-              {t("testYourLuck")}
+              Mulai Koleksi Sekarang
             </Link>
           </motion.div>
         </div>
@@ -120,7 +120,7 @@ const AboutUs = () => {
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
           <span className="font-display text-sm font-bold tracking-wider text-foreground">
-            BUSHIDO<span className="text-accent"> GACHA</span>
+            BUSHIDO<span className="text-accent"> VAULT</span>
           </span>
           <p className="text-xs text-muted-foreground">{t("companyName")}</p>
           <p className="font-display text-xs tracking-wider text-muted-foreground">

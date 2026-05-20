@@ -34,20 +34,20 @@ type FAQCategory = {
 const categories: FAQCategory[] = [
   {
     id: "tentang",
-    title: "Tentang BushidoGacha",
+    title: "Tentang Bushido Vault",
     icon: Swords,
     items: [
       {
-        q: "Apa itu BushidoGacha?",
-        a: "BushidoGacha adalah platform gacha online berhadiah fisik yang beroperasi di Indonesia. Kamu bisa melakukan gacha untuk mendapatkan berbagai hadiah menarik seperti PlayStation 5, Nintendo Switch, action figure, dan masih banyak lagi — semua hadiah dikirim secara fisik ke alamatmu.",
+        q: "Apa itu Bushido Vault?",
+        a: "Bushido Vault adalah platform kolektibel online berproduk fisik yang beroperasi di Indonesia. Kamu bisa melakukan pembelian untuk mendapatkan berbagai produk menarik seperti PlayStation 5, Nintendo Switch, action figure, dan masih banyak lagi — semua produk dikirim secara fisik ke alamatmu.",
       },
       {
-        q: "Apakah BushidoGacha aman dan terpercaya?",
-        a: "Ya. BushidoGacha beroperasi secara transparan dengan menampilkan drop rate setiap hadiah secara terbuka. Setiap hadiah yang berhasil diklaim akan dikirimkan secara fisik melalui jasa ekspedisi ke alamat pemenang. Kamu juga bisa melihat riwayat pemenang di halaman Wall of Winners kami.",
+        q: "Apakah Bushido Vault aman dan terpercaya?",
+        a: "Ya. Bushido Vault beroperasi secara transparan dengan menampilkan drop rate setiap produk secara terbuka. Setiap produk yang berhasil diklaim akan dikirimkan secara fisik melalui jasa ekspedisi ke alamat penerima. Kamu juga bisa melihat riwayat penerima di halaman Wall of Winners kami.",
       },
       {
-        q: "Apakah BushidoGacha termasuk judi online?",
-        a: "Tidak. BushidoGacha berbeda dari judi online karena setiap gacha yang kamu lakukan dijamin menghasilkan hadiah fisik nyata. Kami juga memiliki sistem pity yang menjamin kamu mendapatkan hadiah tertentu setelah melakukan gacha dalam jumlah yang sudah ditentukan — artinya tidak ada istilah \"zonk\" atau kehilangan uang tanpa hasil.",
+        q: "Apakah Bushido Vault termasuk judi online?",
+        a: "Tidak. Bushido Vault berbeda dari judi online karena setiap pembelian yang kamu lakukan dijamin menghasilkan produk fisik nyata. Kami juga memiliki sistem pity yang menjamin kamu mendapatkan produk tertentu setelah melakukan pembelian dalam jumlah yang sudah ditentukan — artinya tidak ada istilah \"zonk\" atau kehilangan uang tanpa hasil.",
       },
     ],
   },
@@ -58,15 +58,15 @@ const categories: FAQCategory[] = [
     items: [
       {
         q: "Apa itu sistem pity?",
-        a: "Sistem pity adalah mekanisme garansi hadiah di BushidoGacha. Setiap kali kamu melakukan gacha, progress pity-mu akan bertambah. Setelah mencapai jumlah gacha tertentu yang sudah ditentukan di setiap campaign, kamu dijamin mendapatkan hadiah utama — terlepas dari faktor keberuntungan.",
+        a: "Sistem pity adalah mekanisme garansi produk di Bushido Vault. Setiap kali kamu melakukan pembelian, progress pity-mu akan bertambah. Setelah mencapai jumlah pembelian tertentu yang sudah ditentukan di setiap campaign, kamu dijamin mendapatkan produk utama — terlepas dari faktor keberuntungan.",
       },
       {
-        q: "Apakah progress pity saya akan hilang setelah dapat hadiah pity?",
-        a: "Ya, progress pity akan direset setelah kamu mendapatkan hadiah melalui sistem pity. Namun kamu bisa mulai mengumpulkan progress pity kembali dari awal.",
+        q: "Apakah progress pity saya akan hilang setelah dapat produk pity?",
+        a: "Ya, progress pity akan direset setelah kamu mendapatkan produk melalui sistem pity. Namun kamu bisa mulai mengumpulkan progress pity kembali dari awal.",
       },
       {
         q: "Di mana saya bisa melihat progress pity saya?",
-        a: "Progress pity bisa kamu lihat secara real-time di halaman campaign gacha dalam bentuk progress bar, serta di halaman profil kamu.",
+        a: "Progress pity bisa kamu lihat secara real-time di halaman campaign kolektibel dalam bentuk progress bar, serta di halaman profil kamu.",
       },
     ],
   },
@@ -85,7 +85,7 @@ const categories: FAQCategory[] = [
       },
       {
         q: "Apakah koin bisa di-refund?",
-        a: "Koin yang sudah dibeli tidak dapat di-refund. Pastikan kamu sudah memahami cara kerja sistem gacha dan pity sebelum melakukan pembelian. Jika ada kendala teknis dalam proses pembelian, segera hubungi tim kami.",
+        a: "Koin yang sudah dibeli tidak dapat di-refund. Pastikan kamu sudah memahami cara kerja sistem kolektibel dan pity sebelum melakukan pembelian. Jika ada kendala teknis dalam proses pembelian, segera hubungi tim kami.",
       },
       {
         q: "Apakah koin memiliki masa berlaku?",
@@ -100,7 +100,7 @@ const categories: FAQCategory[] = [
     items: [
       {
         q: "Apa itu fitur Gift Koin?",
-        a: "Fitur Gift Koin memungkinkan kamu mengirimkan koin ke sesama pengguna BushidoGacha. Cocok untuk berbagi kesenangan bermain gacha bersama teman atau hadiah spesial untuk orang terdekat.",
+        a: "Fitur Gift Koin memungkinkan kamu mengirimkan koin ke sesama pengguna Bushido Vault. Cocok untuk berbagi kesenangan berbelanja kolektibel bersama teman atau hadiah spesial untuk orang terdekat.",
       },
       {
         q: "Apakah ada batas minimum atau maksimum untuk gift koin?",
@@ -119,11 +119,11 @@ const categories: FAQCategory[] = [
     items: [
       {
         q: "Apa itu Bushido Ticket?",
-        a: "Bushido Ticket adalah tiket yang kamu dapatkan setiap kali melakukan 1x gacha. Tiket ini bisa dikumpulkan dan ditukarkan dengan hadiah pilihan di halaman Bushido Ticket.",
+        a: "Bushido Ticket adalah tiket yang kamu dapatkan setiap kali melakukan 1x pembelian. Tiket ini bisa dikumpulkan dan ditukarkan dengan produk pilihan di halaman Bushido Ticket.",
       },
       {
-        q: "Berapa tiket yang didapat per gacha?",
-        a: "Setiap 1x gacha memberikan 1 Bushido Ticket, terlepas dari hadiah yang kamu dapatkan.",
+        q: "Berapa tiket yang didapat per pembelian?",
+        a: "Setiap 1x pembelian memberikan 1 Bushido Ticket, terlepas dari produk yang kamu dapatkan.",
       },
       {
         q: "Apakah Bushido Ticket bisa expired?",
@@ -133,46 +133,46 @@ const categories: FAQCategory[] = [
   },
   {
     id: "trade",
-    title: "Trade Hadiah",
+    title: "Trade Produk",
     icon: Repeat,
     items: [
       {
-        q: "Apa itu fitur Trade Hadiah?",
-        a: "Trade Hadiah adalah fitur yang memungkinkan kamu menukarkan hadiah yang sudah kamu dapatkan dengan hadiah milik pengguna lain. Cocok jika kamu mendapatkan hadiah yang kurang sesuai selera dan ingin menukarnya dengan hadiah yang lebih kamu inginkan.",
+        q: "Apa itu fitur Trade Produk?",
+        a: "Trade Produk adalah fitur yang memungkinkan kamu menukarkan produk yang sudah kamu dapatkan dengan produk milik pengguna lain. Cocok jika kamu mendapatkan produk yang kurang sesuai selera dan ingin menukarnya dengan produk yang lebih kamu inginkan.",
       },
       {
-        q: "Bagaimana cara melakukan trade hadiah?",
-        a: "Masuk ke halaman Trade, pilih hadiah milikmu yang ingin ditukar, lalu cari penawaran trade dari pengguna lain yang sesuai. Kedua pihak harus menyetujui trade sebelum hadiah berpindah tangan.",
+        q: "Bagaimana cara melakukan trade produk?",
+        a: "Masuk ke halaman Trade, pilih produk milikmu yang ingin ditukar, lalu cari penawaran trade dari pengguna lain yang sesuai. Kedua pihak harus menyetujui trade sebelum produk berpindah tangan.",
       },
       {
-        q: "Apakah trade hadiah aman?",
-        a: "Ya. Sistem trade kami dirancang agar kedua pihak harus menyetujui pertukaran terlebih dahulu sebelum hadiah berpindah. Tidak ada hadiah yang berpindah secara sepihak.",
+        q: "Apakah trade produk aman?",
+        a: "Ya. Sistem trade kami dirancang agar kedua pihak harus menyetujui pertukaran terlebih dahulu sebelum produk berpindah. Tidak ada produk yang berpindah secara sepihak.",
       },
     ],
   },
   {
     id: "klaim",
-    title: "Klaim & Pengiriman Hadiah",
+    title: "Pengambilan & Pengiriman Produk",
     icon: Package,
     items: [
       {
-        q: "Bagaimana cara klaim hadiah?",
-        a: "Buka halaman Inventory, pilih hadiah yang ingin diklaim, lalu isi form pengiriman dengan nama lengkap, nomor WA aktif, dan alamat lengkap beserta kode pos. Setelah klaim diverifikasi, hadiah akan segera diproses untuk pengiriman.",
+        q: "Bagaimana cara klaim produk?",
+        a: "Buka halaman Inventory, pilih produk yang ingin diklaim, lalu isi form pengiriman dengan nama lengkap, nomor WA aktif, dan alamat lengkap beserta kode pos. Setelah klaim diverifikasi, produk akan segera diproses untuk pengiriman.",
       },
       {
-        q: "Berapa lama hadiah sampai setelah diklaim?",
-        a: "Hadiah akan dikirimkan dalam estimasi 7–10 hari kerja setelah klaim berhasil diverifikasi. Nomor resi pengiriman akan tersedia di halaman Claim History kamu setelah paket dikirim.",
+        q: "Berapa lama produk sampai setelah diklaim?",
+        a: "Produk akan dikirimkan dalam estimasi 7–10 hari kerja setelah klaim berhasil diverifikasi. Nomor resi pengiriman akan tersedia di halaman Claim History kamu setelah paket dikirim.",
       },
       {
-        q: "Apakah ada batas maksimal klaim hadiah?",
-        a: "Tidak ada batas maksimal klaim hadiah per bulan. Selama kamu memiliki hadiah di inventory, kamu bebas melakukan klaim kapan saja.",
+        q: "Apakah ada batas maksimal klaim produk?",
+        a: "Tidak ada batas maksimal klaim produk per bulan. Selama kamu memiliki produk di inventory, kamu bebas melakukan klaim kapan saja.",
       },
       {
-        q: "Bagaimana jika hadiah rusak atau tidak sesuai saat diterima?",
-        a: "Segera hubungi tim BushidoGacha melalui kontak resmi kami dalam waktu 2x24 jam setelah paket diterima dengan menyertakan foto kondisi paket. Tim kami akan membantu menyelesaikan masalah tersebut.",
+        q: "Bagaimana jika produk rusak atau tidak sesuai saat diterima?",
+        a: "Segera hubungi tim Bushido Vault melalui kontak resmi kami dalam waktu 2x24 jam setelah paket diterima dengan menyertakan foto kondisi paket. Tim kami akan membantu menyelesaikan masalah tersebut.",
       },
       {
-        q: "Ke mana saya bisa melacak status pengiriman hadiah saya?",
+        q: "Ke mana saya bisa melacak status pengiriman produk saya?",
         a: "Nomor resi pengiriman bisa kamu temukan di halaman Claim History setelah paket dikirim. Gunakan nomor resi tersebut untuk melacak paket di website ekspedisi yang bersangkutan.",
       },
     ],
@@ -183,7 +183,7 @@ const categories: FAQCategory[] = [
     icon: ShieldCheck,
     items: [
       {
-        q: "Bagaimana cara mendaftar di BushidoGacha?",
+        q: "Bagaimana cara mendaftar di Bushido Vault?",
         a: "Klik tombol Daftar di halaman utama, isi data diri yang diperlukan, lalu verifikasi akunmu. Setelah itu kamu langsung bisa mulai bermain.",
       },
       {
@@ -202,7 +202,7 @@ const categories: FAQCategory[] = [
     icon: Phone,
     items: [
       {
-        q: "Bagaimana cara menghubungi tim BushidoGacha?",
+        q: "Bagaimana cara menghubungi tim Bushido Vault?",
         a: "Kamu bisa menghubungi kami melalui WhatsApp di 082231283948 atau email yang tersedia di halaman About Us. Tim kami siap membantu di hari dan jam kerja.",
       },
     ],
@@ -245,8 +245,8 @@ const FAQ = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SEO
-        title="FAQ — Pertanyaan yang Sering Diajukan | Bushido Gacha"
-        description="Temukan jawaban atas pertanyaan seputar BushidoGacha: sistem pity, koin, gift, Bushido Ticket, trade hadiah, klaim & pengiriman, serta akun & keamanan."
+        title="FAQ — Pertanyaan yang Sering Diajukan | Bushido Vault"
+        description="Temukan jawaban atas pertanyaan seputar Bushido Vault: sistem pity, koin, gift, Bushido Ticket, trade produk, klaim & pengiriman, serta akun & keamanan."
         canonicalPath="/faq"
         jsonLd={{
           "@context": "https://schema.org",
@@ -278,7 +278,7 @@ const FAQ = () => {
               Pertanyaan yang Sering Diajukan
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              Cari jawaban cepat tentang BushidoGacha — dari sistem pity, koin, hingga klaim hadiah.
+              Cari jawaban cepat tentang Bushido Vault — dari jaminan produk, koin, hingga pengambilan koleksi.
             </p>
 
             {/* Search */}

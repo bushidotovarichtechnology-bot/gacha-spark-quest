@@ -10,7 +10,7 @@ import { useI18n } from "@/context/I18nContext";
 import { format } from "date-fns";
 
 const tierMeta: Record<string, { color: string; icon: typeof Crown; bg: string; label: string }> = {
-  S: { color: "text-accent", icon: Crown, bg: "bg-accent/10", label: "Grand Prize" },
+  S: { color: "text-accent", icon: Crown, bg: "bg-accent/10", label: "Produk Utama" },
   A: { color: "text-neon-purple", icon: Star, bg: "bg-primary/10", label: "Tier A" },
   B: { color: "text-neon-pink", icon: Gift, bg: "bg-pink-500/10", label: "Tier B" },
   C: { color: "text-muted-foreground", icon: Award, bg: "bg-muted/20", label: "Tier C" },
