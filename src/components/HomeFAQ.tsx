@@ -10,16 +10,16 @@ import { Button } from "@/components/ui/button";
 
 const previewFaqs = [
   {
-    q: "Apa itu BushidoGacha?",
-    a: "BushidoGacha adalah platform gacha online berhadiah fisik yang beroperasi di Indonesia. Kamu bisa melakukan gacha untuk mendapatkan berbagai hadiah menarik seperti PlayStation 5, Nintendo Switch, action figure, dan masih banyak lagi — semua hadiah dikirim secara fisik ke alamatmu.",
+    q: "Apa itu Bushido Vault?",
+    a: "Bushido Vault adalah platform mystery box kolektibel online berhadiah fisik yang beroperasi di Indonesia. Kamu bisa melakukan mystery box kolektibel untuk mendapatkan berbagai produk menarik seperti PlayStation 5, Nintendo Switch, action figure, dan masih banyak lagi — semua produk dikirim secara fisik ke alamatmu.",
   },
   {
-    q: "Apakah BushidoGacha termasuk judi online?",
-    a: 'Tidak. Setiap gacha yang kamu lakukan dijamin menghasilkan hadiah fisik nyata. Kami juga memiliki sistem pity yang menjamin kamu mendapatkan hadiah tertentu setelah jumlah gacha tertentu — artinya tidak ada istilah "zonk".',
+    q: "Apakah Bushido Vault termasuk judi online?",
+    a: "Tidak. Setiap pembelian kolektibel yang kamu lakukan dijamin menghasilkan produk fisik nyata. Kami juga memiliki sistem pity yang menjamin kamu mendapatkan produk tertentu setelah jumlah pembelian kolektibel tertentu — artinya setiap pembelian pasti menghasilkan produk fisik nyata.",
   },
   {
-    q: "Apa itu sistem pity?",
-    a: "Sistem pity adalah mekanisme garansi hadiah. Setelah kamu melakukan gacha dalam jumlah tertentu, kamu dijamin mendapatkan hadiah utama — terlepas dari faktor keberuntungan.",
+    q: "Apa itu sistem jaminan produk?",
+    a: "Sistem pity adalah mekanisme garansi produk. Setelah kamu melakukan pembelian dalam jumlah tertentu, kamu dijamin mendapatkan produk utama — terlepas dari jumlah pembelian yang sudah ditentukan.",
   },
   {
     q: "Bagaimana cara mendapatkan koin?",
@@ -27,11 +27,11 @@ const previewFaqs = [
   },
   {
     q: "Apa itu Bushido Ticket?",
-    a: "Bushido Ticket adalah item khusus yang bisa kamu dapatkan dan gunakan untuk melakukan gacha tanpa mengurangi koin, atau ditukar dengan reward eksklusif lainnya.",
+    a: "Bushido Ticket adalah item khusus yang bisa kamu dapatkan dan gunakan untuk melakukan pembelian kolektibel tanpa mengurangi koin, atau ditukar dengan reward eksklusif lainnya.",
   },
   {
     q: "Bagaimana cara klaim hadiah yang saya menangkan?",
-    a: "Setiap hadiah yang kamu menangkan akan otomatis masuk ke inventory. Dari sana kamu bisa mengisi alamat pengiriman dan mengajukan klaim untuk dikirimkan ke alamatmu.",
+    a: "Setiap hadiah yang kamu dapatkan akan otomatis masuk ke inventory. Dari sana kamu bisa mengisi alamat pengiriman dan mengajukan klaim untuk dikirimkan ke alamatmu.",
   },
 ];
 
@@ -50,7 +50,7 @@ const HomeFAQ = () => {
             Pertanyaan yang Sering Ditanyakan
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Temukan jawaban cepat seputar BushidoGacha, sistem pity, koin, hingga klaim hadiah.
+            Temukan jawaban cepat seputar Bushido Vault, jaminan produk, koin, hingga pengambilan koleksi.
           </p>
         </div>
 
