@@ -107,14 +107,14 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-2 shrink-0 mr-2">
           <img
             src="/favicon.webp"
-            alt="Bushido Gacha"
+            alt="Bushido Vault"
             width={36}
             height={36}
             className="h-9 w-9 rounded-lg object-contain"
             style={{ imageRendering: "pixelated" }}
           />
           <span className="font-display text-base xl:text-lg font-bold tracking-wider text-foreground whitespace-nowrap leading-none">
-            BUSHIDO<span className="text-accent"> GACHA</span>
+            BUSHIDO<span className="text-accent"> VAULT</span>
           </span>
         </Link>
 
@@ -291,7 +291,7 @@ const Navbar = () => {
                   {freeDraws > 0 && (
                     <div className="flex items-center gap-1.5">
                       <Gamepad2 className="h-4 w-4 text-green-400" />
-                      <span className="text-sm font-bold text-green-400">{freeDraws}x Gacha Gratis</span>
+                      <span className="text-sm font-bold text-green-400">{freeDraws}x Pembelian Gratis</span>
                     </div>
                   )}
                   {activeDiscountPercent > 0 && (

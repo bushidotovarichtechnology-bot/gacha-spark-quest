@@ -77,7 +77,7 @@ const GrandPrizePreview = () => {
             Hall of Fame
           </p>
           <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Pemenang Grand Prize
+            Penerima Produk Utama
           </h2>
         </div>
 
@@ -263,7 +263,7 @@ const Index = () => {
           <article className="space-y-6">
             <header>
               <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-accent">
-                Bushido Gacha
+                Bushido Vault
               </p>
               <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 {t("seoSectionWhyTitle")}
@@ -355,7 +355,7 @@ const Index = () => {
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
           <span className="font-display text-sm font-bold tracking-wider text-foreground">
-            BUSHIDO<span className="text-accent"> GACHA</span>
+            BUSHIDO<span className="text-accent"> VAULT</span>
           </span>
           <p className="text-xs text-muted-foreground">
             {t("companyName")}
