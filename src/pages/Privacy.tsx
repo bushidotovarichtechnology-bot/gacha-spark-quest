@@ -24,8 +24,8 @@ const Privacy = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SEO
-        title="Kebijakan Privasi — Bushido Gacha"
-        description="Kebijakan privasi Bushido Gacha. Pelajari bagaimana PT. BUSHIDO TOVARICH TECHNOLOGY mengumpulkan, menggunakan, dan melindungi data pribadi pengguna platform gacha online Indonesia."
+        title="Kebijakan Privasi — Bushido Vault"
+        description="Kebijakan privasi Bushido Vault. Pelajari bagaimana PT. BUSHIDO TOVARICH TECHNOLOGY mengumpulkan, menggunakan, dan melindungi data pribadi pengguna platform kolektibel online Indonesia."
         canonicalPath="/privacy"
       />
       <Navbar />
@@ -39,7 +39,7 @@ const Privacy = () => {
             </div>
             <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">Kebijakan Privasi</h1>
             <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-              www.bushidogacha.com · Terakhir diperbarui: 18 April 2025
+              www.bushidovault.com · Terakhir diperbarui: 18 April 2025
             </p>
           </motion.div>
         </div>
@@ -61,7 +61,7 @@ const Privacy = () => {
             <section id="komitmen" className="space-y-3 scroll-mt-24">
               <h2 className="font-display text-xl font-bold text-foreground">Komitmen Kami Terhadap Privasi Anda</h2>
               <p>
-                PT Perorangan Bushido Gacha selaku pengelola Platform BUSHIDO GACHA ("kami") berkomitmen melindungi dan
+                PT. BUSHIDO TOVARICH TECHNOLOGY selaku pengelola Platform BUSHIDO VAULT ("kami") berkomitmen melindungi dan
                 menghormati privasi setiap Pengguna. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan,
                 memproses, menyimpan, dan melindungi data pribadi Anda sesuai UU No. 27 Tahun 2022 (UU PDP) dan peraturan
                 perundang-undangan Indonesia yang berlaku.
@@ -108,7 +108,7 @@ const Privacy = () => {
               <ul className="list-disc space-y-1 pl-6">
                 <li>Pembuatan, pengelolaan, dan verifikasi akun.</li>
                 <li>Pemenuhan transaksi, pemrosesan pembayaran, pengiriman hadiah.</li>
-                <li>Pengelolaan mekanisme gacha & distribusi hadiah.</li>
+                <li>Pengelolaan mekanisme kolektibel & distribusi produk.</li>
                 <li>Layanan dukungan pelanggan & penyelesaian pengaduan.</li>
                 <li>Informasi kampanye, promosi, dan pembaruan layanan (dengan persetujuan).</li>
                 <li>Deteksi & pencegahan fraud serta pelanggaran keamanan.</li>
@@ -199,8 +199,8 @@ const Privacy = () => {
 
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 11 — Cara Mengajukan Permintaan Hak</h3>
               <ul className="list-disc space-y-1 pl-6">
-                <li>Surel: privacy@bushidogacha.com</li>
-                <li>Formulir online: www.bushidogacha.com/privacy-request</li>
+                <li>Surel: privacy@bushidovault.com</li>
+                <li>Formulir online: www.bushidovault.com/privacy-request</li>
               </ul>
               <p>
                 Kami merespons dalam 14 hari kerja. Verifikasi identitas dapat diminta sebelum memproses permohonan.
@@ -231,7 +231,7 @@ const Privacy = () => {
               <h2 className="font-display text-xl font-bold text-foreground">BAB IX — Hubungi Kami</h2>
               <h3 className="font-display text-base font-semibold text-foreground">Pasal 14 — Pejabat Perlindungan Data (DPO)</h3>
               <ul className="list-disc space-y-1 pl-6">
-                <li>Situs Web: www.bushidogacha.com</li>
+                <li>Situs Web: www.bushidovault.com</li>
                 <li>Email: support@bushidotovarichtechnology.com</li>
                 <li>Alamat: Jl. Semolowaru Indah II Blok Q 11, Surabaya, 60119</li>
               </ul>
@@ -243,7 +243,7 @@ const Privacy = () => {
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
           <span className="font-display text-sm font-bold tracking-wider text-foreground">
-            BUSHIDO<span className="text-accent"> GACHA</span>
+            BUSHIDO<span className="text-accent"> VAULT</span>
           </span>
           <p className="text-xs text-muted-foreground">{t("companyName")}</p>
           <p className="font-display text-xs tracking-wider text-muted-foreground">{t("allRightsReserved")}</p>
