@@ -15,7 +15,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const SITE_URL = "https://bushidogacha.com";
+const SITE_URL = "https://bushidovault.com";
 const DEFAULT_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/dY6AwmkFmlRRiJD2BZmVPEqLuqM2/social-images/social-1776672907909-Gemini_Generated_Image_1kqrhc1kqrhc1kqr.webp";
 
@@ -44,7 +44,7 @@ const SEO = ({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:image" content={image} />
-      <meta property="og:site_name" content="Bushido Gacha" />
+      <meta property="og:site_name" content="Bushido Vault" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
