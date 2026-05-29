@@ -198,6 +198,7 @@ const Index = () => {
         jsonLd={[organizationLd, softwareApplicationLd, websiteLd]}
       />
       <Navbar />
+      <main>
       <HeroSection />
       <Suspense fallback={<div className="container mx-auto px-4 pt-6"><div className="aspect-[16/7] w-full animate-pulse rounded-2xl border border-border/50 bg-secondary sm:aspect-[16/5]" /></div>}>
         <PromoCarousel />
@@ -351,6 +352,7 @@ const Index = () => {
           <HomeFAQ />
         </Suspense>
       </InView>
+      </main>
 
       <footer className="border-t border-border/50 py-10">
         <div className="container mx-auto flex flex-col items-center gap-3 px-4 text-center">
