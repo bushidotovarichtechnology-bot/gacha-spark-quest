@@ -29,37 +29,18 @@ const navItems = [
 const AdminLayout = () => {
   const { signOut } = useAuth();
   const location = useLocation();
-  const [midtransMode, setMidtransMode] = useState<"sandbox" | "production" | null>(null);
-  const [ipaymuMode, setIpaymuMode] = useState<"sandbox" | "production">("sandbox");
-  const [dokuMode, setDokuMode] = useState<"sandbox" | "production">("sandbox");
-  const [activeProvider, setActiveProvider] = useState<"midtrans" | "stripe" | "ipaymu" | "doku">("midtrans");
+  const [violetMode, setVioletMode] = useState<"sandbox" | "production" | null>(null);
   const [maintenanceOn, setMaintenanceOn] = useState(false);
 
   useEffect(() => {
-    const fetchMode = async () => {
-      const { data } = await supabase
-        .from("app_settings")
-        .select("value")
-        .eq("key", "midtrans_mode")
-        .maybeSingle();
-      const m = (data?.value as { mode?: string } | null)?.mode;
-      setMidtransMode(m === "production" ? "production" : "sandbox");
-    };
     const fetchProvider = async () => {
       const { data } = await supabase
         .from("app_settings")
         .select("value")
         .eq("key", "payment_provider")
         .maybeSingle();
-      const v = (data?.value as { provider?: string; active?: string; ipaymu_mode?: string; doku_mode?: string } | null) || {};
-      const p = v.active || v.provider;
-      setActiveProvider(
-        p === "stripe" ? "stripe" :
-        p === "ipaymu" ? "ipaymu" :
-        p === "doku" ? "doku" : "midtrans"
-      );
-      setIpaymuMode(v.ipaymu_mode === "production" ? "production" : "sandbox");
-      setDokuMode(v.doku_mode === "production" ? "production" : "sandbox");
+      const v = (data?.value as { violet_mode?: string } | null) || {};
+      setVioletMode(v.violet_mode === "production" ? "production" : "sandbox");
     };
     const fetchMaintenance = async () => {
       const { data } = await supabase
@@ -70,17 +51,11 @@ const AdminLayout = () => {
       const v = (data?.value as { enabled?: boolean } | null) ?? {};
       setMaintenanceOn(!!v.enabled);
     };
-    fetchMode();
     fetchProvider();
     fetchMaintenance();
 
     const channel = supabase
       .channel("admin-app-settings")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "app_settings", filter: "key=eq.midtrans_mode" },
-        () => fetchMode(),
-      )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "app_settings", filter: "key=eq.payment_provider" },
@@ -98,14 +73,8 @@ const AdminLayout = () => {
     };
   }, []);
 
-  const badgeMode =
-    activeProvider === "ipaymu" ? ipaymuMode :
-    activeProvider === "doku" ? dokuMode :
-    midtransMode;
-  const badgeLabel =
-    activeProvider === "stripe" ? "Stripe" :
-    activeProvider === "ipaymu" ? "iPaymu" :
-    activeProvider === "doku" ? "DOKU" : "Midtrans";
+  const badgeMode = violetMode;
+  const badgeLabel = "Violet Media Pay";
   const isProd = badgeMode === "production";
 
   return (

@@ -81,7 +81,7 @@ const categories: FAQCategory[] = [
       },
       {
         q: "Metode pembayaran apa saja yang tersedia?",
-        a: "Kami menerima pembayaran melalui transfer bank, QRIS, dan berbagai e-wallet populer yang didukung oleh Midtrans.",
+        a: "Kami menerima pembayaran melalui transfer bank, QRIS, dan berbagai e-wallet populer yang didukung oleh gateway pembayaran resmi kami.",
       },
       {
         q: "Apakah koin bisa di-refund?",
