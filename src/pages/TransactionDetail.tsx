@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { loadMidtransSnap } from "@/lib/midtransSnap";
+
 
 interface Transaction {
   id: string;
@@ -143,29 +143,12 @@ const TransactionDetail = () => {
     if (!user || !tx) return;
     setRetrying(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-midtrans-token", {
-        body: { package_id: tx.package_id, coins: tx.coins, amount: tx.amount },
+      const { data, error } = await supabase.functions.invoke("create-violet-checkout", {
+        body: { package_id: tx.package_id, return_url: `${window.location.origin}/transactions` },
       });
-      if (error || !data?.token) throw new Error(error?.message || "Gagal membuat transaksi baru");
-
-      await loadMidtransSnap(data.mode ?? "sandbox", data.client_key);
-
-      if (window.snap) {
-        window.snap.pay(data.token, {
-          onSuccess: () => {
-            toast.success("Pembayaran Berhasil! 🎉");
-            refreshCoins?.();
-            navigate("/transactions");
-          },
-          onPending: () => toast("Menunggu Pembayaran", { description: "Silakan selesaikan pembayaran." }),
-          onError: () => toast.error("Pembayaran Gagal"),
-          onClose: () => {
-            // Refresh this transaction
-            supabase.from("transactions").select("*").eq("id", tx.id).single()
-              .then(({ data: refreshed }) => { if (refreshed) setTx(refreshed as unknown as Transaction); });
-          },
-        });
-      }
+      if (error || !data?.redirect_url) throw new Error(error?.message || "Gagal membuat transaksi baru");
+      toast.info("Mengarahkan ke halaman pembayaran...");
+      window.location.href = data.redirect_url;
     } catch (err: any) {
       toast.error("Gagal", { description: err.message });
     } finally {
