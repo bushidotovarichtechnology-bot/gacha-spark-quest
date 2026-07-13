@@ -272,23 +272,6 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
     if (!selectedMethod) return;
     setPayingShipping(true);
     try {
-      // Check active payment provider
-      const { data: provRow } = await supabase
-        .from("app_settings")
-        .select("value")
-        .eq("key", "payment_provider")
-        .maybeSingle();
-      const provVal = (provRow?.value as { active?: string; provider?: string } | null) ?? {};
-      const provider = (provVal.active ?? provVal.provider ?? "midtrans") as "midtrans" | "stripe" | "ipaymu";
-
-      if (provider === "stripe") {
-        // Open embedded Stripe checkout inside this form
-        setStripeClaimId(claimId);
-        setStripeOpen(true);
-        setPayingShipping(false);
-        return;
-      }
-
       const { data, error } = await supabase.functions.invoke("create-shipping-payment", {
         body: {
           claim_id: claimId,
@@ -297,48 +280,11 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
           prize_name: item.prize,
         },
       });
-
       if (error) throw new Error(error.message || "Failed to create shipping payment");
-
-      // iPaymu: redirect ke halaman pembayaran
-      if (data?.provider === "ipaymu" || data?.redirect_url) {
-        if (!data?.redirect_url) throw new Error("iPaymu redirect URL tidak tersedia");
-        toast.info("Mengarahkan ke halaman pembayaran iPaymu...");
-        window.location.href = data.redirect_url;
-        return;
-      }
-
-      if (!data?.token) throw new Error("Token pembayaran tidak tersedia");
-
-      await loadMidtransSnap(data.mode ?? "sandbox", data.client_key);
-
-      window.snap.pay(data.token, {
-        onSuccess: () => {
-          toast.info("Mengonfirmasi pembayaran...", {
-            description: "Mohon tunggu konfirmasi sistem.",
-          });
-          // Poll until webhook flips payment_status to "paid"
-          setStripeClaimId(claimId);
-          setPollingPayment(true);
-        },
-        onPending: () => {
-          toast.info("Pembayaran pending", {
-            description: "Selesaikan pembayaran agar klaim diproses. Item tetap di inventori sampai konfirmasi.",
-          });
-          // Do NOT mark claimed — let user finish from claim history
-          setTimeout(() => { onClose(); }, 2000);
-        },
-        onError: () => {
-          toast.error("Pembayaran gagal", { description: "Silakan coba lagi dari Riwayat Klaim." });
-          setStep(3);
-        },
-        onClose: () => {
-          toast.info("Pembayaran dibatalkan", {
-            description: "Klaim belum aktif sampai ongkir dibayar. Lanjutkan dari Riwayat Klaim.",
-          });
-          setStep(3);
-        },
-      });
+      if (!data?.redirect_url) throw new Error("URL pembayaran tidak tersedia");
+      setStripeClaimId(claimId);
+      toast.info("Mengarahkan ke halaman pembayaran...");
+      window.location.href = data.redirect_url;
     } catch (err: any) {
       toast.error("Gagal membuat pembayaran ongkir", { description: err.message });
       setStep(3);
@@ -607,23 +553,10 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                       <X className="h-6 w-6 text-destructive" />
                     </div>
                     <div className="space-y-1">
-                      <p className="font-display text-base font-semibold text-foreground">
-                        Gagal menyiapkan pembayaran
-                      </p>
+                      <p className="font-display text-base font-semibold text-foreground">Gagal menyiapkan pembayaran</p>
                       <p className="text-sm text-muted-foreground max-w-xs mx-auto">{stripeError}</p>
                     </div>
-                    <Button
-                      onClick={() => {
-                        setStripeError(null);
-                        if (stripeClaimId) {
-                          setStripeOpen(true);
-                        } else {
-                          setStep(3);
-                        }
-                      }}
-                      variant="outline"
-                      className="gap-2"
-                    >
+                    <Button onClick={() => { setStripeError(null); setStep(3); }} variant="outline" className="gap-2">
                       Coba lagi
                     </Button>
                   </>
@@ -631,16 +564,10 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
                   <>
                     <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">
-                      {pollingPayment
-                        ? "Mengonfirmasi pembayaran ongkir..."
-                        : stripeLoading
-                          ? "Menyiapkan sesi pembayaran Stripe..."
-                          : "Memproses pembayaran ongkir..."}
+                      {pollingPayment ? "Mengonfirmasi pembayaran ongkir..." : "Memproses pembayaran ongkir..."}
                     </p>
                     {pollingPayment && (
-                      <p className="text-[11px] text-muted-foreground">
-                        Ini bisa memakan waktu beberapa detik.
-                      </p>
+                      <p className="text-[11px] text-muted-foreground">Ini bisa memakan waktu beberapa detik.</p>
                     )}
                   </>
                 )}
@@ -649,32 +576,6 @@ const ClaimPrizeForm = ({ item, onClose, onClaimed }: ClaimPrizeFormProps) => {
           </AnimatePresence>
         </div>
       </motion.div>
-
-      <StripeCheckoutDialog
-        open={stripeOpen}
-        kind="shipping"
-        claim_id={stripeClaimId ?? undefined}
-        shipping_cost={shippingCost}
-        shipping_method={selectedMethod?.label}
-        prize_name={item.prize}
-        returnUrl={`${window.location.origin}/claims?session_id={CHECKOUT_SESSION_ID}`}
-        onLoadingChange={setStripeLoading}
-        onError={(msg) => {
-          setStripeError(msg);
-          setStripeOpen(false);
-          toast.error("Gagal memuat pembayaran Stripe", { description: msg });
-        }}
-        onClose={() => {
-          setStripeOpen(false);
-          if (stripeError) return;
-          // Start polling prize_claims.payment_status — webhook updates it async.
-          // Form stays mounted on step 4 showing polling indicator.
-          toast.info("Mengonfirmasi pembayaran...", {
-            description: "Mohon tunggu sebentar.",
-          });
-          setPollingPayment(true);
-        }}
-      />
     </motion.div>
   );
 };
