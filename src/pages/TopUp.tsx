@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useGacha } from "@/context/GachaContext";
 import { useI18n } from "@/context/I18nContext";
 import { useAuth } from "@/context/AuthContext";
-import { usePaymentProvider } from "@/hooks/use-payment-provider";
-import { StripeCheckoutDialog } from "@/components/StripeCheckoutDialog";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import Navbar from "@/components/Navbar";
 import {
   Dialog,
@@ -19,20 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { loadMidtransSnap } from "@/lib/midtransSnap";
-
-declare global {
-  interface Window {
-    snap: {
-      pay: (token: string, options: {
-        onSuccess?: (result: any) => void;
-        onPending?: (result: any) => void;
-        onError?: (result: any) => void;
-        onClose?: () => void;
-      }) => void;
-    };
-  }
-}
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = { Coins, Zap, Sparkles, Crown };
 
@@ -71,7 +54,6 @@ const getPaymentErrorMessage = async (error: unknown, fallback: string) => {
       return fallback;
     }
   }
-
   return (error as { message?: string } | null)?.message || fallback;
 };
 
@@ -80,34 +62,21 @@ const useCountdown = (endTime: string | null) => {
 
   useEffect(() => {
     if (!endTime) return;
-
     const calculateTimeLeft = () => {
       const end = new Date(endTime).getTime();
       const now = new Date().getTime();
       const diff = end - now;
-
-      if (diff <= 0) {
-        setTimeLeft("");
-        return;
-      }
-
+      if (diff <= 0) { setTimeLeft(""); return; }
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      if (days > 0) {
-        setTimeLeft(`${days}h ${hours}j ${minutes}m`);
-      } else if (hours > 0) {
-        setTimeLeft(`${hours}j ${minutes}m ${seconds}d`);
-      } else {
-        setTimeLeft(`${minutes}m ${seconds}d`);
-      }
+      if (days > 0) setTimeLeft(`${days}h ${hours}j ${minutes}m`);
+      else if (hours > 0) setTimeLeft(`${hours}j ${minutes}m ${seconds}d`);
+      else setTimeLeft(`${minutes}m ${seconds}d`);
     };
-
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
-
     return () => clearInterval(interval);
   }, [endTime]);
 
@@ -115,18 +84,14 @@ const useCountdown = (endTime: string | null) => {
 };
 
 const TopUp = () => {
-  const { addCoins } = useGacha();
+  useGacha();
   const { t } = useI18n();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { provider } = usePaymentProvider();
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [midtransReady, setMidtransReady] = useState(false);
   const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
-  const [stripeOpen, setStripeOpen] = useState(false);
-  const [stripePackageId, setStripePackageId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -140,135 +105,37 @@ const TopUp = () => {
       });
   }, []);
 
-  useEffect(() => {
-    setMidtransReady(true); // load deferred until purchase, with correct mode
-  }, []);
-
   const handlePurchase = async () => {
     if (!selectedPackage || !user) return;
-
-    // Route to Stripe if active provider is stripe
-    if (provider === "stripe") {
-      setStripePackageId(selectedPackage.id);
-      setSelectedPackage(null);
-      setStripeOpen(true);
-      return;
-    }
-
-    // Route to iPaymu redirect page if active provider is ipaymu
-    if (provider === "ipaymu" || provider === "doku") {
-      const fnName = provider === "doku" ? "create-doku-checkout" : "create-ipaymu-token";
-      const providerLabel = provider === "doku" ? "DOKU" : "iPaymu";
-      setProcessing(true);
-      try {
-        const { data, error } = await supabase.functions.invoke(fnName, {
-          body: {
-            package_id: selectedPackage.id,
-            return_url: `${window.location.origin}/transactions`,
-          },
-        });
-        if (error || !data?.redirect_url) {
-          const description = await getPaymentErrorMessage(error, data?.user_message || `Gagal membuat sesi ${providerLabel}`);
-          toast({ title: `Pembayaran ${providerLabel} belum siap`, description, variant: "destructive" });
-          return;
-        }
-        setSelectedPackage(null);
-        toast({
-          title: `Mengarahkan ke ${providerLabel}`,
-          description: `Anda akan diarahkan ke halaman pembayaran ${providerLabel}.`,
-        });
-        window.location.href = data.redirect_url;
-      } catch (err: any) {
-        console.error(`${providerLabel} error:`, err);
-        const description = await getPaymentErrorMessage(err, `Gagal membuat pembayaran ${providerLabel}`);
-        toast({ title: `Pembayaran ${providerLabel} belum siap`, description, variant: "destructive" });
-      } finally {
-        setProcessing(false);
-      }
-      return;
-    }
-
     setProcessing(true);
-    const finalPrice = getDiscountedPrice(selectedPackage);
-    const totalCoins = selectedPackage.coins + selectedPackage.bonus_coins;
-
     try {
-      const { data, error } = await supabase.functions.invoke("create-midtrans-token", {
+      const { data, error } = await supabase.functions.invoke("create-violet-checkout", {
         body: {
           package_id: selectedPackage.id,
-          coins: totalCoins,
-          amount: finalPrice,
+          return_url: `${window.location.origin}/transactions`,
         },
       });
-
-      if (error || !data?.token) throw new Error(error?.message || "Failed to create payment");
-
-      await loadMidtransSnap(data.mode ?? "sandbox", data.client_key);
-
-      const orderId = data.order_id;
+      if (error || !data?.redirect_url) {
+        const description = await getPaymentErrorMessage(error, data?.user_message || "Gagal membuat sesi pembayaran");
+        toast({ title: "Pembayaran belum siap", description, variant: "destructive" });
+        return;
+      }
       setSelectedPackage(null);
-
-      const pollTransactionStatus = async (oid: string, coinsAmount: number) => {
-        let attempts = 0;
-        const maxAttempts = 40; // ~2 menit
-        const interval = setInterval(async () => {
-          attempts++;
-          const { data: txData } = await supabase
-            .from("transactions")
-            .select("status")
-            .eq("order_id", oid)
-            .single();
-
-          if (txData && txData.status !== "pending") {
-            clearInterval(interval);
-            if (txData.status === "settlement") {
-              // Backend webhook sudah credit koin — refresh saldo dari DB
-              window.dispatchEvent(new Event("coins-updated"));
-              toast({
-                title: t("purchaseSuccess"),
-                description: t("purchaseSuccessDesc", { coins: coinsAmount.toLocaleString() }),
-              });
-            } else if (txData.status === "deny" || txData.status === "cancel") {
-              toast({ title: "Pembayaran Gagal", description: "Pembayaran ditolak atau dibatalkan. Koin tidak ditambahkan.", variant: "destructive" });
-            } else if (txData.status === "expire") {
-              toast({ title: "Pembayaran Kedaluwarsa", description: "Waktu pembayaran telah habis. Koin tidak ditambahkan.", variant: "destructive" });
-            }
-          }
-          if (attempts >= maxAttempts) clearInterval(interval);
-        }, 3000);
-      };
-
-      window.snap.pay(data.token, {
-        onSuccess: () => {
-          // JANGAN credit koin dari sini — tunggu konfirmasi webhook Midtrans (signature-verified).
-          toast({
-            title: "Pembayaran terkirim",
-            description: "Koin akan masuk otomatis setelah pembayaran terkonfirmasi sistem.",
-          });
-          pollTransactionStatus(orderId, totalCoins);
-        },
-        onPending: () => {
-          toast({ title: "Pembayaran Pending", description: "Status akan diperbarui otomatis. Silakan cek riwayat transaksi." });
-          pollTransactionStatus(orderId, totalCoins);
-        },
-        onError: () => {
-          // JANGAN tulis status ke DB dari klien — webhook akan handle.
-          toast({ title: "Pembayaran Gagal", description: "Terjadi kesalahan saat memproses pembayaran. Koin tidak ditambahkan.", variant: "destructive" });
-        },
-        onClose: () => {
-          // User menutup popup — cek status dan poll bila masih pending.
-          pollTransactionStatus(orderId, totalCoins);
-        },
+      toast({
+        title: "Mengarahkan ke Violet Media Pay",
+        description: "Anda akan diarahkan ke halaman pembayaran.",
       });
+      window.location.href = data.redirect_url;
     } catch (err: any) {
       console.error("Payment error:", err);
-      toast({ title: "Error", description: err.message || "Gagal memproses pembayaran", variant: "destructive" });
+      const description = await getPaymentErrorMessage(err, "Gagal memproses pembayaran");
+      toast({ title: "Error", description, variant: "destructive" });
     } finally {
       setProcessing(false);
     }
   };
 
-const formatRupiah = (value: number) =>
+  const formatRupiah = (value: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
   const maxPrice = coinPackages.length ? Math.max(...coinPackages.map((p) => p.price)) : 0;
@@ -286,15 +153,14 @@ const formatRupiah = (value: number) =>
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
         className={`relative cursor-pointer rounded-xl border-2 p-6 text-center transition-all hover:scale-105 ${
-          isBestValue 
-            ? "border-accent bg-accent/5 box-glow-gold animate-pulse-glow ring-2 ring-accent/50 shadow-[0_0_30px_rgba(250,204,21,0.3)]" 
-            : pkg.is_popular 
-              ? "border-accent bg-accent/5 box-glow-gold" 
+          isBestValue
+            ? "border-accent bg-accent/5 box-glow-gold animate-pulse-glow ring-2 ring-accent/50 shadow-[0_0_30px_rgba(250,204,21,0.3)]"
+            : pkg.is_popular
+              ? "border-accent bg-accent/5 box-glow-gold"
               : "border-border bg-card hover:border-primary/50"
         }`}
         onClick={() => onSelect(pkg)}
       >
-        {/* Badges */}
         {isBestValue && (
           <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-foreground whitespace-nowrap shadow-lg animate-pulse">
             ⭐ BEST VALUE
@@ -338,7 +204,6 @@ const formatRupiah = (value: number) =>
           {formatRupiah(Math.round(finalPrice / totalCoins))}/{t("perCoin")}
         </div>
 
-        {/* Countdown Timer */}
         {promo && countdown && (
           <div className="mt-3 flex items-center justify-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
             <Clock className="h-3 w-3" />
@@ -374,14 +239,13 @@ const formatRupiah = (value: number) =>
         <div className="mx-auto mt-10 max-w-md text-center">
           <p className="text-xs text-muted-foreground">{t("paymentMethods")}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-            {["GoPay", "OVO", "DANA", "ShopeePay", "BCA VA", "BRI VA", "QRIS", "Credit Card"].map((m) => (
+            {["QRIS", "Virtual Account", "E-Wallet", "Kartu Kredit"].map((m) => (
               <span key={m} className="rounded-md border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">{m}</span>
             ))}
           </div>
         </div>
       </main>
 
-      {/* Confirm dialog */}
       <Dialog open={!!selectedPackage} onOpenChange={(open) => !open && setSelectedPackage(null)}>
         <DialogContent className="border-border bg-card sm:max-w-sm">
           <DialogHeader>
@@ -429,26 +293,13 @@ const formatRupiah = (value: number) =>
                   )}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground">
-                  Pembayaran diproses melalui {provider === "stripe" ? "Stripe" : provider === "ipaymu" ? "iPaymu" : "Midtrans"}
+                  Pembayaran diproses melalui Violet Media Pay
                 </p>
               </div>
             );
           })()}
         </DialogContent>
       </Dialog>
-
-      {/* Stripe Embedded Checkout */}
-      <StripeCheckoutDialog
-        open={stripeOpen}
-        kind="topup"
-        package_id={stripePackageId || undefined}
-        onClose={() => {
-          setStripeOpen(false);
-          setStripePackageId(null);
-          // Trigger coin balance refresh — webhook may have credited
-          setTimeout(() => window.dispatchEvent(new Event("coins-updated")), 1500);
-        }}
-      />
     </div>
   );
 };

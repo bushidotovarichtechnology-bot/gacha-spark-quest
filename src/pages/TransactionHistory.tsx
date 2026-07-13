@@ -11,7 +11,7 @@ import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { loadMidtransSnap } from "@/lib/midtransSnap";
+
 import { supabaseImg } from "@/lib/imageTransform";
 
 interface Transaction {
@@ -227,52 +227,12 @@ const TransactionHistory = () => {
     if (!user) return;
     setRetrying(tx.id);
     try {
-      const { data, error } = await supabase.functions.invoke("create-midtrans-token", {
-        body: {
-          package_id: tx.package_id,
-          coins: tx.coins,
-          amount: tx.amount,
-        },
+      const { data, error } = await supabase.functions.invoke("create-violet-checkout", {
+        body: { package_id: tx.package_id, return_url: `${window.location.origin}/transactions` },
       });
-
-      if (error || !data?.token) throw new Error(error?.message || "Gagal membuat transaksi baru");
-
-      await loadMidtransSnap(data.mode ?? "sandbox", data.client_key);
-
-      if (window.snap) {
-        window.snap.pay(data.token, {
-          onSuccess: () => {
-            toast.success("Pembayaran Berhasil! 🎉", {
-              description: `+${tx.coins.toLocaleString()} koin telah ditambahkan.`,
-            });
-            refreshCoins?.();
-          },
-          onPending: () => {
-            toast("Menunggu Pembayaran", {
-              description: "Silakan selesaikan pembayaran Anda.",
-            });
-          },
-          onError: () => {
-            toast.error("Pembayaran Gagal", {
-              description: "Terjadi kesalahan saat memproses pembayaran.",
-            });
-          },
-          onClose: () => {
-            // Refresh transactions list
-            supabase
-              .from("transactions")
-              .select("*")
-              .order("created_at", { ascending: false })
-              .then(({ data: refreshed }) => {
-                if (refreshed) setTransactions(refreshed as unknown as Transaction[]);
-              });
-          },
-        });
-      } else {
-        toast.error("Payment gateway belum siap", {
-          description: "Silakan refresh halaman dan coba lagi.",
-        });
-      }
+      if (error || !data?.redirect_url) throw new Error(error?.message || "Gagal membuat transaksi baru");
+      toast.info("Mengarahkan ke halaman pembayaran...");
+      window.location.href = data.redirect_url;
     } catch (err: any) {
       toast.error("Gagal", { description: err.message || "Tidak dapat memproses ulang transaksi." });
     } finally {
@@ -281,35 +241,11 @@ const TransactionHistory = () => {
   };
 
   const handleContinue = async (tx: Transaction) => {
-    if (!tx.snap_token) {
-      // No token saved → fall back to creating a new transaction
-      handleRetry(tx);
-      return;
-    }
+    // Violet Media Pay uses a hosted redirect flow — reuse the retry path
+    // to create a fresh session and redirect the user.
     setContinuing(tx.id);
     try {
-      await loadMidtransSnap();
-      if (!window.snap) {
-        toast.error("Payment gateway belum siap", { description: "Silakan refresh halaman dan coba lagi." });
-        return;
-      }
-      window.snap.pay(tx.snap_token, {
-        onSuccess: () => {
-          toast.success("Pembayaran terkirim", { description: "Koin akan masuk otomatis setelah konfirmasi sistem." });
-          fetchTransactions();
-        },
-        onPending: () => {
-          toast("Menunggu Pembayaran", { description: "Selesaikan pembayaran Anda." });
-        },
-        onError: () => {
-          toast.error("Pembayaran Gagal", { description: "Terjadi kesalahan saat memproses pembayaran." });
-        },
-        onClose: () => {
-          fetchTransactions();
-        },
-      });
-    } catch (err: any) {
-      toast.error("Gagal", { description: err.message || "Tidak dapat membuka pembayaran." });
+      await handleRetry(tx);
     } finally {
       setContinuing(null);
     }

@@ -158,58 +158,10 @@ const ClaimHistory = () => {
           prize_name: claim.prize_name,
         },
       });
-
       if (error) throw new Error(error.message || "Gagal membuat pembayaran");
-
-      // iPaymu: redirect to hosted payment page
-      if (data?.provider === "ipaymu" || data?.redirect_url) {
-        if (!data?.redirect_url) throw new Error("iPaymu redirect URL tidak tersedia");
-        toast.info("Mengarahkan ke halaman pembayaran iPaymu...");
-        window.location.href = data.redirect_url;
-        return;
-      }
-
-      if (!data?.token) throw new Error("Token pembayaran tidak tersedia");
-
-      if (data.client_key) {
-        const script = document.querySelector('script[src*="midtrans"]') as HTMLScriptElement;
-        if (script) script.setAttribute("data-client-key", data.client_key);
-      }
-
-      if ((window as any).snap) {
-        (window as any).snap.pay(data.token, {
-          onSuccess: () => {
-            toast.success("Pembayaran ongkir berhasil! 🎉", {
-              description: "Klaim hadiah kamu akan segera diproses admin.",
-            });
-          },
-          onPending: () => {
-            toast("Menunggu pembayaran", {
-              description: "Silakan selesaikan pembayaran ongkir.",
-            });
-          },
-          onError: () => {
-            toast.error("Pembayaran gagal", {
-              description: "Terjadi kesalahan saat memproses pembayaran.",
-            });
-          },
-          onClose: () => {
-            // Refresh claims
-            supabase
-              .from("prize_claims")
-              .select("*")
-              .eq("user_id", user!.id)
-              .order("created_at", { ascending: false })
-              .then(({ data: refreshed }) => {
-                if (refreshed) setClaims(refreshed as Claim[]);
-              });
-          },
-        });
-      } else {
-        toast.error("Payment gateway belum siap", {
-          description: "Silakan refresh halaman dan coba lagi.",
-        });
-      }
+      if (!data?.redirect_url) throw new Error("URL pembayaran tidak tersedia");
+      toast.info("Mengarahkan ke halaman pembayaran...");
+      window.location.href = data.redirect_url;
     } catch (err: any) {
       toast.error("Gagal", { description: err.message || "Tidak dapat memproses pembayaran." });
     } finally {

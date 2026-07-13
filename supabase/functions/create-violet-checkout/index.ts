@@ -1,6 +1,8 @@
-// Creates an iPaymu redirect-page session for top-up coin packages.
+// Create a checkout session on Violet Media Pay (violetmediapay.com).
+// STUB: Payload keys mengikuti pola gateway umum; sesuaikan dengan spec
+// resmi Violet Media Pay setelah dokumentasi API dirilis / dibagikan.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { getIpaymuConfig, getIpaymuProviderError, ipaymuRequest } from "../_shared/ipaymu.ts";
+import { getVioletConfig, violetRequest } from "../_shared/violet.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,8 +48,8 @@ Deno.serve(async (req) => {
     const { data: pkg, error: pkgError } = await supabaseAdmin
       .from("coin_packages")
       .select("id, name, coins, bonus_coins, price, discount_percent, discount_start, discount_end, is_active")
-      .eq("id", package_id).maybeSingle();
-
+      .eq("id", package_id)
+      .maybeSingle();
     if (pkgError || !pkg || !pkg.is_active) {
       return new Response(JSON.stringify({ error: "Package not found or inactive" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -63,43 +65,53 @@ Deno.serve(async (req) => {
       : pkg.price;
     const totalCoins = (pkg.coins ?? 0) + (pkg.bonus_coins ?? 0);
 
-    const orderId = `IPAYMU-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    const orderId = `VMP-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
 
-    const cfg = await getIpaymuConfig();
-    if (!cfg.va || !cfg.apiKey) {
-      return new Response(JSON.stringify({ error: `iPaymu ${cfg.mode} credentials not configured` }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const cfg = await getVioletConfig();
+    if (!cfg.apiKey || !cfg.merchantId) {
+      return new Response(JSON.stringify({
+        error: `Violet Media Pay ${cfg.mode} credentials not configured`,
+        user_message: "Kredensial Violet Media Pay belum dikonfigurasi oleh admin.",
+      }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const projectRef = Deno.env.get("SUPABASE_URL")!.split("//")[1].split(".")[0];
-    const notifyUrl = `https://${projectRef}.supabase.co/functions/v1/ipaymu-webhook`;
-    const fallbackReturn = return_url || `${req.headers.get("origin") || ""}/transactions`;
+    const notifyUrl = `https://${projectRef}.supabase.co/functions/v1/violet-webhook`;
+    const successReturn = return_url || `${req.headers.get("origin") || ""}/transactions`;
 
+    // TODO: Sesuaikan skema payload berikut dengan dokumentasi Violet Media Pay.
     const payload = {
-      product: [`${totalCoins} Gacha Coins`],
-      qty: [1],
-      price: [finalAmount],
-      returnUrl: fallbackReturn,
-      notifyUrl,
-      cancelUrl: fallbackReturn,
-      referenceId: orderId,
-      buyerName: user.email?.split("@")[0] || "User",
-      buyerEmail: user.email || "user@example.com",
-      buyerPhone: "08000000000",
+      merchant_id: cfg.merchantId,
+      order_id: orderId,
+      amount: finalAmount,
+      currency: "IDR",
+      description: `Top-up ${totalCoins} Bushido Coins`,
+      customer: {
+        email: user.email,
+        name: user.email?.split("@")[0] || "User",
+      },
+      return_url: successReturn,
+      cancel_url: successReturn,
+      notify_url: notifyUrl,
+      metadata: {
+        kind: "topup",
+        user_id: user.id,
+        package_id,
+        coins: totalCoins,
+      },
     };
 
-    const { ok, data } = await ipaymuRequest<any>(cfg, "/payment", payload);
-    if (!ok || data?.Status !== 200) {
-      console.error("iPaymu error:", data);
-      const setupError = getIpaymuProviderError(data?.Message, cfg.mode);
-      return new Response(JSON.stringify(setupError.body), {
-        status: setupError.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const { ok, status, data } = await violetRequest<any>(cfg, "/checkout/sessions", payload);
+    const redirectUrl = data?.redirect_url || data?.payment_url || data?.data?.redirect_url;
+    if (!ok || !redirectUrl) {
+      console.error("Violet Media Pay error:", status, data);
+      const msg = data?.message || data?.error || "Failed to create Violet Media Pay session";
+      return new Response(JSON.stringify({
+        error: msg,
+        user_message: "Gagal membuat sesi pembayaran Violet Media Pay.",
+        provider_message: msg,
+      }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    const sessionId: string = data?.Data?.SessionID || "";
-    const redirectUrl: string = data?.Data?.Url || "";
 
     await supabaseAdmin.from("transactions").insert({
       order_id: orderId,
@@ -108,16 +120,17 @@ Deno.serve(async (req) => {
       coins: totalCoins,
       amount: finalAmount,
       status: "pending",
-      provider: "ipaymu",
-      provider_reference: sessionId,
+      snap_token: null,
     });
 
-    return new Response(
-      JSON.stringify({ redirect_url: redirectUrl, session_id: sessionId, order_id: orderId, mode: cfg.mode }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({
+      provider: "violet",
+      redirect_url: redirectUrl,
+      order_id: orderId,
+      mode: cfg.mode,
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
-    console.error("create-ipaymu-token error:", err);
+    console.error("create-violet-checkout error:", err);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

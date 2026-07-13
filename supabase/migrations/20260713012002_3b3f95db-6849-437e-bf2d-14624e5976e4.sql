@@ -1,0 +1,2 @@
+DELETE FROM public.app_settings WHERE key IN ('midtrans_mode', 'payment_provider');
+INSERT INTO public.app_settings (key, value) VALUES ('payment_provider', '{"active":"violet","violet_mode":"sandbox"}'::jsonb);
