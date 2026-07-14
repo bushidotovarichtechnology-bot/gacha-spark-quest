@@ -21,14 +21,14 @@ export async function getVioletConfig(): Promise<VioletConfig> {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-  const { data } = await supabaseAdmin
+  const { data: providerRow } = await supabaseAdmin
     .from("app_settings")
     .select("value")
     .eq("key", "payment_provider")
     .maybeSingle();
 
   const mode: VioletMode =
-    (data?.value as any)?.violet_mode === "production" ? "production" : "sandbox";
+    (providerRow?.value as any)?.violet_mode === "production" ? "production" : "sandbox";
 
   const apiKey = mode === "production"
     ? Deno.env.get("VIOLETMEDIAPAY_API_KEY_PRODUCTION") ?? ""
@@ -37,10 +37,20 @@ export async function getVioletConfig(): Promise<VioletConfig> {
     ? Deno.env.get("VIOLETMEDIAPAY_MERCHANT_ID_PRODUCTION") ?? ""
     : Deno.env.get("VIOLETMEDIAPAY_MERCHANT_ID_SANDBOX") ?? "";
 
-  const baseUrl = mode === "production" ? PRODUCTION_BASE : SANDBOX_BASE;
+  // Optional endpoint overrides stored in app_settings.violet_endpoints
+  const { data: epRow } = await supabaseAdmin
+    .from("app_settings")
+    .select("value")
+    .eq("key", "violet_endpoints")
+    .maybeSingle();
+  const ep = (epRow?.value as { sandbox_base_url?: string; production_base_url?: string } | null) || {};
+  const baseUrl = mode === "production"
+    ? (ep.production_base_url?.trim() || PRODUCTION_BASE)
+    : (ep.sandbox_base_url?.trim() || SANDBOX_BASE);
 
   return { mode, apiKey, merchantId, baseUrl };
 }
+
 
 /**
  * Perform a POST request to Violet Media Pay. Adjust the auth header format
