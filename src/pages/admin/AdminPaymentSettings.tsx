@@ -4,16 +4,28 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { CreditCard, AlertTriangle, CheckCircle2, Wallet } from "lucide-react";
+import { CreditCard, AlertTriangle, CheckCircle2, Wallet, Link2, KeyRound, Copy } from "lucide-react";
 
 type Mode = "sandbox" | "production";
+
+const DEFAULT_SANDBOX_BASE = "https://sandbox.violetmediapay.com/api/v1";
+const DEFAULT_PRODUCTION_BASE = "https://api.violetmediapay.com/api/v1";
 
 const AdminPaymentSettings = () => {
   const [violetMode, setVioletMode] = useState<Mode>("sandbox");
   const [initialVioletMode, setInitialVioletMode] = useState<Mode>("sandbox");
+
+  const [sandboxBase, setSandboxBase] = useState("");
+  const [productionBase, setProductionBase] = useState("");
+  const [initialSandboxBase, setInitialSandboxBase] = useState("");
+  const [initialProductionBase, setInitialProductionBase] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/violet-webhook`;
 
   useEffect(() => {
     (async () => {
@@ -26,6 +38,20 @@ const AdminPaymentSettings = () => {
       const currentMode: Mode = provVal.violet_mode === "production" ? "production" : "sandbox";
       setVioletMode(currentMode);
       setInitialVioletMode(currentMode);
+
+      const { data: epRow } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "violet_endpoints")
+        .maybeSingle();
+      const ep = (epRow?.value as { sandbox_base_url?: string; production_base_url?: string } | null) || {};
+      const sb = ep.sandbox_base_url ?? "";
+      const pb = ep.production_base_url ?? "";
+      setSandboxBase(sb);
+      setProductionBase(pb);
+      setInitialSandboxBase(sb);
+      setInitialProductionBase(pb);
+
       setLoading(false);
     })();
   }, []);
@@ -53,7 +79,13 @@ const AdminPaymentSettings = () => {
     setSaving(true);
     try {
       await upsertSetting("payment_provider", { active: "violet", violet_mode: violetMode });
+      await upsertSetting("violet_endpoints", {
+        sandbox_base_url: sandboxBase.trim(),
+        production_base_url: productionBase.trim(),
+      });
       setInitialVioletMode(violetMode);
+      setInitialSandboxBase(sandboxBase);
+      setInitialProductionBase(productionBase);
       toast.success("Pengaturan pembayaran disimpan");
     } catch (e: any) {
       console.error("Save payment settings error:", e);
@@ -63,14 +95,26 @@ const AdminPaymentSettings = () => {
     }
   };
 
-  const dirty = violetMode !== initialVioletMode;
+  const copyWebhook = async () => {
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      toast.success("Webhook URL disalin");
+    } catch {
+      toast.error("Gagal menyalin");
+    }
+  };
+
+  const dirty =
+    violetMode !== initialVioletMode ||
+    sandboxBase !== initialSandboxBase ||
+    productionBase !== initialProductionBase;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold">Pengaturan Pembayaran</h1>
         <p className="text-sm text-muted-foreground">
-          Gateway aktif: <strong>Violet Media Pay</strong> (violetmediapay.com). Kelola mode operasi di bawah.
+          Gateway aktif: <strong>Violet Media Pay</strong> (violetmediapay.com). Kelola mode operasi, endpoint, dan webhook di bawah.
         </p>
       </div>
 
@@ -153,16 +197,69 @@ const AdminPaymentSettings = () => {
                 </div>
               </div>
             )}
+          </Card>
 
-            <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Webhook / Notify URL untuk dashboard Violet Media Pay:</p>
-              <code className="block break-all bg-background border border-border rounded px-2 py-1">
-                {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/violet-webhook`}
+          <Card className="p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <Link2 className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <h2 className="font-semibold">Endpoint API</h2>
+                <p className="text-sm text-muted-foreground">
+                  Kosongkan untuk memakai endpoint bawaan. Isi hanya jika Violet Media Pay memberi base URL berbeda
+                  (mis. staging khusus merchant).
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Sandbox base URL</Label>
+              <Input
+                placeholder={DEFAULT_SANDBOX_BASE}
+                value={sandboxBase}
+                onChange={(e) => setSandboxBase(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">Default: <code>{DEFAULT_SANDBOX_BASE}</code></p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Production base URL</Label>
+              <Input
+                placeholder={DEFAULT_PRODUCTION_BASE}
+                value={productionBase}
+                onChange={(e) => setProductionBase(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">Default: <code>{DEFAULT_PRODUCTION_BASE}</code></p>
+            </div>
+          </Card>
+
+          <Card className="p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <KeyRound className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <h2 className="font-semibold">Webhook / Notify URL</h2>
+                <p className="text-sm text-muted-foreground">
+                  Tempelkan URL berikut pada kolom <strong>Notification URL / Callback URL</strong> di dashboard
+                  violetmediapay.com. Signature diverifikasi menggunakan <code>VIOLETMEDIAPAY_WEBHOOK_SECRET</code>.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <code className="flex-1 break-all rounded border border-border bg-background px-2 py-1.5 text-xs">
+                {webhookUrl}
               </code>
-              <p className="mt-2">
-                Tempelkan URL ini ke setting <strong>Notification URL / Callback URL</strong> di dashboard
-                violetmediapay.com. Signature dicek dengan <code>VIOLETMEDIAPAY_WEBHOOK_SECRET</code>.
-              </p>
+              <Button type="button" size="sm" variant="outline" onClick={copyWebhook}>
+                <Copy className="h-3.5 w-3.5 mr-1" /> Salin
+              </Button>
+            </div>
+
+            <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
+              <p><strong>Kredensial yang dibutuhkan (disimpan sebagai secret):</strong></p>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><code>VIOLETMEDIAPAY_API_KEY_SANDBOX</code> / <code>_PRODUCTION</code></li>
+                <li><code>VIOLETMEDIAPAY_MERCHANT_ID_SANDBOX</code> / <code>_PRODUCTION</code></li>
+                <li><code>VIOLETMEDIAPAY_WEBHOOK_SECRET</code></li>
+              </ul>
             </div>
           </Card>
 
