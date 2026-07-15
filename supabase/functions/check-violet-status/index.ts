@@ -90,21 +90,17 @@ Deno.serve(async (req) => {
     const status = mapStatus(data?.status || data?.data?.status);
     const paymentType = data?.payment_method || data?.data?.payment_method;
 
-    await supabase.from("transactions")
-      .update({ status, payment_type: paymentType ?? tx.payment_type ?? null })
-      .eq("order_id", order_id);
-
-    let credited = false;
-    if (status === "settlement" && tx.status !== "settlement") {
-      const { data: userCoins } = await supabase
-        .from("user_coins").select("balance").eq("user_id", tx.user_id).maybeSingle();
-      if (userCoins) {
-        await supabase.from("user_coins").update({ balance: (userCoins.balance || 0) + tx.coins }).eq("user_id", tx.user_id);
-      } else {
-        await supabase.from("user_coins").insert({ user_id: tx.user_id, balance: tx.coins });
-      }
-      credited = true;
+    const { data: settleRes, error: settleErr } = await supabase.rpc(
+      "settle_transaction_atomic" as any,
+      { _order_id: order_id, _new_status: status, _payment_type: paymentType ?? tx.payment_type ?? null },
+    );
+    if (settleErr) {
+      console.error("settle_transaction_atomic error:", settleErr);
+      return new Response(JSON.stringify({
+        success: false, status: tx.status, credited: false, retriable: true, error: "settlement_failed",
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const credited = (settleRes as any)?.credited === true;
 
     return new Response(JSON.stringify({ success: true, status, credited, retriable: true }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
