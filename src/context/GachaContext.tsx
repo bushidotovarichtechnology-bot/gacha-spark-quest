@@ -184,10 +184,17 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const { data: invData } = await supabase
       .from("user_inventory")
-      .select("*")
+      .select("id, prize_name, tier_label, campaign_id, campaign_name, image_url, coin_value, won_at")
       .eq("user_id", user.id)
       .order("won_at", { ascending: false });
     if (invData) {
+      // Digital codes are not readable directly from user_inventory (column
+      // SELECT is revoked). Fetch them via a security-definer RPC.
+      const { data: codeRows } = await supabase.rpc("get_my_inventory_codes" as any);
+      const codeMap = new Map<string, string>();
+      (codeRows as Array<{ inventory_id: string; digital_code: string }> | null)?.forEach((r) => {
+        codeMap.set(r.inventory_id, r.digital_code);
+      });
       setItems(invData.map((r) => ({
         id: r.id,
         prize: r.prize_name,
@@ -197,7 +204,7 @@ export const GachaProvider = ({ children }: { children: ReactNode }) => {
         image: r.image_url,
         coinValue: r.coin_value,
         wonAt: r.won_at,
-        digitalCode: (r as any).digital_code ?? null,
+        digitalCode: codeMap.get(r.id) ?? null,
       })));
     }
   }, [user]);
