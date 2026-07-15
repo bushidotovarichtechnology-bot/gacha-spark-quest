@@ -111,11 +111,21 @@ Deno.serve(async (req) => {
     if (!providerOk || !paymentUrl) {
       console.error("Violet Media Pay create failed:", status, data);
       const msg = data?.message || data?.error || data?.data?.message || "Failed to create Violet Media Pay session";
-      return json(502, {
+      const isSslHandshake = status === 525 || status === 526;
+      const isProviderDown = status >= 500;
+      const userMessage = isSslHandshake
+        ? "Layanan pembayaran Violet Media Pay sedang tidak dapat diakses (SSL handshake gagal di sisi provider). Silakan coba beberapa saat lagi."
+        : isProviderDown
+          ? "Layanan Violet Media Pay sedang bermasalah. Silakan coba lagi nanti."
+          : "Gagal membuat sesi pembayaran Violet Media Pay. Periksa kembali data pembayaran Anda.";
+      // Return 200 so supabase.functions.invoke doesn't throw — the client
+      // reads the structured error body and shows a toast.
+      return json(200, {
         error: msg,
-        user_message: "Gagal membuat sesi pembayaran Violet Media Pay.",
+        user_message: userMessage,
         provider_message: msg,
         provider_status: status,
+        fallback: isProviderDown,
       });
     }
 
