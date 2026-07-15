@@ -57,25 +57,12 @@ Deno.serve(async (req) => {
     );
 
     // === Shipping payments (look up in prize_claims by shipping_order_id) ===
-    const { data: shippingClaim } = await supabase
+    const { data: claim } = await supabase
       .from("prize_claims")
       .select("id, payment_status, shipping_paid")
       .eq("shipping_order_id", orderId)
       .maybeSingle();
-    if (shippingClaim) {
-      const claim = shippingClaim;
-      {
-      const { data: claim } = await supabase
-        .from("prize_claims")
-        .select("id, payment_status, shipping_paid")
-        .eq("shipping_order_id", orderId)
-        .maybeSingle();
-      if (!claim) {
-        return new Response(JSON.stringify({ status: false, error: "Claim not found" }), {
-          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
+    if (claim) {
       let newPaymentStatus = claim.payment_status;
       let newShippingPaid = claim.shipping_paid;
       if (status === "settlement") { newPaymentStatus = "paid"; newShippingPaid = true; }
