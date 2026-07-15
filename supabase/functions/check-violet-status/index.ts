@@ -1,7 +1,7 @@
 // Poll Violet Media Pay for the current status of a pending transaction.
-// STUB: Endpoint dan field parsing menyesuaikan dokumentasi resmi.
+// Uses GET /transactions?api_key=...&ref_kode=... per official docs.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { getVioletConfig } from "../_shared/violet.ts";
+import { getVioletConfig, violetGet } from "../_shared/violet.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,11 +10,11 @@ const corsHeaders = {
 
 function mapStatus(raw: string): string {
   const s = (raw || "").toLowerCase();
-  if (["paid", "success", "successful", "settlement", "completed", "capture"].includes(s)) return "settlement";
-  if (["failed", "failure", "deny", "denied"].includes(s)) return "deny";
-  if (["cancel", "cancelled", "canceled"].includes(s)) return "cancel";
-  if (["expire", "expired"].includes(s)) return "expire";
-  if (["pending", "waiting"].includes(s)) return "pending";
+  if (["paid", "success", "successful", "settlement", "completed", "capture", "berhasil", "sukses", "lunas"].includes(s)) return "settlement";
+  if (["failed", "failure", "deny", "denied", "gagal"].includes(s)) return "deny";
+  if (["cancel", "cancelled", "canceled", "batal", "dibatalkan"].includes(s)) return "cancel";
+  if (["expire", "expired", "kadaluarsa", "kadaluwarsa"].includes(s)) return "expire";
+  if (["pending", "waiting", "menunggu"].includes(s)) return "pending";
   return s || "pending";
 }
 
@@ -66,29 +66,32 @@ Deno.serve(async (req) => {
     }
 
     const cfg = await getVioletConfig();
-    if (!cfg.apiKey) {
+    if (!cfg.apiKey || !cfg.secretKey) {
       return new Response(JSON.stringify({
-        success: false, status: tx.status, credited: false, retriable: false, error: "violet_api_key_missing",
+        success: false, status: tx.status, credited: false, retriable: false, error: "violet_credentials_missing",
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // TODO: sesuaikan path dan format response dengan dokumentasi resmi.
-    const resp = await fetch(`${cfg.baseUrl}/checkout/sessions/${encodeURIComponent(order_id)}`, {
-      headers: {
-        "Authorization": `Bearer ${cfg.apiKey}`,
-        "X-Merchant-Id": cfg.merchantId,
-        "Accept": "application/json",
-      },
+    // GET /transactions with api_key + ref_kode (per Violet Media Pay docs).
+    const { ok, status: httpStatus, data } = await violetGet<any>(cfg, "/transactions", {
+      api_key: cfg.apiKey,
+      ref_kode: order_id,
     });
-    if (!resp.ok) {
+    if (!ok) {
       return new Response(JSON.stringify({
-        success: false, status: tx.status, credited: false, retriable: resp.status !== 401,
-        error: resp.status === 401 ? "violet_credentials_mismatch" : "violet_status_unavailable",
+        success: false, status: tx.status, credited: false,
+        retriable: httpStatus !== 401,
+        error: httpStatus === 401 ? "violet_credentials_mismatch" : "violet_status_unavailable",
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const data = await resp.json();
-    const status = mapStatus(data?.status || data?.data?.status);
-    const paymentType = data?.payment_method || data?.data?.payment_method;
+
+    const rawStatus =
+      data?.data?.status_transaksi || data?.data?.status ||
+      data?.status_transaksi || data?.status || "";
+    const status = mapStatus(String(rawStatus));
+    const paymentType =
+      data?.data?.channel_payment || data?.data?.payment_method ||
+      data?.channel_payment || data?.payment_method || null;
 
     const { data: settleRes, error: settleErr } = await supabase.rpc(
       "settle_transaction_atomic" as any,
