@@ -1745,6 +1745,13 @@ export type Database = {
           won_at: string
         }[]
       }
+      get_my_inventory_codes: {
+        Args: never
+        Returns: {
+          digital_code: string
+          inventory_id: string
+        }[]
+      }
       get_pity_trend: {
         Args: { days_back?: number }
         Returns: {
@@ -1842,6 +1849,10 @@ export type Database = {
       }
       set_security_pin: { Args: { _pin: string }; Returns: Json }
       set_username: { Args: { _username: string }; Returns: Json }
+      settle_transaction_atomic: {
+        Args: { _new_status: string; _order_id: string; _payment_type: string }
+        Returns: Json
+      }
       slugify: { Args: { _input: string }; Returns: string }
       transfer_gift_coins: {
         Args: { _amount: number; _receiver_id: string }
