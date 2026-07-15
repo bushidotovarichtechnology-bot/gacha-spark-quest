@@ -56,8 +56,15 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // === Shipping payments (order_id starts with "SHIP-") ===
-    if (orderId.startsWith("SHIP-")) {
+    // === Shipping payments (look up in prize_claims by shipping_order_id) ===
+    const { data: shippingClaim } = await supabase
+      .from("prize_claims")
+      .select("id, payment_status, shipping_paid")
+      .eq("shipping_order_id", orderId)
+      .maybeSingle();
+    if (shippingClaim) {
+      const claim = shippingClaim;
+      {
       const { data: claim } = await supabase
         .from("prize_claims")
         .select("id, payment_status, shipping_paid")
