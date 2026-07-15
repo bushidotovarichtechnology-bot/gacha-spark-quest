@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // === Coin top-up transactions ===
+    // Fetch tx first (needed for email context / user_id lookup).
     const { data: tx } = await supabase
       .from("transactions").select("*").eq("order_id", orderId).maybeSingle();
     if (!tx) {
@@ -89,20 +89,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    await supabase.from("transactions")
-      .update({ status, payment_type: paymentType || tx.payment_type || "violet" })
-      .eq("order_id", orderId);
+    // Atomic settlement — server-side function guarantees single credit even
+    // under concurrent webhook/status-check races.
+    const { data: settleRes, error: settleErr } = await supabase.rpc(
+      "settle_transaction_atomic" as any,
+      { _order_id: orderId, _new_status: status, _payment_type: paymentType || tx.payment_type || "violet" },
+    );
+    if (settleErr) {
+      console.error("settle_transaction_atomic error:", settleErr);
+      return new Response(JSON.stringify({ error: "settlement_failed" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (status === "settlement" && tx.status !== "settlement") {
-      const { data: userCoins } = await supabase
-        .from("user_coins").select("balance").eq("user_id", tx.user_id).maybeSingle();
-      if (userCoins) {
-        await supabase.from("user_coins")
-          .update({ balance: (userCoins.balance || 0) + tx.coins })
-          .eq("user_id", tx.user_id);
-      } else {
-        await supabase.from("user_coins").insert({ user_id: tx.user_id, balance: tx.coins });
-      }
+    if ((settleRes as any)?.credited === true) {
 
       // Fire-and-forget top-up success email
       try {
