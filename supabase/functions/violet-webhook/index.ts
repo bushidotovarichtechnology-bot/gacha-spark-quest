@@ -1,22 +1,22 @@
-// Webhook handler for Violet Media Pay.
-// STUB: Field names (status, order_id, dll) mengikuti pola gateway umum;
-// sesuaikan dengan dokumentasi resmi Violet Media Pay.
+// Webhook handler for Violet Media Pay callbacks.
+// Verifies X-Callback-Signature (HMAC-SHA256 of ref_kode+api_key+amount keyed by secret_key)
+// then settles the transaction atomically. Responds with {"status": true}.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { verifyVioletWebhook } from "../_shared/violet.ts";
+import { verifyVioletWebhook, parseVioletCallbackBody } from "../_shared/violet.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-callback-signature",
 };
 
-// Map provider status string → internal transaction status.
+// Map Violet status string → internal transaction status.
 function mapStatus(raw: string): string {
   const s = (raw || "").toLowerCase();
-  if (["paid", "success", "successful", "settlement", "completed", "capture"].includes(s)) return "settlement";
-  if (["failed", "failure", "deny", "denied"].includes(s)) return "deny";
-  if (["cancel", "cancelled", "canceled"].includes(s)) return "cancel";
-  if (["expire", "expired"].includes(s)) return "expire";
-  if (["pending", "waiting"].includes(s)) return "pending";
+  if (["paid", "success", "successful", "settlement", "completed", "capture", "berhasil", "sukses", "lunas"].includes(s)) return "settlement";
+  if (["failed", "failure", "deny", "denied", "gagal"].includes(s)) return "deny";
+  if (["cancel", "cancelled", "canceled", "batal", "dibatalkan"].includes(s)) return "cancel";
+  if (["expire", "expired", "kadaluarsa", "kadaluwarsa"].includes(s)) return "expire";
+  if (["pending", "waiting", "menunggu"].includes(s)) return "pending";
   return s || "pending";
 }
 
@@ -28,19 +28,24 @@ Deno.serve(async (req) => {
     const signatureOk = await verifyVioletWebhook({ headers: req.headers, rawBody });
     if (!signatureOk) {
       console.error("Invalid Violet Media Pay webhook signature");
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+      return new Response(JSON.stringify({ status: false, error: "Invalid signature" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const body = JSON.parse(rawBody || "{}");
-    // TODO: sesuaikan dengan struktur payload Violet Media Pay
-    const orderId: string = body.order_id || body.reference_id || body.data?.order_id;
-    const rawStatus: string = body.status || body.transaction_status || body.data?.status;
-    const paymentType: string | undefined = body.payment_method || body.payment_type || body.data?.payment_method;
+    const body = parseVioletCallbackBody(rawBody, req.headers.get("content-type") || "");
+
+    const orderId: string = String(
+      body.ref_kode || body.reference || body.reference_id || body.order_id || "",
+    );
+    const rawStatus: string = String(
+      body.status_transaksi || body.status || body.transaction_status || body.data?.status || "",
+    );
+    const paymentType: string | undefined =
+      body.channel_payment || body.payment_method || body.payment_type || body.metode_pembayaran || undefined;
 
     if (!orderId || !rawStatus) {
-      return new Response(JSON.stringify({ error: "Invalid payload" }), {
+      return new Response(JSON.stringify({ status: false, error: "Invalid payload" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -59,7 +64,7 @@ Deno.serve(async (req) => {
         .eq("shipping_order_id", orderId)
         .maybeSingle();
       if (!claim) {
-        return new Response(JSON.stringify({ error: "Claim not found" }), {
+        return new Response(JSON.stringify({ status: false, error: "Claim not found" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -75,16 +80,16 @@ Deno.serve(async (req) => {
           payment_status: newPaymentStatus, shipping_paid: newShippingPaid,
         }).eq("id", claim.id);
       }
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ status: true }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Fetch tx first (needed for email context / user_id lookup).
+    // === Coin top-up transactions ===
     const { data: tx } = await supabase
       .from("transactions").select("*").eq("order_id", orderId).maybeSingle();
     if (!tx) {
-      return new Response(JSON.stringify({ error: "Transaction not found" }), {
+      return new Response(JSON.stringify({ status: false, error: "Transaction not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -97,13 +102,12 @@ Deno.serve(async (req) => {
     );
     if (settleErr) {
       console.error("settle_transaction_atomic error:", settleErr);
-      return new Response(JSON.stringify({ error: "settlement_failed" }), {
+      return new Response(JSON.stringify({ status: false, error: "settlement_failed" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if ((settleRes as any)?.credited === true) {
-
       // Fire-and-forget top-up success email
       try {
         const { data: userRes } = await supabase.auth.admin.getUserById(tx.user_id);
@@ -133,12 +137,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ status: true }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("violet-webhook error:", err);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    return new Response(JSON.stringify({ status: false, error: "Internal server error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

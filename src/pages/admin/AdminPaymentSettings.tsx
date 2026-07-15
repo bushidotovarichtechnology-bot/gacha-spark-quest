@@ -10,8 +10,8 @@ import { CreditCard, AlertTriangle, CheckCircle2, Wallet, Link2, KeyRound, Copy 
 
 type Mode = "sandbox" | "production";
 
-const DEFAULT_SANDBOX_BASE = "https://sandbox.violetmediapay.com/api/v1";
-const DEFAULT_PRODUCTION_BASE = "https://api.violetmediapay.com/api/v1";
+const DEFAULT_SANDBOX_BASE = "https://violetmediapay.com/api/sanbox";
+const DEFAULT_PRODUCTION_BASE = "https://violetmediapay.com/api/live";
 
 const AdminPaymentSettings = () => {
   const [violetMode, setVioletMode] = useState<Mode>("sandbox");
@@ -179,9 +179,8 @@ const AdminPaymentSettings = () => {
                 <div>
                   <p className="font-medium text-destructive">Mode Production aktif</p>
                   <p className="text-muted-foreground text-xs">
-                    Pastikan <code>VIOLETMEDIAPAY_API_KEY_PRODUCTION</code>,{" "}
-                    <code>VIOLETMEDIAPAY_MERCHANT_ID_PRODUCTION</code>, dan{" "}
-                    <code>VIOLETMEDIAPAY_WEBHOOK_SECRET</code> sudah valid.
+                    Pastikan <code>VIOLETMEDIAPAY_API_KEY_PRODUCTION</code> dan{" "}
+                    <code>VIOLETMEDIAPAY_SECRET_KEY_PRODUCTION</code> sudah valid.
                   </p>
                 </div>
               </div>
@@ -192,7 +191,7 @@ const AdminPaymentSettings = () => {
                   <p className="font-medium">Mode Sandbox aktif</p>
                   <p className="text-muted-foreground text-xs">
                     Menggunakan <code>VIOLETMEDIAPAY_API_KEY_SANDBOX</code> dan{" "}
-                    <code>VIOLETMEDIAPAY_MERCHANT_ID_SANDBOX</code>.
+                    <code>VIOLETMEDIAPAY_SECRET_KEY_SANDBOX</code>.
                   </p>
                 </div>
               </div>
@@ -236,10 +235,12 @@ const AdminPaymentSettings = () => {
             <div className="flex items-start gap-3">
               <KeyRound className="h-5 w-5 text-primary mt-0.5" />
               <div className="flex-1">
-                <h2 className="font-semibold">Webhook / Notify URL</h2>
+                <h2 className="font-semibold">Webhook / Callback URL</h2>
                 <p className="text-sm text-muted-foreground">
-                  Tempelkan URL berikut pada kolom <strong>Notification URL / Callback URL</strong> di dashboard
-                  violetmediapay.com. Signature diverifikasi menggunakan <code>VIOLETMEDIAPAY_WEBHOOK_SECRET</code>.
+                  Tempelkan URL berikut pada kolom <strong>URL Callback</strong> di dashboard
+                  violetmediapay.com (atau kirim sebagai <code>url_callback</code> di setiap request).
+                  Signature callback (<code>X-Callback-Signature</code>) diverifikasi menggunakan{" "}
+                  <code>VIOLETMEDIAPAY_SECRET_KEY_&#123;MODE&#125;</code>.
                 </p>
               </div>
             </div>
@@ -257,9 +258,12 @@ const AdminPaymentSettings = () => {
               <p><strong>Kredensial yang dibutuhkan (disimpan sebagai secret):</strong></p>
               <ul className="list-disc pl-5 space-y-0.5">
                 <li><code>VIOLETMEDIAPAY_API_KEY_SANDBOX</code> / <code>_PRODUCTION</code></li>
-                <li><code>VIOLETMEDIAPAY_MERCHANT_ID_SANDBOX</code> / <code>_PRODUCTION</code></li>
-                <li><code>VIOLETMEDIAPAY_WEBHOOK_SECRET</code></li>
+                <li><code>VIOLETMEDIAPAY_SECRET_KEY_SANDBOX</code> / <code>_PRODUCTION</code></li>
               </ul>
+              <p className="pt-1">
+                Whitelist IP callback Violet Media Pay:{" "}
+                <code>202.155.132.37</code> (IPv4), <code>2001:df7:5300:9::122</code> (IPv6).
+              </p>
             </div>
           </Card>
 
