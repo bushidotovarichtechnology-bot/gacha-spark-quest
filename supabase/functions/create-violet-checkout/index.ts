@@ -57,8 +57,9 @@ Deno.serve(async (req) => {
       : pkg.price;
     const totalCoins = (pkg.coins ?? 0) + (pkg.bonus_coins ?? 0);
 
-    // ref_kode must be unique per transaction. Keep it URL-safe and reasonably short.
-    const refKode = `VMP${Date.now()}${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
+    // ref_kode must be unique per transaction. Docs require an int, so use
+    // millis + 4 random digits to stay numeric and unique.
+    const refKode = `${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
 
     const cfg = await getVioletConfig();
     if (!cfg.apiKey || !cfg.secretKey) {
