@@ -1,7 +1,14 @@
 // Shared Violet Media Pay (violetmediapay.com) helper.
-// NOTE: Endpoint paths dan skema payload di bawah ini adalah PLACEHOLDER —
-// sesuaikan dengan dokumentasi resmi https://violetmediapay.com/docs
-// setelah kredensial merchant diperoleh.
+//
+// Docs: https://violetmediapay.com — MERCHANT REST API
+//   Sandbox base : https://violetmediapay.com/api/sanbox
+//   Production   : https://violetmediapay.com/api/live
+//
+// Signature spec (per docs, HMAC-SHA256 hex):
+//   signature = hex_hmac_sha256( ref_kode + api_key + nominal , secret_key )
+//
+// Callbacks arrive as POST with header `X-Callback-Signature` computed the
+// same way from the callback payload's ref_kode/api_key/amount fields.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 export type VioletMode = "sandbox" | "production";
@@ -9,12 +16,12 @@ export type VioletMode = "sandbox" | "production";
 export interface VioletConfig {
   mode: VioletMode;
   apiKey: string;
-  merchantId: string;
+  secretKey: string;
   baseUrl: string;
 }
 
-const SANDBOX_BASE = "https://sandbox.violetmediapay.com/api/v1";
-const PRODUCTION_BASE = "https://api.violetmediapay.com/api/v1";
+const SANDBOX_BASE = "https://violetmediapay.com/api/sanbox";
+const PRODUCTION_BASE = "https://violetmediapay.com/api/live";
 
 export async function getVioletConfig(): Promise<VioletConfig> {
   const supabaseAdmin = createClient(
@@ -33,9 +40,11 @@ export async function getVioletConfig(): Promise<VioletConfig> {
   const apiKey = mode === "production"
     ? Deno.env.get("VIOLETMEDIAPAY_API_KEY_PRODUCTION") ?? ""
     : Deno.env.get("VIOLETMEDIAPAY_API_KEY_SANDBOX") ?? "";
-  const merchantId = mode === "production"
-    ? Deno.env.get("VIOLETMEDIAPAY_MERCHANT_ID_PRODUCTION") ?? ""
-    : Deno.env.get("VIOLETMEDIAPAY_MERCHANT_ID_SANDBOX") ?? "";
+  const secretKey = mode === "production"
+    ? Deno.env.get("VIOLETMEDIAPAY_SECRET_KEY_PRODUCTION") ??
+      Deno.env.get("VIOLETMEDIAPAY_API_SECRET_PRODUCTION") ?? ""
+    : Deno.env.get("VIOLETMEDIAPAY_SECRET_KEY_SANDBOX") ??
+      Deno.env.get("VIOLETMEDIAPAY_WEBHOOK_SECRET") ?? "";
 
   // Optional endpoint overrides stored in app_settings.violet_endpoints
   const { data: epRow } = await supabaseAdmin
@@ -48,62 +57,127 @@ export async function getVioletConfig(): Promise<VioletConfig> {
     ? (ep.production_base_url?.trim() || PRODUCTION_BASE)
     : (ep.sandbox_base_url?.trim() || SANDBOX_BASE);
 
-  return { mode, apiKey, merchantId, baseUrl };
+  return { mode, apiKey, secretKey, baseUrl };
 }
 
+// Hex HMAC-SHA256 helper.
+async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Build the request signature per Violet Media Pay spec. */
+export function violetSignature(
+  cfg: VioletConfig,
+  refKode: string,
+  amount: string | number,
+): Promise<string> {
+  const nominal = String(amount);
+  return hmacSha256Hex(cfg.secretKey, `${refKode}${cfg.apiKey}${nominal}`);
+}
 
 /**
- * Perform a POST request to Violet Media Pay. Adjust the auth header format
- * to match the official Violet Media Pay documentation (Bearer / X-API-Key /
- * signed request, dll). The current implementation uses a standard
- * `Authorization: Bearer <api_key>` header, which is the most common pattern.
+ * POST form-encoded request to Violet Media Pay. The `/create` endpoint
+ * accepts application/x-www-form-urlencoded per official examples.
  */
-export async function violetRequest<T = any>(
+export async function violetPostForm<T = any>(
   cfg: VioletConfig,
   path: string,
-  body: Record<string, unknown>,
+  fields: Record<string, string | number>,
 ): Promise<{ ok: boolean; status: number; data: T }> {
+  const body = new URLSearchParams();
+  for (const [k, v] of Object.entries(fields)) body.set(k, String(v));
+
   const res = await fetch(`${cfg.baseUrl}${path}`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
       "Accept": "application/json",
-      "Authorization": `Bearer ${cfg.apiKey}`,
-      "X-Merchant-Id": cfg.merchantId,
     },
-    body: JSON.stringify(body),
+    body: body.toString(),
   });
   let data: any = null;
   try { data = await res.json(); } catch { data = null; }
   return { ok: res.ok, status: res.status, data };
 }
 
+export async function violetGet<T = any>(
+  cfg: VioletConfig,
+  path: string,
+  query: Record<string, string | number>,
+): Promise<{ ok: boolean; status: number; data: T }> {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(query)) qs.set(k, String(v));
+  const url = `${cfg.baseUrl}${path}${qs.toString() ? `?${qs.toString()}` : ""}`;
+  const res = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
+  let data: any = null;
+  try { data = await res.json(); } catch { data = null; }
+  return { ok: res.ok, status: res.status, data };
+}
+
 /**
- * Verify webhook signature. Violet Media Pay is expected to sign each webhook
- * payload with HMAC-SHA256 using the merchant webhook secret. Header name
- * (`X-Violet-Signature`) may need adjustment per official docs.
+ * Verify the X-Callback-Signature header on an incoming Violet webhook.
+ * Computes hex HMAC-SHA256 of `ref_kode + api_key + amount` (from the
+ * callback body) keyed by the merchant secret_key, and compares against
+ * the header value.
  */
 export async function verifyVioletWebhook(opts: {
   headers: Headers;
   rawBody: string;
 }): Promise<boolean> {
-  const secret = Deno.env.get("VIOLETMEDIAPAY_WEBHOOK_SECRET") ?? "";
-  if (!secret) return false;
-  const signature =
+  const cfg = await getVioletConfig();
+  if (!cfg.secretKey || !cfg.apiKey) return false;
+
+  const provided =
+    opts.headers.get("X-Callback-Signature") ||
+    opts.headers.get("x-callback-signature") ||
     opts.headers.get("X-Violet-Signature") ||
-    opts.headers.get("x-violet-signature") ||
     opts.headers.get("Signature") ||
     "";
-  if (!signature) return false;
+  if (!provided) return false;
 
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(opts.rawBody));
-  const expectedHex = Array.from(new Uint8Array(sig))
-    .map((b) => b.toString(16).padStart(2, "0")).join("");
-  // Support hex or "sha256=<hex>" formats
-  const provided = signature.replace(/^sha256=/i, "").toLowerCase();
-  return provided === expectedHex;
+  // Parse payload — Violet posts form-encoded or JSON, accept either.
+  let payload: Record<string, unknown> = {};
+  const contentType = (opts.headers.get("content-type") || "").toLowerCase();
+  try {
+    if (contentType.includes("application/json")) {
+      payload = JSON.parse(opts.rawBody || "{}");
+    } else {
+      // form-encoded fallback
+      const usp = new URLSearchParams(opts.rawBody);
+      for (const [k, v] of usp.entries()) payload[k] = v;
+    }
+  } catch {
+    // If JSON parse fails, still try form-encoded.
+    try {
+      const usp = new URLSearchParams(opts.rawBody);
+      for (const [k, v] of usp.entries()) payload[k] = v;
+    } catch { /* ignore */ }
+  }
+
+  const refKode = String(payload.ref_kode ?? payload.reference ?? payload.reference_id ?? "");
+  const amount = String(payload.amount ?? payload.nominal ?? payload.gross_amount ?? "");
+  if (!refKode || !amount) return false;
+
+  const expected = await hmacSha256Hex(cfg.secretKey, `${refKode}${cfg.apiKey}${amount}`);
+  const normalized = provided.replace(/^sha256=/i, "").toLowerCase();
+  return normalized === expected;
+}
+
+/** Parse a callback body (JSON or form-encoded) into a plain object. */
+export function parseVioletCallbackBody(rawBody: string, contentType: string): Record<string, any> {
+  const ct = (contentType || "").toLowerCase();
+  if (ct.includes("application/json")) {
+    try { return JSON.parse(rawBody || "{}"); } catch { return {}; }
+  }
+  const usp = new URLSearchParams(rawBody);
+  const out: Record<string, string> = {};
+  for (const [k, v] of usp.entries()) out[k] = v;
+  return out;
 }
