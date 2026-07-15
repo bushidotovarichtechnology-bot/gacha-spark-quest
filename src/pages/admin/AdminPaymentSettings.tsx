@@ -10,8 +10,8 @@ import { CreditCard, AlertTriangle, CheckCircle2, Wallet, Link2, KeyRound, Copy 
 
 type Mode = "sandbox" | "production";
 
-const DEFAULT_SANDBOX_BASE = "https://sandbox.violetmediapay.com/api/v1";
-const DEFAULT_PRODUCTION_BASE = "https://api.violetmediapay.com/api/v1";
+const DEFAULT_SANDBOX_BASE = "https://violetmediapay.com/api/sanbox";
+const DEFAULT_PRODUCTION_BASE = "https://violetmediapay.com/api/live";
 
 const AdminPaymentSettings = () => {
   const [violetMode, setVioletMode] = useState<Mode>("sandbox");
