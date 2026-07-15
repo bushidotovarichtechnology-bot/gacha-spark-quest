@@ -179,9 +179,8 @@ const AdminPaymentSettings = () => {
                 <div>
                   <p className="font-medium text-destructive">Mode Production aktif</p>
                   <p className="text-muted-foreground text-xs">
-                    Pastikan <code>VIOLETMEDIAPAY_API_KEY_PRODUCTION</code>,{" "}
-                    <code>VIOLETMEDIAPAY_MERCHANT_ID_PRODUCTION</code>, dan{" "}
-                    <code>VIOLETMEDIAPAY_WEBHOOK_SECRET</code> sudah valid.
+                    Pastikan <code>VIOLETMEDIAPAY_API_KEY_PRODUCTION</code> dan{" "}
+                    <code>VIOLETMEDIAPAY_SECRET_KEY_PRODUCTION</code> sudah valid.
                   </p>
                 </div>
               </div>
@@ -192,7 +191,7 @@ const AdminPaymentSettings = () => {
                   <p className="font-medium">Mode Sandbox aktif</p>
                   <p className="text-muted-foreground text-xs">
                     Menggunakan <code>VIOLETMEDIAPAY_API_KEY_SANDBOX</code> dan{" "}
-                    <code>VIOLETMEDIAPAY_MERCHANT_ID_SANDBOX</code>.
+                    <code>VIOLETMEDIAPAY_SECRET_KEY_SANDBOX</code>.
                   </p>
                 </div>
               </div>
