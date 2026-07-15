@@ -45,8 +45,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ref_kode prefixed with SHIP- so the webhook routes it to prize_claims.
-    const refKode = `SHIP-${Date.now()}-${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
+    // ref_kode must be numeric per Violet docs. Prefix "2" distinguishes
+    // shipping payments from top-ups ("1") when routing webhooks.
+    const refKode = `2${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
     const projectRef = Deno.env.get("SUPABASE_URL")!.split("//")[1].split(".")[0];
     const callbackUrl = `https://${projectRef}.supabase.co/functions/v1/violet-webhook`;
     const origin = req.headers.get("origin") || "";

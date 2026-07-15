@@ -57,8 +57,9 @@ Deno.serve(async (req) => {
       : pkg.price;
     const totalCoins = (pkg.coins ?? 0) + (pkg.bonus_coins ?? 0);
 
-    // ref_kode must be unique per transaction. Keep it URL-safe and reasonably short.
-    const refKode = `VMP${Date.now()}${crypto.randomUUID().replace(/-/g, "").slice(0, 8)}`;
+    // ref_kode must be numeric per Violet docs. Prefix "1" distinguishes
+    // top-ups from shipping payments ("2") when routing webhooks.
+    const refKode = `1${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
 
     const cfg = await getVioletConfig();
     if (!cfg.apiKey || !cfg.secretKey) {
