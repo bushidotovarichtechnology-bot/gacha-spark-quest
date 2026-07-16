@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
       api_key: cfg.apiKey,
       ref_kode: order_id,
     });
+    console.log("Violet /transactions response:", JSON.stringify({ ok, httpStatus, data }));
     if (!ok) {
       return new Response(JSON.stringify({
         success: false, status: tx.status, credited: false,
@@ -85,13 +86,27 @@ Deno.serve(async (req) => {
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const rawStatus =
-      data?.data?.status_transaksi || data?.data?.status ||
-      data?.status_transaksi || data?.status || "";
-    const status = mapStatus(String(rawStatus));
+    // Extract raw status ONLY from the transaction data envelope (`data.data.*`).
+    // The top-level `data.status` is a request-envelope flag ("invalid", true,
+    // "success", etc.) — using it as the transaction status was overwriting
+    // pending rows with garbage like "invalid".
+    const txData = data?.data ?? null;
+    const rawStatus: string = String(
+      txData?.status_transaksi ?? txData?.status ?? txData?.transaction_status ?? "",
+    );
     const paymentType =
-      data?.data?.channel_payment || data?.data?.payment_method ||
-      data?.channel_payment || data?.payment_method || null;
+      txData?.channel_payment || txData?.payment_method || null;
+
+    if (!txData || !rawStatus) {
+      // Violet returned an error envelope (e.g. { status: "invalid", message: "..." })
+      // or a transaction with no status. Do NOT overwrite the pending row.
+      return new Response(JSON.stringify({
+        success: false, status: tx.status, credited: false, retriable: true,
+        error: "violet_status_unavailable",
+        provider_message: data?.message || data?.error || null,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const status = mapStatus(rawStatus);
 
     const { data: settleRes, error: settleErr } = await supabase.rpc(
       "settle_transaction_atomic" as any,
