@@ -73,7 +73,7 @@ const DrawHistory = () => {
         {/* History list */}
         <div className="space-y-2">
           {filtered.map((entry, i) => {
-            const meta = tierMeta[entry.tier];
+            const meta = tierMeta[entry.tier] ?? tierMeta.C;
             const Icon = meta.icon;
             let dateStr = entry.drawnAt;
             try {
