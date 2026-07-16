@@ -27,8 +27,8 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return json(401, { error: "Unauthorized" });
 
-    const { claim_id, shipping_cost, shipping_method, prize_name, channel_payment } = await req.json();
-    if (!claim_id || !shipping_cost || !shipping_method) {
+    const { claim_id, prize_name, channel_payment } = await req.json();
+    if (!claim_id) {
       return json(400, { error: "Missing required fields" });
     }
 
@@ -36,6 +36,57 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Load the claim server-side and verify ownership. Ignore any client-provided
+    // shipping_cost — recompute it authoritatively from the shipping_zones table.
+    const { data: claim, error: claimError } = await supabaseAdmin
+      .from("prize_claims")
+      .select("id, user_id, province, shipping_method, payment_status, shipping_paid")
+      .eq("id", claim_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (claimError || !claim) {
+      return json(404, { error: "Claim not found" });
+    }
+    if (claim.payment_status === "paid" || claim.shipping_paid) {
+      return json(400, { error: "Claim already paid", user_message: "Klaim ini sudah dibayar." });
+    }
+    if (!claim.province || !claim.shipping_method) {
+      return json(400, { error: "Claim missing shipping address/method" });
+    }
+
+    // Server-authoritative shipping price lookup.
+    const { data: zoneRow, error: zoneError } = await supabaseAdmin
+      .from("shipping_zones")
+      .select("regular_price, express_price, same_day_price, same_day_available")
+      .contains("provinces", [claim.province])
+      .maybeSingle();
+
+    if (zoneError || !zoneRow) {
+      return json(400, {
+        error: "No shipping zone for province",
+        user_message: "Zona pengiriman untuk provinsi ini belum dikonfigurasi.",
+      });
+    }
+
+    let authoritativeCost = 0;
+    switch (claim.shipping_method) {
+      case "express": authoritativeCost = Number(zoneRow.express_price) || 0; break;
+      case "same_day":
+        if (!zoneRow.same_day_available) {
+          return json(400, { error: "Same day not available for this province" });
+        }
+        authoritativeCost = Number(zoneRow.same_day_price) || 0;
+        break;
+      default: authoritativeCost = Number(zoneRow.regular_price) || 0;
+    }
+    if (!authoritativeCost || authoritativeCost <= 0) {
+      return json(400, { error: "Invalid shipping cost for this zone/method" });
+    }
+
+    const shipping_cost = authoritativeCost;
+    const shipping_method = claim.shipping_method;
 
     const cfg = await getVioletConfig();
     if (!cfg.apiKey || !cfg.secretKey) {
