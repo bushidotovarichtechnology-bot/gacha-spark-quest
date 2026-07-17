@@ -159,7 +159,7 @@ const TransactionHistory = () => {
       .channel("user-transactions")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "transactions" },
+        { event: "UPDATE", schema: "public", table: "transactions", filter: `user_id=eq.${user.id}` },
         (payload) => {
           const newTx = payload.new as any;
           const prevStatus = prevStatusRef.current[newTx.id];
