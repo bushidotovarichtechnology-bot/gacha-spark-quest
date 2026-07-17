@@ -107,9 +107,11 @@ const TransactionHistory = () => {
   const prevStatusRef = useRef<Record<string, string>>({});
 
   const fetchTransactions = async () => {
+    if (!user) return;
     const { data } = await supabase
       .from("transactions")
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     if (data) {
       const txs = data as unknown as Transaction[];
@@ -121,9 +123,11 @@ const TransactionHistory = () => {
   };
 
   const fetchLedger = async () => {
+    if (!user) return;
     const { data } = await supabase
       .from("coin_ledger" as any)
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(100);
     if (data) {
@@ -155,7 +159,7 @@ const TransactionHistory = () => {
       .channel("user-transactions")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "transactions" },
+        { event: "UPDATE", schema: "public", table: "transactions", filter: `user_id=eq.${user.id}` },
         (payload) => {
           const newTx = payload.new as any;
           const prevStatus = prevStatusRef.current[newTx.id];
