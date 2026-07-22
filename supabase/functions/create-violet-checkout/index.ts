@@ -94,21 +94,36 @@ Deno.serve(async (req) => {
 
     const { ok, status, data } = await violetPostForm<any>(cfg, "/create", fields);
 
+    const payload = data?.data ?? data ?? {};
+
     // Common response shapes across gateways: try a few likely fields.
     const paymentUrl =
-      data?.data?.payment_url ||
-      data?.data?.redirect_url ||
-      data?.data?.checkout_url ||
-      data?.data?.pay_url ||
-      data?.data?.url ||
+      payload?.payment_url ||
+      payload?.redirect_url ||
+      payload?.checkout_url ||
+      payload?.pay_url ||
+      payload?.url ||
       data?.payment_url ||
       data?.redirect_url ||
       data?.checkout_url ||
       data?.url ||
       null;
 
-    const providerOk = ok && (data?.status === true || data?.status === "success" || !!paymentUrl);
-    if (!providerOk || !paymentUrl) {
+    // Method-specific instruction fields.
+    const qrString =
+      payload?.qr_string || payload?.qris_string || payload?.qr_code || payload?.qrString || null;
+    const qrImageUrl =
+      payload?.qr_image || payload?.qr_url || payload?.qris_image || payload?.qr_image_url || null;
+    const vaNumber =
+      payload?.va_number || payload?.virtual_account || payload?.no_va || payload?.va || null;
+    const vaBank =
+      payload?.bank || payload?.bank_code || payload?.va_bank || null;
+    const expiredAt =
+      payload?.expired_time || payload?.expired_at || payload?.expiry || payload?.expire_time || null;
+
+    const hasInstruction = !!(paymentUrl || qrString || qrImageUrl || vaNumber);
+    const providerOk = ok && (data?.status === true || data?.status === "success" || hasInstruction);
+    if (!providerOk || !hasInstruction) {
       console.error("Violet Media Pay create failed:", status, data);
       const msg = data?.message || data?.error || data?.data?.message || "Failed to create Violet Media Pay session";
       const isSslHandshake = status === 525 || status === 526;
@@ -118,8 +133,6 @@ Deno.serve(async (req) => {
         : isProviderDown
           ? "Layanan Violet Media Pay sedang bermasalah. Silakan coba lagi nanti."
           : "Gagal membuat sesi pembayaran Violet Media Pay. Periksa kembali data pembayaran Anda.";
-      // Return 200 so supabase.functions.invoke doesn't throw — the client
-      // reads the structured error body and shows a toast.
       return json(200, {
         error: msg,
         user_message: userMessage,
@@ -145,6 +158,17 @@ Deno.serve(async (req) => {
       redirect_url: paymentUrl,
       order_id: refKode,
       mode: cfg.mode,
+      amount: finalAmount,
+      channel: fields.channel_payment,
+      instruction: {
+        qr_string: qrString,
+        qr_image_url: qrImageUrl,
+        va_number: vaNumber,
+        va_bank: vaBank,
+        expired_at: expiredAt,
+        payment_url: paymentUrl,
+      },
+      raw: payload,
     });
   } catch (err) {
     console.error("create-violet-checkout error:", err);
