@@ -363,6 +363,12 @@ const TopUp = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      <PaymentInstructionDialog
+        data={instructionData}
+        open={!!instructionData}
+        onOpenChange={(open) => !open && setInstructionData(null)}
+      />
     </div>
   );
 };
