@@ -114,6 +114,7 @@ const TopUp = () => {
         body: {
           package_id: selectedPackage.id,
           return_url: `${window.location.origin}/transactions`,
+          channel_payment: selectedChannel,
         },
       });
       if (error || !data?.redirect_url) {
