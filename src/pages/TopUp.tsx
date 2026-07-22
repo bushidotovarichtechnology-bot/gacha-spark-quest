@@ -151,17 +151,18 @@ const TopUp = () => {
           channel_payment: selectedChannel,
         },
       });
-      if (error || !data?.redirect_url) {
+      if (error || !data || data?.error) {
         const description = await getPaymentErrorMessage(error, data?.user_message || "Gagal membuat sesi pembayaran");
         toast({ title: "Pembayaran belum siap", description, variant: "destructive" });
         return;
       }
       setSelectedPackage(null);
-      toast({
-        title: "Mengarahkan ke Violet Media Pay",
-        description: "Anda akan diarahkan ke halaman pembayaran.",
+      setInstructionData({
+        order_id: data.order_id,
+        amount: data.amount ?? 0,
+        channel: data.channel ?? selectedChannel,
+        instruction: data.instruction ?? { payment_url: data.redirect_url ?? null },
       });
-      window.location.href = data.redirect_url;
     } catch (err: any) {
       console.error("Payment error:", err);
       const description = await getPaymentErrorMessage(err, "Gagal memproses pembayaran");
