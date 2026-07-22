@@ -19,6 +19,38 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = { Coins, Zap, Sparkles, Crown };
 
+const PAYMENT_CHANNEL_GROUPS: { label: string; channels: { code: string; label: string }[] }[] = [
+  {
+    label: "QRIS",
+    channels: [{ code: "QRIS", label: "QRIS" }],
+  },
+  {
+    label: "Virtual Account",
+    channels: [
+      { code: "BCA_VA", label: "BCA" },
+      { code: "BNI_VA", label: "BNI" },
+      { code: "BRI_VA", label: "BRI" },
+      { code: "MANDIRI_VA", label: "Mandiri" },
+      { code: "PERMATA_VA", label: "Permata" },
+      { code: "CIMB_VA", label: "CIMB" },
+    ],
+  },
+  {
+    label: "E-Wallet",
+    channels: [
+      { code: "OVO", label: "OVO" },
+      { code: "DANA", label: "DANA" },
+      { code: "SHOPEEPAY", label: "ShopeePay" },
+      { code: "LINKAJA", label: "LinkAja" },
+      { code: "GOPAY", label: "GoPay" },
+    ],
+  },
+  {
+    label: "Kartu Kredit",
+    channels: [{ code: "CREDIT_CARD", label: "Visa / Mastercard / JCB" }],
+  },
+];
+
 type CoinPackage = {
   id: string;
   name: string;
@@ -92,6 +124,7 @@ const TopUp = () => {
   const [processing, setProcessing] = useState(false);
   const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
+  const [selectedChannel, setSelectedChannel] = useState<string>("QRIS");
 
   useEffect(() => {
     supabase
@@ -113,6 +146,7 @@ const TopUp = () => {
         body: {
           package_id: selectedPackage.id,
           return_url: `${window.location.origin}/transactions`,
+          channel_payment: selectedChannel,
         },
       });
       if (error || !data?.redirect_url) {
@@ -285,6 +319,32 @@ const TopUp = () => {
                     </div>
                   )}
                 </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-foreground">Pilih metode pembayaran</div>
+                  {PAYMENT_CHANNEL_GROUPS.map((group) => (
+                    <div key={group.label} className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">{group.label}</div>
+                      <div className="flex flex-wrap gap-2">
+                        {group.channels.map((ch) => (
+                          <button
+                            key={ch.code}
+                            type="button"
+                            onClick={() => setSelectedChannel(ch.code)}
+                            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                              selectedChannel === ch.code
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-secondary text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                            }`}
+                          >
+                            {ch.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <Button variant="gold" className="w-full" onClick={handlePurchase} disabled={processing}>
                   {processing ? (
                     <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{t("processing")}</span>
