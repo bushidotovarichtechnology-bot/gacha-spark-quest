@@ -287,6 +287,32 @@ const TopUp = () => {
                     </div>
                   )}
                 </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-foreground">Pilih metode pembayaran</div>
+                  {PAYMENT_CHANNEL_GROUPS.map((group) => (
+                    <div key={group.label} className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">{group.label}</div>
+                      <div className="flex flex-wrap gap-2">
+                        {group.channels.map((ch) => (
+                          <button
+                            key={ch.code}
+                            type="button"
+                            onClick={() => setSelectedChannel(ch.code)}
+                            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                              selectedChannel === ch.code
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-secondary text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                            }`}
+                          >
+                            {ch.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <Button variant="gold" className="w-full" onClick={handlePurchase} disabled={processing}>
                   {processing ? (
                     <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{t("processing")}</span>
