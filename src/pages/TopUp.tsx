@@ -19,6 +19,38 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = { Coins, Zap, Sparkles, Crown };
 
+const PAYMENT_CHANNEL_GROUPS: { label: string; channels: { code: string; label: string }[] }[] = [
+  {
+    label: "QRIS",
+    channels: [{ code: "QRIS", label: "QRIS" }],
+  },
+  {
+    label: "Virtual Account",
+    channels: [
+      { code: "BCA_VA", label: "BCA" },
+      { code: "BNI_VA", label: "BNI" },
+      { code: "BRI_VA", label: "BRI" },
+      { code: "MANDIRI_VA", label: "Mandiri" },
+      { code: "PERMATA_VA", label: "Permata" },
+      { code: "CIMB_VA", label: "CIMB" },
+    ],
+  },
+  {
+    label: "E-Wallet",
+    channels: [
+      { code: "OVO", label: "OVO" },
+      { code: "DANA", label: "DANA" },
+      { code: "SHOPEEPAY", label: "ShopeePay" },
+      { code: "LINKAJA", label: "LinkAja" },
+      { code: "GOPAY", label: "GoPay" },
+    ],
+  },
+  {
+    label: "Kartu Kredit",
+    channels: [{ code: "CREDIT_CARD", label: "Visa / Mastercard / JCB" }],
+  },
+];
+
 type CoinPackage = {
   id: string;
   name: string;
