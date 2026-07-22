@@ -92,6 +92,7 @@ const TopUp = () => {
   const [processing, setProcessing] = useState(false);
   const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
+  const [selectedChannel, setSelectedChannel] = useState<string>("QRIS");
 
   useEffect(() => {
     supabase
