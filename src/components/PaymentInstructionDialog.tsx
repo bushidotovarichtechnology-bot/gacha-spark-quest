@@ -30,9 +30,9 @@ const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
 const CHANNEL_KIND = (ch: string): "qris" | "va" | "ewallet" | "card" | "redirect" => {
-  const c = (ch || "").toUpperCase();
+  const c = (ch || "").toUpperCase().replace(/[\s_-]/g, "");
   if (c.includes("QRIS") || c === "QR") return "qris";
-  if (c.includes("VA") || ["BCA", "BNI", "BRI", "MANDIRI", "PERMATA", "CIMB"].some((b) => c.includes(b))) return "va";
+  if (c.includes("VA") || ["BCA", "BNI", "BRI", "MANDIRI", "PERMATA", "CIMB", "BSI", "DANAMON", "OCBC", "SINARMAS", "PANIN", "MAYBANK", "BNC", "SAMPOERNA", "ARTAGRAHA", "ATMBERSAMA"].some((b) => c.includes(b))) return "va";
   if (["OVO", "DANA", "SHOPEEPAY", "LINKAJA", "GOPAY"].some((w) => c.includes(w))) return "ewallet";
   if (c.includes("CARD") || c.includes("CC") || c.includes("CREDIT")) return "card";
   return "redirect";
