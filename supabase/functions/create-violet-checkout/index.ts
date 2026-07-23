@@ -112,8 +112,34 @@ Deno.serve(async (req) => {
     // Method-specific instruction fields.
     const qrString =
       payload?.qr_string || payload?.qris_string || payload?.qr_code || payload?.qrString || null;
-    const qrImageUrl =
+    let qrImageUrl =
       payload?.qr_image || payload?.qr_url || payload?.qris_image || payload?.qr_image_url || null;
+
+    // Violet's /create only returns `checkout_url` for QRIS. Fetch that page
+    // server-side and extract the QR image URL so we can render it inline
+    // instead of forcing an iframe/new tab.
+    const channelStr = String(fields.channel_payment || "").toUpperCase();
+    const isQris = channelStr.includes("QRIS") || channelStr.includes("QRISC");
+    if (!qrImageUrl && !qrString && isQris && paymentUrl) {
+      try {
+        const html = await (await fetch(paymentUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 BushidoVault" },
+        })).text();
+        // Look for an <img> whose src points to a QR (data URI, /qr, or qris in path)
+        const imgMatches = Array.from(html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)).map((m) => m[1]);
+        const qrCandidate = imgMatches.find((src) =>
+          src.startsWith("data:image") ||
+          /qr(is)?|barcode|chart\?/i.test(src)
+        );
+        if (qrCandidate) {
+          qrImageUrl = qrCandidate.startsWith("http") || qrCandidate.startsWith("data:")
+            ? qrCandidate
+            : new URL(qrCandidate, paymentUrl).toString();
+        }
+      } catch (e) {
+        console.warn("QR extraction failed:", e);
+      }
+    }
     const vaNumber =
       payload?.va_number || payload?.virtual_account || payload?.no_va || payload?.va || null;
     const vaBank =
