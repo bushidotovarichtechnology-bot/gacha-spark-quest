@@ -20,6 +20,8 @@ import { PaymentInstructionDialog, type PaymentInstructionData } from "@/compone
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = { Coins, Zap, Sparkles, Crown };
 
+// Kode channel harus sama persis dengan spesifikasi Violet Media Pay
+// (lihat https://violetmediapay.com/dokumentasi/ – Daftar Channel Pembayaran).
 const PAYMENT_CHANNEL_GROUPS: { label: string; channels: { code: string; label: string }[] }[] = [
   {
     label: "QRIS",
@@ -28,12 +30,14 @@ const PAYMENT_CHANNEL_GROUPS: { label: string; channels: { code: string; label: 
   {
     label: "Virtual Account",
     channels: [
-      { code: "BCA_VA", label: "BCA" },
-      { code: "BNI_VA", label: "BNI" },
-      { code: "BRI_VA", label: "BRI" },
-      { code: "MANDIRI_VA", label: "Mandiri" },
-      { code: "PERMATA_VA", label: "Permata" },
-      { code: "CIMB_VA", label: "CIMB" },
+      { code: "BCAVA", label: "BCA" },
+      { code: "BNIVA", label: "BNI" },
+      { code: "BRIVA", label: "BRI" },
+      { code: "MANDIRIVA", label: "Mandiri" },
+      { code: "PERMATAVA", label: "Permata" },
+      { code: "CIMBNIAGA", label: "CIMB Niaga" },
+      { code: "BSI", label: "BSI" },
+      { code: "DANAMON", label: "Danamon" },
     ],
   },
   {
@@ -41,14 +45,13 @@ const PAYMENT_CHANNEL_GROUPS: { label: string; channels: { code: string; label: 
     channels: [
       { code: "OVO", label: "OVO" },
       { code: "DANA", label: "DANA" },
-      { code: "SHOPEEPAY", label: "ShopeePay" },
-      { code: "LINKAJA", label: "LinkAja" },
-      { code: "GOPAY", label: "GoPay" },
+      { code: "Shopee Pay", label: "ShopeePay" },
+      { code: "Link Aja", label: "LinkAja" },
     ],
   },
   {
-    label: "Kartu Kredit",
-    channels: [{ code: "CREDIT_CARD", label: "Visa / Mastercard / JCB" }],
+    label: "Convenience Store",
+    channels: [{ code: "ALFAMART", label: "Alfamart" }],
   },
 ];
 
