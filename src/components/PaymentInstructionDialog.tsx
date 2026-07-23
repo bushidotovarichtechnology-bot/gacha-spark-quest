@@ -149,6 +149,15 @@ export const PaymentInstructionDialog = ({
                   alt="QRIS Code"
                   className="mx-auto h-64 w-64 rounded-lg border border-border bg-white p-2"
                 />
+              ) : instruction.payment_url ? (
+                <div className="overflow-hidden rounded-lg border border-border bg-white">
+                  <iframe
+                    src={instruction.payment_url}
+                    title="QRIS Payment"
+                    className="h-[420px] w-full"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  />
+                </div>
               ) : (
                 <div className="flex h-64 items-center justify-center rounded-lg border border-border bg-secondary">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
