@@ -17,6 +17,27 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PaymentInstructionDialog, type PaymentInstructionData } from "@/components/PaymentInstructionDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+// Channel Violet Media Pay yang mewajibkan cus_phone (nomor HP customer).
+const PHONE_REQUIRED_CHANNELS = new Set(["OVO", "DANA", "Shopee Pay", "Link Aja"]);
+const channelRequiresPhone = (code: string) => PHONE_REQUIRED_CHANNELS.has(code);
+
+// Normalisasi ke format 08xxxxxxxxxx (Violet menerima format lokal Indonesia).
+const normalizePhone = (raw: string): string => {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("62")) return "0" + digits.slice(2);
+  if (digits.startsWith("0")) return digits;
+  if (digits.startsWith("8")) return "0" + digits;
+  return digits;
+};
+
+const isValidIdPhone = (raw: string): boolean => {
+  const n = normalizePhone(raw);
+  // 08xx dengan panjang 10–13 digit total
+  return /^08\d{8,11}$/.test(n);
+};
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = { Coins, Zap, Sparkles, Crown };
 
