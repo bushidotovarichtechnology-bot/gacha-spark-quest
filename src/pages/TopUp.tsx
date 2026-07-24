@@ -392,6 +392,34 @@ const TopUp = () => {
                   ))}
                 </div>
 
+                {channelRequiresPhone(selectedChannel) && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cus_phone" className="text-sm font-medium text-foreground">
+                      Nomor HP terdaftar di {PAYMENT_CHANNEL_GROUPS.flatMap(g => g.channels).find(c => c.code === selectedChannel)?.label}
+                    </Label>
+                    <Input
+                      id="cus_phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      placeholder="Contoh: 081234567890"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (phoneError) setPhoneError("");
+                      }}
+                      aria-invalid={!!phoneError}
+                      aria-describedby="cus_phone_help"
+                      className={phoneError ? "border-destructive focus-visible:ring-destructive" : ""}
+                    />
+                    <p id="cus_phone_help" className={`text-xs ${phoneError ? "text-destructive" : "text-muted-foreground"}`}>
+                      {phoneError || "Wajib nomor HP aktif yang terdaftar di aplikasi e-wallet Anda untuk menerima permintaan pembayaran."}
+                    </p>
+                  </div>
+                )}
+
+
+
                 <Button variant="gold" className="w-full" onClick={handlePurchase} disabled={processing}>
                   {processing ? (
                     <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{t("processing")}</span>
