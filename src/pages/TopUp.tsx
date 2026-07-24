@@ -173,6 +173,18 @@ const TopUp = () => {
 
   const handlePurchase = async () => {
     if (!selectedPackage || !user) return;
+
+    const needsPhone = channelRequiresPhone(selectedChannel);
+    let normalizedPhone = "";
+    if (needsPhone) {
+      if (!isValidIdPhone(phone)) {
+        setPhoneError("Masukkan nomor HP Indonesia yang valid (contoh: 081234567890).");
+        return;
+      }
+      normalizedPhone = normalizePhone(phone);
+      setPhoneError("");
+    }
+
     setProcessing(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-violet-checkout", {
@@ -180,6 +192,7 @@ const TopUp = () => {
           package_id: selectedPackage.id,
           return_url: `${window.location.origin}/transactions`,
           channel_payment: selectedChannel,
+          cus_phone: needsPhone ? normalizedPhone : undefined,
         },
       });
       if (error || !data || data?.error) {
