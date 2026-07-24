@@ -29,9 +29,30 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return json(401, { error: "Unauthorized" });
 
-    const { package_id, return_url, channel_payment } = await req.json();
+    const { package_id, return_url, channel_payment, cus_phone } = await req.json();
     if (!package_id || typeof package_id !== "string") {
       return json(400, { error: "Missing package_id" });
+    }
+
+    // Channel Violet Media Pay yang mewajibkan cus_phone.
+    const PHONE_REQUIRED = new Set(["OVO", "DANA", "Shopee Pay", "Link Aja"]);
+    const channelStrIn = (channel_payment && String(channel_payment).trim()) || "QRIS";
+    const needsPhone = PHONE_REQUIRED.has(channelStrIn);
+
+    // Normalisasi ke format 08xxxxxxxxxx.
+    const normalizePhone = (raw: string): string => {
+      const digits = (raw || "").replace(/\D/g, "");
+      if (digits.startsWith("62")) return "0" + digits.slice(2);
+      if (digits.startsWith("0")) return digits;
+      if (digits.startsWith("8")) return "0" + digits;
+      return digits;
+    };
+    const phoneNormalized = normalizePhone(typeof cus_phone === "string" ? cus_phone : "");
+    if (needsPhone && !/^08\d{8,11}$/.test(phoneNormalized)) {
+      return json(400, {
+        error: "invalid_phone",
+        user_message: `Nomor HP tidak valid. Metode ${channelStrIn} memerlukan nomor HP Indonesia yang terdaftar (contoh: 081234567890).`,
+      });
     }
 
     const supabaseAdmin = createClient(
