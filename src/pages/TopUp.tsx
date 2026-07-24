@@ -17,6 +17,27 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PaymentInstructionDialog, type PaymentInstructionData } from "@/components/PaymentInstructionDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+// Channel Violet Media Pay yang mewajibkan cus_phone (nomor HP customer).
+const PHONE_REQUIRED_CHANNELS = new Set(["OVO", "DANA", "Shopee Pay", "Link Aja"]);
+const channelRequiresPhone = (code: string) => PHONE_REQUIRED_CHANNELS.has(code);
+
+// Normalisasi ke format 08xxxxxxxxxx (Violet menerima format lokal Indonesia).
+const normalizePhone = (raw: string): string => {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("62")) return "0" + digits.slice(2);
+  if (digits.startsWith("0")) return digits;
+  if (digits.startsWith("8")) return "0" + digits;
+  return digits;
+};
+
+const isValidIdPhone = (raw: string): boolean => {
+  const n = normalizePhone(raw);
+  // 08xx dengan panjang 10–13 digit total
+  return /^08\d{8,11}$/.test(n);
+};
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = { Coins, Zap, Sparkles, Crown };
 
@@ -130,6 +151,13 @@ const TopUp = () => {
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<string>("QRIS");
   const [instructionData, setInstructionData] = useState<PaymentInstructionData | null>(null);
+  const [phone, setPhone] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
+
+  // Reset error saat channel berubah.
+  useEffect(() => {
+    setPhoneError("");
+  }, [selectedChannel]);
 
   useEffect(() => {
     supabase
@@ -145,6 +173,18 @@ const TopUp = () => {
 
   const handlePurchase = async () => {
     if (!selectedPackage || !user) return;
+
+    const needsPhone = channelRequiresPhone(selectedChannel);
+    let normalizedPhone = "";
+    if (needsPhone) {
+      if (!isValidIdPhone(phone)) {
+        setPhoneError("Masukkan nomor HP Indonesia yang valid (contoh: 081234567890).");
+        return;
+      }
+      normalizedPhone = normalizePhone(phone);
+      setPhoneError("");
+    }
+
     setProcessing(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-violet-checkout", {
@@ -152,6 +192,7 @@ const TopUp = () => {
           package_id: selectedPackage.id,
           return_url: `${window.location.origin}/transactions`,
           channel_payment: selectedChannel,
+          cus_phone: needsPhone ? normalizedPhone : undefined,
         },
       });
       if (error || !data || data?.error) {
@@ -350,6 +391,34 @@ const TopUp = () => {
                     </div>
                   ))}
                 </div>
+
+                {channelRequiresPhone(selectedChannel) && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cus_phone" className="text-sm font-medium text-foreground">
+                      Nomor HP terdaftar di {PAYMENT_CHANNEL_GROUPS.flatMap(g => g.channels).find(c => c.code === selectedChannel)?.label}
+                    </Label>
+                    <Input
+                      id="cus_phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      placeholder="Contoh: 081234567890"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (phoneError) setPhoneError("");
+                      }}
+                      aria-invalid={!!phoneError}
+                      aria-describedby="cus_phone_help"
+                      className={phoneError ? "border-destructive focus-visible:ring-destructive" : ""}
+                    />
+                    <p id="cus_phone_help" className={`text-xs ${phoneError ? "text-destructive" : "text-muted-foreground"}`}>
+                      {phoneError || "Wajib nomor HP aktif yang terdaftar di aplikasi e-wallet Anda untuk menerima permintaan pembayaran."}
+                    </p>
+                  </div>
+                )}
+
+
 
                 <Button variant="gold" className="w-full" onClick={handlePurchase} disabled={processing}>
                   {processing ? (
