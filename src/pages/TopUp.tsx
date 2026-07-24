@@ -151,6 +151,13 @@ const TopUp = () => {
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<string>("QRIS");
   const [instructionData, setInstructionData] = useState<PaymentInstructionData | null>(null);
+  const [phone, setPhone] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
+
+  // Reset error saat channel berubah.
+  useEffect(() => {
+    setPhoneError("");
+  }, [selectedChannel]);
 
   useEffect(() => {
     supabase
