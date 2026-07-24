@@ -150,19 +150,30 @@ Deno.serve(async (req) => {
     const hasInstruction = !!(paymentUrl || qrString || qrImageUrl || vaNumber);
     const providerOk = ok && (data?.status === true || data?.status === "success" || hasInstruction);
     if (!providerOk || !hasInstruction) {
-      console.error("Violet Media Pay create failed:", status, data);
-      const msg = data?.message || data?.error || data?.data?.message || "Failed to create Violet Media Pay session";
+      console.error("Violet Media Pay create failed:", status, JSON.stringify(data));
+      // Violet menaruh pesan error yang mudah dibaca di data.data.status
+      // (mis. "Gagal: Feature Not Allowed" saat channel belum diaktifkan).
+      const providerMsg =
+        (typeof data?.data?.status === "string" ? data.data.status : null) ||
+        data?.message ||
+        data?.error ||
+        data?.data?.message ||
+        "Failed to create Violet Media Pay session";
       const isSslHandshake = status === 525 || status === 526;
       const isProviderDown = status >= 500;
-      const userMessage = isSslHandshake
-        ? "Layanan pembayaran Violet Media Pay sedang tidak dapat diakses (SSL handshake gagal di sisi provider). Silakan coba beberapa saat lagi."
-        : isProviderDown
-          ? "Layanan Violet Media Pay sedang bermasalah. Silakan coba lagi nanti."
-          : "Gagal membuat sesi pembayaran Violet Media Pay. Periksa kembali data pembayaran Anda.";
+      const isFeatureNotAllowed = /feature not allowed/i.test(String(providerMsg));
+      const channelLabel = String(fields.channel_payment);
+      const userMessage = isFeatureNotAllowed
+        ? `Metode pembayaran "${channelLabel}" belum diaktifkan di akun Violet Media Pay Anda. Aktifkan channel ini di dashboard Violet Media Pay terlebih dahulu, atau pilih metode lain (mis. QRIS).`
+        : isSslHandshake
+          ? "Layanan pembayaran Violet Media Pay sedang tidak dapat diakses (SSL handshake gagal di sisi provider). Silakan coba beberapa saat lagi."
+          : isProviderDown
+            ? "Layanan Violet Media Pay sedang bermasalah. Silakan coba lagi nanti."
+            : `Gagal membuat sesi pembayaran: ${providerMsg}`;
       return json(200, {
-        error: msg,
+        error: providerMsg,
         user_message: userMessage,
-        provider_message: msg,
+        provider_message: providerMsg,
         provider_status: status,
         fallback: isProviderDown,
       });
